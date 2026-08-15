@@ -1,0 +1,29 @@
+﻿# --- Secrets (CRITICAL - never commit) ---
+.env
+*.env
+!.env.example
+
+# --- Python / FastAPI ---
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+
+# --- User uploaded media (real user data - never commit) ---
+media_storage/
+
+# --- Flutter / Dart (if lib/ folder lives here too) ---
+**/build/
+.dart_tool/
+.flutter-plugin-dependencies
+.packages
+*.iml
+.idea/
+
+# --- Misc ---
+.DS_Store
+*.log
+
+# Zip archives
+*.zip

@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/constants/app_constants.dart';
+import '../../core/network/api_client.dart';
+import '../../core/theme/app_theme.dart';
+import '../../models/user.dart';
+import '../../providers/auth_providers.dart';
+import '../../widgets/common/app_toast.dart';
+import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/loading_widget.dart';
+import '../../widgets/common/screen_backdrop.dart';
+
+/// Read/write view of the three permission flags the onboarding
+/// screens (`camera_permission_screen.dart`, etc.) originally set —
+/// lets the user come back later and see/change what they granted,
+/// instead of those flags only ever being set once during onboarding
+/// and never visible again.
+///
+/// Same real `PUT /auth/permissions` endpoint as onboarding (only the
+/// one flag that changed is sent). Note this only tracks the app's own
+/// record of what the user said yes/no to — it does not (and, per the
+/// project brief, no screen in this app does) query or trigger the
+/// actual OS-level permission dialog, since there's no
+/// `permission_handler` dependency wired in. If the OS permission is
+/// separately revoked in device Settings, this screen won't reflect
+/// that until `permission_handler` is added.
+class AppPermissionsScreen extends ConsumerStatefulWidget {
+  const AppPermissionsScreen({super.key});
+
+  @override
+  ConsumerState<AppPermissionsScreen> createState() => _AppPermissionsScreenState();
+}
+
+class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
+  /// Which permission (if any) has an update in flight — 'camera' |
+  /// 'photos' | 'push' | null — so only the row being changed shows a
+  /// spinner and the others stay interactive.
+  String? _updating;
+
+  Future<void> _toggle({
+    required String key,
+    required bool value,
+    required Future<AppUser> Function() call,
+  }) async {
+    setState(() => _updating = key);
+    try {
+      final updated = await call();
+      ref.read(authProvider.notifier).setUser(updated);
+    } on ApiException catch (e) {
+      if (mounted) AppToast.show(context, e.message, isError: true);
+    } catch (_) {
+      if (mounted) AppToast.show(context, 'Could not update permission. Try again.', isError: true);
+    } finally {
+      if (mounted) setState(() => _updating = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = ref.watch(authProvider).valueOrNull;
+
+    return Scaffold(
+      appBar: const CustomAppBar(title: 'App Permissions'),
+      body: ScreenBackdrop(
+        child: SafeArea(
+          top: false,
+          child: user == null
+              ? const Center(child: LoadingWidget())
+              : ListView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: [
+                    Text(
+                      'What picgallery can access',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'These reflect what you allowed during setup — flip any of them here instead.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _PermissionCard(
+                      icon: Icons.camera_alt_rounded,
+                      title: 'Camera',
+                      description: 'Capture and upload photos directly from the app.',
+                      granted: user.cameraPermissionGranted,
+                      isUpdating: _updating == 'camera',
+                      onChanged: (v) => _toggle(
+                        key: 'camera',
+                        value: v,
+                        call: () => ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: v),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _PermissionCard(
+                      icon: Icons.photo_library_rounded,
+                      title: 'Photo Library',
+                      description: 'Import photos from your device into albums.',
+                      granted: user.photoLibraryPermissionGranted,
+                      isUpdating: _updating == 'photos',
+                      onChanged: (v) => _toggle(
+                        key: 'photos',
+                        value: v,
+                        call: () =>
+                            ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: v),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _PermissionCard(
+                      icon: Icons.notifications_active_rounded,
+                      title: 'Push Notifications',
+                      description: 'Get notified about new galleries, downloads and activity.',
+                      granted: user.pushNotificationsEnabled,
+                      isUpdating: _updating == 'push',
+                      onChanged: (v) => _toggle(
+                        key: 'push',
+                        value: v,
+                        call: () => ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: v),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PermissionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final bool granted;
+  final bool isUpdating;
+  final ValueChanged<bool> onChanged;
+
+  const _PermissionCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.granted,
+    required this.isUpdating,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: (granted ? AppColors.success : AppColors.subtitle).withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: granted ? AppColors.success : AppColors.subtitle),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(title, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (granted ? AppColors.success : AppColors.subtitle).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Text(
+                        granted ? 'Granted' : 'Not Granted',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: granted ? AppColors.success : AppColors.subtitle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(description, style: const TextStyle(fontSize: 12, color: AppColors.subtitle, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          isUpdating
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Padding(
+                    padding: EdgeInsets.all(2),
+                    child: CircularProgressIndicator(strokeWidth: 2.4),
+                  ),
+                )
+              : Switch.adaptive(
+                  value: granted,
+                  activeColor: AppColors.primary,
+                  onChanged: onChanged,
+                ),
+        ],
+      ),
+    );
+  }
+}

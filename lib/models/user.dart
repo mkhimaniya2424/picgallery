@@ -1,0 +1,408 @@
+/// Mirrors the backend's `UserRole` enum (`app/models/user.py`). Named
+/// `AppUserRole` (rather than `UserRole`) to avoid clashing with the
+/// dummy-navigation `UserRole` enum already declared in
+/// `core/routes/app_routes.dart` — files that need both can import each
+/// without a name collision.
+enum AppUserRole {
+  photographer,
+  client;
+
+  static AppUserRole fromJson(String value) {
+    return AppUserRole.values.firstWhere(
+      (r) => r.name == value,
+      orElse: () => throw ArgumentError('Unknown role: $value'),
+    );
+  }
+
+  String toJson() => name;
+}
+
+/// Plain Dart mirror of the backend's `UserRead` schema
+/// (`app/schemas/user.py`). Field names are camelCase on the Dart side;
+/// [fromJson]/[toJson] translate to/from the backend's snake_case keys.
+class AppUser {
+  final String id;
+  final String fullName;
+  final String email;
+  final String phone;
+  final AppUserRole role;
+  final String? studioName;
+  final String? studioAddress;
+  final String? businessType;
+  final String? avatarUrl;
+  final String? country;
+  final String? state;
+  final String? city;
+  final String? address;
+  final String? bio;
+  final List<String>? specializations;
+  final bool isEmailVerified;
+  final bool cameraPermissionGranted;
+  final bool photoLibraryPermissionGranted;
+  final bool pushNotificationsEnabled;
+
+  /// Privacy & Security screen — "Download Permissions" toggle. Whether
+  /// this user allows their galleries/media to be downloaded.
+  final bool allowDownloads;
+
+  /// App Settings screen — "App Language" picker (e.g. "English",
+  /// "Hindi", "Spanish"). Shared by both roles.
+  final String appLanguage;
+  final DateTime createdAt;
+
+  // Studio profile fields (Task 3 backend / Task 8-9 Flutter) — populated
+  // only for photographer ("Studio") accounts, always null for clients.
+  final int? yearEstablished;
+  final int? teamSize;
+  final List<String>? serviceAreas;
+  final String? studioType;
+  final int? experienceYears;
+  final List<String>? languages;
+  final String? equipmentHighlights;
+  final double? pricingMin;
+  final double? pricingMax;
+  final String? packageDetails;
+  final List<String>? availabilityDays;
+  final String? instagramUrl;
+  final String? facebookUrl;
+  final String? youtubeUrl;
+  final String? pinterestUrl;
+
+  // Client optional profile fields (Task 4 backend / Task 8 Flutter) —
+  // populated only for client accounts, always null for photographers.
+  final String? profilePhotoUrl;
+  final String? gender;
+  final DateTime? dateOfBirth;
+  final List<String>? preferredPhotoTypes;
+  final String? preferredCity;
+  final double? budgetMin;
+  final double? budgetMax;
+  final String? alternatePhone;
+
+  // Subscription backend fields (mirrors PlatformUserRead)
+  final String subscriptionStatus; // "active" | "trial" | "expired" | "none"
+  final String? currentPlan; // "trial" | "pro" | "premium"
+  final DateTime? planStartedAt;
+  final DateTime? planExpiry;
+  /// Whether the user has ever activated the free trial (set to true by the
+  /// backend the moment the trial is granted — stays true even after it
+  /// expires so the user cannot re-claim it).
+  final bool trialUsed;
+
+
+
+  /// Whether [CompleteProfileScreen] has actually been filled in — used
+  /// by `login_screen.dart` and `splash_screen.dart` to decide whether
+  /// to route there before Home/Admin Home. Every role must have set a
+  /// bio; photographers must additionally have set a studio name, since
+  /// those are the fields that screen actually collects.
+  bool get hasCompletedProfile {
+    if (role == AppUserRole.photographer && (studioName == null || studioName!.trim().isEmpty)) {
+      return false;
+    }
+    return bio != null && bio!.trim().isNotEmpty;
+  }
+
+  const AppUser({
+    required this.id,
+    required this.fullName,
+    required this.email,
+    required this.phone,
+    required this.role,
+    this.studioName,
+    this.studioAddress,
+    this.businessType,
+    this.avatarUrl,
+    this.country,
+    this.state,
+    this.city,
+    this.address,
+    this.bio,
+    this.specializations,
+    required this.isEmailVerified,
+    required this.cameraPermissionGranted,
+    required this.photoLibraryPermissionGranted,
+    required this.pushNotificationsEnabled,
+    required this.allowDownloads,
+    this.appLanguage = 'English',
+    required this.createdAt,
+    this.yearEstablished,
+    this.teamSize,
+    this.serviceAreas,
+    this.studioType,
+    this.experienceYears,
+    this.languages,
+    this.equipmentHighlights,
+    this.pricingMin,
+    this.pricingMax,
+    this.packageDetails,
+    this.availabilityDays,
+    this.instagramUrl,
+    this.facebookUrl,
+    this.youtubeUrl,
+    this.pinterestUrl,
+    this.profilePhotoUrl,
+    this.gender,
+    this.dateOfBirth,
+    this.preferredPhotoTypes,
+    this.preferredCity,
+    this.budgetMin,
+    this.budgetMax,
+    this.alternatePhone,
+    this.subscriptionStatus = 'none',
+    this.currentPlan,
+    this.planStartedAt,
+    this.planExpiry,
+    this.trialUsed = false,
+  });
+
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
+      id: json['id'] as String,
+      fullName: json['full_name'] as String,
+      email: json['email'] as String,
+      phone: json['phone'] as String,
+      role: AppUserRole.fromJson(json['role'] as String),
+      studioName: json['studio_name'] as String?,
+      studioAddress: json['studio_address'] as String?,
+      businessType: json['business_type'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
+      country: json['country'] as String?,
+      state: json['state'] as String?,
+      city: json['city'] as String?,
+      address: json['address'] as String?,
+      bio: json['bio'] as String?,
+      specializations: (json['specializations'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      isEmailVerified: json['is_email_verified'] as bool,
+      cameraPermissionGranted: json['camera_permission_granted'] as bool,
+      photoLibraryPermissionGranted: json['photo_library_permission_granted'] as bool,
+      pushNotificationsEnabled: json['push_notifications_enabled'] as bool,
+      allowDownloads: json['allow_downloads'] as bool,
+      appLanguage: json['app_language'] as String? ?? 'English',
+      createdAt: DateTime.parse(json['created_at'] as String),
+      yearEstablished: json['year_established'] as int?,
+      teamSize: json['team_size'] as int?,
+      serviceAreas: (json['service_areas'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      studioType: json['studio_type'] as String?,
+      experienceYears: json['experience_years'] as int?,
+      languages: (json['languages'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      equipmentHighlights: json['equipment_highlights'] as String?,
+      pricingMin: (json['pricing_min'] as num?)?.toDouble(),
+      pricingMax: (json['pricing_max'] as num?)?.toDouble(),
+      packageDetails: json['package_details'] as String?,
+      availabilityDays: (json['availability_days'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      instagramUrl: json['instagram_url'] as String?,
+      facebookUrl: json['facebook_url'] as String?,
+      youtubeUrl: json['youtube_url'] as String?,
+      pinterestUrl: json['pinterest_url'] as String?,
+      profilePhotoUrl: json['profile_photo_url'] as String?,
+      gender: json['gender'] as String?,
+      dateOfBirth: json['date_of_birth'] == null ? null : DateTime.parse(json['date_of_birth'] as String),
+      preferredPhotoTypes:
+          (json['preferred_photo_types'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      preferredCity: json['preferred_city'] as String?,
+      budgetMin: (json['budget_min'] as num?)?.toDouble(),
+      budgetMax: (json['budget_max'] as num?)?.toDouble(),
+      alternatePhone: json['alternate_phone'] as String?,
+      subscriptionStatus: json['subscription_status'] as String? ?? 'none',
+      currentPlan: json['current_plan'] as String?,
+      planStartedAt: json['plan_started_at'] != null ? DateTime.parse(json['plan_started_at'] as String) : null,
+      planExpiry: json['plan_expiry'] != null ? DateTime.parse(json['plan_expiry'] as String) : null,
+      trialUsed: json['trial_used'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'full_name': fullName,
+      'email': email,
+      'phone': phone,
+      'role': role.toJson(),
+      'studio_name': studioName,
+      'studio_address': studioAddress,
+      'business_type': businessType,
+      'avatar_url': avatarUrl,
+      'country': country,
+      'state': state,
+      'city': city,
+      'address': address,
+      'bio': bio,
+      'specializations': specializations,
+      'is_email_verified': isEmailVerified,
+      'camera_permission_granted': cameraPermissionGranted,
+      'photo_library_permission_granted': photoLibraryPermissionGranted,
+      'push_notifications_enabled': pushNotificationsEnabled,
+      'allow_downloads': allowDownloads,
+      'app_language': appLanguage,
+      'created_at': createdAt.toIso8601String(),
+      'year_established': yearEstablished,
+      'team_size': teamSize,
+      'service_areas': serviceAreas,
+      'studio_type': studioType,
+      'experience_years': experienceYears,
+      'languages': languages,
+      'equipment_highlights': equipmentHighlights,
+      'pricing_min': pricingMin,
+      'pricing_max': pricingMax,
+      'package_details': packageDetails,
+      'availability_days': availabilityDays,
+      'instagram_url': instagramUrl,
+      'facebook_url': facebookUrl,
+      'youtube_url': youtubeUrl,
+      'pinterest_url': pinterestUrl,
+      'profile_photo_url': profilePhotoUrl,
+      'gender': gender,
+      'date_of_birth': dateOfBirth?.toIso8601String().split('T').first,
+      'preferred_photo_types': preferredPhotoTypes,
+      'preferred_city': preferredCity,
+      'budget_min': budgetMin,
+      'budget_max': budgetMax,
+      'alternate_phone': alternatePhone,
+      'subscription_status': subscriptionStatus,
+      'current_plan': currentPlan,
+      'plan_started_at': planStartedAt?.toIso8601String(),
+      'plan_expiry': planExpiry?.toIso8601String(),
+      'trial_used': trialUsed,
+    };
+  }
+
+  AppUser copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? phone,
+    AppUserRole? role,
+    String? studioName,
+    String? studioAddress,
+    String? businessType,
+    String? avatarUrl,
+    String? country,
+    String? state,
+    String? city,
+    String? address,
+    String? bio,
+    List<String>? specializations,
+    bool? isEmailVerified,
+    bool? cameraPermissionGranted,
+    bool? photoLibraryPermissionGranted,
+    bool? pushNotificationsEnabled,
+    bool? allowDownloads,
+    String? appLanguage,
+    DateTime? createdAt,
+    int? yearEstablished,
+    int? teamSize,
+    List<String>? serviceAreas,
+    String? studioType,
+    int? experienceYears,
+    List<String>? languages,
+    String? equipmentHighlights,
+    double? pricingMin,
+    double? pricingMax,
+    String? packageDetails,
+    List<String>? availabilityDays,
+    String? instagramUrl,
+    String? facebookUrl,
+    String? youtubeUrl,
+    String? pinterestUrl,
+    String? profilePhotoUrl,
+    String? gender,
+    DateTime? dateOfBirth,
+    List<String>? preferredPhotoTypes,
+    String? preferredCity,
+    double? budgetMin,
+    double? budgetMax,
+    String? alternatePhone,
+    String? subscriptionStatus,
+    String? currentPlan,
+    DateTime? planStartedAt,
+    DateTime? planExpiry,
+    bool? trialUsed,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      studioName: studioName ?? this.studioName,
+      studioAddress: studioAddress ?? this.studioAddress,
+      businessType: businessType ?? this.businessType,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      country: country ?? this.country,
+      state: state ?? this.state,
+      city: city ?? this.city,
+      address: address ?? this.address,
+      bio: bio ?? this.bio,
+      specializations: specializations ?? this.specializations,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      cameraPermissionGranted: cameraPermissionGranted ?? this.cameraPermissionGranted,
+      photoLibraryPermissionGranted:
+          photoLibraryPermissionGranted ?? this.photoLibraryPermissionGranted,
+      pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      allowDownloads: allowDownloads ?? this.allowDownloads,
+      appLanguage: appLanguage ?? this.appLanguage,
+      createdAt: createdAt ?? this.createdAt,
+      yearEstablished: yearEstablished ?? this.yearEstablished,
+      teamSize: teamSize ?? this.teamSize,
+      serviceAreas: serviceAreas ?? this.serviceAreas,
+      studioType: studioType ?? this.studioType,
+      experienceYears: experienceYears ?? this.experienceYears,
+      languages: languages ?? this.languages,
+      equipmentHighlights: equipmentHighlights ?? this.equipmentHighlights,
+      pricingMin: pricingMin ?? this.pricingMin,
+      pricingMax: pricingMax ?? this.pricingMax,
+      packageDetails: packageDetails ?? this.packageDetails,
+      availabilityDays: availabilityDays ?? this.availabilityDays,
+      instagramUrl: instagramUrl ?? this.instagramUrl,
+      facebookUrl: facebookUrl ?? this.facebookUrl,
+      youtubeUrl: youtubeUrl ?? this.youtubeUrl,
+      pinterestUrl: pinterestUrl ?? this.pinterestUrl,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      preferredPhotoTypes: preferredPhotoTypes ?? this.preferredPhotoTypes,
+      preferredCity: preferredCity ?? this.preferredCity,
+      budgetMin: budgetMin ?? this.budgetMin,
+      budgetMax: budgetMax ?? this.budgetMax,
+      alternatePhone: alternatePhone ?? this.alternatePhone,
+      subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
+      currentPlan: currentPlan ?? this.currentPlan,
+      planStartedAt: planStartedAt ?? this.planStartedAt,
+      planExpiry: planExpiry ?? this.planExpiry,
+      trialUsed: trialUsed ?? this.trialUsed,
+    );
+  }
+}
+
+/// Mirrors the backend's `Token` schema — the response body of
+/// `POST /auth/register` and `POST /auth/login`.
+class AuthToken {
+  final String accessToken;
+  final String tokenType;
+  final AppUser user;
+
+  const AuthToken({
+    required this.accessToken,
+    required this.tokenType,
+    required this.user,
+  });
+
+  factory AuthToken.fromJson(Map<String, dynamic> json) {
+    return AuthToken(
+      accessToken: json['access_token'] as String,
+      tokenType: json['token_type'] as String? ?? 'bearer',
+      user: AppUser.fromJson(json['user'] as Map<String, dynamic>),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'access_token': accessToken,
+      'token_type': tokenType,
+      'user': user.toJson(),
+    };
+  }
+}

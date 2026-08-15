@@ -1,0 +1,74 @@
+{
+  "@@locale": "en",
+  "appName": "picgallery",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label"
+  },
+  "albums": "Albums",
+  "@albums": {
+    "description": "Albums label"
+  },
+  "collections": "Collections",
+  "@collections": {
+    "description": "Collections profile and settings menu option"
+  },
+  "downloads": "Downloads",
+  "@downloads": {
+    "description": "Downloads label"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab and settings title"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings label"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language settings option"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save action text"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel action text"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete action text"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Search bar label"
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications settings and alerts"
+  },
+  "helpSupport": "Help & Support",
+  "@helpSupport": {
+    "description": "Help and Support settings option"
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy Policy settings option"
+  },
+  "termsConditions": "Terms & Conditions",
+  "@termsConditions": {
+    "description": "Terms and Conditions settings option"
+  },
+  "selected": "Selected",
+  "selectLanguage": "Select Language",
+  "gallery": "Gallery",
+  "editProfile": "Edit Profile",
+  "privacySecurity": "Privacy & Security",
+  "about": "About",
+  "logOut": "Log Out"
+}
