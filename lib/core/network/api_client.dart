@@ -27,7 +27,8 @@ class ApiException implements Exception {
 class ApiClient {
   /// Mutable (not `final`) so [updateBaseUrl] can repoint every future
   /// request at a new host live, without recreating this instance or
-  /// restarting the app — see `ServerSettingsSheet` on the splash screen.
+  /// restarting the app (e.g. for a dev build pointing at a different
+  /// backend).
   String baseUrl;
   final http.Client _client;
 
@@ -40,26 +41,12 @@ class ApiClient {
       : baseUrl = baseUrl ?? _defaultBaseUrl(),
         _client = client ?? http.Client();
 
-  /// Sentinel `baseUrl` used only when no real host could be determined —
-  /// see [_defaultBaseUrl]. Deliberately not a URL scheme any real request
-  /// could ever reach; [isConfigured] checks against this directly so a
-  /// misconfigured client fails loudly (a clear [ApiException] — see
-  /// [_guarded]) instead of silently dialing a dead LAN IP forever.
-  static const String _unconfiguredBaseUrl = 'unconfigured://no-server-set';
-
-  /// False only on a real device/emulator that has neither an `API_HOST`
-  /// build-time override nor a host saved via [ServerConfigStorage] /
-  /// the gear-icon [ServerSettingsSheet]. Desktop/web are always
-  /// considered configured (they use `localhost` — see [_defaultBaseUrl]).
-  bool get isConfigured => baseUrl != _unconfiguredBaseUrl;
-
   /// Builds a full base URL from either just a host/IP (e.g.
   /// `192.168.1.34`, kept on the default `http://…:8000/api/v1` shape) or
   /// an already-complete URL (e.g. a Cloudflare Tunnel/ngrok URL like
   /// `https://my-tunnel.trycloudflare.com`, which is typically already on
   /// port 443 with its own scheme and shouldn't have `:8000` forced onto
-  /// it). Used by both [_defaultBaseUrl]'s `API_HOST` override and
-  /// [ServerSettingsSheet]'s manual entry.
+  /// it). Used by [_defaultBaseUrl]'s `API_HOST` override.
   static String baseUrlForHost(String host) {
     final trimmed = host.trim();
     if (trimmed.contains('://')) {
@@ -74,8 +61,7 @@ class ApiClient {
 
   /// Repoints this client at a new host immediately — no app restart or
   /// provider rebuild required, since every request reads `baseUrl` at
-  /// call time via [_uri]. Callers should also persist the host via
-  /// [ServerConfigStorage] so it survives the next launch too.
+  /// call time via [_uri].
   void updateBaseUrl(String newBaseUrl) => baseUrl = newBaseUrl;
 
   /// `10.0.2.2` is how the Android emulator reaches the host machine's
@@ -95,26 +81,18 @@ class ApiClient {
       return baseUrlForHost('localhost');
     }
 
-    // A REAL phone (or emulator) is a separate device from the backend,
-    // so there is no address that's correct by default the way
-    // `localhost` is above — a hardcoded LAN IP here only ever works from
-    // the one Wi-Fi network it was written on and silently fails
-    // everywhere else (mobile data, a different Wi-Fi, another dev's
-    // machine, ...). Instead:
-    //  1. `--dart-define=API_HOST=<host-or-full-url>` lets a build pin a
-    //     host (or a persistent tunnel URL, e.g. Cloudflare Tunnel/ngrok)
-    //     without hardcoding it in source.
-    //  2. Otherwise, this stays deliberately unconfigured — see
-    //     [isConfigured] — until the gear icon on the sign-in screen
-    //     ([ServerSettingsSheet]) sets and persists one via
-    //     [ServerConfigStorage] (read back in `main.dart` on next
-    //     launch). Every request made while unconfigured fails fast with
-    //     a clear [ApiException] (see [_guarded]) instead of hanging on
-    //     a dead IP.
+    // A REAL phone (or emulator) is a separate device from the backend.
+    // The backend now has a permanent public URL (Cloudflare Tunnel), so
+    // that's the real default every build ships with — no manual setup,
+    // no LAN IP, no gear-icon configuration needed.
+    //
+    // `--dart-define=API_HOST=<host-or-full-url>` still lets a dev build
+    // point at a different backend (e.g. a local machine while testing)
+    // without touching this file.
     const envHost = String.fromEnvironment('API_HOST');
     if (envHost.isNotEmpty) return baseUrlForHost(envHost);
 
-    return _unconfiguredBaseUrl;
+    return baseUrlForHost('https://api.picgallery.in');
   }
   Map<String, String> _headers({bool withAuth = true}) {
     final headers = <String, String>{'Content-Type': 'application/json'};
@@ -197,14 +175,6 @@ class ApiClient {
   /// entirely, leaving their `_isLoading` flag stuck at `true` forever
   /// with no error shown — the exact "stuck spinner" symptom.
   Future<http.Response> _guarded(Future<http.Response> Function() send) async {
-    if (!isConfigured) {
-      throw const ApiException(
-        0,
-        "No backend server is set up yet. Tap the gear icon on the sign-in "
-        "screen and enter your backend's host, IP, or tunnel URL (e.g. from "
-        "ngrok or Cloudflare Tunnel).",
-      );
-    }
     try {
       return await send();
     } on ApiException {

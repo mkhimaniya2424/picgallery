@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/network/api_client.dart';
 import 'core/routes/app_routes.dart';
-import 'core/storage/server_config_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/auth_providers.dart';
@@ -22,11 +21,10 @@ Future<void> main() async {
   // to, so the very first frame can already read saved state.
   await Hive.initFlutter();
 
-  // If the gear icon on the splash screen was used to save a server
-  // host previously, use it instead of the hardcoded default so a
-  // network change doesn't require a code edit + rebuild every time.
-  final savedHost = await ServerConfigStorage().readHost();
-  final apiClient = savedHost == null ? ApiClient() : ApiClient(baseUrl: ApiClient.baseUrlForHost(savedHost));
+  // The backend now has a permanent public URL baked into ApiClient's
+  // default (https://api.picgallery.in), so no saved/manual host is
+  // needed anymore.
+  final apiClient = ApiClient();
 
   runApp(
     ProviderScope(

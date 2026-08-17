@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
@@ -50,6 +52,38 @@ def get_current_studio_user(current_user: User = Depends(get_current_user)) -> U
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only studio accounts can manage a gallery.",
         )
+    return current_user
+
+
+def require_active_plan(current_user: User = Depends(get_current_studio_user)) -> User:
+    """Guards gallery-write routes (create folder/album, upload media)
+    that should be blocked once a studio's plan has lapsed.
+
+    Mirrors the Flutter app's own check exactly (see
+    `subscription_guard.dart` / `subscription_status`+`current_plan` in
+    `schemas/user.py`): a plan only counts as active when
+    `plan_status == "active"` AND `plan_expiry` hasn't passed yet. The
+    app's `requireActiveSubscription` already blocks these actions in
+    the UI — this is the server-side enforcement of the same rule, so
+    the check can't be bypassed by calling the API directly.
+    """
+    if current_user.plan_status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your plan has expired. Please upgrade to continue.",
+        )
+    if current_user.plan_expiry is not None:
+        expiry = current_user.plan_expiry
+        # DB values may come back naive (no tzinfo) depending on the
+        # column/driver; normalize to UTC-aware before comparing so this
+        # never raises "can't compare offset-naive and offset-aware".
+        if expiry.tzinfo is None:
+            expiry = expiry.replace(tzinfo=timezone.utc)
+        if expiry < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your plan has expired. Please upgrade to continue.",
+            )
     return current_user
 
 

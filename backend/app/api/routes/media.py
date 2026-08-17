@@ -8,7 +8,7 @@ from sqlalchemy import select
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_studio_user, get_current_user
+from app.api.deps import get_current_studio_user, get_current_user, require_active_plan
 from app.core.activity_log import log_activity
 from app.core.face_index import index_media_background
 from app.core.storage import (
@@ -155,7 +155,7 @@ def upload_media(
     file: UploadFile = File(...),
     album_id: uuid.UUID | None = None,
     folder_id: uuid.UUID | None = None,
-    current_user: User = Depends(get_current_studio_user),
+    current_user: User = Depends(require_active_plan),
     db: Session = Depends(get_db),
 ) -> MediaRead:
     """Uploads one photo/video. Multipart form: `file` is required;
