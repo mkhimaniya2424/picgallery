@@ -137,7 +137,7 @@ def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Sessi
     user = User(
         full_name=payload.full_name,
         email=payload.email,
-        phone="",
+        phone=payload.phone,
         hashed_password=hash_password(payload.password),
         role=payload.role,
         studio_name=payload.studio_name,
@@ -146,6 +146,10 @@ def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Sessi
         agreed_to_terms=payload.agreed_to_terms,
         email_verification_token=verification_token,
         email_verification_sent_at=datetime.now(timezone.utc),
+        # The `plan_status` column has a NOT NULL constraint at the
+        # database level; every new account must get an explicit value
+        # or the INSERT fails. "inactive" means "no active paid plan yet".
+        plan_status="inactive",
     )
     db.add(user)
     db.commit()
@@ -188,6 +192,15 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
         )
 
     user = candidates[0]
+    if user.hashed_password is None:
+        # Account was created via Google/Apple sign-in and has no
+        # password set — verify_password() would otherwise crash
+        # passlib with a None hash and surface as a 500.
+        provider_label = user.auth_provider.value.capitalize() if user.auth_provider else "Google or Apple"
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"This account uses {provider_label} sign-in. Please continue with {provider_label} instead.",
+        )
     if not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -262,6 +275,9 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
             provider_user_id=identity.provider_user_id,
             agreed_to_terms=True,
             is_email_verified=True,
+            # See matching comment in the email/password signup path above:
+            # the DB requires a non-null plan_status on every new user row.
+            plan_status="inactive",
         )
         db.add(user)
     else:
