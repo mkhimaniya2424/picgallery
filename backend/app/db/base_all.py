@@ -22,3 +22,4 @@ from app.models.chat import ChatThread, ChatMessage  # noqa: F401
 from app.models.face import FaceEmbedding  # noqa: F401
 from app.models.activity_log import ActivityLog  # noqa: F401
 from app.models.studio_portfolio import StudioPortfolioImage  # noqa: F401
+from app.models.studio_backup import StudioBackup  # noqa: F401

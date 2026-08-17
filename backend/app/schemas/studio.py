@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -85,3 +86,17 @@ class StudioDirectoryItem(StudioSummary):
 
     connection_status: str
     is_favorite: bool
+
+
+class StudioBackupRead(BaseModel):
+    """Response for `POST /studios/me/backup` and `GET /studios/me/backup`
+    — the saved snapshot's id/timestamp plus the settings payload itself,
+    so the app can both show "Last backed up: ..." and (Task 7) restore
+    from `payload` directly without a second request.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    payload: dict[str, Any]
+    created_at: datetime

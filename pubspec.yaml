@@ -65,6 +65,8 @@
     crypto: ^3.0.6
     gal: ^2.3.1
     app_links: ^7.0.0
+    connectivity_plus: ^7.3.1
+    image: ^4.8.0
 
   dev_dependencies:
     flutter_test:
