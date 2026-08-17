@@ -137,7 +137,6 @@ def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Sessi
     user = User(
         full_name=payload.full_name,
         email=payload.email,
-        phone=payload.phone,
         hashed_password=hash_password(payload.password),
         role=payload.role,
         studio_name=payload.studio_name,
@@ -192,6 +191,15 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
         )
 
     user = candidates[0]
+    if user.hashed_password is None:
+        # Account was created via Google/Apple sign-in and has no
+        # password set — verify_password() would otherwise crash
+        # passlib with a None hash and surface as a 500.
+        provider_label = user.auth_provider.value.capitalize() if user.auth_provider else "Google or Apple"
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"This account uses {provider_label} sign-in. Please continue with {provider_label} instead.",
+        )
     if not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -259,7 +267,6 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
         user = User(
             full_name=full_name,
             email=identity.email,
-            phone="",
             hashed_password=None,
             role=payload.role,
             auth_provider=payload.provider,
@@ -308,7 +315,6 @@ def complete_profile(
         )
 
     current_user.full_name = payload.full_name
-    current_user.phone = payload.phone or current_user.phone
     current_user.country = payload.country
     current_user.state = payload.state
     current_user.city = payload.city

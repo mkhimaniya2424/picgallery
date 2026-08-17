@@ -40,7 +40,9 @@ class User(Base):
     # Step 1 — identity
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
-    phone: Mapped[str] = mapped_column(String(30), nullable=False)
+    # `phone` was removed as a feature (column dropped from the DB
+    # directly) — kept out of the ORM model entirely so SELECT/INSERT
+    # never reference a column that no longer exists.
 
     # Step 2 — auth. Nullable because Google/Apple sign-in accounts have
     # no password at all — the provider's ID token is the credential

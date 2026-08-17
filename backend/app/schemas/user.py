@@ -91,7 +91,6 @@ class UserCompleteProfile(BaseModel):
     """
 
     full_name: str = Field(min_length=1, max_length=150)
-    phone: str | None = Field(default=None, max_length=30)
     country: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=100)
@@ -111,7 +110,6 @@ class UserUpdate(BaseModel):
     """
 
     full_name: str | None = Field(default=None, min_length=1, max_length=150)
-    phone: str | None = Field(default=None, max_length=30)
     country: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=100)
@@ -216,10 +214,20 @@ class MessageResponse(BaseModel):
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # `phone` was removed from the platform (column dropped from the
+    # `users` table). Kept as an always-empty computed field — rather
+    # than deleted outright — so the Flutter `User.fromJson` (which
+    # still does `json['phone'] as String`, a non-null cast) doesn't
+    # crash on existing installs until the app itself is updated to
+    # stop expecting it.
+    @computed_field
+    @property
+    def phone(self) -> str:
+        return ""
+
     id: uuid.UUID
     full_name: str
     email: EmailStr
-    phone: str
     role: UserRole
     studio_name: str | None
     studio_address: str | None
