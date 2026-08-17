@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_client_user, get_current_studio_user
+from app.api.deps import get_current_client_user, get_current_studio_user, require_active_plan
 from app.core.album_sharing import active_shares_for_client
 from app.core.storage import build_media_url
 from app.db.session import get_db
@@ -140,7 +140,7 @@ def _protected_share_link_album_ids_multi(db: Session, owner_ids: list[uuid.UUID
 @router.post("", response_model=AlbumRead, status_code=status.HTTP_201_CREATED)
 def create_album(
     payload: AlbumCreate,
-    current_user: User = Depends(get_current_studio_user),
+    current_user: User = Depends(require_active_plan),
     db: Session = Depends(get_db),
 ) -> AlbumRead:
     if payload.folder_id is not None:

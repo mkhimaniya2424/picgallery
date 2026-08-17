@@ -11,7 +11,6 @@ import 'package:gal/gal.dart';
 import 'download_service.dart';
 import 'media_picker_service.dart' show MediaContentType;
 import '../core/network/api_client.dart';
-import '../core/storage/server_config_storage.dart';
 import '../core/storage/token_storage.dart';
 import '../storage/media_local_store.dart';
 import '../models/media_model.dart';
@@ -164,17 +163,14 @@ class DownloadServiceImpl implements DownloadService {
       }
 
       // Fallback path for any caller that hasn't been updated to pass
-      // the shared client yet. Mirrors main.dart's own host resolution,
-      // but still depends on TokenStorage having a token — which is
-      // the exact gap the [apiClient] path above exists to avoid.
+      // the shared client yet. ApiClient() now always resolves to a real
+      // backend URL by default, so no saved host lookup is needed — this
+      // still depends on TokenStorage having a token, which is the exact
+      // gap the [apiClient] path above exists to avoid.
       final token = await TokenStorage().readToken();
       if (token == null) return;
 
-      final savedHost = await ServerConfigStorage().readHost();
-      final fallbackClient = ApiClient(
-        baseUrl: savedHost == null ? null : ApiClient.baseUrlForHost(savedHost),
-        authToken: token,
-      );
+      final fallbackClient = ApiClient(authToken: token);
       try {
         await fallbackClient.post(endpoint, body: {'media_id': resolvedId});
       } finally {

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_studio_user
+from app.api.deps import get_current_studio_user, require_active_plan
 from app.db.session import get_db
 from app.models.gallery import Album, Folder, Media
 from app.models.user import User
@@ -139,7 +139,7 @@ def _would_create_cycle(db: Session, folder_id: uuid.UUID, new_parent_id: uuid.U
 @router.post("", response_model=FolderRead, status_code=status.HTTP_201_CREATED)
 def create_folder(
     payload: FolderCreate,
-    current_user: User = Depends(get_current_studio_user),
+    current_user: User = Depends(require_active_plan),
     db: Session = Depends(get_db),
 ) -> FolderRead:
     if payload.parent_id is not None:

@@ -16,7 +16,6 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/inline_error_banner.dart';
 import '../../widgets/common/logo_widget.dart';
 import '../../widgets/common/screen_backdrop.dart';
-import '../../widgets/common/server_settings_sheet.dart';
 import '../../widgets/inputs/custom_text_field.dart';
 import 'role_selection_screen.dart';
 
@@ -213,20 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: CustomAppBar(
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GlassIconButton(
-              icon: Icons.settings_outlined,
-              onTap: () async {
-                await ServerSettingsSheet.show(context, ref.read(apiClientProvider));
-                if (mounted) setState(() {});
-              },
-            ),
-          ),
-        ],
-      ),
+      appBar: const CustomAppBar(),
       body: ScreenBackdrop(
         child: SafeArea(
           top: true,
@@ -247,21 +233,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  if (!ref.watch(apiClientProvider).isConfigured) ...[
-                    InlineErrorBanner(
-                      message: "No backend server is set up yet. Tap the gear icon above and "
-                          "enter your backend's host, IP, or tunnel URL.",
-                      action: TextButton(
-                        onPressed: () async {
-                          await ServerSettingsSheet.show(context, ref.read(apiClientProvider));
-                          if (mounted) setState(() {});
-                        },
-                        child: const Text('Open Server Settings',
-                            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
                   if (_errorMessage != null) ...[
                     InlineErrorBanner(message: _errorMessage!),
                     const SizedBox(height: AppSpacing.md),
