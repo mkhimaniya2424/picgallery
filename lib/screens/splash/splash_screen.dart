@@ -6,23 +6,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
-import '../../models/user.dart';
-import '../../providers/auth_providers.dart';
+import '../../models/settings_model.dart';
+import '../../providers/settings_provider.dart';
 import '../../storage/onboarding_local_store.dart';
 import '../../widgets/common/screen_backdrop.dart';
 
 /// Animated splash: logo scales/fades in over the gradient backdrop, the
-/// tagline fades in after, then a soft loading dash before auto-navigating.
+/// tagline fades in after, then a soft loading dash before auto-navigating
+/// onward.
 ///
-/// Also doubles as the app's session bootstrap: while the animation plays,
-/// [authProvider] resolves whatever [AuthRepository.restoreSession] found
-/// (a persisted token from a previous "Remember me" login, or a Google/Apple
-/// sign-in, which always persists). If that resolves to a logged-in
-/// [AppUser], we skip straight past Role Selection/Login to that user's
-/// home — same priority order [LoginScreen._navigateAfterAuth] uses, so a
-/// still-valid session is only ever asked to log in again if
-/// [AuthNotifier.build] itself found no valid token (missing, or rejected
-/// as expired/invalid by GET /auth/me).
+/// Also owns the one-time, cold-start App Lock PIN gate: if
+/// `settings.securityPinEnabled && settings.requirePinOnLaunch` are both
+/// true, [AppRoutes.pinUnlock] is pushed first and only on a correct PIN
+/// does navigation continue to Onboarding/Role Selection. This screen only
+/// runs once per process start, so the PIN is never asked again mid-session.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -58,69 +55,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _splashTimer = Timer(AppDurations.splash, () async {
       if (!mounted) return;
+
       // Backend-agnostic check: OnboardingLocalStore owns the only
       // persistence detail here (a Hive-backed flag today, but callers
       // never need to know that). Falls back to showing onboarding if
       // nothing has been persisted yet, or if the check fails.
       final alreadySeenOnboarding =
           await OnboardingLocalStore().hasSeenOnboarding();
+      final destinationRoute =
+          alreadySeenOnboarding ? AppRoutes.roleSelection : AppRoutes.onboarding;
       if (!mounted) return;
 
-      if (!alreadySeenOnboarding) {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+      // Read persisted settings directly from the store (bypassing the
+      // provider's own async load) so this cold-start check is never
+      // racing SettingsNotifier.build()'s background load — see
+      // settings_provider.dart.
+      final settingsData = await ref.read(settingsStoreProvider).load();
+      final settings = settingsData != null
+          ? SettingsModel.fromJson(settingsData)
+          : const SettingsModel();
+      if (!mounted) return;
+
+      if (settings.securityPinEnabled && settings.requirePinOnLaunch) {
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.pinUnlock,
+          arguments: PinUnlockArgs(
+            correctPin: settings.securityPin,
+            destinationRoute: destinationRoute,
+          ),
+        );
         return;
       }
 
-      // Wait for AuthNotifier.build() to finish restoring whatever
-      // AuthRepository.restoreSession() found (persisted token -> GET
-      // /auth/me). authProvider.future resolves once that settles, whether
-      // it lands on a logged-in AppUser or null (no token / rejected).
-      AppUser? user;
-      try {
-        user = await ref.read(authProvider.future);
-      } catch (_) {
-        // AuthNotifier.build() already swallows expected failures (missing/
-        // expired/rejected token) into a `null` result -- this only guards
-        // against something unexpected (e.g. no network at all on launch).
-        // Either way, fall back to a normal logged-out start rather than
-        // getting the user stuck on the splash screen.
-        user = null;
-      }
-      if (!mounted) return;
-
-      if (user != null) {
-        _navigateAfterAuth(user);
-        return;
-      }
-
-      Navigator.of(context).pushReplacementNamed(AppRoutes.roleSelection);
+      Navigator.of(context).pushReplacementNamed(destinationRoute);
     });
-  }
-
-  /// Same priority order as [LoginScreen._navigateAfterAuth]: unverified
-  /// email first, then an incomplete profile, and only then role-based
-  /// home. Kept in sync with that method deliberately -- see its doc
-  /// comment.
-  void _navigateAfterAuth(AppUser user) {
-    final legacyRole =
-        user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
-    final navigator = Navigator.of(context);
-
-    if (!user.isEmailVerified) {
-      navigator.pushReplacementNamed(
-        AppRoutes.verificationPending,
-        arguments: {'email': user.email, 'role': legacyRole},
-      );
-      return;
-    }
-
-    if (!user.hasCompletedProfile) {
-      navigator.pushReplacementNamed(AppRoutes.completeProfile, arguments: legacyRole);
-      return;
-    }
-
-    final destination = legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
-    navigator.pushReplacementNamed(destination);
   }
 
   @override
