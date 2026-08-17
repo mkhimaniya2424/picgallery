@@ -515,8 +515,6 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
               const SizedBox(height: 14),
               _buildContactRow(Icons.email_outlined, 'Email Address', studio.email),
               const Divider(color: AppColors.border, height: 20),
-              _buildContactRow(Icons.phone_iphone_outlined, 'Phone Number', studio.phone),
-              const Divider(color: AppColors.border, height: 20),
               _buildContactRow(Icons.public_outlined, 'Official Website', studio.website),
             ],
           ),

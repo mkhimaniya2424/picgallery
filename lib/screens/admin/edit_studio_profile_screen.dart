@@ -32,7 +32,6 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
   late final TextEditingController _studioNameController;
   late final TextEditingController _photoNameController;
   late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
   late final TextEditingController _websiteController;
   late final TextEditingController _aboutController;
 
@@ -103,18 +102,12 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
         );
 
     if (studio != null) {
-      // Prefer the backend user's phone (authoritative) over the studio
-      // directory cache, which may be stale or missing for new accounts.
-      _phoneController = TextEditingController(
-        text: cachedUser?.phone ?? studio.phone,
-      );
       _websiteController = TextEditingController(text: studio.website);
       _aboutController = TextEditingController(text: studio.about);
       _logoPath = studio.logoUrl;
       _coverPath = studio.coverUrl;
       _selectedCategories = List<String>.from(studio.categories);
     } else {
-      _phoneController = TextEditingController(text: cachedUser?.phone ?? '');
       _websiteController = TextEditingController();
       _aboutController = TextEditingController();
     }
@@ -138,10 +131,6 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       _studioNameController.text = user.studioName ?? _studioNameController.text;
       _photoNameController.text = user.fullName;
       _emailController.text = user.email;
-      // Prefer backend phone over whatever the local studio cache set.
-      if (user.phone.isNotEmpty) {
-        _phoneController.text = user.phone;
-      }
     });
   }
 
@@ -150,7 +139,6 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     _studioNameController.dispose();
     _photoNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _websiteController.dispose();
     _aboutController.dispose();
     super.dispose();
@@ -413,11 +401,6 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       final updatedUser = await ref.read(userRepositoryProvider).updateProfile(
             fullName: _photoNameController.text.trim(),
             studioName: _studioNameController.text.trim(),
-            // Phone is a shared User column — save it here so it stays in
-            // sync with whatever the user typed in the Phone field.
-            phone: _phoneController.text.trim().isNotEmpty
-                ? _phoneController.text.trim()
-                : null,
             // Bio maps to the "About / Business Description" textarea.
             bio: _aboutController.text.trim().isNotEmpty
                 ? _aboutController.text.trim()
@@ -455,7 +438,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
 
       final studioIdToUse = studio?.id ?? widget.settings.studioId;
 
-      // NOTE: Logo/Cover/About/Categories/Phone/Website are still
+      // NOTE: Logo/Cover/About/Categories/Website are still
       // local-only (StudioNotifier's `_studios` list is now the real
       // client-facing `GET /studios` directory, which this admin screen
       // has no update method for and — being client-only on the backend
@@ -768,13 +751,6 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                           decoration: const InputDecoration(labelText: 'Email Address'),
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) => v == null || v.trim().isEmpty ? 'Enter email' : null,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _phoneController,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Phone Number'),
-                          keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(

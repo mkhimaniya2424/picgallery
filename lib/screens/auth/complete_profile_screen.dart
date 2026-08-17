@@ -45,7 +45,6 @@ class CompleteProfileScreen extends ConsumerStatefulWidget {
 class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
   String? _country;
   String? _state;
   String? _city;
@@ -85,7 +84,6 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
 
     setState(() {
       _nameController.text = user!.fullName;
-      _phoneController.text = user.phone;
       _country = user.country;
       _state = user.state;
       _city = user.city;
@@ -111,7 +109,6 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
     try {
       await ref.read(authProvider.notifier).completeProfile(
             fullName: _nameController.text.trim(),
-            phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
             country: _country,
             state: _state,
             city: _city,
@@ -136,7 +133,6 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   void dispose() {
     for (final c in [
       _nameController,
-      _phoneController,
       _addressController,
       _bioController,
       _studioNameController,
@@ -219,13 +215,6 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                           validator: (v) => (v == null || v.trim().isEmpty) ? 'Studio name is required' : null,
                         ),
                       ],
-                      const SizedBox(height: AppSpacing.md),
-                      CustomTextField(
-                        label: 'Phone',
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        controller: _phoneController,
-                      ),
                       const SizedBox(height: AppSpacing.md),
                       CascadingLocationPicker(
                         initialCountry: _country,

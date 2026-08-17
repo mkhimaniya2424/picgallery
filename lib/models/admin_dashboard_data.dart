@@ -113,7 +113,6 @@ class ClientData {
   final bool isPaid;
   final double bookingValue;
   final String email;
-  final String phone;
   final DateTime? lastActive;
   final List<String> assignedGalleryIds;
   final int totalViews;
@@ -131,7 +130,6 @@ class ClientData {
     required this.isPaid,
     this.bookingValue = 0,
     this.email = '',
-    this.phone = '',
     this.lastActive,
     this.assignedGalleryIds = const [],
     this.totalViews = 0,
@@ -144,7 +142,6 @@ class ClientData {
     String? outstanding,
     GalleryStatus? galleryStatus,
     String? email,
-    String? phone,
     DateTime? lastActive,
     List<String>? assignedGalleryIds,
     int? totalViews,
@@ -162,7 +159,6 @@ class ClientData {
         isPaid: isPaid ?? this.isPaid,
         bookingValue: bookingValue ?? this.bookingValue,
         email: email ?? this.email,
-        phone: phone ?? this.phone,
         lastActive: lastActive ?? this.lastActive,
         assignedGalleryIds: assignedGalleryIds ?? this.assignedGalleryIds,
         totalViews: totalViews ?? this.totalViews,
@@ -181,7 +177,6 @@ class ClientData {
         'isPaid': isPaid,
         'bookingValue': bookingValue,
         'email': email,
-        'phone': phone,
         'lastActive': lastActive?.toIso8601String(),
         'assignedGalleryIds': assignedGalleryIds,
         'totalViews': totalViews,
@@ -200,7 +195,6 @@ class ClientData {
         isPaid: json['isPaid'] as bool,
         bookingValue: (json['bookingValue'] as num?)?.toDouble() ?? 0,
         email: json['email'] as String? ?? '',
-        phone: json['phone'] as String? ?? '',
         lastActive: json['lastActive'] != null ? DateTime.tryParse(json['lastActive'] as String) : null,
         assignedGalleryIds: (json['assignedGalleryIds'] as List?)?.cast<String>() ?? const [],
         totalViews: json['totalViews'] as int? ?? 0,

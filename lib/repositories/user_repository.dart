@@ -18,7 +18,6 @@ class UserRepository {
   /// alone.
   Future<AppUser> updateProfile({
     String? fullName,
-    String? phone,
     String? country,
     String? state,
     String? city,
@@ -54,7 +53,6 @@ class UserRepository {
     String? preferredCity,
     double? budgetMin,
     double? budgetMax,
-    String? alternatePhone,
     // Privacy & Security screen — "Download Permissions" toggle. Shared
     // by both roles.
     bool? allowDownloads,
@@ -63,7 +61,6 @@ class UserRepository {
   }) async {
     final body = <String, dynamic>{};
     if (fullName != null) body['full_name'] = fullName;
-    if (phone != null) body['phone'] = phone;
     if (country != null) body['country'] = country;
     if (state != null) body['state'] = state;
     if (city != null) body['city'] = city;
@@ -99,7 +96,6 @@ class UserRepository {
     if (preferredCity != null) body['preferred_city'] = preferredCity;
     if (budgetMin != null) body['budget_min'] = budgetMin;
     if (budgetMax != null) body['budget_max'] = budgetMax;
-    if (alternatePhone != null) body['alternate_phone'] = alternatePhone;
     if (allowDownloads != null) body['allow_downloads'] = allowDownloads;
     if (appLanguage != null) body['app_language'] = appLanguage;
 

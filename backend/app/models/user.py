@@ -118,7 +118,6 @@ class User(Base):
     preferred_city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     budget_min: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     budget_max: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    alternate_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
     agreed_to_terms: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

@@ -247,8 +247,7 @@ class DashboardClientDto {
   /// [StudioClientConnection.fromApiJson] only populates `clientData`
   /// when the viewer is the studio side, so this stays defensive).
   ///
-  /// Everything [ConnectionRead]/`ClientSummary` doesn't carry —
-  /// outstanding balance, paid status, booking value, email, phone,
+  /// outstanding balance, paid status, booking value, email,
   /// gallery status, view/download counts, activity log — is left at
   /// [ClientData]'s neutral defaults rather than fabricated, same as
   /// [StudioClientConnection.fromApiJson] already documents for its own
@@ -275,7 +274,6 @@ class DashboardClientDto {
       isPaid: base.isPaid,
       bookingValue: base.bookingValue,
       email: base.email,
-      phone: base.phone,
       lastActive: connection.respondedAt ?? connection.requestedAt,
       assignedGalleryIds: base.assignedGalleryIds,
       totalViews: base.totalViews,

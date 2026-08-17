@@ -204,7 +204,6 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                 isPaid: cd.isPaid,
                 bookingValue: cd.bookingValue,
                 email: cd.email,
-                phone: cd.phone,
                 lastActive: conn!.respondedAt ?? conn.requestedAt,
                 assignedGalleryIds: cd.assignedGalleryIds,
                 totalViews: cd.totalViews,
@@ -284,11 +283,6 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                             const SizedBox(height: 4),
                             Text(
                               c.email.isNotEmpty ? c.email : 'No email provided',
-                              style: const TextStyle(color: AppColors.subtitle, fontSize: 13, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              c.phone.isNotEmpty ? c.phone : 'No phone number',
                               style: const TextStyle(color: AppColors.subtitle, fontSize: 13, fontWeight: FontWeight.w500),
                             ),
                           ],

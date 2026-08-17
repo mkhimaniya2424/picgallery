@@ -10,7 +10,6 @@ class SignupData {
   final UserRole role;
   final String name;
   final String email;
-  final String phone;
   final String password;
   final String? studioName;
   final String? studioAddress;
@@ -20,7 +19,6 @@ class SignupData {
     required this.role,
     required this.name,
     required this.email,
-    required this.phone,
     required this.password,
     this.studioName,
     this.studioAddress,

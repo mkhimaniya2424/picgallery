@@ -24,7 +24,7 @@ class AppUser {
   final String id;
   final String fullName;
   final String email;
-  final String phone;
+
   final AppUserRole role;
   final String? studioName;
   final String? studioAddress;
@@ -77,7 +77,6 @@ class AppUser {
   final String? preferredCity;
   final double? budgetMin;
   final double? budgetMax;
-  final String? alternatePhone;
 
   // Subscription backend fields (mirrors PlatformUserRead)
   final String subscriptionStatus; // "active" | "trial" | "expired" | "none"
@@ -107,7 +106,6 @@ class AppUser {
     required this.id,
     required this.fullName,
     required this.email,
-    required this.phone,
     required this.role,
     this.studioName,
     this.studioAddress,
@@ -148,7 +146,6 @@ class AppUser {
     this.preferredCity,
     this.budgetMin,
     this.budgetMax,
-    this.alternatePhone,
     this.subscriptionStatus = 'none',
     this.currentPlan,
     this.planStartedAt,
@@ -161,7 +158,6 @@ class AppUser {
       id: json['id'] as String,
       fullName: json['full_name'] as String,
       email: json['email'] as String,
-      phone: json['phone'] as String,
       role: AppUserRole.fromJson(json['role'] as String),
       studioName: json['studio_name'] as String?,
       studioAddress: json['studio_address'] as String?,
@@ -205,7 +201,6 @@ class AppUser {
       preferredCity: json['preferred_city'] as String?,
       budgetMin: (json['budget_min'] as num?)?.toDouble(),
       budgetMax: (json['budget_max'] as num?)?.toDouble(),
-      alternatePhone: json['alternate_phone'] as String?,
       subscriptionStatus: json['subscription_status'] as String? ?? 'none',
       currentPlan: json['current_plan'] as String?,
       planStartedAt: json['plan_started_at'] != null ? DateTime.parse(json['plan_started_at'] as String) : null,
@@ -219,7 +214,6 @@ class AppUser {
       'id': id,
       'full_name': fullName,
       'email': email,
-      'phone': phone,
       'role': role.toJson(),
       'studio_name': studioName,
       'studio_address': studioAddress,
@@ -260,7 +254,6 @@ class AppUser {
       'preferred_city': preferredCity,
       'budget_min': budgetMin,
       'budget_max': budgetMax,
-      'alternate_phone': alternatePhone,
       'subscription_status': subscriptionStatus,
       'current_plan': currentPlan,
       'plan_started_at': planStartedAt?.toIso8601String(),
@@ -273,7 +266,6 @@ class AppUser {
     String? id,
     String? fullName,
     String? email,
-    String? phone,
     AppUserRole? role,
     String? studioName,
     String? studioAddress,
@@ -314,7 +306,6 @@ class AppUser {
     String? preferredCity,
     double? budgetMin,
     double? budgetMax,
-    String? alternatePhone,
     String? subscriptionStatus,
     String? currentPlan,
     DateTime? planStartedAt,
@@ -325,7 +316,6 @@ class AppUser {
       id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
-      phone: phone ?? this.phone,
       role: role ?? this.role,
       studioName: studioName ?? this.studioName,
       studioAddress: studioAddress ?? this.studioAddress,
@@ -367,7 +357,6 @@ class AppUser {
       preferredCity: preferredCity ?? this.preferredCity,
       budgetMin: budgetMin ?? this.budgetMin,
       budgetMax: budgetMax ?? this.budgetMax,
-      alternatePhone: alternatePhone ?? this.alternatePhone,
       subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
       currentPlan: currentPlan ?? this.currentPlan,
       planStartedAt: planStartedAt ?? this.planStartedAt,

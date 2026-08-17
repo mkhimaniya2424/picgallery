@@ -17,7 +17,6 @@ class StudioModel {
   final List<String> galleryUrls;
   final StudioConnectionStatus connectionStatus;
   final String email;
-  final String phone;
   final String website;
 
   /// Client-side favorite/bookmark toggle. Persisted server-side via
@@ -40,7 +39,6 @@ class StudioModel {
     required this.galleryUrls,
     required this.connectionStatus,
     required this.email,
-    required this.phone,
     required this.website,
     this.isFavorite = false,
     this.passwordHash = '',
@@ -76,7 +74,6 @@ class StudioModel {
       galleryUrls: (json['gallery_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
       connectionStatus: StudioConnectionStatus.notConnected,
       email: '',
-      phone: '',
       website: '',
       isFavorite: true,
     );
@@ -111,7 +108,6 @@ class StudioModel {
         orElse: () => StudioConnectionStatus.notConnected,
       ),
       email: '',
-      phone: '',
       website: '',
       isFavorite: json['is_favorite'] as bool? ?? false,
     );
@@ -138,7 +134,6 @@ class StudioModel {
         orElse: () => StudioConnectionStatus.notConnected,
       ),
       email: json['email'] as String? ?? '',
-      phone: json['phone'] as String? ?? '',
       website: json['website'] as String? ?? '',
       isFavorite: json['isFavorite'] as bool? ?? false,
     );
@@ -157,7 +152,6 @@ class StudioModel {
         'galleryUrls': galleryUrls,
         'connectionStatus': connectionStatus.name,
         'email': email,
-        'phone': phone,
         'website': website,
         'isFavorite': isFavorite,
       };
@@ -175,7 +169,6 @@ class StudioModel {
     List<String>? galleryUrls,
     StudioConnectionStatus? connectionStatus,
     String? email,
-    String? phone,
     String? website,
     bool? isFavorite,
   }) {
@@ -192,7 +185,6 @@ class StudioModel {
       galleryUrls: galleryUrls ?? this.galleryUrls,
       connectionStatus: connectionStatus ?? this.connectionStatus,
       email: email ?? this.email,
-      phone: phone ?? this.phone,
       website: website ?? this.website,
       isFavorite: isFavorite ?? this.isFavorite,
     );

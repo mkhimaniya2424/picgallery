@@ -21,7 +21,6 @@ abstract class AdminDashboardRepository {
   Future<ClientData> inviteClient({
     required String name,
     required String email,
-    required String phone,
     required double bookingValue,
   });
 

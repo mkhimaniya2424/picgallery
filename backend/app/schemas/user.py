@@ -145,7 +145,6 @@ class UserUpdate(BaseModel):
     preferred_city: str | None = Field(default=None, max_length=100)
     budget_min: float | None = None
     budget_max: float | None = None
-    alternate_phone: str | None = Field(default=None, max_length=30)
 
     # Privacy & Security screen — "Download Permissions" toggle. Shared
     # by both roles (unlike the studio/client-only fields above).
@@ -214,17 +213,6 @@ class MessageResponse(BaseModel):
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    # `phone` was removed from the platform (column dropped from the
-    # `users` table). Kept as an always-empty computed field — rather
-    # than deleted outright — so the Flutter `User.fromJson` (which
-    # still does `json['phone'] as String`, a non-null cast) doesn't
-    # crash on existing installs until the app itself is updated to
-    # stop expecting it.
-    @computed_field
-    @property
-    def phone(self) -> str:
-        return ""
-
     id: uuid.UUID
     full_name: str
     email: EmailStr
@@ -274,7 +262,6 @@ class UserRead(BaseModel):
     preferred_city: str | None = None
     budget_min: float | None = None
     budget_max: float | None = None
-    alternate_phone: str | None = None
 
     # Subscription fields — from the DB columns added via SQL migration.
     # Exposed as-is so the Flutter app can derive plan/status locally.

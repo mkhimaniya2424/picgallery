@@ -21,7 +21,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _phoneController;
 
   Uint8List? _avatarBytes;
 
@@ -42,16 +41,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final settings = ref.read(settingsProvider);
     _nameController = TextEditingController(text: settings.photographerName);
     _emailController = TextEditingController(text: settings.email);
-    // Phone number is not present in SettingsModel right now.
-    // Keep it as a local-only field until backend integration.
-    _phoneController = TextEditingController(text: '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -99,13 +94,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       if (!v.contains('@')) return 'Enter a valid email';
                       return null;
                     },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  CustomTextField(
-                    label: 'Phone Number',
-                    icon: Icons.phone_outlined,
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   FilledButton.icon(

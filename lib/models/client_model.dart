@@ -2,7 +2,6 @@ class ClientModel {
   final String id;
   final String name;
   final String email;
-  final String phone;
   final String passwordHash;
   final String city;
   final String state;
@@ -14,7 +13,6 @@ class ClientModel {
     required this.id,
     required this.name,
     required this.email,
-    required this.phone,
     required this.passwordHash,
     required this.city,
     required this.state,
@@ -27,7 +25,6 @@ class ClientModel {
     String? id,
     String? name,
     String? email,
-    String? phone,
     String? passwordHash,
     String? city,
     String? state,
@@ -39,7 +36,6 @@ class ClientModel {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      phone: phone ?? this.phone,
       passwordHash: passwordHash ?? this.passwordHash,
       city: city ?? this.city,
       state: state ?? this.state,
@@ -53,7 +49,6 @@ class ClientModel {
         'id': id,
         'name': name,
         'email': email,
-        'phone': phone,
         'passwordHash': passwordHash,
         'city': city,
         'state': state,
@@ -66,7 +61,6 @@ class ClientModel {
         id: json['id'] as String,
         name: json['name'] as String,
         email: json['email'] as String,
-        phone: json['phone'] as String? ?? '',
         passwordHash: json['passwordHash'] as String? ?? '',
         city: json['city'] as String? ?? '',
         state: json['state'] as String? ?? '',

@@ -77,13 +77,11 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
   Future<void> inviteClient({
     required String name,
     required String email,
-    required String phone,
     required double bookingValue,
   }) async {
     await _repo.inviteClient(
       name: name,
       email: email,
-      phone: phone,
       bookingValue: bookingValue,
     );
     await refresh();

@@ -192,7 +192,6 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   /// PUT /auth/complete-profile — final onboarding step.
   Future<void> completeProfile({
     required String fullName,
-    String? phone,
     String? country,
     String? state,
     String? city,
@@ -204,7 +203,6 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     await _mutate(() {
       return _repo.completeProfile(
         fullName: fullName,
-        phone: phone,
         country: country,
         state: state,
         city: city,

@@ -40,7 +40,6 @@ const List<String> kWeekDays = [
 const List<String> kGenderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
 /// Edit Profile screen (Task 7): Personal Details (Name, read-only
-/// Email, Phone) + the Task 6 [CascadingLocationPicker] for
 /// Country/State/City, plus (Task 8) role-specific sections —
 /// Studio Details + Social Media Links (Task 9) for photographer
 /// accounts, Preferences for client accounts — and a shared Bio field.
@@ -67,7 +66,6 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _bioController = TextEditingController();
 
   String? _country;
@@ -100,7 +98,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _preferredCityController = TextEditingController();
   final _budgetMinController = TextEditingController();
   final _budgetMaxController = TextEditingController();
-  final _alternatePhoneController = TextEditingController();
 
   bool _seeded = false;
   bool _isSaving = false;
@@ -129,7 +126,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   void _seedControllers(AppUser user) {
     _fullNameController.text = user.fullName;
-    _phoneController.text = user.phone;
     _bioController.text = user.bio ?? '';
     _country = user.country;
     _state = user.state;
@@ -162,7 +158,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _preferredCityController.text = user.preferredCity ?? '';
       _budgetMinController.text = user.budgetMin?.toString() ?? '';
       _budgetMaxController.text = user.budgetMax?.toString() ?? '';
-      _alternatePhoneController.text = user.alternatePhone ?? '';
     }
 
     _seeded = true;
@@ -210,7 +205,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     try {
       final updated = await ref.read(userRepositoryProvider).updateProfile(
             fullName: _fullNameController.text.trim(),
-            phone: _phoneController.text.trim(),
             country: _country,
             state: _state,
             city: _city,
@@ -236,7 +230,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             preferredCity: !isPhotographer ? _emptyToNull(_preferredCityController.text) : null,
             budgetMin: !isPhotographer ? _parseDouble(_budgetMinController.text) : null,
             budgetMax: !isPhotographer ? _parseDouble(_budgetMaxController.text) : null,
-            alternatePhone: !isPhotographer ? _emptyToNull(_alternatePhoneController.text) : null,
           );
       ref.read(authProvider.notifier).setUser(updated);
 
@@ -254,7 +247,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _phoneController.dispose();
     _bioController.dispose();
     _yearEstablishedController.dispose();
     _teamSizeController.dispose();
@@ -270,7 +262,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _preferredCityController.dispose();
     _budgetMinController.dispose();
     _budgetMaxController.dispose();
-    _alternatePhoneController.dispose();
     super.dispose();
   }
 
@@ -328,14 +319,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _ReadOnlyField(label: 'Email', value: user.email, icon: Icons.email_outlined),
-                      const SizedBox(height: AppSpacing.md),
-                      CustomTextField(
-                        label: 'Phone',
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        controller: _phoneController,
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Phone is required' : null,
-                      ),
                       const SizedBox(height: AppSpacing.md),
                       CustomTextField(
                         label: 'Bio',
@@ -628,13 +611,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        CustomTextField(
-          label: 'Alternate Phone',
-          icon: Icons.phone_forwarded_outlined,
-          keyboardType: TextInputType.phone,
-          controller: _alternatePhoneController,
         ),
       ],
     );

@@ -161,7 +161,6 @@ class AuthRepository {
   /// authenticated user's role is photographer.
   Future<AppUser> completeProfile({
     required String fullName,
-    String? phone,
     String? country,
     String? state,
     String? city,
@@ -174,7 +173,6 @@ class AuthRepository {
       '/auth/complete-profile',
       body: {
         'full_name': fullName,
-        'phone': phone,
         'country': country,
         'state': state,
         'city': city,

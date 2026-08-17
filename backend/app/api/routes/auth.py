@@ -383,25 +383,39 @@ def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)) -> 
 
 @router.get("/verify-email-link", response_class=HTMLResponse, include_in_schema=False)
 def verify_email_link(token: str, db: Session = Depends(get_db)) -> HTMLResponse:
-    """The link actually placed in the verification email. The Flutter
-    app has no deep-link handling set up yet, so this is a plain browser
-    page (opened from Gmail/Outlook/etc. on any device) that consumes the
-    token directly, instead of trying to hand off into the app."""
+    """The link actually placed in the verification email — opened from
+    Gmail/Outlook/etc. on any device, so this stays a plain browser page
+    that consumes the token directly rather than being an app deep link
+    itself. It then hands off into the app via the same `picgallery://`
+    custom-scheme DeepLinkService already used for payment redirects
+    (see `deep_link_service.dart`), so the user doesn't have to
+    manually switch back — auto-redirect first, with a tappable
+    fallback button in case the browser blocks the automatic one."""
     try:
         _consume_verification_token(token, db)
-        message, ok = "Your email is verified. You can go back to the picgallery app and continue.", True
+        message, ok = "Your email is verified. Taking you back to the picgallery app...", True
     except HTTPException as exc:
         message, ok = exc.detail, False
 
     color = "#16A34A" if ok else "#DC2626"
+    app_link = "picgallery://email-verified"
+    redirect_script = f'<script>window.location.href = "{app_link}";</script>' if ok else ""
+    button = (
+        f'<p style="margin-top:24px;"><a href="{app_link}" '
+        'style="background:#7C3AED;color:#fff;padding:14px 28px;border-radius:10px;'
+        'text-decoration:none;font-weight:600;display:inline-block;">Open picgallery app</a></p>'
+        if ok
+        else ""
+    )
     return HTMLResponse(
         f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>picgallery — Email Verification</title></head>
+<html><head><meta charset="utf-8"><title>picgallery — Email Verification</title>{redirect_script}</head>
 <body style="font-family:-apple-system,Arial,sans-serif;display:flex;min-height:100vh;
              align-items:center;justify-content:center;margin:0;background:#F5F3FF;">
   <div style="text-align:center;padding:40px;max-width:420px;">
     <h2 style="color:{color};">{'Verified!' if ok else 'Verification failed'}</h2>
     <p style="color:#444;">{message}</p>
+    {button}
   </div>
 </body></html>"""
     )

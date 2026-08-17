@@ -47,7 +47,6 @@ _CLIENT_ONLY_FIELDS = {
     "preferred_city",
     "budget_min",
     "budget_max",
-    "alternate_phone",
 }
 
 # Fields where the Flutter screen currently sends "" (not null) to mean
