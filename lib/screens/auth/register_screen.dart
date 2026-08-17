@@ -114,9 +114,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _isSubmitting = false);
 
     // register() already returns an access token and logs the user
-    // in (unverified), so go straight into the email-verification
-    // step with the real account's email/role.
-    Navigator.of(context).pushNamed(AppRoutes.emailVerification,
+    // in (unverified), so go straight into the verification-pending
+    // step with the real account's email/role. (Uses
+    // VerificationPendingScreen, not the dummy EmailVerificationScreen,
+    // since only the former's Resend Email / Continue buttons actually
+    // call the backend.)
+    Navigator.of(context).pushNamed(AppRoutes.verificationPending,
         arguments: {'email': _emailController.text.trim(), 'role': widget.role});
   }
 
