@@ -169,11 +169,17 @@ class User(Base):
 
     # Subscription / billing fields — added via SQL migration (not yet in
     # alembic), matching the columns already present in the database.
-    # plan_status: "active" | "inactive" | "expired"  (DB: varchar)
+    # plan_status: "active" | "inactive" | "expired"  (DB: varchar, NOT NULL)
     # plan_expiry: when the current plan ends  (DB: timestamp)
     # trial_used: whether the free trial has been consumed  (DB: bool)
     # plan_started_at: when the current plan was activated  (DB: timestamptz)
-    plan_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    #
+    # plan_status is NOT NULL at the database level even though it was
+    # previously typed as nullable here — that mismatch let new-user
+    # INSERTs (signup, Google/Apple sign-in) fail with a NotNullViolation
+    # since nothing set this column. default="inactive" covers any other
+    # code path that constructs a User() without setting it explicitly.
+    plan_status: Mapped[str] = mapped_column(String(20), nullable=False, default="inactive", server_default="inactive")
     plan_expiry: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     plan_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

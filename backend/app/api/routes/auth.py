@@ -137,7 +137,7 @@ def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Sessi
     user = User(
         full_name=payload.full_name,
         email=payload.email,
-        phone="",
+        phone=payload.phone,
         hashed_password=hash_password(payload.password),
         role=payload.role,
         studio_name=payload.studio_name,
@@ -146,6 +146,10 @@ def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Sessi
         agreed_to_terms=payload.agreed_to_terms,
         email_verification_token=verification_token,
         email_verification_sent_at=datetime.now(timezone.utc),
+        # The `plan_status` column has a NOT NULL constraint at the
+        # database level; every new account must get an explicit value
+        # or the INSERT fails. "inactive" means "no active paid plan yet".
+        plan_status="inactive",
     )
     db.add(user)
     db.commit()
@@ -262,6 +266,9 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
             provider_user_id=identity.provider_user_id,
             agreed_to_terms=True,
             is_email_verified=True,
+            # See matching comment in the email/password signup path above:
+            # the DB requires a non-null plan_status on every new user row.
+            plan_status="inactive",
         )
         db.add(user)
     else:
