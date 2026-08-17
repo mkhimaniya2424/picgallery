@@ -180,6 +180,7 @@ class User(Base):
     # INSERTs (signup, Google/Apple sign-in) fail with a NotNullViolation
     # since nothing set this column. default="inactive" covers any other
     # code path that constructs a User() without setting it explicitly.
+    current_plan: Mapped[str | None] = mapped_column(String(20), nullable=True)
     plan_status: Mapped[str] = mapped_column(String(20), nullable=False, default="inactive", server_default="inactive")
     plan_expiry: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

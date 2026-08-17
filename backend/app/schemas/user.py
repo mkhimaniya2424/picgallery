@@ -265,33 +265,24 @@ class UserRead(BaseModel):
 
     # Subscription fields — from the DB columns added via SQL migration.
     # Exposed as-is so the Flutter app can derive plan/status locally.
-    plan_status: str | None = None        # "active" | "inactive" | None
+    current_plan: str | None = None       # "trial" | "pro" | "premium" | None
+    plan_status: str | None = None        # "active" | "inactive" | "expired" | None
     plan_expiry: datetime | None = None   # UTC expiry timestamp
     trial_used: bool = False              # whether free trial has been used
     plan_started_at: datetime | None = None
 
     # ── Computed convenience fields for the Flutter AppUser model ────────────
-    # Flutter reads `subscription_status` and `current_plan` directly;
-    # these are derived from plan_status / trial_used so the app doesn't
-    # need any extra logic beyond what it already has.
+    # Flutter reads `subscription_status` and `current_plan` directly.
+    # We map plan_status to subscription_status to match what Flutter expects.
     @computed_field
     @property
     def subscription_status(self) -> str:
         """Maps DB plan_status to the Flutter app's expected values."""
         if self.plan_status == "active":
             return "active"
+        if self.plan_status == "expired":
+            return "expired"
         return "none"
-
-    @computed_field
-    @property
-    def current_plan(self) -> str | None:
-        """Derived from trial_used and plan_status.
-        trial_used=True on an active plan → 'pro' (they paid for a plan).
-        trial_used=False on an active plan → 'trial' (still on free trial).
-        """
-        if self.plan_status != "active":
-            return None
-        return "pro" if self.trial_used else "trial"
 
     @field_validator(
         "specializations",
