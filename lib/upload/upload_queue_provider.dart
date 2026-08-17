@@ -11,6 +11,8 @@ import '../services/media_picker_service.dart' show MediaContentType;
 import '../storage/upload_queue_local_store.dart';
 
 import 'upload_job_model.dart';
+import 'upload_media_prep.dart';
+import 'upload_network_gate.dart';
 import 'upload_queue_state.dart';
 
 /// Controller/notifier for the Upload Queue.
@@ -275,6 +277,13 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       final s = state.value;
       if (s == null) return;
 
+      // Task 4: real, device-level Wi-Fi-only enforcement driven by the
+      // global `settings.wifiOnlyUploads` toggle — checked once per tick
+      // and reused below for both "start the next queued job" and
+      // "pause anything already uploading" so a network drop mid-upload
+      // is caught too, not just at start time.
+      final gate = await canUploadNow(ref);
+
       final anyUploading =
           s.jobs.any((j) => j.status == UploadJobStatus.uploading);
       final hasQueued = s.jobs.any((j) => j.status == UploadJobStatus.queued);
@@ -285,12 +294,21 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         if (idx != -1) {
           final job = s.jobs[idx];
 
-          if (job.wifiOnly && _simulateCellular) {
-            // Block and pause due to WiFi-only option on Cellular network
+          final blockedBySimulation = job.wifiOnly && _simulateCellular;
+          final blockedByRealGate = !gate.canUpload;
+
+          if (blockedBySimulation || blockedByRealGate) {
+            // Block and queue the job instead of silently uploading over
+            // mobile data — either the per-batch WiFi-only option was
+            // tripped by the dev "simulate cellular" toggle, or the
+            // global Settings > Wi-Fi Only Uploads gate found no real
+            // Wi-Fi connection right now.
             final updatedJobs = [...s.jobs];
             updatedJobs[idx] = job.copyWith(
               status: UploadJobStatus.paused,
-              errorMessage: "Paused: WiFi required (on Cellular Network)",
+              errorMessage: blockedBySimulation
+                  ? "Paused: WiFi required (on Cellular Network)"
+                  : (gate.reason ?? "Waiting for Wi-Fi to upload"),
             );
             state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
             await _saveQueue();
@@ -306,15 +324,19 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       // Cellular network check mid-upload — same caveat as pause/cancel:
       // this can't abort bytes already handed to `package:http`, only
       // update what the UI shows for a job that hasn't finished yet.
-      if (_simulateCellular) {
-        final blocked = s.jobs.where(
-            (j) => j.status == UploadJobStatus.uploading && j.wifiOnly);
+      if (_simulateCellular || !gate.canUpload) {
+        final blocked = s.jobs.where((j) =>
+            j.status == UploadJobStatus.uploading &&
+            (j.wifiOnly || !gate.canUpload));
         if (blocked.isNotEmpty) {
           final updatedJobs = s.jobs.map((j) {
-            if (j.status == UploadJobStatus.uploading && j.wifiOnly) {
+            if (j.status == UploadJobStatus.uploading &&
+                (j.wifiOnly || !gate.canUpload)) {
               return j.copyWith(
                 status: UploadJobStatus.paused,
-                errorMessage: "Paused: WiFi required (on Cellular Network)",
+                errorMessage: (!gate.canUpload && (gate.reason != null))
+                    ? gate.reason!
+                    : "Paused: WiFi required (on Cellular Network)",
               );
             }
             return j;
@@ -403,10 +425,24 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       if (bytes == null) {
         throw StateError('No bytes available for this file');
       }
-      await _mediaRepo.uploadMedia(
+
+      final contentType = MediaContentType.forFileName(job.fileName);
+
+      // Task 5: honor the global "Upload Resolution" setting (Settings >
+      // Original/High) — same [prepareMediaBytesForUpload] helper the
+      // single-file uploader uses, so "High" compresses photos to
+      // ~2048px long edge / JPEG quality 85 consistently regardless of
+      // which upload path a file went through.
+      final preparedBytes = await prepareMediaBytesForUpload(
+        ref,
         bytes: bytes,
+        contentType: contentType,
+      );
+
+      await _mediaRepo.uploadMedia(
+        bytes: preparedBytes,
         fileName: job.fileName,
-        contentType: MediaContentType.forFileName(job.fileName),
+        contentType: contentType,
         albumId: job.albumId,
         folderId: job.folderId,
         onSendProgress: (sent, total) => _onRealProgress(job.id, sent, total),

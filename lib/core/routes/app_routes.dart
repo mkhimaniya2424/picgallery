@@ -23,6 +23,7 @@ import '../../screens/admin/admin_main_nav_screen.dart';
 import '../../screens/shared/edit_profile_screen.dart';
 import '../../screens/shared/delete_account_screen.dart';
 import '../../screens/shared/app_permissions_screen.dart';
+import '../../screens/shared/pin_unlock_screen.dart';
 
 import '../../screens/admin/client_details_screen.dart';
 import '../../screens/admin/admin_analytics_screen.dart';
@@ -91,6 +92,18 @@ class PhotoEditorArgs {
   const PhotoEditorArgs({required this.media});
 }
 
+/// Arguments for [AppRoutes.pinUnlock] — see splash_screen.dart, the only
+/// place this route is pushed from. [destinationRoute] is whichever route
+/// splash would have gone to directly had the PIN gate not been enabled
+/// (Onboarding or Role Selection) — [PinUnlockScreen] pushes it itself
+/// once the PIN matches, using its own (still-mounted) context rather
+/// than one captured from the splash screen that pushed it.
+class PinUnlockArgs {
+  final String correctPin;
+  final String destinationRoute;
+  const PinUnlockArgs({required this.correctPin, required this.destinationRoute});
+}
+
 /// Lets a screen (e.g. [MediaGridScreen]) know when it has become visible
 /// again after a route pushed on top of it was popped.
 final routeObserver = RouteObserver<ModalRoute<void>>();
@@ -104,6 +117,7 @@ class AppRoutes {
   AppRoutes._();
 
   static const String splash = '/';
+  static const String pinUnlock = '/pin-unlock';
   static const String onboarding = '/onboarding';
   static const String roleSelection = '/role-selection';
   static const String login = '/login';
@@ -214,6 +228,12 @@ class AppRoutes {
     switch (settings.name) {
       case splash:
         return _fade(const SplashScreen());
+      case pinUnlock:
+        final args = settings.arguments as PinUnlockArgs;
+        return _fade(PinUnlockScreen(
+          correctPin: args.correctPin,
+          destinationRoute: args.destinationRoute,
+        ));
       case onboarding:
         return _fade(const OnboardingScreen());
       case roleSelection:

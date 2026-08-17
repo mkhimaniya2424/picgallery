@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/media_model.dart';
 import '../providers/auth_providers.dart';
 import '../services/media_upload_service.dart';
+import 'upload_media_prep.dart';
+import 'upload_network_gate.dart';
 import 'upload_state.dart';
 
 
@@ -15,6 +17,7 @@ import 'upload_state.dart';
 final uploadProvider =
     StateNotifierProvider.autoDispose<UploadController, UploadState>(
   (ref) => UploadController(
+    ref: ref,
     mediaUploadService: MediaUploadService(
       apiClient: ref.read(apiClientProvider),
     ),
@@ -24,10 +27,12 @@ final uploadProvider =
 
 /// Riverpod notifier for uploading a single file.
 class UploadController extends StateNotifier<UploadState> {
-  UploadController({required MediaUploadService mediaUploadService})
-      : _service = mediaUploadService,
+  UploadController({required Ref ref, required MediaUploadService mediaUploadService})
+      : _ref = ref,
+        _service = mediaUploadService,
         super(const UploadState.initial());
 
+  final Ref _ref;
   final MediaUploadService _service;
 
   /// Uploads the given file bytes to the backend.
@@ -58,11 +63,37 @@ class UploadController extends StateNotifier<UploadState> {
       currentFileName: fileName,
     );
 
+    // Task 4: honor the global "Wi-Fi Only Uploads" setting for this
+    // entry point too — same [canUploadNow] gate the batch queue uses,
+    // so the policy isn't duplicated/half-implemented per upload path.
+    // A single upload has no queue to defer into, so a blocked upload
+    // simply fails fast with a clear, actionable message rather than
+    // silently sending over mobile data.
+    final gate = await canUploadNow(_ref);
+    if (!gate.canUpload) {
+      final message = gate.reason ?? 'Waiting for Wi-Fi to upload';
+      state = state.copyWith(
+        status: UploadStatus.failure,
+        errorMessage: message,
+      );
+      throw StateError(message);
+    }
+
     final bytes = await File(filePath).readAsBytes();
+
+    // Task 5: honor the global "Upload Resolution" setting — same
+    // [prepareMediaBytesForUpload] helper the batch queue uses, so
+    // "High" vs "Original" behaves identically no matter which upload
+    // path the file went through.
+    final preparedBytes = await prepareMediaBytesForUpload(
+      _ref,
+      bytes: bytes,
+      contentType: contentType,
+    );
 
     try {
       MediaModel created = await _service.upload(
-        bytes: bytes,
+        bytes: preparedBytes,
         fileName: fileName,
         contentType: contentType,
         albumId: albumId,

@@ -325,14 +325,20 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                   settings.securityPinEnabled ? 'PIN Enabled' : 'PIN Disabled',
               onTap: () => _setupSecurityPin(settings),
             ),
+            // Only shown once a PIN actually exists — this toggle controls
+            // whether that PIN is *required at launch*, which is a
+            // separate concept from whether a PIN is set at all. Previously
+            // this reused `securityPinEnabled` itself, so toggling it would
+            // have silently disabled the PIN instead of just the
+            // launch-enforcement behavior.
             if (settings.securityPinEnabled)
               _SettingsToggleRow(
                 icon: Icons.fingerprint_rounded,
                 title: 'Require PIN on Launch',
-                value: settings.securityPinEnabled,
+                value: settings.requirePinOnLaunch,
                 onChanged: (val) async {
                   await ref.read(settingsProvider.notifier).updateSettings(
-                      settings.copyWith(securityPinEnabled: val));
+                      settings.copyWith(requirePinOnLaunch: val));
                 },
               ),
             _SettingsToggleRow(
@@ -396,8 +402,18 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               iconColor: AppColors.error,
               titleColor: AppColors.error,
               showChevron: false,
-              onTap: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
+              onTap: () async {
+                final navigator = Navigator.of(context);
+                // Clear the persisted token/session first — previously this
+                // button only navigated away and left the auth token intact,
+                // so the studio was never actually logged out.
+                try {
+                  await ref.read(authProvider.notifier).logout();
+                } catch (_) {
+                  // Best-effort: still navigate away even if some part of
+                  // logout (e.g. clearing the cached Google session) fails.
+                }
+                navigator.pushNamedAndRemoveUntil(
                     AppRoutes.roleSelection, (route) => false);
               },
             ),

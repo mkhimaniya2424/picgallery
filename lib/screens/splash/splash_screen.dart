@@ -1,24 +1,36 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/user.dart';
+import '../../providers/auth_providers.dart';
 import '../../storage/onboarding_local_store.dart';
 import '../../widgets/common/screen_backdrop.dart';
 
 /// Animated splash: logo scales/fades in over the gradient backdrop, the
-/// tagline fades in after, then a soft loading dash before auto-navigating
-/// to Onboarding.
-class SplashScreen extends StatefulWidget {
+/// tagline fades in after, then a soft loading dash before auto-navigating.
+///
+/// Also doubles as the app's session bootstrap: while the animation plays,
+/// [authProvider] resolves whatever [AuthRepository.restoreSession] found
+/// (a persisted token from a previous "Remember me" login, or a Google/Apple
+/// sign-in, which always persists). If that resolves to a logged-in
+/// [AppUser], we skip straight past Role Selection/Login to that user's
+/// home — same priority order [LoginScreen._navigateAfterAuth] uses, so a
+/// still-valid session is only ever asked to log in again if
+/// [AuthNotifier.build] itself found no valid token (missing, or rejected
+/// as expired/invalid by GET /auth/me).
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _logoScale;
@@ -53,10 +65,62 @@ class _SplashScreenState extends State<SplashScreen>
       final alreadySeenOnboarding =
           await OnboardingLocalStore().hasSeenOnboarding();
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(
-        alreadySeenOnboarding ? AppRoutes.roleSelection : AppRoutes.onboarding,
-      );
+
+      if (!alreadySeenOnboarding) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+        return;
+      }
+
+      // Wait for AuthNotifier.build() to finish restoring whatever
+      // AuthRepository.restoreSession() found (persisted token -> GET
+      // /auth/me). authProvider.future resolves once that settles, whether
+      // it lands on a logged-in AppUser or null (no token / rejected).
+      AppUser? user;
+      try {
+        user = await ref.read(authProvider.future);
+      } catch (_) {
+        // AuthNotifier.build() already swallows expected failures (missing/
+        // expired/rejected token) into a `null` result -- this only guards
+        // against something unexpected (e.g. no network at all on launch).
+        // Either way, fall back to a normal logged-out start rather than
+        // getting the user stuck on the splash screen.
+        user = null;
+      }
+      if (!mounted) return;
+
+      if (user != null) {
+        _navigateAfterAuth(user);
+        return;
+      }
+
+      Navigator.of(context).pushReplacementNamed(AppRoutes.roleSelection);
     });
+  }
+
+  /// Same priority order as [LoginScreen._navigateAfterAuth]: unverified
+  /// email first, then an incomplete profile, and only then role-based
+  /// home. Kept in sync with that method deliberately -- see its doc
+  /// comment.
+  void _navigateAfterAuth(AppUser user) {
+    final legacyRole =
+        user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final navigator = Navigator.of(context);
+
+    if (!user.isEmailVerified) {
+      navigator.pushReplacementNamed(
+        AppRoutes.verificationPending,
+        arguments: {'email': user.email, 'role': legacyRole},
+      );
+      return;
+    }
+
+    if (!user.hasCompletedProfile) {
+      navigator.pushReplacementNamed(AppRoutes.completeProfile, arguments: legacyRole);
+      return;
+    }
+
+    final destination = legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
+    navigator.pushReplacementNamed(destination);
   }
 
   @override

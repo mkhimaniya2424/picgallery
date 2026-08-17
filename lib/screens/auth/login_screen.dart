@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
+  bool _rememberMe = true;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -354,4 +354,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     );
   }
 }
-
