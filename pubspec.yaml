@@ -1,90 +1,76 @@
-  name: picgallery
-  description: "PicGallery — Premium Photo & Video Management Platform"
-  publish_to: 'none'
-  version: 1.0.0+7
-
-  environment:
-    sdk: '>=3.4.0 <4.0.0'
-
-  dependencies:
-    flutter:
-      sdk: flutter
-    flutter_localizations:
-      sdk: flutter
-    cupertino_icons: ^1.0.8
-    google_fonts: ^6.2.1
-
-    # Riverpod state management — used app-wide (auth, admin dashboard,
-    # albums/folders/media/search/settings/upload-queue providers).
-    flutter_riverpod: ^2.6.1
-
-    # On-device persistence — Admin Dashboard, and the new local-only
-    # albums/folders/media/onboarding/settings/share-link/upload-queue
-    # feature set (none of this touches your FastAPI backend).
-    hive: ^2.2.3
-    hive_flutter: ^1.1.0
-
-    # Real auth flow wired to the FastAPI backend (POST /auth/register,
-    # /login, PUT /auth/complete-profile, /auth/permissions,
-    # POST /auth/verify-email, /send-verification-email).
-    http: ^1.2.2
-    # Stores the JWT access token between app launches so authenticated
-    # endpoints don't need to re-login every session.
-    flutter_secure_storage: ^9.2.2
-    # Also used to open picgallery.in for plan purchases (subscription
-    # plans now redirect to the website instead of paying in-app).
-    url_launcher: ^6.3.2
-
-    # Subscription persistence — stores activatedAt / expiresAt across restarts
-    shared_preferences: ^2.3.0
-
-    # Local push notifications — subscription expiry reminders (30d / 15d / 1d)
-    flutter_local_notifications: ^22.2.0
-    # Required by flutter_local_notifications for scheduling at exact datetimes
-    timezone: ^0.11.1
-
-    # Sign in with Google / Sign in with Apple, wired up in
-    # services/social_auth_service.dart and posted to the backend's
-    # POST /auth/social-login (see repositories/auth_repository.dart).
-    google_sign_in: ^6.2.2
-    sign_in_with_apple: ^6.1.4
-
-    # Added for the designer's new local-only feature set: albums, folders,
-    # media grid/trash, upload queue, photo editor, and sharing.
-    video_player: ^2.9.2
-    file_picker: ^8.1.2
-    image_picker: ^1.1.2
-    share_plus: ^12.0.2
-    file_saver: ^0.2.14
-    qr_flutter: ^4.1.0
-    csc_picker_plus: ^0.0.3
-    # Date formatting for chat screens
-    intl: ^0.20.2
-
-    # SHA-256 password hashing (core/utils/password_hasher.dart)
-    crypto: ^3.0.6
-    gal: ^2.3.1
-    app_links: ^7.0.0
-    connectivity_plus: ^7.3.1
-    image: ^4.8.0
-
-    # Real OS-level permission prompts (camera / photo library / push),
-    # wired into services/permission_service.dart and the onboarding
-    # permission screens.
-    permission_handler: ^11.3.1
-
-  dev_dependencies:
-    flutter_test:
-      sdk: flutter
-    flutter_lints: ^4.0.0
-    flutter_launcher_icons: ^0.14.4
-
+name: picgallery
+description: "PicGallery — Premium Photo & Video Management Platform"
+publish_to: 'none'
+version: 1.0.0+9
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+dependencies:
   flutter:
-    uses-material-design: true
-    assets:
-      - assets/images/
-
-  flutter_launcher_icons:
-    android: true
-    ios: true
-    image_path: "assets/images/app_logo.png"
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  # Riverpod state management — used app-wide (auth, admin dashboard,
+  # albums/folders/media/search/settings/upload-queue providers).
+  flutter_riverpod: ^2.6.1
+  # On-device persistence — Admin Dashboard, and the new local-only
+  # albums/folders/media/onboarding/settings/share-link/upload-queue
+  # feature set (none of this touches your FastAPI backend).
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  # Real auth flow wired to the FastAPI backend (POST /auth/register,
+  # /login, PUT /auth/complete-profile, /auth/permissions,
+  # POST /auth/verify-email, /send-verification-email).
+  http: ^1.2.2
+  # Stores the JWT access token between app launches so authenticated
+  # endpoints don't need to re-login every session.
+  flutter_secure_storage: ^9.2.2
+  # Also used to open picgallery.in for plan purchases (subscription
+  # plans now redirect to the website instead of paying in-app).
+  url_launcher: ^6.3.2
+  # Subscription persistence — stores activatedAt / expiresAt across restarts
+  shared_preferences: ^2.3.0
+  # Local push notifications — subscription expiry reminders (30d / 15d / 1d)
+  flutter_local_notifications: ^22.2.0
+  # Required by flutter_local_notifications for scheduling at exact datetimes
+  timezone: ^0.11.1
+  # Sign in with Google / Sign in with Apple, wired up in
+  # services/social_auth_service.dart and posted to the backend's
+  # POST /auth/social-login (see repositories/auth_repository.dart).
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.4
+  # Added for the designer's new local-only feature set: albums, folders,
+  # media grid/trash, upload queue, photo editor, and sharing.
+  video_player: ^2.9.2
+  file_picker: ^8.1.2
+  image_picker: ^1.1.2
+  share_plus: ^12.0.2
+  file_saver: ^0.2.14
+  qr_flutter: ^4.1.0
+  csc_picker_plus: ^0.0.3
+  # Date formatting for chat screens
+  intl: ^0.20.2
+  # SHA-256 password hashing (core/utils/password_hasher.dart)
+  crypto: ^3.0.6
+  gal: ^2.3.1
+  app_links: ^7.0.0
+  connectivity_plus: ^7.3.1
+  image: ^4.8.0
+  # Real OS-level permission prompts (camera / photo library / push),
+  # wired into services/permission_service.dart and the onboarding
+  # permission screens.
+  permission_handler: ^11.3.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_logo.png"
