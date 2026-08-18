@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/utils/app_exceptions.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/settings_model.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/studio_provider.dart';
 import '../../providers/user_providers.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'edit_studio_profile_screen.dart';
@@ -221,8 +223,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Restore completed successfully')),
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const _RestoreProgressDialog(),
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
@@ -325,14 +329,20 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                   settings.securityPinEnabled ? 'PIN Enabled' : 'PIN Disabled',
               onTap: () => _setupSecurityPin(settings),
             ),
+            // Only shown once a PIN actually exists — this toggle controls
+            // whether that PIN is *required at launch*, which is a
+            // separate concept from whether a PIN is set at all. Previously
+            // this reused `securityPinEnabled` itself, so toggling it would
+            // have silently disabled the PIN instead of just the
+            // launch-enforcement behavior.
             if (settings.securityPinEnabled)
               _SettingsToggleRow(
                 icon: Icons.fingerprint_rounded,
                 title: 'Require PIN on Launch',
-                value: settings.securityPinEnabled,
+                value: settings.requirePinOnLaunch,
                 onChanged: (val) async {
                   await ref.read(settingsProvider.notifier).updateSettings(
-                      settings.copyWith(securityPinEnabled: val));
+                      settings.copyWith(requirePinOnLaunch: val));
                 },
               ),
             _SettingsToggleRow(
@@ -396,8 +406,18 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               iconColor: AppColors.error,
               titleColor: AppColors.error,
               showChevron: false,
-              onTap: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
+              onTap: () async {
+                final navigator = Navigator.of(context);
+                // Clear the persisted token/session first — previously this
+                // button only navigated away and left the auth token intact,
+                // so the studio was never actually logged out.
+                try {
+                  await ref.read(authProvider.notifier).logout();
+                } catch (_) {
+                  // Best-effort: still navigate away even if some part of
+                  // logout (e.g. clearing the cached Google session) fails.
+                }
+                navigator.pushNamedAndRemoveUntil(
                     AppRoutes.roleSelection, (route) => false);
               },
             ),
@@ -632,63 +652,106 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
   }
 }
 
-/// A self-contained backup-progress dialog that uses a real repeating
-/// timer so the bar actually fills to 100 % and the Finish button appears.
-class _BackupProgressDialog extends StatefulWidget {
+enum _BackupStatus { inProgress, success, error }
+
+/// Backup-progress dialog wired to the real `POST /studios/me/backup`
+/// call (Task 6.5) — sends the current [SettingsModel] as-is via
+/// [StudioProfileRepository.createBackup]. `ConsumerStatefulWidget` so
+/// it can read `settingsProvider`/`studioProfileRepositoryProvider`
+/// itself rather than the caller threading them through as
+/// constructor args. Error handling mirrors `_showLanguageSelector`'s
+/// try/catch-`ApiException` shape, plus a Retry action since this
+/// dialog (unlike the language selector's snackbar) stays open long
+/// enough to offer one.
+class _BackupProgressDialog extends ConsumerStatefulWidget {
   const _BackupProgressDialog();
 
   @override
-  State<_BackupProgressDialog> createState() => _BackupProgressDialogState();
+  ConsumerState<_BackupProgressDialog> createState() => _BackupProgressDialogState();
 }
 
-class _BackupProgressDialogState extends State<_BackupProgressDialog> {
-  double _progress = 0.0;
+class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
+  _BackupStatus _status = _BackupStatus.inProgress;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _startProgress();
+    _runBackup();
   }
 
-  Future<void> _startProgress() async {
-    // Advance 25 % every 400 ms — reaches 100 % in ~1.6 s.
-    for (int i = 1; i <= 4; i++) {
-      await Future.delayed(const Duration(milliseconds: 400));
+  Future<void> _runBackup() async {
+    setState(() {
+      _status = _BackupStatus.inProgress;
+      _errorMessage = null;
+    });
+
+    final settings = ref.read(settingsProvider);
+    try {
+      await ref.read(studioProfileRepositoryProvider).createBackup(settings.toJson());
       if (!mounted) return;
-      setState(() => _progress = i * 0.25);
+      setState(() => _status = _BackupStatus.success);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _status = _BackupStatus.error;
+        _errorMessage = e.message;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isError = _status == _BackupStatus.error;
+    final isDone = _status == _BackupStatus.success;
+
     return AlertDialog(
       backgroundColor: AppColors.surface,
-      title: const Text(
-        'Backing Up Data',
-        style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+      title: Text(
+        isError ? 'Backup Failed' : 'Backing Up Data',
+        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Preparing your local gallery and configurations backup archive...',
-            style: TextStyle(color: AppColors.subtitle, fontSize: 13.5),
-          ),
-          const SizedBox(height: 20),
-          LinearProgressIndicator(
-            value: _progress,
-            color: AppColors.primary,
-            backgroundColor: AppColors.border,
-          ),
-          const SizedBox(height: 8),
           Text(
-            '${(_progress * 100).round()}% Completed',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            isError
+                ? (_errorMessage ?? 'Something went wrong. Please try again.')
+                : isDone
+                    ? 'Your studio settings backup has been saved.'
+                    : 'Backing up your studio settings and configurations...',
+            style: const TextStyle(color: AppColors.subtitle, fontSize: 13.5),
           ),
+          if (!isError) ...[
+            const SizedBox(height: 20),
+            LinearProgressIndicator(
+              value: isDone ? 1.0 : null,
+              color: AppColors.primary,
+              backgroundColor: AppColors.border,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isDone ? '100% Completed' : 'Uploading…',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ],
         ],
       ),
       actions: [
-        if (_progress >= 1.0)
+        if (isError) ...[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle)),
+          ),
+          ElevatedButton(
+            onPressed: _runBackup,
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text(
+              'Retry',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ] else if (isDone)
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
@@ -698,6 +761,154 @@ class _BackupProgressDialogState extends State<_BackupProgressDialog> {
             ),
           ),
       ],
+    );
+  }
+}
+
+enum _RestoreStatus { inProgress, success, error, notFound }
+
+/// Mirrors [_BackupProgressDialog]'s shape (Task 7): fetches the latest
+/// backup via `GET /studios/me/backup` (`getLatestBackup()`), applies its
+/// payload to [settingsProvider] so the restored values actually take
+/// effect and persist locally, and only reports success once that's done
+/// — never on a hardcoded timer.
+class _RestoreProgressDialog extends ConsumerStatefulWidget {
+  const _RestoreProgressDialog();
+
+  @override
+  ConsumerState<_RestoreProgressDialog> createState() => _RestoreProgressDialogState();
+}
+
+class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> {
+  _RestoreStatus _status = _RestoreStatus.inProgress;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _runRestore();
+  }
+
+  Future<void> _runRestore() async {
+    setState(() {
+      _status = _RestoreStatus.inProgress;
+      _errorMessage = null;
+    });
+
+    try {
+      final backup = await ref.read(studioProfileRepositoryProvider).getLatestBackup();
+      final restoredSettings = SettingsModel.fromJson(backup.payload);
+      await ref.read(settingsProvider.notifier).updateSettings(restoredSettings);
+      if (!mounted) return;
+      setState(() => _status = _RestoreStatus.success);
+    } on NotFoundException {
+      if (!mounted) return;
+      setState(() => _status = _RestoreStatus.notFound);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _status = _RestoreStatus.error;
+        _errorMessage = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isError = _status == _RestoreStatus.error;
+    final isNotFound = _status == _RestoreStatus.notFound;
+    final isDone = _status == _RestoreStatus.success;
+    final isFailure = isError || isNotFound;
+
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: Text(
+        isNotFound
+            ? 'No Backup Found'
+            : isError
+                ? 'Restore Failed'
+                : 'Restoring Data',
+        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isNotFound
+                ? 'This studio has never made a backup, so there is nothing to restore yet.'
+                : isError
+                    ? (_errorMessage ?? 'Something went wrong. Please try again.')
+                    : isDone
+                        ? 'Your studio settings have been restored from the latest backup.'
+                        : 'Fetching your latest backup and restoring settings...',
+            style: const TextStyle(color: AppColors.subtitle, fontSize: 13.5),
+          ),
+          if (!isFailure) ...[
+            const SizedBox(height: 20),
+            LinearProgressIndicator(
+              value: isDone ? 1.0 : null,
+              color: AppColors.primary,
+              backgroundColor: AppColors.border,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isDone ? '100% Completed' : 'Restoring…',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        if (isNotFound) ...[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerBackupFromDialogContext();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text(
+              'Back Up Now',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ] else if (isError) ...[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle)),
+          ),
+          ElevatedButton(
+            onPressed: _runRestore,
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text(
+              'Retry',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ] else if (isDone)
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text(
+              'Finish',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Reuses the same backup flow the "Cloud Backup Now" row triggers, so
+  /// tapping "Back Up Now" from the "nothing to restore yet" state doesn't
+  /// need a second, slightly-different code path.
+  void _triggerBackupFromDialogContext() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _BackupProgressDialog(),
     );
   }
 }

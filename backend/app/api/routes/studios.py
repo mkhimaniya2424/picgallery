@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,11 +13,13 @@ from app.db.session import get_db
 from app.models.connection import ConnectionInitiator, ConnectionStatus, StudioClientConnection
 from app.models.favorite import StudioFavorite
 from app.models.notification import Notification, NotificationType
+from app.models.studio_backup import StudioBackup
 from app.models.studio_portfolio import StudioPortfolioImage
 from app.models.user import User, UserRole
 from app.schemas.studio import (
     AvatarUploadResponse,
     FavoriteStudioRead,
+    StudioBackupRead,
     StudioDirectoryItem,
     StudioPortfolioImageRead,
     StudioSummary,
@@ -401,3 +404,53 @@ def delete_portfolio_image(
     db.commit()
 
     return MessageResponse(message="Portfolio image removed.")
+
+
+# --------------------------------------------------------------------------
+# Backup & Restore (Task 6). There's no settings table server-side today
+# (settings live in the app's local Hive store — see
+# `settings_local_store.dart`), so `POST /studios/me/backup` just stores
+# whatever JSON blob the app sends as an opaque snapshot, and
+# `GET /studios/me/backup` hands back the most recent one. Restore
+# (Task 7) reads `payload` straight off the response.
+# --------------------------------------------------------------------------
+
+@router.post("/me/backup", response_model=StudioBackupRead, status_code=status.HTTP_201_CREATED)
+def create_backup(
+    payload: dict[str, Any] = Body(...),
+    current_user: User = Depends(get_current_studio_user),
+    db: Session = Depends(get_db),
+) -> StudioBackupRead:
+    """Saves a new settings-backup snapshot for the current studio.
+    Each call adds a new row (see `StudioBackup` docstring) rather than
+    overwriting a single record, so history stays available even though
+    only the latest one is surfaced in the app today.
+    """
+    backup = StudioBackup(owner_id=current_user.id, payload=payload)
+    db.add(backup)
+    db.commit()
+    db.refresh(backup)
+
+    return StudioBackupRead.model_validate(backup)
+
+
+@router.get("/me/backup", response_model=StudioBackupRead)
+def get_latest_backup(
+    current_user: User = Depends(get_current_studio_user),
+    db: Session = Depends(get_db),
+) -> StudioBackupRead:
+    """Returns the current studio's most recent settings backup. Used
+    both to show "Last backed up: ..." on the App Settings screen and,
+    in Task 7, to restore from.
+    """
+    backup = db.execute(
+        select(StudioBackup)
+        .where(StudioBackup.owner_id == current_user.id)
+        .order_by(StudioBackup.created_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
+    if backup is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No backup found for this studio.")
+
+    return StudioBackupRead.model_validate(backup)

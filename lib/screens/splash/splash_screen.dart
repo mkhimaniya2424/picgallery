@@ -1,24 +1,33 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/settings_model.dart';
+import '../../providers/settings_provider.dart';
 import '../../storage/onboarding_local_store.dart';
 import '../../widgets/common/screen_backdrop.dart';
 
 /// Animated splash: logo scales/fades in over the gradient backdrop, the
 /// tagline fades in after, then a soft loading dash before auto-navigating
-/// to Onboarding.
-class SplashScreen extends StatefulWidget {
+/// onward.
+///
+/// Also owns the one-time, cold-start App Lock PIN gate: if
+/// `settings.securityPinEnabled && settings.requirePinOnLaunch` are both
+/// true, [AppRoutes.pinUnlock] is pushed first and only on a correct PIN
+/// does navigation continue to Onboarding/Role Selection. This screen only
+/// runs once per process start, so the PIN is never asked again mid-session.
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _logoScale;
@@ -46,16 +55,39 @@ class _SplashScreenState extends State<SplashScreen>
 
     _splashTimer = Timer(AppDurations.splash, () async {
       if (!mounted) return;
+
       // Backend-agnostic check: OnboardingLocalStore owns the only
       // persistence detail here (a Hive-backed flag today, but callers
       // never need to know that). Falls back to showing onboarding if
       // nothing has been persisted yet, or if the check fails.
       final alreadySeenOnboarding =
           await OnboardingLocalStore().hasSeenOnboarding();
+      final destinationRoute =
+          alreadySeenOnboarding ? AppRoutes.roleSelection : AppRoutes.onboarding;
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(
-        alreadySeenOnboarding ? AppRoutes.roleSelection : AppRoutes.onboarding,
-      );
+
+      // Read persisted settings directly from the store (bypassing the
+      // provider's own async load) so this cold-start check is never
+      // racing SettingsNotifier.build()'s background load — see
+      // settings_provider.dart.
+      final settingsData = await ref.read(settingsStoreProvider).load();
+      final settings = settingsData != null
+          ? SettingsModel.fromJson(settingsData)
+          : const SettingsModel();
+      if (!mounted) return;
+
+      if (settings.securityPinEnabled && settings.requirePinOnLaunch) {
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.pinUnlock,
+          arguments: PinUnlockArgs(
+            correctPin: settings.securityPin,
+            destinationRoute: destinationRoute,
+          ),
+        );
+        return;
+      }
+
+      Navigator.of(context).pushReplacementNamed(destinationRoute);
     });
   }
 

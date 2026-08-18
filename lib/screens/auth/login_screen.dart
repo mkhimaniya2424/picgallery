@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
+  bool _rememberMe = true;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -93,6 +93,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         return;
       }
       await AppPopup.show(context, title: 'Something Went Wrong', message: e.message, isError: true);
+      return;
+    } catch (_) {
+      // Anything that isn't an ApiException (e.g. a response-parsing
+      // error) must still clear _isLoading — otherwise the Sign In
+      // button spins forever with no error shown at all.
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      await AppPopup.show(
+        context,
+        title: 'Something Went Wrong',
+        message: 'Something went wrong. Please try again.',
+        isError: true,
+      );
       return;
     }
 
@@ -354,4 +367,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     );
   }
 }
-

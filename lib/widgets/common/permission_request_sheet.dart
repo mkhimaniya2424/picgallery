@@ -12,10 +12,12 @@ import 'screen_backdrop.dart';
 /// `email_verification_screen.dart` so the onboarding tail feels of a
 /// piece with the rest of the auth flow.
 ///
-/// Dummy only: neither [onAllow] nor [onSkip] talk to a real OS
-/// permission API (no `permission_handler` dependency in this project) —
-/// callers just decide where to navigate next, and per the brief "Not
-/// Now" always advances the flow the same as "Allow Access" would.
+/// [onAllow] is wired by each caller to trigger the real native OS
+/// permission dialog (via `PermissionService` / `permission_handler`)
+/// before advancing. Per the brief, "Not Now" always advances the flow
+/// the same as "Allow Access" would — this widget itself has no
+/// opinion on what [onAllow] and [onSkip] do, it just renders the ask
+/// and defers to the caller.
 class PermissionRequestSheet extends StatelessWidget {
   final IconData icon;
   final String title;

@@ -4,18 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_client.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/auth_providers.dart';
+import '../../services/permission_service.dart';
 import '../../widgets/common/permission_request_sheet.dart';
 
 /// First of three onboarding permission prompts (camera → photo library →
 /// push notifications), shown after Complete Profile and before Home /
 /// Admin Home.
 ///
-/// "Allow Access" sends `PUT /auth/permissions` with just
-/// `camera_permission_granted: true` (per the backend's own doc-comment:
-/// each screen only sends the one flag it owns). "Not Now" skips the
-/// call entirely — per the brief, both buttons always advance the flow
-/// regardless of the API result, so a failed/slow request never blocks
-/// onboarding.
+/// "Allow Access" first triggers the real native camera permission
+/// dialog via `PermissionService`, then sends `PUT /auth/permissions`
+/// with `camera_permission_granted: <result>` (per the backend's own
+/// doc-comment: each screen only sends the one flag it owns) so our
+/// record matches what the OS actually granted — even if the user
+/// dismisses the native dialog with "Deny". "Not Now" skips both the
+/// native prompt and the call entirely. Per the brief, both buttons
+/// always advance the flow regardless of the outcome, so a denied
+/// permission or a failed/slow request never blocks onboarding.
 class CameraPermissionScreen extends ConsumerWidget {
   final UserRole? role;
   const CameraPermissionScreen({super.key, this.role});
@@ -25,8 +29,9 @@ class CameraPermissionScreen extends ConsumerWidget {
   }
 
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
+    final granted = await PermissionService.instance.checkAndRequestCameraPermission();
     try {
-      await ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: true);
+      await ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: granted);
     } on ApiException {
       // Best-effort — advance regardless, same as "Not Now".
     }

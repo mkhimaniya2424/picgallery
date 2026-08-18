@@ -12,6 +12,7 @@ pointed at Google's/Apple's keys instead of our SECRET_KEY.
 """
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass
 
@@ -23,6 +24,8 @@ from jose import jwt as jose_jwt
 from jose.exceptions import JOSEError
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys"
 APPLE_ISSUER = "https://appleid.apple.com"
@@ -92,11 +95,25 @@ def verify_google_id_token(id_token_str: str) -> SocialIdentity:
             detail="Invalid or expired Google sign-in token",
         ) from exc
 
-    if claims.get("aud") not in settings.GOOGLE_CLIENT_IDS:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Google sign-in token was not issued for this app",
-        )
+    token_aud = claims.get("aud")
+
+    # TEMP DEBUG (Google sign-in "not issued for this app" investigation) —
+    # logs the exact aud the token carried vs. the exact allow-list this
+    # running process loaded from GOOGLE_CLIENT_IDS. Check your backend's
+    # own console/log output (not the phone) right after a failed iOS
+    # attempt. Safe to remove once the mismatch is found — doesn't log any
+    # token contents beyond these two values.
+    logger.warning("Google sign-in aud check: token_aud=%r allowed=%r", token_aud, settings.GOOGLE_CLIENT_IDS)
+
+    if token_aud not in settings.GOOGLE_CLIENT_IDS:
+        detail = "Google sign-in token was not issued for this app"
+        # Only in non-production: put the actual mismatching values right
+        # in the error response, so you can see them on-device (in the
+        # popup / API response) without needing server log access at all.
+        # Remove this branch (or set ENVIRONMENT=production) before ship.
+        if settings.ENVIRONMENT != "production":
+            detail += f" (token aud={token_aud!r}, allowed={settings.GOOGLE_CLIENT_IDS!r})"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
 
     return SocialIdentity(
         provider_user_id=claims["sub"],
