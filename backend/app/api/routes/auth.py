@@ -223,9 +223,12 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
     First sign-in creates the account (auto-verified — the provider
     already proved the email is real, so there's no email-verification
     step to send here, unlike register()). Returning sign-ins are
-    recognized primarily by provider_user_id (stable even across an
-    email change at the provider) and secondarily by (email, role) for
-    the very first call, before that id is stored.
+    recognized by (provider_user_id, auth_provider, role) — role is
+    part of the lookup (not just email/provider) so the same Google/
+    Apple account can hold a separate Client and Studio row, matching
+    how email/password accounts work (`uq_users_email_role`). Falls
+    back to (email, role) for the very first call on a given role,
+    before provider_user_id is stored for that row.
     """
     identity: SocialIdentity = (
         verify_google_id_token(payload.id_token)
@@ -244,6 +247,7 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
         .filter(
             User.provider_user_id == identity.provider_user_id,
             User.auth_provider == payload.provider,
+            User.role == payload.role,
             User.is_deleted == False,  # noqa: E712
         )
         .first()
