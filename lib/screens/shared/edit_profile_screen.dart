@@ -67,12 +67,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _bioController = TextEditingController();
+  final _addressController = TextEditingController();
 
   String? _country;
   String? _state;
   String? _city;
 
   // Studio-only fields (Task 8) — photographer role only.
+  final _studioAddressController = TextEditingController();
   String? _studioType;
   final _yearEstablishedController = TextEditingController();
   final _teamSizeController = TextEditingController();
@@ -127,11 +129,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void _seedControllers(AppUser user) {
     _fullNameController.text = user.fullName;
     _bioController.text = user.bio ?? '';
+    _addressController.text = user.address ?? '';
     _country = user.country;
     _state = user.state;
     _city = user.city;
 
     if (user.role == AppUserRole.photographer) {
+      _studioAddressController.text = user.studioAddress ?? '';
       _studioType = user.studioType;
       _yearEstablishedController.text = user.yearEstablished?.toString() ?? '';
       _teamSizeController.text = user.teamSize?.toString() ?? '';
@@ -208,7 +212,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             country: _country,
             state: _state,
             city: _city,
+            address: _emptyToNull(_addressController.text),
             bio: _emptyToNull(_bioController.text),
+            studioAddress: isPhotographer ? _emptyToNull(_studioAddressController.text) : null,
             studioType: isPhotographer ? _studioType : null,
             yearEstablished: isPhotographer ? _parseInt(_yearEstablishedController.text) : null,
             teamSize: isPhotographer ? _parseInt(_teamSizeController.text) : null,
@@ -248,6 +254,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void dispose() {
     _fullNameController.dispose();
     _bioController.dispose();
+    _addressController.dispose();
+    _studioAddressController.dispose();
     _yearEstablishedController.dispose();
     _teamSizeController.dispose();
     _experienceYearsController.dispose();
@@ -326,6 +334,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         controller: _bioController,
                         maxLines: 3,
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      CustomTextField(
+                        label: 'Address',
+                        icon: Icons.home_outlined,
+                        controller: _addressController,
+                        maxLines: 2,
+                      ),
                     ],
                   ),
                 ),
@@ -376,6 +391,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        CustomTextField(
+          label: 'Studio Address',
+          icon: Icons.location_on_outlined,
+          controller: _studioAddressController,
+          maxLines: 2,
+        ),
+        const SizedBox(height: AppSpacing.lg),
         Text('Studio Type', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
         const SizedBox(height: AppSpacing.sm),
         _SingleChoiceChips(

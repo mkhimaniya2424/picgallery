@@ -26,6 +26,7 @@ _LIST_FIELDS = {
 # accounts; ignored (not rejected) if a client payload happens to
 # include them, since the Flutter screen never sends them for clients.
 _PHOTOGRAPHER_ONLY_FIELDS = {
+    "studio_address",
     "year_established",
     "team_size",
     "service_areas",

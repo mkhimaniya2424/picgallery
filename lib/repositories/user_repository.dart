@@ -26,6 +26,7 @@ class UserRepository {
     // Studio profile fields (Task 8-9) — meaningful only for photographer
     // accounts; callers should leave these null for client accounts.
     String? studioName,
+    String? studioAddress,
     String? logoUrl,
     String? coverPhotoUrl,
     List<String>? portfolioImages,
@@ -69,6 +70,7 @@ class UserRepository {
     if (bio != null) body['bio'] = bio;
 
     if (studioName != null) body['studio_name'] = studioName;
+    if (studioAddress != null) body['studio_address'] = studioAddress;
     if (logoUrl != null) body['logo_url'] = logoUrl;
     if (coverPhotoUrl != null) body['cover_photo_url'] = coverPhotoUrl;
     if (portfolioImages != null) body['portfolio_images'] = portfolioImages;

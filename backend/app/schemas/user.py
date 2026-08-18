@@ -116,6 +116,13 @@ class UserUpdate(BaseModel):
     address: str | None = Field(default=None, max_length=255)
     bio: str | None = Field(default=None, max_length=500)
 
+    # Studio's own street address (photographer role only) — distinct
+    # from `address` above, which is the person's own address and is
+    # shared by both roles. Was previously only settable once, at
+    # registration (`UserRegister.studio_address`); wired up here so
+    # it's editable afterward too, same as `specializations` was.
+    studio_address: str | None = Field(default=None, max_length=255)
+
     # Studio profile fields (Task 3) — meaningful only for photographer
     # ("Studio") accounts; a future edit-profile endpoint is expected to
     # ignore/reject these for client accounts. All optional/nullable.
@@ -307,4 +314,4 @@ class UserRead(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: UserRead 
+    user: UserRead

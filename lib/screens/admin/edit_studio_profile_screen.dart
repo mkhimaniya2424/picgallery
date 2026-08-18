@@ -34,6 +34,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
   late final TextEditingController _emailController;
   late final TextEditingController _websiteController;
   late final TextEditingController _aboutController;
+  late final TextEditingController _studioAddressController;
 
   String? _logoPath;
   String? _coverPath;
@@ -85,6 +86,12 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     _emailController = TextEditingController(
       text: cachedUser?.email ?? widget.settings.email,
     );
+    // Studio's own street address — a real backend User column
+    // (`studio_address`), only ever set once at registration until now;
+    // wired up here the same way Studio Name/Photographer Name are.
+    _studioAddressController = TextEditingController(
+      text: cachedUser?.studioAddress ?? '',
+    );
     if (cachedUser == null) {
       _loadCurrentUser();
     }
@@ -131,6 +138,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       _studioNameController.text = user.studioName ?? _studioNameController.text;
       _photoNameController.text = user.fullName;
       _emailController.text = user.email;
+      _studioAddressController.text = user.studioAddress ?? _studioAddressController.text;
     });
   }
 
@@ -141,6 +149,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     _emailController.dispose();
     _websiteController.dispose();
     _aboutController.dispose();
+    _studioAddressController.dispose();
     super.dispose();
   }
 
@@ -401,6 +410,9 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       final updatedUser = await ref.read(userRepositoryProvider).updateProfile(
             fullName: _photoNameController.text.trim(),
             studioName: _studioNameController.text.trim(),
+            studioAddress: _studioAddressController.text.trim().isNotEmpty
+                ? _studioAddressController.text.trim()
+                : null,
             // Bio maps to the "About / Business Description" textarea.
             bio: _aboutController.text.trim().isNotEmpty
                 ? _aboutController.text.trim()
@@ -742,6 +754,13 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                           style: const TextStyle(color: AppColors.text, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Photographer Name'),
                           validator: (v) => v == null || v.trim().isEmpty ? 'Enter photographer name' : null,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _studioAddressController,
+                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          decoration: const InputDecoration(labelText: 'Studio Address'),
+                          maxLines: 2,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
