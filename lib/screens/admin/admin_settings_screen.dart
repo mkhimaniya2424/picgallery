@@ -325,8 +325,11 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
             _SettingsRow(
               icon: Icons.lock_outline_rounded,
               title: 'App Lock PIN',
-              subtitle:
-                  settings.securityPinEnabled ? 'PIN Enabled' : 'PIN Disabled',
+              subtitle: !settings.securityPinEnabled
+                  ? 'PIN Disabled'
+                  : settings.requirePinOnLaunch
+                      ? 'PIN required at launch'
+                      : 'PIN set — not required at launch yet',
               onTap: () => _setupSecurityPin(settings),
             ),
             // Only shown once a PIN actually exists — this toggle controls
@@ -624,6 +627,27 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
         ),
       ),
       actions: [
+        if (widget.settings.securityPinEnabled)
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              final updated = widget.settings.copyWith(
+                securityPinEnabled: false,
+                securityPin: '',
+                requirePinOnLaunch: false,
+              );
+              navigator.pop();
+              await widget.ref
+                  .read(settingsProvider.notifier)
+                  .updateSettings(updated);
+              messenger.showSnackBar(
+                const SnackBar(content: Text('App Lock PIN disabled')),
+              );
+            },
+            child: const Text('Disable',
+                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+          ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel',
@@ -649,8 +673,9 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-          child: const Text('Enable',
-              style: TextStyle(
+          child: Text(
+              widget.settings.securityPinEnabled ? 'Update' : 'Enable',
+              style: const TextStyle(
                   color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ],
