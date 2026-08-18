@@ -364,6 +364,12 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                     settings.copyWith(searchEngineIndexing: val));
               },
             ),
+            _SettingsRow(
+              icon: Icons.verified_user_outlined,
+              title: 'App Permissions',
+              subtitle: 'Camera, photo library & notifications',
+              onTap: () => Navigator.of(context).pushNamed(AppRoutes.permissions),
+            ),
           ]),
           const SizedBox(height: AppSpacing.md),
 

@@ -432,11 +432,14 @@ def update_permissions(
     db: Session = Depends(get_db),
 ) -> User:
     """Backs items 15-17 (Camera / Photo Library / Push Notification
-    prompts). Each screen's "Allow Access" sends its one flag as True;
-    "Not Now" either omits the call entirely or sends it as False — the
-    brief has onSkip always advance regardless of granted state, so the
-    frontend is free to skip calling this on Not Now. Dummy-only: no real
-    OS permission is ever requested or checked."""
+    prompts). Each screen's "Allow Access" triggers the real native OS
+    permission dialog client-side (via `permission_handler`) first, then
+    sends its one flag as whatever the OS actually granted; "Not Now"
+    either omits the call entirely or sends it as False — the brief has
+    onSkip always advance regardless of granted state, so the frontend is
+    free to skip calling this on Not Now. This endpoint itself just
+    records the flag it's given — it has no way to independently verify
+    the OS permission state."""
     updates = payload.model_dump(exclude_unset=True)
     for field, value in updates.items():
         setattr(current_user, field, value)
@@ -492,4 +495,4 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     user.reset_password_sent_at = None
     db.commit()
 
-    return MessageResponse(message="Password reset successfully. You can now sign in with your new password.")  
+    return MessageResponse(message="Password reset successfully. You can now sign in with your new password.")
