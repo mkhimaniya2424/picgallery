@@ -346,7 +346,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                   const SizedBox(height: AppSpacing.xl),
                   Center(
                     child: TextButton(
-                      onPressed: () => Navigator.of(context).pushNamed(AppRoutes.register, arguments: widget.role),
+                      onPressed: () {
+                        // TEMP DEBUG — remove once the client/studio
+                        // role mismatch is confirmed fixed.
+                        debugPrint('[ROLE_DEBUG] LoginScreen Create Account tapped, widget.role=${widget.role}');
+                        Navigator.of(context).pushNamed(AppRoutes.register, arguments: widget.role);
+                      },
                       child: RichText(
                         text: const TextSpan(
                           text: "Don't have an account? ",

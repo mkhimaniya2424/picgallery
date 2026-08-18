@@ -492,4 +492,4 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     user.reset_password_sent_at = None
     db.commit()
 
-    return MessageResponse(message="Password reset successfully. You can now sign in with your new password.")
+    return MessageResponse(message="Password reset successfully. You can now sign in with your new password.")  
