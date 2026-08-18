@@ -79,6 +79,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   /// after "signing up" this way (Google/Apple sign-up worked because
   /// that path calls the API directly via AuthNotifier.socialLogin).
   Future<void> _submit() async {
+    // TEMP DEBUG — remove once the client/studio role mismatch is
+    // confirmed fixed.
+    debugPrint('[ROLE_DEBUG] RegisterScreen._submit, widget.role=${widget.role}, '
+        'sending role=${widget.role == UserRole.photographer ? 'photographer' : 'client'}');
     setState(() => _isSubmitting = true);
     try {
       await ref.read(authProvider.notifier).register(

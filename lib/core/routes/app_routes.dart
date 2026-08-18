@@ -239,8 +239,10 @@ class AppRoutes {
       case roleSelection:
         return _fade(const RoleSelectionScreen());
       case login:
+        debugPrint('[ROLE_DEBUG] case login, settings.arguments=${settings.arguments}');
         return _fade(LoginScreen(role: settings.arguments as UserRole?));
       case register:
+        debugPrint('[ROLE_DEBUG] case register, settings.arguments=${settings.arguments}');
         return _slide(RegisterScreen(role: settings.arguments as UserRole? ?? UserRole.client));
       case forgotPassword:
         return _slide(const ForgotPasswordScreen());

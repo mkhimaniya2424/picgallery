@@ -158,8 +158,10 @@ class UserUpdatePermissions(BaseModel):
     """Payload for PUT /auth/permissions — items 15-17 (Camera / Photo
     Library / Push Notification prompts). All fields optional so each
     screen can send just the one flag it owns; unset fields are left
-    untouched. Dummy-only — no real OS permission is ever checked, this
-    just records which button the user tapped.
+    untouched. The client requests the real OS permission first (via
+    `permission_handler`) and sends the actual result here — this
+    endpoint has no way to independently verify OS permission state
+    itself, it just records the flag it's given.
     """
 
     camera_permission_granted: bool | None = None

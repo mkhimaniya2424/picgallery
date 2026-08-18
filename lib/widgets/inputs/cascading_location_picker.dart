@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/location_providers.dart';
 
 /// Country → State → City cascading picker used on the Complete Profile
 /// and Edit Profile screens.
 ///
-/// Each field opens its own full-height, searchable bottom sheet
-/// ([_LocationSearchSheet]) instead of an inline Material dropdown, so a
-/// long list (all ~195 countries, or a country with dozens of states)
-/// is never clipped down to just a couple of visible rows — the sheet
-/// gets a fixed height and a real scrollable [ListView.builder], so
-/// every entry is reachable by scrolling or by typing to filter.
+/// Every level is fetched live from the backend's `/locations/*`
+/// endpoints (`LocationRepository` → `app/api/routes/locations.py`),
+/// which serve the full offline country/state/city dataset (250
+/// countries, ~5k states/provinces, ~148k cities — see
+/// `app/core/location_data.py`). This used to be a hardcoded
+/// client-side map covering only a handful of cities per state (e.g.
+/// 6 for all of Gujarat) — that's what caused "only some cities show
+/// up". Now both sides agree: whatever the picker shows is exactly
+/// what the backend recognizes as valid for that country/state, so a
+/// value saved here always round-trips correctly.
 ///
-/// [_kAllCountries] covers every country. [_kLocationData] additionally
-/// supplies states/provinces and cities for the countries listed there;
-/// for any country not in that map (or a state with no city list), the
-/// state/city fields fall back to a free-text entry so nothing is ever
-/// blocked by a gap in the data.
-class CascadingLocationPicker extends StatefulWidget {
+/// Each field opens its own full-height, searchable bottom sheet
+/// ([_LocationSearchSheet]) instead of an inline Material dropdown, so
+/// a long list is never clipped down to just a couple of visible rows.
+///
+/// If a fetch fails (offline, backend unreachable) or the backend has
+/// no state/city list for a given selection, the field disables itself
+/// and a free-text fallback appears below it — so nothing is ever
+/// blocked by a network hiccup or a gap in the dataset.
+class CascadingLocationPicker extends ConsumerStatefulWidget {
   final String? initialCountry;
   final String? initialState;
   final String? initialCity;
@@ -35,30 +43,37 @@ class CascadingLocationPicker extends StatefulWidget {
   });
 
   @override
-  State<CascadingLocationPicker> createState() => _CascadingLocationPickerState();
+  ConsumerState<CascadingLocationPicker> createState() => _CascadingLocationPickerState();
 }
 
-class _CascadingLocationPickerState extends State<CascadingLocationPicker> {
-  late String? _country;
-  late String? _state;
-  late String? _city;
+class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicker> {
+  String? _country;
+  String? _state;
+  String? _city;
 
   late final TextEditingController _stateFallbackController;
   late final TextEditingController _cityFallbackController;
+
+  // `null` countries list = not fetched yet; `_kAllCountries` is only
+  // ever used as an offline fallback if the fetch itself fails.
+  List<String>? _countries;
+  bool _countriesLoading = false;
+
+  List<String> _states = [];
+  bool _statesLoading = false;
+
+  List<String> _cities = [];
+  bool _citiesLoading = false;
 
   @override
   void initState() {
     super.initState();
     _country = widget.initialCountry;
-    _state = _statesFor(_country).containsKey(widget.initialState) ? widget.initialState : null;
-    _city = _citiesFor(_country, _state).contains(widget.initialCity) ? widget.initialCity : null;
-
-    _stateFallbackController = TextEditingController(
-      text: _statesFor(_country).containsKey(widget.initialState) ? '' : (widget.initialState ?? ''),
-    );
-    _cityFallbackController = TextEditingController(
-      text: _citiesFor(_country, _state).contains(widget.initialCity) ? '' : (widget.initialCity ?? ''),
-    );
+    _state = widget.initialState;
+    _city = widget.initialCity;
+    _stateFallbackController = TextEditingController();
+    _cityFallbackController = TextEditingController();
+    _bootstrap();
   }
 
   @override
@@ -68,11 +83,93 @@ class _CascadingLocationPickerState extends State<CascadingLocationPicker> {
     super.dispose();
   }
 
-  Map<String, List<String>> _statesFor(String? country) =>
-      country == null ? const {} : (_kLocationData[country] ?? const {});
+  /// Loads countries, then — if this profile already has a
+  /// country/state saved (edit flow) — loads states and cities too, so
+  /// the previously-saved value can be checked against the *current*
+  /// backend dataset. If it's no longer recognized, it's moved into the
+  /// free-text fallback rather than silently shown as if still valid.
+  Future<void> _bootstrap() async {
+    await _fetchCountries();
+    if (_country != null) {
+      await _fetchStates(revalidate: true);
+      if (_state != null) {
+        await _fetchCities(revalidate: true);
+      }
+    }
+  }
 
-  List<String> _citiesFor(String? country, String? state) =>
-      state == null ? const [] : (_statesFor(country)[state] ?? const []);
+  Future<void> _fetchCountries() async {
+    setState(() => _countriesLoading = true);
+    try {
+      final list = await ref.read(locationRepositoryProvider).fetchCountries();
+      if (!mounted) return;
+      setState(() {
+        _countries = list;
+        _countriesLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _countries = _kAllCountries;
+        _countriesLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchStates({bool revalidate = false}) async {
+    final country = _country;
+    if (country == null) {
+      setState(() => _states = []);
+      return;
+    }
+    setState(() => _statesLoading = true);
+    try {
+      final list = await ref.read(locationRepositoryProvider).fetchStates(country);
+      if (!mounted || _country != country) return;
+      setState(() {
+        _states = list;
+        _statesLoading = false;
+        if (revalidate && _state != null && !list.contains(_state)) {
+          _stateFallbackController.text = _state!;
+          _state = null;
+        }
+      });
+    } catch (_) {
+      if (!mounted || _country != country) return;
+      setState(() {
+        _states = [];
+        _statesLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchCities({bool revalidate = false}) async {
+    final country = _country;
+    final state = _state;
+    if (country == null || state == null) {
+      setState(() => _cities = []);
+      return;
+    }
+    setState(() => _citiesLoading = true);
+    try {
+      final list = await ref.read(locationRepositoryProvider).fetchCities(country, state);
+      if (!mounted || _country != country || _state != state) return;
+      setState(() {
+        _cities = list;
+        _citiesLoading = false;
+        if (revalidate && _city != null && !list.contains(_city)) {
+          _cityFallbackController.text = _city!;
+          _city = null;
+        }
+      });
+    } catch (_) {
+      if (!mounted || _country != country || _state != state) return;
+      setState(() {
+        _cities = [];
+        _citiesLoading = false;
+      });
+    }
+  }
 
   void _emit() {
     final state = _state ?? _emptyToNull(_stateFallbackController.text);
@@ -83,52 +180,57 @@ class _CascadingLocationPickerState extends State<CascadingLocationPicker> {
   String? _emptyToNull(String v) => v.trim().isEmpty ? null : v.trim();
 
   Future<void> _pickCountry() async {
+    if (_countriesLoading) return;
+    final options = _countries ?? _kAllCountries;
     final picked = await _LocationSearchSheet.show(
       context,
       title: 'Select country',
-      options: _kAllCountries,
+      options: options,
       current: _country,
     );
-    if (picked == null) return;
+    if (picked == null || picked == _country) return;
     setState(() {
       _country = picked;
       _state = null;
       _city = null;
+      _states = [];
+      _cities = [];
       _stateFallbackController.clear();
       _cityFallbackController.clear();
     });
     _emit();
+    _fetchStates();
   }
 
   Future<void> _pickState() async {
-    final states = _statesFor(_country).keys.toList();
-    if (states.isEmpty) return;
+    if (_country == null || _statesLoading || _states.isEmpty) return;
     final picked = await _LocationSearchSheet.show(
       context,
       title: 'Select state / province',
-      options: states,
+      options: _states,
       current: _state,
     );
-    if (picked == null) return;
+    if (picked == null || picked == _state) return;
     setState(() {
       _state = picked;
       _city = null;
+      _cities = [];
       _stateFallbackController.clear();
       _cityFallbackController.clear();
     });
     _emit();
+    _fetchCities();
   }
 
   Future<void> _pickCity() async {
-    final cities = _citiesFor(_country, _state);
-    if (cities.isEmpty) return;
+    if (_state == null || _citiesLoading || _cities.isEmpty) return;
     final picked = await _LocationSearchSheet.show(
       context,
       title: 'Select city',
-      options: cities,
+      options: _cities,
       current: _city,
     );
-    if (picked == null) return;
+    if (picked == null || picked == _city) return;
     setState(() {
       _city = picked;
       _cityFallbackController.clear();
@@ -138,8 +240,10 @@ class _CascadingLocationPickerState extends State<CascadingLocationPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final states = _statesFor(_country);
-    final cities = _citiesFor(_country, _state);
+    final stateEnabled = _country != null && !_statesLoading && _states.isNotEmpty;
+    final stateShowFallback = _country != null && !_statesLoading && _states.isEmpty;
+    final cityEnabled = _state != null && !_citiesLoading && _cities.isNotEmpty;
+    final cityShowFallback = _state != null && !_citiesLoading && _cities.isEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,20 +251,28 @@ class _CascadingLocationPickerState extends State<CascadingLocationPicker> {
         _PickerField(
           label: 'Country',
           value: _country,
-          hint: 'Select country',
+          hint: _countriesLoading ? 'Loading countries…' : 'Select country',
           icon: Icons.public_rounded,
+          loading: _countriesLoading,
           onTap: _pickCountry,
         ),
         const SizedBox(height: AppSpacing.md),
         _PickerField(
           label: 'State / Province',
           value: _state,
-          hint: states.isEmpty ? 'No list for this country — type below' : 'Select state',
+          hint: _country == null
+              ? 'Select country first'
+              : _statesLoading
+                  ? 'Loading states…'
+                  : _states.isEmpty
+                      ? 'No list for this country — type below'
+                      : 'Select state',
           icon: Icons.map_outlined,
-          enabled: states.isNotEmpty,
+          enabled: stateEnabled,
+          loading: _statesLoading,
           onTap: _pickState,
         ),
-        if (states.isEmpty && _country != null) ...[
+        if (stateShowFallback) ...[
           const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: _stateFallbackController,
@@ -175,12 +287,19 @@ class _CascadingLocationPickerState extends State<CascadingLocationPicker> {
         _PickerField(
           label: 'City',
           value: _city,
-          hint: cities.isEmpty ? 'No list for this state — type below' : 'Select city',
+          hint: _state == null
+              ? 'Select state first'
+              : _citiesLoading
+                  ? 'Loading cities…'
+                  : _cities.isEmpty
+                      ? 'No list for this state — type below'
+                      : 'Select city',
           icon: Icons.location_city_rounded,
-          enabled: cities.isNotEmpty,
+          enabled: cityEnabled,
+          loading: _citiesLoading,
           onTap: _pickCity,
         ),
-        if (cities.isEmpty && _state != null) ...[
+        if (cityShowFallback) ...[
           const SizedBox(height: AppSpacing.sm),
           TextFormField(
             controller: _cityFallbackController,
@@ -205,6 +324,7 @@ class _PickerField extends StatelessWidget {
   final String hint;
   final IconData icon;
   final bool enabled;
+  final bool loading;
   final VoidCallback onTap;
 
   const _PickerField({
@@ -214,6 +334,7 @@ class _PickerField extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.enabled = true,
+    this.loading = false,
   });
 
   @override
@@ -222,7 +343,7 @@ class _PickerField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: enabled ? AppColors.primary : AppColors.subtitle, size: 20),
-        enabled: enabled,
+        enabled: enabled || loading,
       ),
       child: InkWell(
         onTap: enabled ? onTap : null,
@@ -239,8 +360,15 @@ class _PickerField extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.arrow_drop_down_rounded,
-                color: enabled ? AppColors.subtitle : AppColors.border),
+            if (loading)
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.subtitle),
+              )
+            else
+              Icon(Icons.arrow_drop_down_rounded,
+                  color: enabled ? AppColors.subtitle : AppColors.border),
           ],
         ),
       ),
@@ -382,10 +510,13 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
   }
 }
 
-/// Every country (all UN member states plus commonly-listed observer
-/// states), used for the top-level Country field. Kept as a flat list
-/// here since — unlike states/cities below — a full, correct country
-/// list is small and stable enough to maintain directly.
+/// Offline fallback for the Country field ONLY, used if the
+/// `/locations/countries` fetch itself fails (e.g. no network). States
+/// and cities always come from the backend — there is no equivalent
+/// hardcoded fallback for those, since a partial/stale local copy is
+/// exactly what caused the original "only some cities" bug. If the
+/// backend is unreachable when a state/state+city is needed, the field
+/// disables and the free-text fallback below it takes over instead.
 const List<String> _kAllCountries = [
   'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina',
   'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados',
@@ -416,74 +547,3 @@ const List<String> _kAllCountries = [
   'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia',
   'Zimbabwe',
 ];
-
-/// State/city breakdown for the countries picgallery is most likely to
-/// launch in first. Not exhaustive for every one of the 195 countries
-/// above — any country missing here (or a state with no city list)
-/// simply falls back to the free-text field, so nothing is ever
-/// blocked by a gap in this data. Extend freely.
-const Map<String, Map<String, List<String>>> _kLocationData = {
-  'India': {
-    'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur'],
-    'Delhi': ['New Delhi'],
-    'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Amreli'],
-    'Karnataka': ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi'],
-    'Kerala': ['Kochi', 'Thiruvananthapuram', 'Kozhikode'],
-    'Madhya Pradesh': ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur'],
-    'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Nashik'],
-    'Punjab': ['Ludhiana', 'Amritsar', 'Jalandhar'],
-    'Rajasthan': ['Jaipur', 'Udaipur', 'Jodhpur'],
-    'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai'],
-    'Telangana': ['Hyderabad', 'Warangal'],
-    'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra'],
-    'West Bengal': ['Kolkata', 'Howrah', 'Siliguri'],
-  },
-  'United States': {
-    'California': ['Los Angeles', 'San Francisco', 'San Diego', 'Sacramento'],
-    'Florida': ['Miami', 'Orlando', 'Tampa', 'Jacksonville'],
-    'Illinois': ['Chicago', 'Aurora', 'Naperville'],
-    'New York': ['New York City', 'Buffalo', 'Albany', 'Rochester'],
-    'Texas': ['Houston', 'Austin', 'Dallas', 'San Antonio'],
-    'Washington': ['Seattle', 'Spokane', 'Tacoma'],
-  },
-  'United Kingdom': {
-    'England': ['London', 'Manchester', 'Birmingham', 'Liverpool'],
-    'Scotland': ['Edinburgh', 'Glasgow', 'Aberdeen'],
-    'Wales': ['Cardiff', 'Swansea'],
-    'Northern Ireland': ['Belfast'],
-  },
-  'Canada': {
-    'Ontario': ['Toronto', 'Ottawa', 'Mississauga'],
-    'British Columbia': ['Vancouver', 'Victoria', 'Surrey'],
-    'Quebec': ['Montreal', 'Quebec City'],
-    'Alberta': ['Calgary', 'Edmonton'],
-  },
-  'Australia': {
-    'New South Wales': ['Sydney', 'Newcastle', 'Wollongong'],
-    'Victoria': ['Melbourne', 'Geelong'],
-    'Queensland': ['Brisbane', 'Gold Coast', 'Cairns'],
-    'Western Australia': ['Perth'],
-  },
-  'United Arab Emirates': {
-    'Dubai': ['Dubai'],
-    'Abu Dhabi': ['Abu Dhabi'],
-    'Sharjah': ['Sharjah'],
-  },
-  'Pakistan': {
-    'Punjab': ['Lahore', 'Faisalabad', 'Rawalpindi'],
-    'Sindh': ['Karachi', 'Hyderabad'],
-  },
-  'Germany': {
-    'Bavaria': ['Munich', 'Nuremberg'],
-    'Berlin': ['Berlin'],
-    'North Rhine-Westphalia': ['Cologne', 'Dusseldorf'],
-  },
-  'France': {
-    'Ile-de-France': ['Paris'],
-    'Provence-Alpes-Cote d\'Azur': ['Marseille', 'Nice'],
-    'Auvergne-Rhone-Alpes': ['Lyon'],
-  },
-  'Singapore': {
-    'Singapore': ['Singapore'],
-  },
-};

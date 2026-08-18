@@ -73,8 +73,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   icon: Icons.arrow_forward_rounded,
                   onPressed: _selected == null
                       ? null
-                      : () => Navigator.of(context)
-                          .pushNamed(AppRoutes.login, arguments: _selected),
+                      : () {
+                          // TEMP DEBUG — remove once the client/studio
+                          // role mismatch is confirmed fixed.
+                          debugPrint('[ROLE_DEBUG] RoleSelection Continue tapped, _selected=$_selected');
+                          Navigator.of(context)
+                              .pushNamed(AppRoutes.login, arguments: _selected);
+                        },
                 ),
                 const SizedBox(height: AppSpacing.lg),
               ],

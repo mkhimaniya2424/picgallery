@@ -28,6 +28,7 @@ class ProfileScreen extends ConsumerWidget {
     (icon: Icons.download_for_offline_rounded, label: 'Download History'),
     (icon: Icons.lock_outline_rounded, label: 'Privacy & Security'),
     (icon: Icons.notifications_none_rounded, label: 'Notification Settings'),
+    (icon: Icons.verified_user_outlined, label: 'App Permissions'),
     (icon: Icons.language_rounded, label: 'Language'),
     (icon: Icons.info_outline_rounded, label: 'About'),
     (icon: Icons.help_outline_rounded, label: 'Help & Support'),
@@ -143,6 +144,10 @@ class ProfileScreen extends ConsumerWidget {
                                       ? () => Navigator.of(context).pushNamed(
                                             '/profile/privacy',
                                           )
+                                      : item.label == 'App Permissions'
+                                          ? () => Navigator.of(context).pushNamed(
+                                                AppRoutes.permissions,
+                                              )
                                       : item.label == 'Language'
                                           ? () =>
                                               Navigator.of(context).pushNamed(
