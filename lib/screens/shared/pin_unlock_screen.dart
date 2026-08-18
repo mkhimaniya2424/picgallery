@@ -24,10 +24,17 @@ class PinUnlockScreen extends StatefulWidget {
   /// pushed this route is already gone by the time the PIN is entered.
   final String destinationRoute;
 
+  /// Whatever [destinationRoute] itself needs as `settings.arguments`
+  /// once pushed (e.g. a `UserRole` for completeProfile) — forwarded
+  /// as-is from [PinUnlockArgs.destinationArguments]. `null` for routes
+  /// that don't need any (role-selection, onboarding, home, ...).
+  final Object? destinationArguments;
+
   const PinUnlockScreen({
     super.key,
     required this.correctPin,
     required this.destinationRoute,
+    this.destinationArguments,
   });
 
   @override
@@ -54,7 +61,10 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_pinCtrl.text.trim() == widget.correctPin) {
-      Navigator.of(context).pushReplacementNamed(widget.destinationRoute);
+      Navigator.of(context).pushReplacementNamed(
+        widget.destinationRoute,
+        arguments: widget.destinationArguments,
+      );
       return;
     }
 

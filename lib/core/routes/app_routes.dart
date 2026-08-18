@@ -101,7 +101,19 @@ class PhotoEditorArgs {
 class PinUnlockArgs {
   final String correctPin;
   final String destinationRoute;
-  const PinUnlockArgs({required this.correctPin, required this.destinationRoute});
+  /// Arguments [destinationRoute] itself needs once the PIN is entered
+  /// correctly (e.g. the `UserRole` a completeProfile route requires, or
+  /// the `{email, role}` map a verificationPending route requires) — see
+  /// splash_screen.dart's `_resolveDestination`, the only place that
+  /// builds one of these. Without this, any destination that needs
+  /// arguments would silently get called with none once the PIN gate is
+  /// in the way, since PinUnlockScreen pushes destinationRoute itself.
+  final Object? destinationArguments;
+  const PinUnlockArgs({
+    required this.correctPin,
+    required this.destinationRoute,
+    this.destinationArguments,
+  });
 }
 
 /// Lets a screen (e.g. [MediaGridScreen]) know when it has become visible
@@ -233,6 +245,7 @@ class AppRoutes {
         return _fade(PinUnlockScreen(
           correctPin: args.correctPin,
           destinationRoute: args.destinationRoute,
+          destinationArguments: args.destinationArguments,
         ));
       case onboarding:
         return _fade(const OnboardingScreen());

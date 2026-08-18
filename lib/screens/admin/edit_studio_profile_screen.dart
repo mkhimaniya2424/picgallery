@@ -405,9 +405,8 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
             bio: _aboutController.text.trim().isNotEmpty
                 ? _aboutController.text.trim()
                 : null,
-            // Categories/Specializations map to the serviceAreas column —
-            // the closest existing backend field for this concept.
-            serviceAreas: _selectedCategories.isNotEmpty
+            // Categories/Specializations map to the specializations column.
+            specializations: _selectedCategories.isNotEmpty
                 ? _selectedCategories
                 : null,
           );

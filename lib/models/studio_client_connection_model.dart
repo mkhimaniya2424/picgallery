@@ -1,4 +1,25 @@
+import 'package:flutter/material.dart';
+
 import 'admin_dashboard_data.dart';
+
+/// Deterministic-by-id placeholder gradient, same idea
+/// `DashboardClientDto`/`DashboardUploadsDto` (`admin_dashboard_dto.dart`)
+/// already use for rows that have no real gradient opinion of their own.
+/// Duplicated here (rather than imported) because that palette is
+/// private to `admin_dashboard_dto.dart` and this model has no
+/// dependency on the dashboard layer otherwise — kept intentionally
+/// small and self-contained.
+const List<List<Color>> _kPlaceholderGradients = [
+  [Color(0xFF7C5CFF), Color(0xFFA855F7)],
+  [Color(0xFFEC4899), Color(0xFFF472B6)],
+  [Color(0xFF22C55E), Color(0xFF10B981)],
+  [Color(0xFFF59E0B), Color(0xFFEF4444)],
+  [Color(0xFF0EA5E9), Color(0xFF3B82F6)],
+  [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+];
+
+List<Color> _gradientFor(String id) =>
+    _kPlaceholderGradients[id.hashCode.abs() % _kPlaceholderGradients.length];
 
 enum ConnectionStatus {
   notConnected,
@@ -130,7 +151,13 @@ class StudioClientConnection {
               id: clientJson['id'] as String,
               name: clientJson['full_name'] as String? ?? '',
               initials: _initialsFrom(clientJson['full_name'] as String?),
-              gradient: const [],
+              // Was `const []` — `LinearGradient` requires at least two
+              // colors, so any renderer using this straight off the
+              // connection (e.g. `_ConnectedClientsTab`'s fallback for a
+              // client not yet in the dashboard snapshot) would throw at
+              // paint time on an empty list. Always give it a real,
+              // deterministic-by-id gradient instead.
+              gradient: _gradientFor(clientJson['id'] as String),
               bookingStatus: '',
               galleryStatus: GalleryStatus.notStarted,
               outstanding: '',

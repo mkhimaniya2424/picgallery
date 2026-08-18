@@ -14,7 +14,13 @@ router = APIRouter(prefix="/users", tags=["users"])
 # Fields whose DB column stores a comma-separated string but is exposed
 # to/from the client as a list (same convention `UserRead` already uses
 # for `specializations` via `_split_csv_fields`).
-_LIST_FIELDS = {"service_areas", "languages", "availability_days", "preferred_photo_types"}
+_LIST_FIELDS = {
+    "service_areas",
+    "specializations",
+    "languages",
+    "availability_days",
+    "preferred_photo_types",
+}
 
 # Studio profile fields (Task 8-9) — meaningful only for photographer
 # accounts; ignored (not rejected) if a client payload happens to
@@ -23,6 +29,7 @@ _PHOTOGRAPHER_ONLY_FIELDS = {
     "year_established",
     "team_size",
     "service_areas",
+    "specializations",
     "studio_type",
     "experience_years",
     "languages",

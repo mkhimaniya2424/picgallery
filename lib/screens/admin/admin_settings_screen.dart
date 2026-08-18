@@ -661,6 +661,13 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
               final updated = widget.settings.copyWith(
                 securityPinEnabled: true,
                 securityPin: _pinCtrl.text.trim(),
+                // First-time setup should actually lock the app on next
+                // launch, not just save a PIN that's never enforced.
+                // Preserve the user's existing choice when they're just
+                // changing an already-active PIN.
+                requirePinOnLaunch: widget.settings.securityPinEnabled
+                    ? widget.settings.requirePinOnLaunch
+                    : true,
               );
               navigator.pop();
               await widget.ref

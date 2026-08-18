@@ -122,6 +122,7 @@ class UserUpdate(BaseModel):
     year_established: int | None = None
     team_size: int | None = None
     service_areas: list[str] | None = None
+    specializations: list[str] | None = None
     studio_type: str | None = Field(default=None, max_length=100)
     experience_years: int | None = None
     languages: list[str] | None = None
@@ -306,4 +307,4 @@ class UserRead(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: UserRead
+    user: UserRead 

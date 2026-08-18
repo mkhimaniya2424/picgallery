@@ -32,6 +32,7 @@ class UserRepository {
     int? yearEstablished,
     int? teamSize,
     List<String>? serviceAreas,
+    List<String>? specializations,
     String? studioType,
     int? experienceYears,
     List<String>? languages,
@@ -74,6 +75,7 @@ class UserRepository {
     if (yearEstablished != null) body['year_established'] = yearEstablished;
     if (teamSize != null) body['team_size'] = teamSize;
     if (serviceAreas != null) body['service_areas'] = serviceAreas;
+    if (specializations != null) body['specializations'] = specializations;
     if (studioType != null) body['studio_type'] = studioType;
     if (experienceYears != null) body['experience_years'] = experienceYears;
     if (languages != null) body['languages'] = languages;

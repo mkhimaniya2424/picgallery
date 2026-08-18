@@ -71,8 +71,16 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
 
     try {
       return await _repo.getMe();
-    } on ApiException {
-      await _repo.logout();
+    } on ApiException catch (e) {
+      // Only a real auth rejection (expired/invalid token) should log the
+      // user out and wipe the saved session. Anything else — no network
+      // yet at cold start, a timeout, a 5xx — is a transient failure, not
+      // proof the token is bad, so leave it on disk and just report
+      // logged-out for *this* launch; the next successful launch will
+      // restore the session normally.
+      if (e.statusCode == 401 || e.statusCode == 403) {
+        await _repo.logout();
+      }
       return null;
     }
   }
