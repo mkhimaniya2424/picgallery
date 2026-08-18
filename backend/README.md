@@ -67,7 +67,7 @@ Matches the Flutter app's 3-step Create Account screen and login screen:
 {
   "full_name": "Jane Doe",
   "email": "jane@example.com",
-  "phone": "+1 555 0100",
+  // "phone": "+1 555 0100",
   "password": "secret123",
   "role": "client",
   "agreed_to_terms": true

@@ -17,6 +17,7 @@ workflows:
 
       vars:
         BUNDLE_ID: com.mk.picgallery
+        API_HOST: https://api.picgallery.in
 
     scripts:
       - name: Get Flutter packages
@@ -27,6 +28,7 @@ workflows:
         script: |
           xcode-project use-profiles
           flutter build ipa --release \
+            --dart-define=API_HOST=$API_HOST \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
