@@ -4,16 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_client.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/auth_providers.dart';
+import '../../services/permission_service.dart';
 import '../../widgets/common/permission_request_sheet.dart';
 
 /// Second of three onboarding permission prompts (camera → photo library →
 /// push notifications), shown after Complete Profile and before Home /
 /// Admin Home.
 ///
-/// "Allow Access" sends `PUT /auth/permissions` with just
-/// `photo_library_permission_granted: true`. "Not Now" skips the call
+/// "Allow Access" first triggers the real native photo library
+/// permission dialog via `PermissionService`, then sends
+/// `PUT /auth/permissions` with `photo_library_permission_granted:
+/// <result>`. "Not Now" skips both the native prompt and the call
 /// entirely — both buttons always advance the flow regardless of the
-/// API result.
+/// outcome.
 class PhotoLibraryPermissionScreen extends ConsumerWidget {
   final UserRole? role;
   const PhotoLibraryPermissionScreen({super.key, this.role});
@@ -23,8 +26,9 @@ class PhotoLibraryPermissionScreen extends ConsumerWidget {
   }
 
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
+    final granted = await PermissionService.instance.checkAndRequestStoragePermission();
     try {
-      await ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: true);
+      await ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: granted);
     } on ApiException {
       // Best-effort — advance regardless, same as "Not Now".
     }

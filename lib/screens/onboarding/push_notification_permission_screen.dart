@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_client.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/auth_providers.dart';
+import '../../services/permission_service.dart';
 import '../../widgets/common/permission_request_sheet.dart';
 
 /// Last of three onboarding permission prompts (camera → photo library →
@@ -12,10 +13,11 @@ import '../../widgets/common/permission_request_sheet.dart';
 /// clients on Home, and clearing the whole auth stack so there's no way
 /// back into onboarding.
 ///
-/// "Allow Access" sends `PUT /auth/permissions` with just
-/// `push_notifications_enabled: true`. "Not Now" skips the call
-/// entirely — both buttons always finish onboarding regardless of the
-/// API result.
+/// "Allow Access" first triggers the real native notification
+/// permission dialog via `PermissionService`, then sends
+/// `PUT /auth/permissions` with `push_notifications_enabled: <result>`.
+/// "Not Now" skips both the native prompt and the call entirely — both
+/// buttons always finish onboarding regardless of the outcome.
 class PushNotificationPermissionScreen extends ConsumerWidget {
   final UserRole? role;
   const PushNotificationPermissionScreen({super.key, this.role});
@@ -26,8 +28,9 @@ class PushNotificationPermissionScreen extends ConsumerWidget {
   }
 
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
+    final granted = await PermissionService.instance.checkAndRequestNotificationPermission();
     try {
-      await ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: true);
+      await ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: granted);
     } on ApiException {
       // Best-effort — finish regardless, same as "Not Now".
     }

@@ -18,13 +18,18 @@ import '../../widgets/common/screen_backdrop.dart';
 /// and never visible again.
 ///
 /// Same real `PUT /auth/permissions` endpoint as onboarding (only the
-/// one flag that changed is sent). Note this only tracks the app's own
-/// record of what the user said yes/no to — it does not (and, per the
-/// project brief, no screen in this app does) query or trigger the
-/// actual OS-level permission dialog, since there's no
-/// `permission_handler` dependency wired in. If the OS permission is
-/// separately revoked in device Settings, this screen won't reflect
-/// that until `permission_handler` is added.
+/// one flag that changed is sent). NOTE: toggling a switch here still
+/// only writes our own record of what the user said yes/no to — it does
+/// NOT call `PermissionService` to re-trigger the native OS dialog or
+/// open device Settings. That means: (a) flipping a switch ON here
+/// won't actually grant the OS permission if it was denied/permanently
+/// denied, and (b) if the OS permission is separately revoked in device
+/// Settings, this screen won't reflect that until the value is
+/// re-synced (e.g. on next app launch) with `PermissionService`'s
+/// `.status` checks. Wiring these switches to `PermissionService`
+/// (`.request()` for turning on, `openAppSettingsPage()` when
+/// permanently denied) is a reasonable next step but is out of scope
+/// for what's implemented here.
 class AppPermissionsScreen extends ConsumerStatefulWidget {
   const AppPermissionsScreen({super.key});
 
