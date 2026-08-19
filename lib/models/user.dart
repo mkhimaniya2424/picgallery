@@ -63,6 +63,7 @@ class AppUser {
   final String? studioAddress;
   final String? businessType;
   final String? avatarUrl;
+  final String? coverImageUrl;
   final String? country;
   final String? state;
   final String? city;
@@ -145,6 +146,7 @@ class AppUser {
     this.studioAddress,
     this.businessType,
     this.avatarUrl,
+    this.coverImageUrl,
     this.country,
     this.state,
     this.city,
@@ -198,6 +200,7 @@ class AppUser {
       studioAddress: json['studio_address'] as String?,
       businessType: json['business_type'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      coverImageUrl: json['cover_image_url'] as String?,
       country: json['country'] as String?,
       state: json['state'] as String?,
       city: json['city'] as String?,
@@ -255,6 +258,7 @@ class AppUser {
       'studio_address': studioAddress,
       'business_type': businessType,
       'avatar_url': avatarUrl,
+      'cover_image_url': coverImageUrl,
       'country': country,
       'state': state,
       'city': city,
@@ -308,6 +312,7 @@ class AppUser {
     String? studioAddress,
     String? businessType,
     String? avatarUrl,
+    String? coverImageUrl,
     String? country,
     String? state,
     String? city,
@@ -359,6 +364,7 @@ class AppUser {
       studioAddress: studioAddress ?? this.studioAddress,
       businessType: businessType ?? this.businessType,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       country: country ?? this.country,
       state: state ?? this.state,
       city: city ?? this.city,

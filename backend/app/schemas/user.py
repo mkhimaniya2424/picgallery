@@ -232,6 +232,7 @@ class UserRead(BaseModel):
     studio_address: str | None
     business_type: str | None
     avatar_url: str | None
+    cover_image_url: str | None = None
     country: str | None
     state: str | None
     city: str | None

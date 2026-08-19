@@ -27,7 +27,10 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(studioProvider.notifier).ensureDirectoryLoaded();
+      // Always refresh the studio directory when this screen opens so a
+      // newly updated logo/cover from Edit Studio Profile is not hidden by
+      // stale cached data already sitting in the provider.
+      ref.read(studioProvider.notifier).loadDirectory();
     });
   }
 

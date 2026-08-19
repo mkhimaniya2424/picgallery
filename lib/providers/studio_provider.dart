@@ -100,6 +100,24 @@ class StudioNotifier extends ChangeNotifier {
     }
   }
 
+  /// Updates the local cached studio branding for the currently edited
+  /// studio so the app reflects a newly uploaded logo or cover before a
+  /// full directory refresh finishes.
+  void updateCachedBranding({String? logoUrl, String? coverUrl}) {
+    if (_studios.isEmpty) return;
+
+    for (var i = 0; i < _studios.length; i++) {
+      final studio = _studios[i];
+      if (logoUrl != null || coverUrl != null) {
+        _studios[i] = studio.copyWith(
+          logoUrl: logoUrl ?? studio.logoUrl,
+          coverUrl: coverUrl ?? studio.coverUrl,
+        );
+      }
+    }
+    notifyListeners();
+  }
+
   /// Fetches the client's real favorited studios from the backend
   /// (`GET /studios/favorites`) and merges them into [_studios]:
   /// existing directory entries with a matching id are simply flagged

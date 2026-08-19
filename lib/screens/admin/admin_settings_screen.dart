@@ -77,7 +77,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
           final isSelected = settings.language == lang;
           return SimpleDialogOption(
             onPressed: () async {
-              Navigator.pop(context);
+              final messenger = ScaffoldMessenger.maybeOf(context);
+              final navigator = Navigator.of(context);
+              navigator.pop();
               try {
                 final updatedUser = await ref
                     .read(userRepositoryProvider)
@@ -87,8 +89,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                     .read(settingsProvider.notifier)
                     .updateSettings(settings.copyWith(language: updatedUser.appLanguage));
               } on ApiException catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (mounted && messenger != null) {
+                  messenger.showSnackBar(
                     SnackBar(content: Text('Error saving language: ${e.message}')),
                   );
                 }
@@ -561,7 +563,8 @@ class _SettingsToggleRow extends StatelessWidget {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
           ),
         ],
       ),

@@ -17,6 +17,7 @@ import '../../services/studio_media_upload_service.dart' show StudioPortfolioIma
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/screen_backdrop.dart';
+import '../../widgets/common/snackbar_helper.dart';
 import '../../widgets/inputs/cascading_location_picker.dart';
 
 class EditStudioProfileScreen extends ConsumerStatefulWidget {
@@ -74,6 +75,28 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     'Family'
   ];
 
+  void _syncBrandingFromSource() {
+    final authUser = ref.read(authProvider).valueOrNull;
+    final studioNotifier = ref.read(studioProvider.notifier);
+    final studio = studioNotifier.studios.cast<StudioModel?>().firstWhere(
+      (s) => s?.id == widget.settings.studioId,
+      orElse: () => studioNotifier.studios.cast<StudioModel?>().firstWhere(
+        (s) => s?.email == widget.settings.email,
+        orElse: () => null,
+      ),
+    );
+
+    final nextLogo = authUser?.avatarUrl ?? studio?.logoUrl ?? _logoPath;
+    final nextCover = authUser?.coverImageUrl ?? studio?.coverUrl ?? _coverPath;
+
+    if (_logoPath != nextLogo || _coverPath != nextCover) {
+      setState(() {
+        _logoPath = nextLogo;
+        _coverPath = nextCover;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -124,11 +147,11 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
 
     if (studio != null) {
       _aboutController = TextEditingController(text: studio.about);
-      _logoPath = studio.logoUrl;
-      _coverPath = studio.coverUrl;
     } else {
       _aboutController = TextEditingController();
     }
+
+    _syncBrandingFromSource();
 
     // Seed website from the backend-synced cachedUser field first, then
     // fall back to the local settings cache so the value still shows if
@@ -223,13 +246,50 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
           : await repo.uploadCover(bytes: bytes, fileName: picked.name, contentType: contentType);
 
       if (!mounted) return;
+
+      final newPath = url ?? previousPath;
       setState(() {
         if (isLogo) {
-          _logoPath = url ?? previousPath;
+          _logoPath = newPath;
         } else {
-          _coverPath = url ?? previousPath;
+          _coverPath = newPath;
         }
       });
+
+      ref.read(studioProvider.notifier).updateCachedBranding(
+        logoUrl: isLogo ? newPath : null,
+        coverUrl: !isLogo ? newPath : null,
+      );
+
+      await ref.read(authProvider.notifier).refreshMe();
+      final refreshedUser = ref.read(authProvider).valueOrNull;
+      if (refreshedUser != null && newPath != null && newPath.isNotEmpty) {
+        if (isLogo) {
+          ref.read(authProvider.notifier).setUser(refreshedUser.copyWith(avatarUrl: newPath));
+        } else {
+          ref.read(authProvider.notifier).setUser(refreshedUser.copyWith(coverImageUrl: newPath));
+        }
+      }
+
+      try {
+        await ref.read(studioProvider.notifier).loadDirectory();
+      } catch (_) {
+        // Best-effort refresh — the backend upload already persisted the
+        // brand asset; if directory loading fails, the user still sees the
+        // updated image on their own account, and the next successful load
+        // will populate it everywhere else.
+      }
+
+      if (mounted) {
+        _syncBrandingFromSource();
+      }
+
+      if (mounted) {
+        SnackBarHelper.showSuccess(
+          context,
+          isLogo ? 'Studio logo updated successfully.' : 'Cover photo updated successfully.',
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -500,14 +560,51 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Studio profile saved successfully!'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
+        SnackBarHelper.showSuccess(context, 'Studio profile updated successfully.');
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Profile saved',
+                    style: TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Your studio branding and profile details have been updated and are now visible.',
+              style: TextStyle(color: AppColors.subtitle),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  'Done',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
-        Navigator.pop(context);
       }
     } on ApiException catch (e) {
       if (mounted) {
