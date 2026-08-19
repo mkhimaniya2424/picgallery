@@ -16,6 +16,7 @@ class SettingsModel {
   final String uploadQuality; // "Original", "High"
   final String themeMode; // "Light", "Dark", "System"
   final String language; // "English", "Hindi", "Spanish"
+  final String website;
 
   final String galleryViewMode; // "Grid", "List", "Timeline"
 
@@ -37,6 +38,7 @@ class SettingsModel {
     this.uploadQuality = 'High',
     this.themeMode = 'System',
     this.language = 'English',
+    this.website = '',
     this.galleryViewMode = 'Grid',
   });
 
@@ -58,6 +60,7 @@ class SettingsModel {
     String? uploadQuality,
     String? themeMode,
     String? language,
+    String? website,
     String? galleryViewMode,
   }) => SettingsModel(
     studioName: studioName ?? this.studioName,
@@ -77,6 +80,7 @@ class SettingsModel {
     uploadQuality: uploadQuality ?? this.uploadQuality,
     themeMode: themeMode ?? this.themeMode,
     language: language ?? this.language,
+    website: website ?? this.website,
     galleryViewMode: galleryViewMode ?? this.galleryViewMode,
   );
 
@@ -98,6 +102,7 @@ class SettingsModel {
     'uploadQuality': uploadQuality,
     'themeMode': themeMode,
     'language': language,
+    'website': website,
     'galleryViewMode': galleryViewMode,
   };
 
@@ -119,6 +124,7 @@ class SettingsModel {
     uploadQuality: json['uploadQuality'] as String? ?? 'High',
     themeMode: json['themeMode'] as String? ?? 'System',
     language: json['language'] as String? ?? 'English',
+    website: json['website'] as String? ?? '',
     galleryViewMode: json['galleryViewMode'] as String? ?? 'Grid',
   );
 }

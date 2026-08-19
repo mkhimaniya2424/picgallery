@@ -17,6 +17,7 @@ import '../../services/studio_media_upload_service.dart' show StudioPortfolioIma
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/screen_backdrop.dart';
+import '../../widgets/inputs/cascading_location_picker.dart';
 
 class EditStudioProfileScreen extends ConsumerStatefulWidget {
   final SettingsModel settings;
@@ -40,6 +41,15 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
   String? _coverPath;
   List<String> _selectedCategories = [];
   bool _isSaving = false;
+
+  // Country/State/City — real backend User columns (same ones the
+  // client-facing Location section on shared/edit_profile_screen.dart
+  // writes to), only ever set once at registration until now. Studios
+  // never route through that shared screen, so this was the only place
+  // in the app a studio could actually reach to edit them.
+  String? _country;
+  String? _state;
+  String? _city;
 
   // Task 8 — logo/cover uploads go straight to the backend as soon as
   // they're picked (unlike the other fields on this screen, which only
@@ -77,14 +87,15 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     // the settings snapshot for the very first frame and kick off a fresh
     // GET /auth/me to replace it.
     final cachedUser = ref.read(authProvider).valueOrNull;
+    final currentSettings = ref.read(settingsProvider);
     _studioNameController = TextEditingController(
-      text: cachedUser?.studioName ?? widget.settings.studioName,
+      text: cachedUser?.studioName ?? currentSettings.studioName,
     );
     _photoNameController = TextEditingController(
-      text: cachedUser?.fullName ?? widget.settings.photographerName,
+      text: cachedUser?.fullName ?? currentSettings.photographerName,
     );
     _emailController = TextEditingController(
-      text: cachedUser?.email ?? widget.settings.email,
+      text: cachedUser?.email ?? currentSettings.email,
     );
     // Studio's own street address — a real backend User column
     // (`studio_address`), only ever set once at registration until now;
@@ -92,6 +103,9 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     _studioAddressController = TextEditingController(
       text: cachedUser?.studioAddress ?? '',
     );
+    _country = cachedUser?.country;
+    _state = cachedUser?.state;
+    _city = cachedUser?.city;
     if (cachedUser == null) {
       _loadCurrentUser();
     }
@@ -109,15 +123,23 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
         );
 
     if (studio != null) {
-      _websiteController = TextEditingController(text: studio.website);
       _aboutController = TextEditingController(text: studio.about);
       _logoPath = studio.logoUrl;
       _coverPath = studio.coverUrl;
-      _selectedCategories = List<String>.from(studio.categories);
     } else {
-      _websiteController = TextEditingController();
       _aboutController = TextEditingController();
     }
+
+    // Seed website from the backend-synced cachedUser field first, then
+    // fall back to the local settings cache so the value still shows if
+    // the auth cache has not refreshed yet.
+    _websiteController = TextEditingController(text: cachedUser?.website ?? currentSettings.website);
+
+    // Seed specializations from the backend-synced cachedUser field, not from
+    // the local-only studio.categories cache (which never gets updated when
+    // the user saves changes). This is the same source-of-truth that the Save
+    // button writes to and that's used everywhere else on screen.
+    _selectedCategories = cachedUser?.specializations ?? [];
   }
 
   /// Forces a `GET /auth/me` when [initState] found nothing cached in
@@ -139,6 +161,10 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       _photoNameController.text = user.fullName;
       _emailController.text = user.email;
       _studioAddressController.text = user.studioAddress ?? _studioAddressController.text;
+      _websiteController.text = user.website ?? ref.read(settingsProvider).website;
+      _country = user.country ?? _country;
+      _state = user.state ?? _state;
+      _city = user.city ?? _city;
     });
   }
 
@@ -413,9 +439,16 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
             studioAddress: _studioAddressController.text.trim().isNotEmpty
                 ? _studioAddressController.text.trim()
                 : null,
+            country: _country,
+            state: _state,
+            city: _city,
             // Bio maps to the "About / Business Description" textarea.
             bio: _aboutController.text.trim().isNotEmpty
                 ? _aboutController.text.trim()
+                : null,
+            // Website URL
+            website: _websiteController.text.trim().isNotEmpty
+                ? _websiteController.text.trim()
                 : null,
             // Categories/Specializations map to the specializations column.
             specializations: _selectedCategories.isNotEmpty
@@ -435,6 +468,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
         studioName: updatedUser.studioName,
         photographerName: updatedUser.fullName,
         email: _emailController.text.trim(),
+        website: _websiteController.text.trim(),
       );
       await settingsNotifier.updateSettings(updatedSettings);
 
@@ -761,6 +795,17 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                           style: const TextStyle(color: AppColors.text, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Studio Address'),
                           maxLines: 2,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        CascadingLocationPicker(
+                          initialCountry: _country,
+                          initialState: _state,
+                          initialCity: _city,
+                          onChanged: (country, state, city) {
+                            _country = country;
+                            _state = state;
+                            _city = city;
+                          },
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(

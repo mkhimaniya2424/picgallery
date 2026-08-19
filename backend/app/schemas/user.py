@@ -142,6 +142,7 @@ class UserUpdate(BaseModel):
     facebook_url: str | None = Field(default=None, max_length=500)
     youtube_url: str | None = Field(default=None, max_length=500)
     pinterest_url: str | None = Field(default=None, max_length=500)
+    website: str | None = Field(default=None, max_length=500)
 
     # Client optional profile fields (Task 4) — meaningful only for
     # client accounts; a future edit-profile endpoint is expected to
@@ -262,6 +263,7 @@ class UserRead(BaseModel):
     facebook_url: str | None = None
     youtube_url: str | None = None
     pinterest_url: str | None = None
+    website: str | None = None
 
     # Client optional profile fields (Task 4) — nullable, populated only
     # for client accounts.

@@ -67,6 +67,30 @@ class SubscriptionPlanModel {
   }
 
   static const List<SubscriptionPlanModel> plans = [
+    // ── No Active Plan ───────────────────────────────────────────────────────
+    // Placeholder entry for `SubscriptionPlan.free` (a brand-new account, or a
+    // plan that has expired and lapsed back to "no plan"). Never shown as a
+    // purchasable card in the pricing grid — `_PlanCard` loops only render
+    // paid/trial entries — this exists purely so `firstWhere(planType ==
+    // currentPlanType)` resolves correctly for a free/no-plan user instead of
+    // silently falling back to `plans[0]` (which used to BE the trial plan,
+    // causing a fresh account to display "Current Plan: 5-Day Free Trial").
+    SubscriptionPlanModel(
+      id: 'free',
+      name: 'No Active Plan',
+      subtitle: 'Choose a plan to get started',
+      price: 0,
+      currency: '₹',
+      duration: '',
+      billingPeriod: '',
+      months: 0,
+      trialDays: 0,
+      features: [],
+      backupDuration: 'No Backup',
+      isPopular: false,
+      planType: SubscriptionPlan.free,
+    ),
+
     // ── Free Trial (5 days) ──────────────────────────────────────────────────
     SubscriptionPlanModel(
       id: 'trial',
@@ -136,8 +160,13 @@ class SubscriptionPlanModel {
     ),
   ];
 
-  /// Returns the plan with the given [planType].
+  /// Returns the plan with the given [planType]. Every [SubscriptionPlan]
+  /// value (including `free`) now has a matching entry in [plans], so this
+  /// should always find a real match — `orElse` only exists as a
+  /// last-resort safety net and intentionally falls back to the `free`
+  /// entry (not trial), so an unrecognized type never gets misrepresented
+  /// as an active paid/trial plan.
   static SubscriptionPlanModel forType(SubscriptionPlan type) =>
       plans.firstWhere((p) => p.planType == type,
-          orElse: () => plans.first);
+          orElse: () => plans.firstWhere((p) => p.planType == SubscriptionPlan.free));
 }

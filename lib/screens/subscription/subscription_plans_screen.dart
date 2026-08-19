@@ -30,18 +30,12 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
   void initState() {
     super.initState();
     // Initialize to Yearly plan as the default selected option
-    _selectedPlan = SubscriptionPlanModel.plans.firstWhere(
-      (p) => p.planType == SubscriptionPlan.premium,
-      orElse: () => SubscriptionPlanModel.plans[1],
-    );
+    _selectedPlan = SubscriptionPlanModel.forType(SubscriptionPlan.premium);
 
     // After build, set to user's current plan if possible
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentPlanType = ref.read(subscriptionPlanProvider);
-      final currentModel = SubscriptionPlanModel.plans.firstWhere(
-        (p) => p.planType == currentPlanType,
-        orElse: () => SubscriptionPlanModel.plans[0],
-      );
+      final currentModel = SubscriptionPlanModel.forType(currentPlanType);
       setState(() {
         _selectedPlan = currentModel;
       });
@@ -84,10 +78,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
   Widget build(BuildContext context) {
     final subState = ref.watch(subscriptionStateProvider).valueOrNull;
     final currentPlanType = ref.watch(subscriptionPlanProvider);
-    final currentModel = SubscriptionPlanModel.plans.firstWhere(
-      (p) => p.planType == currentPlanType,
-      orElse: () => SubscriptionPlanModel.plans[0],
-    );
+    final currentModel = SubscriptionPlanModel.forType(currentPlanType);
 
     // trial_used comes directly from the backend via AppUser
     final user = ref.watch(authProvider).valueOrNull;
@@ -208,47 +199,58 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                               ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        // Current Plan Indicator
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(color: AppColors.border),
-                            boxShadow: AppShadows.subtle,
+                        // Current Plan Indicator — only shown once the user
+                        // actually has an active plan. `currentModel` used
+                        // to silently fall back to the Trial plan for a
+                        // brand-new/no-plan account (no `free` entry existed
+                        // in SubscriptionPlanModel.plans), so this chip used
+                        // to permanently read "Current Plan: 5-Day Free
+                        // Trial" even when nothing was active. Fixed at the
+                        // data level (plans now has a real `free` entry) AND
+                        // gated here, so a no-plan user sees nothing at all,
+                        // consistent with the Expiry/Active banners below.
+                        if (planActive) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: AppColors.border),
+                              boxShadow: AppShadows.subtle,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: currentPlanType.color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Current Plan: ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.subtitle,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  currentModel.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.text,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: currentPlanType.color,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Current Plan: ',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.subtitle,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                currentModel.name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.text,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

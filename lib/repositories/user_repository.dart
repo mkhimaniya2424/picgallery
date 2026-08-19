@@ -46,6 +46,7 @@ class UserRepository {
     String? facebookUrl,
     String? youtubeUrl,
     String? pinterestUrl,
+    String? website,
     // Client optional profile fields (Task 8) — meaningful only for
     // client accounts; callers should leave these null for photographers.
     String? profilePhotoUrl,
@@ -90,6 +91,7 @@ class UserRepository {
     if (facebookUrl != null) body['facebook_url'] = facebookUrl;
     if (youtubeUrl != null) body['youtube_url'] = youtubeUrl;
     if (pinterestUrl != null) body['pinterest_url'] = pinterestUrl;
+    if (website != null) body['website'] = website;
 
     if (profilePhotoUrl != null) body['profile_photo_url'] = profilePhotoUrl;
     if (gender != null) body['gender'] = gender;
@@ -110,7 +112,7 @@ class UserRepository {
   /// DELETE /users/me (Task 10 — Delete Account). [password] confirms
   /// the request for local (email/password) accounts; the backend
   /// ignores it for Google/Apple accounts, which have no password to
-  /// check in the first place. Returns the backend's confirmation
+  /// check in the first place. Returns the backend's confirmation  
   /// message. Soft-deletes server-side — the caller (the Delete Account
   /// screen) is responsible for clearing the local session afterwards
   /// via `AuthNotifier.logout()`, same as any other sign-out.

@@ -43,6 +43,7 @@ _PHOTOGRAPHER_ONLY_FIELDS = {
     "facebook_url",
     "youtube_url",
     "pinterest_url",
+    "website",
 }
 
 # Client optional profile fields (Task 8) — meaningful only for client
@@ -62,7 +63,7 @@ _CLIENT_ONLY_FIELDS = {
 # of `_emptyToNull()`. Normalized to None here so a cleared field
 # actually clears rather than storing "". Originally just the
 # social-link URLs.
-_EMPTY_TO_NULL_FIELDS = {"instagram_url", "facebook_url", "youtube_url", "pinterest_url"}
+_EMPTY_TO_NULL_FIELDS = {"instagram_url", "facebook_url", "youtube_url", "pinterest_url", "website"}
 
 
 @router.patch("/me", response_model=UserRead)

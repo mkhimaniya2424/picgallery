@@ -67,6 +67,7 @@ class AppUser {
   final String? facebookUrl;
   final String? youtubeUrl;
   final String? pinterestUrl;
+  final String? website;
 
   // Client optional profile fields (Task 4 backend / Task 8 Flutter) —
   // populated only for client accounts, always null for photographers.
@@ -139,6 +140,7 @@ class AppUser {
     this.facebookUrl,
     this.youtubeUrl,
     this.pinterestUrl,
+    this.website,
     this.profilePhotoUrl,
     this.gender,
     this.dateOfBirth,
@@ -193,6 +195,7 @@ class AppUser {
       facebookUrl: json['facebook_url'] as String?,
       youtubeUrl: json['youtube_url'] as String?,
       pinterestUrl: json['pinterest_url'] as String?,
+      website: json['website'] as String?,
       profilePhotoUrl: json['profile_photo_url'] as String?,
       gender: json['gender'] as String?,
       dateOfBirth: json['date_of_birth'] == null ? null : DateTime.parse(json['date_of_birth'] as String),
@@ -247,6 +250,7 @@ class AppUser {
       'facebook_url': facebookUrl,
       'youtube_url': youtubeUrl,
       'pinterest_url': pinterestUrl,
+      'website': website,
       'profile_photo_url': profilePhotoUrl,
       'gender': gender,
       'date_of_birth': dateOfBirth?.toIso8601String().split('T').first,
@@ -299,6 +303,7 @@ class AppUser {
     String? facebookUrl,
     String? youtubeUrl,
     String? pinterestUrl,
+    String? website,
     String? profilePhotoUrl,
     String? gender,
     DateTime? dateOfBirth,
@@ -350,6 +355,7 @@ class AppUser {
       facebookUrl: facebookUrl ?? this.facebookUrl,
       youtubeUrl: youtubeUrl ?? this.youtubeUrl,
       pinterestUrl: pinterestUrl ?? this.pinterestUrl,
+      website: website ?? this.website,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       gender: gender ?? this.gender,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,

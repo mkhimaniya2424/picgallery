@@ -106,6 +106,7 @@ class User(Base):
     facebook_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     youtube_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     pinterest_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    website: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Client optional profile fields (Task 4) — client role only, always
     # nullable/unset for photographer accounts. `preferred_photo_types`
@@ -185,6 +186,15 @@ class User(Base):
     plan_expiry: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     plan_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Expiry-reminder tracking — records the days-remaining threshold the
+    # last reminder was sent for on the CURRENT plan cycle (e.g. 30, 7, 1),
+    # so send_plan_reminders.py never re-sends the same threshold twice.
+    # Reset to NULL by activatePlan() (pricing.php) every time a plan is
+    # (re)activated, so a fresh cycle always starts with no reminders sent.
+    # Already exists in the DB (added the same ad-hoc way as the other
+    # plan_* columns above) — this just makes it visible to SQLAlchemy.
+    last_reminder_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
