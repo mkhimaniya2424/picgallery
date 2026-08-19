@@ -7,7 +7,6 @@ import '../../core/theme/app_theme.dart';
 import '../../models/admin_dashboard_data.dart';
 import '../../providers/admin_dashboard_providers.dart';
 import '../../providers/auth_providers.dart';
-import '../../providers/drawer_provider.dart';
 import '../../providers/settings_provider.dart';
 
 /// Gradient (purple → pink) header for [StudioDrawer].
@@ -161,19 +160,23 @@ class StudioDrawerHeader extends ConsumerWidget {
   }
 
   _StorageStat _storageUsage(AdminDashboardSnapshot? snapshot) {
-    if (snapshot == null)
-      return const _StorageStat(usedLabel: '—', totalLabel: '1 TB', percent: 0);
+    if (snapshot == null) {
+      return const _StorageStat(usedLabel: '—', totalLabel: '', percent: 0);
+    }
     final stat = snapshot.stats.cast<StatCardData?>().firstWhere(
-          (s) => s?.label == 'Storage Used',
-          orElse: () => null,
-        );
+      (s) => s?.label == 'Storage Used',
+      orElse: () => null,
+    );
     final usedLabel = stat?.value ?? '0 GB';
     final totalMedia =
         snapshot.recentUploads.fold<int>(0, (sum, u) => sum + u.mediaCount);
     final storageGb = totalMedia * 1.4 / 1000;
     final percent = (storageGb / 1024).clamp(0.0, 1.0);
     return _StorageStat(
-        usedLabel: usedLabel, totalLabel: '1 TB', percent: percent);
+      usedLabel: usedLabel,
+      totalLabel: '',
+      percent: percent,
+    );
   }
 }
 

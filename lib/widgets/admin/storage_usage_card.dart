@@ -88,11 +88,12 @@ class StorageUsageCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppColors.text)),
-                Text('of $totalLabel',
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.subtitle)),
+                if (totalLabel.trim().isNotEmpty)
+                  Text('of $totalLabel',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.subtitle)),
               ],
             ),
           ],

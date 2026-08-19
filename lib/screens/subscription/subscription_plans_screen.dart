@@ -321,7 +321,12 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                                   if (subState?.expiresAt != null)
                                     TextSpan(
                                       text:
-                                          ' — active until ${DateFormat('dd MMM yyyy').format(subState!.expiresAt!)}',
+                                          // .toLocal() is required here: the backend stores/sends
+                                          // expiry as UTC, and DateTime.parse keeps that UTC flag.
+                                          // Formatting it directly (as before) displayed raw UTC
+                                          // instead of the device's local time — 5:30 hours off
+                                          // for an IST user.
+                                          ' — active until ${DateFormat('dd MMM yyyy, hh:mm a').format(subState!.expiresAt!.toLocal())}',
                                     ),
                                 ],
                               ),
@@ -332,7 +337,15 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                     ),
 
                   // ── Plan Cards ─────────────────────────────────────────
-                  ...SubscriptionPlanModel.plans.map((plan) {
+                  // The 'free' entry in SubscriptionPlanModel.plans is a
+                  // lookup-only placeholder (used by forType() so a no-plan
+                  // user resolves correctly) — it must never be rendered as
+                  // a purchasable/selectable card in this grid. Filtering it
+                  // out here is what stops "No Active Plan — ACTIVE" from
+                  // showing up above the real Trial/Pro/Premium cards.
+                  ...SubscriptionPlanModel.plans
+                      .where((plan) => plan.planType != SubscriptionPlan.free)
+                      .map((plan) {
                     final isSelected = _selectedPlan.id == plan.id;
                     final isActive = currentPlanType == plan.planType;
                     final isPlanTrialLocked = plan.planType == SubscriptionPlan.trial &&
@@ -960,7 +973,9 @@ class _CurrentPlanStatusCard extends StatelessWidget {
             _buildStatusRow(context, 'Status', 'Active', isValueGreen: true),
             _buildStatusRow(context, 'Renewal Date',
                 subState?.expiresAt != null
-                    ? DateFormat('dd MMM yyyy, hh:mm a').format(subState!.expiresAt!)
+                    // .toLocal() — same fix as the banner above; expiresAt
+                    // arrives from the backend as UTC.
+                    ? DateFormat('dd MMM yyyy, hh:mm a').format(subState!.expiresAt!.toLocal())
                     : 'N/A'),
             if (subState != null && subState!.daysRemaining >= 0)
               _buildStatusRow(context, 'Days Remaining', '${subState!.daysRemaining} days'),

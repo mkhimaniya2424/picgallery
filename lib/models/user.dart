@@ -17,6 +17,39 @@ enum AppUserRole {
   String toJson() => name;
 }
 
+/// Parses a subscription-timestamp string (`plan_started_at` / `plan_expiry`)
+/// from the backend, always treating it as UTC.
+///
+/// The backend is supposed to send these with an explicit UTC offset, but
+/// `plan_expiry`'s underlying DB column is `timestamp` (no timezone) rather
+/// than `timestamptz` — see the comment above `plan_expiry` in
+/// `app/models/user.py`. Postgres silently drops the offset on write, so the
+/// value can come back as a bare string like "2026-08-24T10:13:00" with no
+/// "Z"/offset suffix. `DateTime.parse` treats a string like that as *local*
+/// device time, not UTC, which made the Renewal Date / subscription banner
+/// show a time up to several hours off (5:30 for IST users) once `.toLocal()`
+/// was applied downstream.
+///
+/// This mirrors the same defensive fix already used server-side in
+/// `app/api/deps.py` (re-tagging a naive datetime as UTC before comparing)
+/// so the app is correct regardless of whether that DB column ever gets
+/// migrated to `timestamptz`.
+DateTime? _parseUtcTimestamp(String? raw) {
+  if (raw == null) return null;
+  final parsed = DateTime.parse(raw);
+  if (parsed.isUtc) return parsed;
+  return DateTime.utc(
+    parsed.year,
+    parsed.month,
+    parsed.day,
+    parsed.hour,
+    parsed.minute,
+    parsed.second,
+    parsed.millisecond,
+    parsed.microsecond,
+  );
+}
+
 /// Plain Dart mirror of the backend's `UserRead` schema
 /// (`app/schemas/user.py`). Field names are camelCase on the Dart side;
 /// [fromJson]/[toJson] translate to/from the backend's snake_case keys.
@@ -206,8 +239,8 @@ class AppUser {
       budgetMax: (json['budget_max'] as num?)?.toDouble(),
       subscriptionStatus: json['subscription_status'] as String? ?? 'none',
       currentPlan: json['current_plan'] as String?,
-      planStartedAt: json['plan_started_at'] != null ? DateTime.parse(json['plan_started_at'] as String) : null,
-      planExpiry: json['plan_expiry'] != null ? DateTime.parse(json['plan_expiry'] as String) : null,
+      planStartedAt: _parseUtcTimestamp(json['plan_started_at'] as String?),
+      planExpiry: _parseUtcTimestamp(json['plan_expiry'] as String?),
       trialUsed: json['trial_used'] as bool? ?? false,
     );
   }

@@ -28,11 +28,16 @@ def upgrade() -> None:
     # same as current_plan/plan_status/plan_expiry/trial_used were.
     # Nullable, no default needed: NULL simply means "no reminder sent
     # yet this cycle".
-    op.add_column(
-        'users',
-        sa.Column('last_reminder_days', sa.Integer(), nullable=True),
+    # Idempotent: this column already exists in some environments where it
+    # was added manually via raw SQL before this migration was written.
+    # op.add_column() has no IF NOT EXISTS option, so we use raw DDL
+    # (Postgres 9.6+ supports ADD COLUMN IF NOT EXISTS).
+    op.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_reminder_days INTEGER"
     )
 
 
 def downgrade() -> None:
-    op.drop_column('users', 'last_reminder_days')
+    op.execute(
+        "ALTER TABLE users DROP COLUMN IF EXISTS last_reminder_days"
+    )

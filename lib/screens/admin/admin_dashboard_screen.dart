@@ -223,7 +223,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                   delay: const Duration(milliseconds: 180),
                   child: StorageUsageCard(
                     usedLabel: _storageStat(snapshot).value,
-                    totalLabel: '1 TB',
+                    totalLabel: '',
                     percentUsed: _storagePercent(snapshot),
                     onTap: () => Navigator.of(context)
                         .pushNamed(AppRoutes.storageOverview),

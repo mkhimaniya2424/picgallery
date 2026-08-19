@@ -72,7 +72,7 @@ class StorageOverviewScreen extends ConsumerWidget {
                 children: [
                   StorageUsageCard(
                     usedLabel: storageStat.value,
-                    totalLabel: '1 TB',
+                    totalLabel: '',
                     percentUsed: percent,
                   ),
                   const SizedBox(height: AppSpacing.xl),
