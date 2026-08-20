@@ -117,6 +117,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
     setState(() => _isSubmitting = false);
 
+    // Clears any leftover SnackBar (e.g. an earlier failed attempt's
+    // "account already exists" message) before navigating away. The
+    // app's ScaffoldMessenger is a single instance shared across every
+    // screen (MaterialApp provides one by default), so without this an
+    // old error banner can silently resurface later — e.g. when the
+    // user backs out of VerificationPendingScreen and lands back on
+    // this screen, even though nothing new went wrong.
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
     // register() already returns an access token and logs the user
     // in (unverified), so go straight into the verification-pending
     // step with the real account's email/role. (Uses

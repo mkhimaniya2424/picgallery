@@ -187,23 +187,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   /// expects per `app_routes.dart` (`verificationPending` wants a Map,
   /// `completeProfile` wants a raw `UserRole?`). `splash_screen.dart`
   /// (Task 10) reuses this same priority order and the same getter.
+  ///
+  /// The verification/profile branches use a plain `pushNamed` (not
+  /// `pushNamedAndRemoveUntil`) so Login stays on the stack beneath the
+  /// gate screen — otherwise the gate screen's back button has nothing
+  /// to pop to and silently does nothing. Only the final, fully-set-up
+  /// destination clears the whole stack, since you shouldn't be able to
+  /// back out of Home into Login.
   void _navigateAfterAuth(AppUser user) {
     final legacyRole = user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
     final navigator = Navigator.of(context);
 
     if (!user.isEmailVerified) {
-      navigator.pushNamedAndRemoveUntil(
+      navigator.pushNamed(
         AppRoutes.verificationPending,
-        (route) => false,
         arguments: {'email': user.email, 'role': legacyRole},
       );
       return;
     }
 
     if (!user.hasCompletedProfile) {
-      navigator.pushNamedAndRemoveUntil(
+      navigator.pushNamed(
         AppRoutes.completeProfile,
-        (route) => false,
         arguments: legacyRole,
       );
       return;

@@ -116,9 +116,37 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         return;
       }
 
-      Navigator.of(context)
-          .pushReplacementNamed(destination.route, arguments: destination.arguments);
+      _navigateToDestination(destination, restoredUser);
     });
+  }
+
+  /// A restored session that still needs to verify its email or finish
+  /// its profile used to land with a single `pushReplacementNamed` —
+  /// leaving [AppRoutes.verificationPending] / [AppRoutes.completeProfile]
+  /// with nothing beneath them, so their back button had nowhere to go.
+  /// For those two "gate" screens, this instead rebuilds a real stack
+  /// (Role Selection -> Login -> gate screen) so back steps through the
+  /// screens one at a time, the same as if the user had navigated there
+  /// by hand, instead of jumping straight to Login. Any other
+  /// destination (onboarding, role selection, or a completed session's
+  /// home screen) keeps the original single-replace behavior — those
+  /// screens don't show a back arrow in the first place.
+  void _navigateToDestination(_ResolvedDestination destination, AppUser? user) {
+    final navigator = Navigator.of(context);
+    final isGateScreen = user != null &&
+        (destination.route == AppRoutes.verificationPending ||
+            destination.route == AppRoutes.completeProfile);
+
+    if (!isGateScreen) {
+      navigator.pushReplacementNamed(destination.route, arguments: destination.arguments);
+      return;
+    }
+
+    final legacyRole =
+        user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    navigator.pushReplacementNamed(AppRoutes.roleSelection);
+    navigator.pushNamed(AppRoutes.login, arguments: legacyRole);
+    navigator.pushNamed(destination.route, arguments: destination.arguments);
   }
 
   /// Same priority order as `LoginScreen._navigateAfterAuth`: a restored
@@ -262,4 +290,4 @@ class _ResolvedDestination {
   final String route;
   final Object? arguments;
   const _ResolvedDestination(this.route, {this.arguments});
-}
+} 

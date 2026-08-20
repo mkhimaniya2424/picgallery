@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_providers.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/common/app_popup.dart';
+import '../../widgets/common/auth_container.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/screen_backdrop.dart';
 
@@ -86,14 +87,16 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(),
       body: ScreenBackdrop(
         child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          top: true,
+          child: AuthContainer(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xl),
+            mainAxisAlignment: MainAxisAlignment.center,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 ScaleTransition(
                   scale: _scale,
