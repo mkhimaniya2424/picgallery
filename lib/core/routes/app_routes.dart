@@ -428,9 +428,12 @@ class AppRoutes {
       case albumShareSettings:
         return _slide(ShareSettingsScreen(albumId: settings.arguments as String));
       case sharedGallery:
-        final args = settings.arguments as Map<String, dynamic>?;
-        final linkId = args?['linkId'] as String? ?? '';
-        return _fade(SharedGalleryScreen(linkId: linkId));
+        // Takes the share link's opaque `token` now, not an internal
+        // `linkId` — a guest opening a `picgallery://shared/{token}`
+        // deep link (or "Preview Client View") never has, or should
+        // have, the internal id, only the token.
+        final token = settings.arguments as String? ?? '';
+        return _fade(SharedGalleryScreen(token: token));
       case adminClientDetails:
         return _slide(ClientDetailsScreen(clientId: settings.arguments as String? ?? ''));
       case adminAnalytics:

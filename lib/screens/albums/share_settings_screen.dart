@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -32,6 +33,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
   DateTime? _expiryDate;
   bool _allowDownload = true;
   bool _showWatermark = false;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -39,16 +41,20 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     super.dispose();
   }
 
-  void _initFields(WidgetRef ref) {
+  /// Primes the form from the loaded link, once. Unlike the old
+  /// local-only version, this never prefills [_passwordController] —
+  /// the backend only ever stores a bcrypt hash, so there is no
+  /// plaintext to prefill with. A blank password field on an
+  /// already-protected link means "keep the existing password", not
+  /// "there is no password"; [_hasExistingPassword] tracks that.
+  void _initFields(GalleryShareLink? link) {
     if (_initialized) return;
     _initialized = true;
 
-    final link = ref.read(shareLinkProvider).getLinkForAlbum(widget.albumId);
-    if (link != null && !link.revoked) {
-      _isPublic = link.isPublic;
-      _passwordController.text = link.password ?? '';
-      _hasExpiry = link.expiryDate != null;
-      _expiryDate = link.expiryDate;
+    if (link != null && !link.isRevoked) {
+      _isPublic = !link.hasPassword;
+      _hasExpiry = link.expiresAt != null;
+      _expiryDate = link.expiresAt;
       _allowDownload = link.allowDownload;
       _showWatermark = link.showWatermark;
     }
@@ -70,28 +76,48 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     }
   }
 
-  Future<void> _saveSettings() async {
-    if (!_isPublic && !_formKey.currentState!.validate()) {
+  Future<void> _saveSettings(GalleryShareLink? existingLink) async {
+    final hasExistingPassword = existingLink != null && !existingLink.isRevoked && existingLink.hasPassword;
+
+    if (!_isPublic && !hasExistingPassword && !_formKey.currentState!.validate()) {
       return;
     }
+    // Still run the validator for a non-empty edit even when a password
+    // already exists, so a stray 1-3 character typo doesn't silently
+    // get sent — but an empty field is fine there (means "keep it").
+    if (!_isPublic && hasExistingPassword && _passwordController.text.isNotEmpty) {
+      if (!_formKey.currentState!.validate()) return;
+    }
 
-    final notifier = ref.read(shareLinkProvider.notifier);
-    await notifier.createOrUpdateLink(
-      albumId: widget.albumId,
-      isPublic: _isPublic,
-      password: _isPublic ? null : _passwordController.text,
-      expiryDate: _hasExpiry ? _expiryDate : null,
-      allowDownload: _allowDownload,
-      showWatermark: _showWatermark,
-    );
+    setState(() => _isSaving = true);
+    try {
+      final controller = ref.read(shareLinkControllerProvider(widget.albumId).notifier);
+      await controller.createOrUpdate(
+        password: _isPublic
+            ? null
+            : (_passwordController.text.isEmpty ? null : _passwordController.text),
+        clearPassword: _isPublic,
+        expiresAt: _hasExpiry ? _expiryDate : null,
+        clearExpiry: !_hasExpiry,
+        allowDownload: _allowDownload,
+        showWatermark: _showWatermark,
+      );
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share settings updated successfully.')),
-    );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Share settings updated successfully.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Couldn't update share settings: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
-  Future<void> _revokeLink(String linkId) async {
+  Future<void> _revokeLink() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -115,29 +141,30 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
     if (confirmed != true) return;
 
-    final notifier = ref.read(shareLinkProvider.notifier);
-    await notifier.revokeLink(linkId);
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share link revoked.')),
-    );
+    try {
+      await ref.read(shareLinkControllerProvider(widget.albumId).notifier).revoke();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Share link revoked.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Couldn't revoke link: $e")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    _initFields(ref);
     final albums = ref.watch(albumProvider).allAlbums;
     final album = albums.firstWhere((a) => a.id == widget.albumId);
 
-    final linkState = ref.watch(shareLinkProvider);
-    final activeLink = linkState.getLinkForAlbum(widget.albumId);
-    final hasActiveLink = activeLink != null && !activeLink.revoked;
+    final linkState = ref.watch(shareLinkControllerProvider(widget.albumId));
+    final activeLink = linkState.activeLink;
+    final hasActiveLink = activeLink != null && !activeLink.isRevoked;
 
-    // Simulated share link URL
-    final shareUrl = hasActiveLink
-        ? 'https://picgallery.com/shared/gallery/${activeLink.id}'
-        : '';
+    _initFields(activeLink);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -145,78 +172,87 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
         showBack: true,
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader('Gallery Type'),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildGalleryTypeSelector(),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (!_isPublic) ...[
-                          _buildSectionHeader('Security Settings'),
-                          const SizedBox(height: AppSpacing.sm),
-                          CustomTextField(
-                            label: 'Access Password',
-                            icon: Icons.lock_outline_rounded,
-                            controller: _passwordController,
-                            obscureText: true,
-                            validator: (v) {
-                              if (v == null || v.trim().length < 4) {
-                                return 'Password must be at least 4 characters';
-                              }
-                              return null;
-                            },
+        child: linkState.isLoading && activeLink == null
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader(context, 'Gallery Type'),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildGalleryTypeSelector(),
+                              const SizedBox(height: AppSpacing.lg),
+                              if (!_isPublic) ...[
+                                _buildSectionHeader(context, 'Security Settings'),
+                                const SizedBox(height: AppSpacing.sm),
+                                CustomTextField(
+                                  label: hasActiveLink && activeLink.hasPassword
+                                      ? 'New Password (leave blank to keep current)'
+                                      : 'Access Password',
+                                  icon: Icons.lock_outline_rounded,
+                                  controller: _passwordController,
+                                  obscureText: true,
+                                  validator: (v) {
+                                    if (hasActiveLink && activeLink.hasPassword && (v == null || v.isEmpty)) {
+                                      return null;
+                                    }
+                                    if (v == null || v.trim().length < 4) {
+                                      return 'Password must be at least 4 characters';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
+                              _buildSectionHeader(context, 'Link Configuration'),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildLinkSettingsCard(),
+                              const SizedBox(height: AppSpacing.xl),
+                              GradientButton(
+                                label: hasActiveLink ? 'Update Settings' : 'Generate Share Link',
+                                isLoading: _isSaving,
+                                onPressed: _isSaving ? null : () => _saveSettings(activeLink),
+                              ),
+                              if (hasActiveLink) ...[
+                                const SizedBox(height: AppSpacing.xxl),
+                                const Divider(color: AppColors.border),
+                                const SizedBox(height: AppSpacing.lg),
+                                _buildSectionHeader(context, 'Active Share Link'),
+                                const SizedBox(height: AppSpacing.sm),
+                                _buildActiveLinkCard(activeLink),
+                                const SizedBox(height: AppSpacing.xl),
+                                _buildSectionHeader(context, 'Link Analytics & QR'),
+                                const SizedBox(height: AppSpacing.sm),
+                                _buildAnalyticsAndQrCard(activeLink),
+                              ],
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                        ],
-                        _buildSectionHeader('Link Configuration'),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildLinkSettingsCard(),
-                        const SizedBox(height: AppSpacing.xl),
-                        GradientButton(
-                          label: hasActiveLink ? 'Update Settings' : 'Generate Share Link',
-                          onPressed: _saveSettings,
                         ),
-                        if (hasActiveLink) ...[
-                          const SizedBox(height: AppSpacing.xxl),
-                          const Divider(color: AppColors.border),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildSectionHeader('Active Share Link'),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildActiveLinkCard(activeLink, shareUrl),
-                          const SizedBox(height: AppSpacing.xl),
-                          _buildSectionHeader('Link Analytics & QR'),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildAnalyticsAndQrCard(activeLink, shareUrl),
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14.5,
         fontWeight: FontWeight.w800,
-        color: AppColors.text,
+        color: isDark ? AppColors.textOnDark : AppColors.text,
       ),
     );
   }
@@ -235,11 +271,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             groupValue: _isPublic,
             title: const Text(
               'Public Gallery',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.text),
             ),
             subtitle: const Text(
               'Anyone with the link can view and browse the photos.',
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 12, color: AppColors.subtitle),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
@@ -252,11 +288,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             groupValue: _isPublic,
             title: const Text(
               'Private Gallery',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.text),
             ),
             subtitle: const Text(
               'Requires entering a passcode to validate access.',
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 12, color: AppColors.subtitle),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
@@ -282,11 +318,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             value: _hasExpiry,
             title: const Text(
               'Set Expiry Date',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.text),
             ),
             subtitle: const Text(
               'Link will automatically expire after the date.',
-              style: TextStyle(fontSize: 11.5),
+              style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
@@ -309,7 +345,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                     _expiryDate == null
                         ? 'No date selected'
                         : '${_expiryDate!.day}/${_expiryDate!.month}/${_expiryDate!.year}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.text),
                   ),
                   const Spacer(),
                   TextButton(
@@ -324,11 +360,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             value: _allowDownload,
             title: const Text(
               'Allow Downloads',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.text),
             ),
             subtitle: const Text(
               'Clients can download high-res original photos.',
-              style: TextStyle(fontSize: 11.5),
+              style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) => setState(() => _allowDownload = val),
@@ -338,11 +374,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             value: _showWatermark,
             title: const Text(
               'Overlay Watermark',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.text),
             ),
             subtitle: const Text(
               'Display a soft "picgallery" brand watermarking over photos.',
-              style: TextStyle(fontSize: 11.5),
+              style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) => setState(() => _showWatermark = val),
@@ -352,7 +388,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     );
   }
 
-  Widget _buildActiveLinkCard(GalleryShareLink link, String shareUrl) {
+  Widget _buildActiveLinkCard(GalleryShareLink link) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -367,7 +403,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             children: [
               Expanded(
                 child: Text(
-                  shareUrl,
+                  link.qrDeepLink,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -381,10 +417,17 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                 icon: const Icon(Icons.copy_rounded, color: AppColors.primary),
                 tooltip: 'Copy Link',
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: shareUrl));
+                  Clipboard.setData(ClipboardData(text: link.qrDeepLink));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Share URL copied to clipboard.')),
+                    const SnackBar(content: Text('Share Link copied to clipboard.')),
                   );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.share_rounded, color: AppColors.primary),
+                tooltip: 'Share',
+                onPressed: () {
+                  Share.share(link.qrDeepLink, subject: 'Check out this shared gallery!');
                 },
               ),
             ],
@@ -397,7 +440,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                   onPressed: () {
                     Navigator.of(context).pushNamed(
                       AppRoutes.sharedGallery,
-                      arguments: {'linkId': link.id},
+                      arguments: link.token,
                     );
                   },
                   icon: const Icon(Icons.remove_red_eye_outlined),
@@ -411,7 +454,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),
                   ),
-                  onPressed: () => _revokeLink(link.id),
+                  onPressed: _revokeLink,
                   icon: const Icon(Icons.link_off_rounded),
                   label: const Text('Revoke Link'),
                 ),
@@ -423,13 +466,13 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     );
   }
 
-  Widget _buildAnalyticsAndQrCard(GalleryShareLink link, String shareUrl) {
+  Widget _buildAnalyticsAndQrCard(GalleryShareLink link) {
     final statusColor = link.isExpired
         ? Colors.orange
-        : (link.revoked ? AppColors.error : AppColors.success);
+        : (link.isRevoked ? AppColors.error : AppColors.success);
     final statusText = link.isExpired
         ? 'Expired'
-        : (link.revoked ? 'Revoked' : 'Active');
+        : (link.isRevoked ? 'Revoked' : 'Active');
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -447,13 +490,14 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
               children: [
                 const Text(
                   'Link Analytics',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: AppColors.text),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _buildAnalyticRow(Icons.info_outline_rounded, 'Status', statusText, valueColor: statusColor),
                 _buildAnalyticRow(Icons.visibility_outlined, 'Total Views', '${link.viewsCount}'),
                 _buildAnalyticRow(Icons.download_outlined, 'Downloads', '${link.downloadsCount}'),
-                _buildAnalyticRow(Icons.lock_clock_outlined, 'Type', link.isPublic ? 'Public' : 'Private (Protected)'),
+                _buildAnalyticRow(
+                    Icons.lock_clock_outlined, 'Type', link.hasPassword ? 'Private (Protected)' : 'Public'),
               ],
             ),
           ),
@@ -468,7 +512,12 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: QrImageView(
-                  data: shareUrl,
+                  // Encodes the in-app deep link (resolved by
+                  // DeepLinkService's `case 'shared':`), not the plain
+                  // https:// share_url — that has no route registered
+                  // to intercept it and would just open a dead browser
+                  // tab.
+                  data: link.qrDeepLink,
                   version: QrVersions.auto,
                   size: 110.0,
                 ),

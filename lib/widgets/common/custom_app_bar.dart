@@ -4,18 +4,8 @@ import '../../core/theme/app_theme.dart';
 
 /// The single AppBar used on every screen in the app, so headers stay
 /// pixel- AND color-consistent everywhere instead of screens hand-rolling
-/// their own header rows or sitting transparent/plain:
-///
-/// * Filled with the same flat [AppColors.background] as the rest of the
-///   screen (no gradient, no shadow), so it blends seamlessly into the
-///   page instead of standing out as a separate bar.
-/// * A soft glass-pill back button by default (or a fully custom
-///   [leading] widget for screens like Home that need a brand mark).
-/// * An optional [titleWidget] for richer titles (e.g. logo + wordmark)
-///   in addition to the simple [title] string used by inner/auth screens.
-/// * An optional [bottom] slot (e.g. Register's step progress bar) so
-///   secondary chrome lives inside the same bar instead of a separate
-///   ad-hoc row below it.
+/// their own header rows or sitting transparent/plain. Automatically
+/// adapts icon/title colors to the current light/dark theme.
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final Widget? titleWidget;
@@ -40,6 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -49,8 +40,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: leading != null ? 4 : NavigationToolbar.kMiddleSpacing,
       automaticallyImplyLeading: showBack,
       leadingWidth: leading != null ? 64 : null,
-      iconTheme: const IconThemeData(color: AppColors.text),
-      actionsIconTheme: const IconThemeData(color: AppColors.text),
+      iconTheme: IconThemeData(color: onSurface),
+      actionsIconTheme: IconThemeData(color: onSurface),
       leading: leading ??
           (showBack
               ? Padding(
@@ -64,10 +55,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: titleWidget ??
           (title != null
               ? Text(title!,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.text))
+                      color: onSurface))
               : null),
       actions: actions,
       bottom: bottom,
@@ -107,6 +98,13 @@ class _GlassIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
+    final bgColor = isDark
+        ? AppColors.darkSurfaceRaised.withValues(alpha: 0.7)
+        : AppColors.primary.withValues(alpha: 0.1);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(100),
@@ -114,11 +112,11 @@ class _GlassIconButton extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
+          color: bgColor,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: borderColor),
         ),
-        child: Icon(icon, size: size * 0.4, color: AppColors.text),
+        child: Icon(icon, size: size * 0.4, color: onSurface),
       ),
     );
   }

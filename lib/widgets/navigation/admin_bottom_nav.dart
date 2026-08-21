@@ -24,13 +24,15 @@ class AdminBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           boxShadow: [
             BoxShadow(
@@ -61,7 +63,7 @@ class AdminBottomNav extends StatelessWidget {
                     children: [
                       Icon(item.icon,
                           size: 20,
-                          color: selected ? Colors.white : AppColors.subtitle),
+                          color: selected ? Colors.white : (isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                       if (selected) ...[
                         const SizedBox(height: 3),
                         Text(

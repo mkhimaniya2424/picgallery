@@ -100,7 +100,7 @@ class _ClientSavedGalleriesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(title: 'Favorites'),
       body: SafeArea(
         child: RefreshIndicator(

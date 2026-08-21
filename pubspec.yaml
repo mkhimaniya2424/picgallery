@@ -61,6 +61,8 @@ dependencies:
   # wired into services/permission_service.dart and the onboarding
   # permission screens.
   permission_handler: ^11.3.1
+  firebase_core: ^4.13.0
+  firebase_messaging: ^16.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

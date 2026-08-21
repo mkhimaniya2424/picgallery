@@ -48,26 +48,29 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(adminDashboardProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurfaceColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
             pinned: true,
-            backgroundColor: AppColors.background,
+            
             elevation: 0,
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: AppColors.text, size: 20),
+              icon: Icon(Icons.arrow_back_ios_new_rounded,
+                  color: onSurfaceColor, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
+            title: Text(
               'Studio Reports & Analytics',
               style: TextStyle(
-                  color: AppColors.text,
+                  color: onSurfaceColor,
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.1),
@@ -76,7 +79,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             bottom: TabBar(
               controller: _tabController,
               labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.subtitle,
+              unselectedLabelColor: subtitleColor,
               indicatorColor: AppColors.primary,
               indicatorWeight: 3,
               labelStyle:
@@ -127,6 +130,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   }
 
   Widget _buildErrorState(Object error) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     return _statusScrollView(
       Center(
         child: Padding(
@@ -140,7 +145,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               Text(
                 'Could not load your analytics\n$error',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.subtitle, fontSize: 13),
+                style: TextStyle(color: subtitleColor, fontSize: 13),
               ),
               const SizedBox(height: AppSpacing.md),
               FilledButton.icon(
@@ -157,6 +162,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   }
 
   Widget _buildEmptyState({required IconData icon, required String message}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurfaceColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     return _statusScrollView(
       Center(
         child: Padding(
@@ -180,10 +188,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                 child: Icon(icon, color: Colors.white, size: 32),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text(
+              Text(
                 'No analytics available',
                 style: TextStyle(
-                    color: AppColors.text,
+                    color: onSurfaceColor,
                     fontSize: 15,
                     fontWeight: FontWeight.w800),
               ),
@@ -191,8 +199,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: AppColors.subtitle,
+                style: TextStyle(
+                    color: subtitleColor,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500),
               ),
@@ -357,10 +365,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                             message: 'No views trend data yet'),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  const Text(
+                  Text(
                     'Most Active Clients (Views)',
                     style: TextStyle(
-                        color: AppColors.text,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text,
                         fontSize: 15,
                         fontWeight: FontWeight.w800),
                   ),
@@ -416,10 +426,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                       icon: Icons.show_chart_rounded,
                       message: 'No downloads trend data yet'),
                   const SizedBox(height: AppSpacing.lg),
-                  const Text(
+                  Text(
                     'Clients by Downloads',
                     style: TextStyle(
-                        color: AppColors.text,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text,
                         fontSize: 15,
                         fontWeight: FontWeight.w800),
                   ),
@@ -624,12 +636,18 @@ class _ClientRankTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
+    final onSurfaceColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
@@ -639,14 +657,14 @@ class _ClientRankTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: rank == 1
                   ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                  : AppColors.border,
+                  : borderColor,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Text(
               '$rank',
               style: TextStyle(
-                color: rank == 1 ? const Color(0xFFD97706) : AppColors.subtitle,
+                color: rank == 1 ? const Color(0xFFD97706) : subtitleColor,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -681,8 +699,8 @@ class _ClientRankTile extends StatelessWidget {
                   client.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: AppColors.text,
+                  style: TextStyle(
+                      color: onSurfaceColor,
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800),
                 ),
@@ -691,8 +709,8 @@ class _ClientRankTile extends StatelessWidget {
                   client.bookingStatus,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: AppColors.subtitle,
+                  style: TextStyle(
+                      color: subtitleColor,
                       fontSize: 11,
                       fontWeight: FontWeight.w500),
                 ),

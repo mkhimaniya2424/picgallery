@@ -151,12 +151,25 @@ class _PermissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardFill = isDark ? AppColors.darkSurface : AppColors.surfaceElevated;
+    final cardBorder = isDark ? AppColors.darkBorder : AppColors.border;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    // A flat, low-alpha tint reads as a crisp pastel badge on the light
+    // card, but the same 12% alpha over a near-black dark card comes out
+    // as a faint, undefined smudge with no visible edge. Bump the fill
+    // and add a thin ring in the same hue so the badge stays a clearly
+    // readable circle on dark surfaces too.
+    final badgeFillAlpha = isDark ? 0.20 : 0.12;
+    final badgeBorderAlpha = isDark ? 0.45 : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: cardFill,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: cardBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,10 +178,16 @@ class _PermissionCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: (granted ? AppColors.success : AppColors.subtitle).withValues(alpha: 0.12),
+              color: (granted ? AppColors.success : subtitleColor).withValues(alpha: badgeFillAlpha),
               shape: BoxShape.circle,
+              border: badgeBorderAlpha > 0
+                  ? Border.all(
+                      color: (granted ? AppColors.success : subtitleColor).withValues(alpha: badgeBorderAlpha),
+                      width: 1,
+                    )
+                  : null,
             ),
-            child: Icon(icon, size: 20, color: granted ? AppColors.success : AppColors.subtitle),
+            child: Icon(icon, size: 20, color: granted ? AppColors.success : subtitleColor),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -177,27 +196,34 @@ class _PermissionCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+                    Text(title, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: textColor)),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (granted ? AppColors.success : AppColors.subtitle).withValues(alpha: 0.12),
+                        color: (granted ? AppColors.success : subtitleColor).withValues(alpha: badgeFillAlpha),
                         borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: badgeBorderAlpha > 0
+                            ? Border.all(
+                                color: (granted ? AppColors.success : subtitleColor)
+                                    .withValues(alpha: badgeBorderAlpha),
+                                width: 1,
+                              )
+                            : null,
                       ),
                       child: Text(
                         granted ? 'Granted' : 'Not Granted',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: granted ? AppColors.success : AppColors.subtitle,
+                          color: granted ? AppColors.success : subtitleColor,
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(description, style: const TextStyle(fontSize: 12, color: AppColors.subtitle, fontWeight: FontWeight.w500)),
+                Text(description, style: TextStyle(fontSize: 12, color: subtitleColor, fontWeight: FontWeight.w500)),
               ],
             ),
           ),

@@ -123,4 +123,11 @@ class UserRepository {
     );
     return (json as Map<String, dynamic>)['message'] as String;
   }
+
+  /// POST /users/me/plan — activates a subscription plan.
+  Future<AppUser> activatePlan(String plan) async {
+    final body = <String, dynamic>{'plan': plan};
+    final json = await _apiClient.post('/users/me/plan', body: body);
+    return AppUser.fromJson(json as Map<String, dynamic>);
+  }
 }

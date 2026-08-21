@@ -45,6 +45,7 @@ class _DrawerMenuItemState extends State<DrawerMenuItem> {
   @override
   Widget build(BuildContext context) {
     final selected = widget.selected;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding:
@@ -92,7 +93,7 @@ class _DrawerMenuItemState extends State<DrawerMenuItem> {
                     child: Icon(
                       widget.icon,
                       size: 21,
-                      color: selected ? Colors.white : AppColors.subtitle,
+                      color: selected ? Colors.white : colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -103,7 +104,7 @@ class _DrawerMenuItemState extends State<DrawerMenuItem> {
                         fontSize: 14,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w600,
-                        color: selected ? Colors.white : AppColors.text,
+                        color: selected ? Colors.white : colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -130,7 +131,7 @@ class _DrawerMenuItemState extends State<DrawerMenuItem> {
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white70 : AppColors.subtitle,
+                        color: selected ? Colors.white70 : colorScheme.onSurfaceVariant,
                       ),
                     ),
                 ],

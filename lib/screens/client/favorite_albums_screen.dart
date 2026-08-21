@@ -27,7 +27,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
     final isLoading = connectedState.isLoading && connectedState.albums.isEmpty;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(title: 'Saved Galleries'),
       body: RefreshIndicator(
         color: AppColors.primary,

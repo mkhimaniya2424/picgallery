@@ -8,6 +8,8 @@ import 'l10n/app_localizations.dart';
 import 'providers/auth_providers.dart';
 import 'providers/settings_provider.dart';
 import 'services/deep_link_service.dart';
+import 'services/push_notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 /// Lets DeepLinkService navigate / show SnackBars after a
 /// picgallery://payment-success|payment-failed link arrives, without
@@ -25,6 +27,14 @@ Future<void> main() async {
   // default (https://api.picgallery.in), so no saved/manual host is
   // needed anymore.
   final apiClient = ApiClient();
+
+  // Initialize Firebase (the user needs to provide google-services.json / GoogleService-Info.plist)
+  try {
+    await Firebase.initializeApp();
+    await PushNotificationService.instance.init(apiClient);
+  } catch (e) {
+    debugPrint('Firebase initialization failed (missing config?): $e');
+  }
 
   runApp(
     ProviderScope(
@@ -56,6 +66,7 @@ class PicGallery extends ConsumerWidget {
       title: 'picgallery',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       initialRoute: AppRoutes.splash,
       onGenerateRoute: AppRoutes.onGenerateRoute,

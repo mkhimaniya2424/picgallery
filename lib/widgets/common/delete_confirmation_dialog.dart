@@ -11,26 +11,35 @@ Future<bool> showDeleteConfirmationDialog({
   String? cancelText,
 }) async {
   final l10n = AppLocalizations.of(context);
+  final theme = Theme.of(context);
   final result = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: theme.colorScheme.surface,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         title,
-        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        style: theme.textTheme.titleLarge?.copyWith(
+          color: theme.colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: Text(
         message,
-        style: const TextStyle(color: AppColors.subtitle),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
           child: Text(
             cancelText ?? (l10n != null ? l10n.cancel : 'Cancel'),
-            style: const TextStyle(color: AppColors.subtitle, fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         FilledButton(

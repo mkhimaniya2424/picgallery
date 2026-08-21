@@ -168,7 +168,7 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(title: widget.album.name, showBack: true),
       body: SafeArea(
         child: RefreshIndicator(

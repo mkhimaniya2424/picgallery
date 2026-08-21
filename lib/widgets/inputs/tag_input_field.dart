@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
 
 /// Freeform "type a value, press enter/tap add to turn it into a chip"
 /// input for list-type fields with no fixed option set (e.g. Service
@@ -52,20 +51,28 @@ class _TagInputFieldState extends State<TagInputField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
           controller: _controller,
-          style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w500, color: AppColors.text),
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurface,
+          ),
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _add(),
           decoration: InputDecoration(
             labelText: widget.label,
             hintText: widget.hint,
-            prefixIcon: Icon(widget.icon, color: AppColors.primary, size: 20),
+            prefixIcon: Icon(widget.icon, color: colorScheme.primary, size: 20),
             suffixIcon: IconButton(
-              icon: const Icon(Icons.add_circle_rounded, color: AppColors.primary),
+              icon: Icon(Icons.add_circle_rounded, color: colorScheme.primary),
               onPressed: _add,
             ),
           ),
@@ -78,11 +85,23 @@ class _TagInputFieldState extends State<TagInputField> {
             children: widget.values.map((value) {
               return Chip(
                 label: Text(value),
-                labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text),
-                backgroundColor: Colors.white.withValues(alpha: 0.7),
-                side: const BorderSide(color: AppColors.border),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
-                deleteIcon: const Icon(Icons.close_rounded, size: 16, color: AppColors.subtitle),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+                backgroundColor: isDark
+                    ? colorScheme.surfaceContainerHighest
+                    : Colors.white.withValues(alpha: 0.7),
+                side: BorderSide(color: colorScheme.outline),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                deleteIcon: Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 onDeleted: () => _remove(value),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               );

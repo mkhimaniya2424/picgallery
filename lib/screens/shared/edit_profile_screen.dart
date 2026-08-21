@@ -504,11 +504,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               labelStyle: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: selected ? Colors.white : AppColors.text,
+                color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
               ),
-              backgroundColor: Colors.white.withValues(alpha: 0.7),
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               selectedColor: AppColors.primary,
-              side: BorderSide(color: selected ? AppColors.primary : AppColors.border),
+              side: BorderSide(color: selected ? AppColors.primary : Theme.of(context).colorScheme.outline),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             );
@@ -596,11 +596,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               labelStyle: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: selected ? Colors.white : AppColors.text,
+                color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
               ),
-              backgroundColor: Colors.white.withValues(alpha: 0.7),
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               selectedColor: AppColors.primary,
-              side: BorderSide(color: selected ? AppColors.primary : AppColors.border),
+              side: BorderSide(color: selected ? AppColors.primary : Theme.of(context).colorScheme.outline),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             );
@@ -666,11 +666,11 @@ class _SingleChoiceChips extends StatelessWidget {
           labelStyle: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 13,
-            color: isSelected ? Colors.white : AppColors.text,
+            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
           ),
-          backgroundColor: Colors.white.withValues(alpha: 0.7),
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           selectedColor: AppColors.primary,
-          side: BorderSide(color: isSelected ? AppColors.primary : AppColors.border),
+          side: BorderSide(color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.outline),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         );
@@ -700,14 +700,17 @@ class _DateField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-          suffixIcon: const Icon(Icons.calendar_month_rounded, color: AppColors.subtitle, size: 20),
+          suffixIcon: Icon(Icons.calendar_month_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
         ),
         child: Text(
           value != null ? _format(value!) : 'Select date',
           style: TextStyle(
             fontSize: 14.5,
             fontWeight: FontWeight.w500,
-            color: value != null ? AppColors.text : AppColors.subtitle,
+            color: value != null
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -727,32 +730,47 @@ class _ReadOnlyField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
+    final outlineColor = Theme.of(context).colorScheme.outline;
+    final bgColor = isDark
+        ? AppColors.darkSurfaceRaised.withValues(alpha: 0.5)
+        : AppColors.border.withValues(alpha: 0.35);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.border.withValues(alpha: 0.35),
+        color: bgColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: outlineColor),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.subtitle, size: 20),
+          Icon(icon, color: onSurfaceVariant, size: 20),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.subtitle)),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: onSurfaceVariant)),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w500, color: AppColors.text),
+                  style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w500,
+                      color: onSurface),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          const Icon(Icons.lock_outline_rounded, color: AppColors.subtitle, size: 16),
+          Icon(Icons.lock_outline_rounded, color: onSurfaceVariant, size: 16),
         ],
       ),
     );

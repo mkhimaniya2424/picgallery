@@ -11,7 +11,9 @@ from app.db.session import get_db
 from app.models.album_share import AlbumClientShare
 from app.models.connection import ConnectionStatus, StudioClientConnection
 from app.models.gallery import Album, Folder, Media
+from app.models.notification import Notification, NotificationType
 from app.models.user import User
+from app.core.firebase_service import send_push_notification
 from app.schemas.gallery_share import (
     AlbumClientShareRead,
     AlbumShareCreate,
@@ -118,9 +120,31 @@ def share_album(
     album = _get_owned_album(db, payload.album_id, current_user.id)
     _require_connected_client(db, current_user.id, payload.client_id)
 
-    share, _ = _get_or_reactivate_share(
+    share, created = _get_or_reactivate_share(
         db, album_id=album.id, client_id=payload.client_id, studio_id=current_user.id
     )
+    
+    if created:
+        client = db.get(User, payload.client_id)
+        if client:
+            title = "New Album Shared"
+            studio_name = current_user.studio_name or current_user.full_name
+            body = f"{studio_name} shared the album '{album.name}' with you."
+            db.add(Notification(
+                user_id=client.id,
+                type=NotificationType.gallery,
+                title=title,
+                subtitle=body,
+                data={"album_id": str(album.id)}
+            ))
+            if client.fcm_token:
+                send_push_notification(
+                    token=client.fcm_token,
+                    title=title,
+                    body=body,
+                    data={"type": "gallery", "album_id": str(album.id)}
+                )
+
     db.commit()
     db.refresh(share)
 
@@ -167,6 +191,27 @@ def share_folder(
                 album_cover_thumbnail_url=_cover_thumbnail_for(db, album.id),
             )
         )
+
+    if created_count > 0:
+        client = db.get(User, payload.client_id)
+        if client:
+            title = "New Folder Shared"
+            studio_name = current_user.studio_name or current_user.full_name
+            body = f"{studio_name} shared the folder '{folder.name}' with you."
+            db.add(Notification(
+                user_id=client.id,
+                type=NotificationType.gallery,
+                title=title,
+                subtitle=body,
+                data={"folder_id": str(folder.id)}
+            ))
+            if client.fcm_token:
+                send_push_notification(
+                    token=client.fcm_token,
+                    title=title,
+                    body=body,
+                    data={"type": "gallery", "folder_id": str(folder.id)}
+                )
 
     db.commit()
 

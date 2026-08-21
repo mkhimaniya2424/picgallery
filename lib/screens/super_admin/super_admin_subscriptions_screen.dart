@@ -36,9 +36,9 @@ class _SuperAdminSubscriptionsScreenState
     };
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        
         elevation: 0,
         title: const Text('Subscriptions',
             style: TextStyle(

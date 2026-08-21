@@ -245,17 +245,17 @@ class _MenuRow extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
-                        color: labelColor ?? AppColors.text),
+                        color: labelColor ?? Theme.of(context).colorScheme.onSurface),
                   ),
                 ),
                 if (labelColor == null)
-                  const Icon(Icons.chevron_right_rounded,
-                      color: AppColors.subtitle, size: 20),
+                  Icon(Icons.chevron_right_rounded,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
               ],
             ),
           ),
         ),
-        if (showDivider) const Divider(height: 1, color: AppColors.border),
+        if (showDivider) Divider(height: 1, color: Theme.of(context).dividerColor),
       ],
     );
   }

@@ -25,6 +25,7 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     String getLabel(int index) {
       switch (index) {
@@ -47,9 +48,9 @@ class CustomBottomNav extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
           boxShadow: [
             BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.14),
@@ -77,7 +78,7 @@ class CustomBottomNav extends StatelessWidget {
                   children: [
                     Icon(item.icon,
                         size: 20,
-                        color: selected ? Colors.white : AppColors.subtitle),
+                        color: selected ? Colors.white : (isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                     if (selected) ...[
                       const SizedBox(width: 8),
                       Text(getLabel(i),

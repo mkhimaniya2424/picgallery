@@ -12,6 +12,7 @@ class LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -28,8 +29,9 @@ class LoadingWidget extends StatelessWidget {
         if (message != null) ...[
           const SizedBox(height: AppSpacing.md),
           Text(message!,
-              style: const TextStyle(
-                  color: AppColors.subtitle, fontWeight: FontWeight.w500)),
+              style: TextStyle(
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                  fontWeight: FontWeight.w500)),
         ],
       ],
     );

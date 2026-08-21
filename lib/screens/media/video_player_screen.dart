@@ -376,10 +376,12 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
           isClientUser: isClientUser,
         );
       }
-      if (widget.shareLinkId != null && context.mounted) {
+      if (widget.shareLinkId != null) {
+        // Fire-and-forget: real /public/share-links/{token}/download call
+        // instead of the old local-only incrementDownloads.
         ref
-            .read(shareLinkProvider.notifier)
-            .incrementDownloads(widget.shareLinkId!);
+            .read(publicGalleryProvider(widget.shareLinkId!).notifier)
+            .recordDownload(mediaId: current.id);
       }
       if (saved && context.mounted) {
         await DownloadCompleteBottomSheet.show(
@@ -436,10 +438,12 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
           isClientUser: isClientUser,
         );
       }
-      if (widget.shareLinkId != null && context.mounted) {
+      if (widget.shareLinkId != null) {
+        // Fire-and-forget: real /public/share-links/{token}/download call
+        // instead of the old local-only incrementDownloads.
         ref
-            .read(shareLinkProvider.notifier)
-            .incrementDownloads(widget.shareLinkId!);
+            .read(publicGalleryProvider(widget.shareLinkId!).notifier)
+            .recordDownload(mediaId: current.id);
       }
       if (saved && context.mounted) {
         await DownloadCompleteBottomSheet.show(

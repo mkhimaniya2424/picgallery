@@ -11,12 +11,18 @@ class AlbumDetailsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.82),
+        color: isDark
+            ? AppColors.darkSurface
+            : Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
       ),
       child: Row(
         children: [
@@ -47,6 +53,7 @@ class AlbumDetailsHeader extends StatelessWidget {
                   album.name,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: titleColor,
                       ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -55,7 +62,7 @@ class AlbumDetailsHeader extends StatelessWidget {
                 Text(
                   '${album.photoCount} photos • ${album.folderCount} folders',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.subtitle,
+                        color: subtitleColor,
                         fontWeight: FontWeight.w600,
                       ),
                 ),

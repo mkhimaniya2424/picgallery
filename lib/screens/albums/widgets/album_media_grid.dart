@@ -30,13 +30,16 @@ class AlbumMediaGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
+        color: isDark
+            ? AppColors.darkSurface
+            : Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 260),
@@ -63,6 +66,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Column(
@@ -73,28 +77,28 @@ class _EmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: AppColors.softWash,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
             ),
             child: const Center(
               child: Text('📷', style: TextStyle(fontSize: 30)),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const Text(
+          Text(
             'No photos yet',
             style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: AppColors.text),
+                color: isDark ? AppColors.textOnDark : AppColors.text),
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
+          Text(
             'Upload your first photo or video',
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.subtitle),
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
           ),
           const SizedBox(height: AppSpacing.md),
           FilledButton.icon(

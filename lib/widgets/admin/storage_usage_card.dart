@@ -24,15 +24,16 @@ class StorageUsageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clamped = percentUsed.clamp(0.0, 1.0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
           boxShadow: AppShadows.soft(AppColors.primary,
               opacity: 0.08, blur: 24, y: 12),
         ),
@@ -58,15 +59,16 @@ class StorageUsageCard extends StatelessWidget {
                       color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                const Expanded(
+                Expanded(
                   child: Text('Storage Usage',
                       style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.text)),
+                          color: isDark ? AppColors.textOnDark : AppColors.text)),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 13, color: AppColors.subtitle),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 13,
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -75,7 +77,7 @@ class StorageUsageCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: clamped,
                 minHeight: 10,
-                backgroundColor: AppColors.border,
+                backgroundColor: isDark ? AppColors.darkBorder : AppColors.border,
                 valueColor: const AlwaysStoppedAnimation(AppColors.primary),
               ),
             ),
@@ -84,16 +86,16 @@ class StorageUsageCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('$usedLabel used',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.text)),
+                        color: isDark ? AppColors.textOnDark : AppColors.text)),
                 if (totalLabel.trim().isNotEmpty)
                   Text('of $totalLabel',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.subtitle)),
+                          color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
               ],
             ),
           ],

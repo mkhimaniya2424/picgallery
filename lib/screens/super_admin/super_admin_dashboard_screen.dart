@@ -22,9 +22,9 @@ class SuperAdminDashboardScreen extends StatelessWidget {
         studios.where((s) => s.subscriptionStatus == SubscriptionStatus.active).length;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        
         elevation: 0,
         automaticallyImplyLeading: false,
         titleSpacing: AppSpacing.md,

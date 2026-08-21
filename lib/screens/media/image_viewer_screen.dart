@@ -482,10 +482,15 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
         );
       }
 
-      if (widget.shareLinkId != null && context.mounted) {
+      if (widget.shareLinkId != null) {
+        // Fire-and-forget: records the download against the real
+        // /public/share-links/{token}/download endpoint (analytics
+        // counter + Download History row), same as the old local
+        // incrementDownloads this replaces, just backed by the server
+        // instead of on-device storage.
         ref
-            .read(shareLinkProvider.notifier)
-            .incrementDownloads(widget.shareLinkId!);
+            .read(publicGalleryProvider(widget.shareLinkId!).notifier)
+            .recordDownload(mediaId: current.id);
       }
     }
 

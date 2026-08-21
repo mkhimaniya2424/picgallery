@@ -29,7 +29,7 @@ class ChatScreen extends ConsumerWidget {
     final threads = chatState.threads;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Messages',

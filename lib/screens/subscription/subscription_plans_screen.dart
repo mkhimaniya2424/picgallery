@@ -92,51 +92,13 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
         trialUsed && currentPlanType != SubscriptionPlan.trial;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(
         title: 'Subscription Plans',
         showBack: true,
       ),
       body: Stack(
         children: [
-          // Background abstract lights / shapes
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    blurRadius: 90,
-                    spreadRadius: 30,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 250,
-            left: -80,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.06),
-                    blurRadius: 80,
-                    spreadRadius: 30,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           SafeArea(
             child: SingleChildScrollView(
               controller: _scrollController,
@@ -194,7 +156,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                         Text(
                           'Unlock the full power of your studio',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.subtitle,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,
                               ),
                           textAlign: TextAlign.center,
@@ -211,45 +173,50 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                         // consistent with the Expiry/Active banners below.
                         if (planActive) ...[
                           const SizedBox(height: AppSpacing.md),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(AppRadius.md),
-                              border: Border.all(color: AppColors.border),
-                              boxShadow: AppShadows.subtle,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: currentPlanType.color,
-                                    shape: BoxShape.circle,
-                                  ),
+                          Builder(builder: (ctx) {
+                            final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(ctx).scaffoldBackgroundColor,
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                border: Border.all(
+                                  color: isDark ? AppColors.darkBorder : AppColors.border,
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Current Plan: ',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.subtitle,
-                                    fontWeight: FontWeight.w600,
+                                boxShadow: AppShadows.subtle,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: currentPlanType.color,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  currentModel.name,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.text,
-                                    fontWeight: FontWeight.w800,
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Current Plan: ',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
+                                  Text(
+                                    currentModel.name,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark ? AppColors.textOnDark : AppColors.text,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                         ],
                       ],
                     ),
@@ -514,6 +481,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
       ),
       itemBuilder: (context, i) {
         final b = benefits[i];
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return GlassCard(
           padding: const EdgeInsets.all(AppSpacing.md),
           borderRadius: AppRadius.md,
@@ -523,7 +491,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: b.color.withValues(alpha: 0.12),
+                  color: b.color.withValues(alpha: isDark ? 0.20 : 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Icon(b.icon, size: 18, color: b.color),
@@ -531,10 +499,10 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
               const SizedBox(height: AppSpacing.sm),
               Text(
                 b.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.text,
+                  color: isDark ? AppColors.textOnDark : AppColors.text,
                   letterSpacing: 0.3,
                 ),
               ),
@@ -542,9 +510,9 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
               Expanded(
                 child: Text(
                   b.desc,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: AppColors.subtitle,
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                     height: 1.3,
                     fontWeight: FontWeight.w500,
                   ),
@@ -579,6 +547,7 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isYearly = plan.planType == SubscriptionPlan.premium;
     // Treat trial the same as free — no billing-period suffix, no paid styling.
     final isFree = plan.planType == SubscriptionPlan.free ||
@@ -605,16 +574,22 @@ class _PlanCard extends StatelessWidget {
           offset: const Offset(0, 6),
         );
       } else {
-        cardBorder = Border.all(color: AppColors.subtitle, width: 2.2);
+        cardBorder = Border.all(color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, width: 2.2);
       }
     } else {
-      cardBorder = Border.all(color: AppColors.border, width: 1);
+      cardBorder = Border.all(color: isDark ? AppColors.darkBorder : AppColors.border, width: 1);
     }
 
     if (isActive) {
-      cardBackground = isFree ? Colors.grey.shade100 : const Color(0xFFF9F7FF);
+      cardBackground = isFree 
+        ? (isDark 
+          ? Colors.grey.shade800 
+          : Colors.grey.shade100)
+        : (isDark ? AppColors.primary.withValues(alpha: 0.15) : const Color(0xFFF9F7FF));
     } else {
-      cardBackground = Colors.white;
+      cardBackground = isDark
+        ? Colors.grey.shade900
+        : Colors.white;
     }
 
     return GestureDetector(
@@ -647,15 +622,15 @@ class _PlanCard extends StatelessWidget {
                               plan.name,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.w900,
-                                    color: AppColors.text,
+                                    color: isDark ? AppColors.textOnDark : AppColors.text,
                                   ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               plan.subtitle,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11.5,
-                                color: AppColors.subtitle,
+                                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -672,19 +647,19 @@ class _PlanCard extends StatelessWidget {
                             children: [
                               Text(
                                 '${plan.currency}${plan.price.toStringAsFixed(0)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.text,
+                                  color: isDark ? AppColors.textOnDark : AppColors.text,
                                   letterSpacing: -0.5,
                                 ),
                               ),
                               if (!isFree)
                                 Text(
                                   ' / ${plan.billingPeriod}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.subtitle,
+                                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -692,9 +667,9 @@ class _PlanCard extends StatelessWidget {
                               if (plan.planType == SubscriptionPlan.trial)
                                 Text(
                                   ' / ${plan.duration}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.subtitle,
+                                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -742,7 +717,7 @@ class _PlanCard extends StatelessWidget {
                   ),
 
                   const SizedBox(height: AppSpacing.md),
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: isDark ? AppColors.darkBorder : AppColors.border),
                   const SizedBox(height: AppSpacing.md),
 
                   // Feature List
@@ -755,7 +730,7 @@ class _PlanCard extends StatelessWidget {
                           Icon(
                             isLimited ? Icons.info_outline_rounded : Icons.check_circle_rounded,
                             size: 15,
-                            color: isLimited ? Colors.amber.shade700 : (isFree ? AppColors.subtitle : AppColors.primary),
+                            color: isLimited ? Colors.amber.shade700 : (isFree ? (isDark ? AppColors.subtitleOnDark : AppColors.subtitle) : AppColors.primary),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -764,7 +739,9 @@ class _PlanCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: isLimited ? FontWeight.w600 : FontWeight.w500,
-                                color: isLimited ? AppColors.text : AppColors.text.withValues(alpha: 0.8),
+                                color: isLimited 
+                                    ? (isDark ? AppColors.textOnDark : AppColors.text) 
+                                    : (isDark ? AppColors.textOnDark : AppColors.text).withValues(alpha: 0.8),
                               ),
                             ),
                           ),
@@ -936,20 +913,11 @@ class _CurrentPlanStatusCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           if (isBasic) ...[
             Text(
-              "You're currently on the Free Plan",
+              "No Active Plan",
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: AppColors.text.withValues(alpha: 0.85),
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              "Your account is limited to basic features, 3 active galleries, and 10GB storage. Upgrade to save more media and unlock premium gallery controls.",
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.subtitle,
-                height: 1.4,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -1059,8 +1027,8 @@ class _ConfirmationBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),

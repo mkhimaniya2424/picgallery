@@ -340,10 +340,15 @@ class _PickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final disabledColor = isDark ? AppColors.darkBorder : AppColors.border;
+
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: enabled ? AppColors.primary : AppColors.subtitle, size: 20),
+        prefixIcon: Icon(icon, color: enabled ? AppColors.primary : subtitleColor, size: 20),
         enabled: enabled || loading,
       ),
       child: InkWell(
@@ -357,19 +362,19 @@ class _PickerField extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14.5,
-                  color: value == null ? AppColors.subtitle : AppColors.text,
+                  color: value == null ? subtitleColor : textColor,
                 ),
               ),
             ),
             if (loading)
-              const SizedBox(
+              SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.subtitle),
+                child: CircularProgressIndicator(strokeWidth: 2, color: subtitleColor),
               )
             else
               Icon(Icons.arrow_drop_down_rounded,
-                  color: enabled ? AppColors.subtitle : AppColors.border),
+                  color: enabled ? subtitleColor : disabledColor),
           ],
         ),
       ),
@@ -394,10 +399,11 @@ class _LocationSearchSheet extends StatefulWidget {
     required List<String> options,
     required String? current,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -439,6 +445,10 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
     // list inside it — always has real, generous height to scroll in,
     // regardless of how many options there are.
     final sheetHeight = MediaQuery.of(context).size.height * 0.75;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final handleColor = isDark ? AppColors.darkBorder : AppColors.border;
 
     return SafeArea(
       child: SizedBox(
@@ -450,7 +460,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: handleColor,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -460,10 +470,10 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(widget.title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.text)),
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
                   Text('${_filtered.length} of ${widget.options.length}',
-                      style: const TextStyle(fontSize: 12.5, color: AppColors.subtitle)),
+                      style: TextStyle(fontSize: 12.5, color: subtitleColor)),
                 ],
               ),
             ),
@@ -473,16 +483,17 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                 controller: _searchController,
                 autofocus: false,
                 onChanged: _onSearch,
-                decoration: const InputDecoration(
+                style: TextStyle(color: textColor),
+                decoration: InputDecoration(
                   hintText: 'Search…',
-                  prefixIcon: Icon(Icons.search_rounded, color: AppColors.subtitle, size: 20),
+                  prefixIcon: Icon(Icons.search_rounded, color: subtitleColor, size: 20),
                 ),
               ),
             ),
             Expanded(
               child: _filtered.isEmpty
-                  ? const Center(
-                      child: Text('No matches', style: TextStyle(color: AppColors.subtitle)))
+                  ? Center(
+                      child: Text('No matches', style: TextStyle(color: subtitleColor)))
                   : ListView.builder(
                       // Always a real scrollable list — every filtered
                       // entry is laid out and reachable, never capped.
@@ -494,7 +505,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                         return ListTile(
                           title: Text(option,
                               style: TextStyle(
-                                  color: selected ? AppColors.primary : AppColors.text,
+                                  color: selected ? AppColors.primary : textColor,
                                   fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
                           trailing: selected
                               ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 18)

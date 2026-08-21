@@ -28,13 +28,14 @@ class AnalyticsChartCard extends StatelessWidget {
       up = delta >= 0;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 250,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         boxShadow: [
           BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.06),
@@ -51,10 +52,10 @@ class AnalyticsChartCard extends StatelessWidget {
                 child: Text(series.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.text)),
+                        color: isDark ? AppColors.textOnDark : AppColors.text)),
               ),
               if (hasData && series.values.length >= 2) ...[
                 const SizedBox(width: 8),
@@ -81,10 +82,10 @@ class AnalyticsChartCard extends StatelessWidget {
           Text(series.subtitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.subtitle)),
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           const SizedBox(height: AppSpacing.md),
           if (hasData)
             series.isBar
@@ -104,15 +105,16 @@ class AnalyticsChartCard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.show_chart_rounded,
-                        size: 26, color: AppColors.subtitle),
+                    Icon(Icons.show_chart_rounded,
+                        size: 26,
+                        color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
                     const SizedBox(height: 8),
                     Text('Not enough data yet',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.subtitle)),
+                            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                   ],
                 ),
               ),

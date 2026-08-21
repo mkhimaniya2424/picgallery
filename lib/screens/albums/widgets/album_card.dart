@@ -56,6 +56,8 @@ class AlbumCard extends ConsumerWidget {
     }
     cover ??= _albumMedia.isNotEmpty ? _albumMedia.first : null;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -63,25 +65,32 @@ class AlbumCard extends ConsumerWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.90),
+            color: isDark
+                ? AppColors.darkSurface
+                : Colors.white.withValues(alpha: 0.90),
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.border),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
           ),
           child: compact
               ? _buildCompactCard(
+                  isDark: isDark,
                   cover: cover,
                   photoCount: photoCount,
                   videoCount: videoCount,
                   folderCount: folderCount,
                 )
               : _buildGridCard(
+                  isDark: isDark,
                   cover: cover,
                   photoCount: photoCount,
                   videoCount: videoCount,
@@ -93,10 +102,13 @@ class AlbumCard extends ConsumerWidget {
   }
 
   Widget _buildCompactCard(
-      {MediaModel? cover,
+      {required bool isDark,
+      MediaModel? cover,
       required int photoCount,
       required int videoCount,
       required int folderCount}) {
+    final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
@@ -123,29 +135,30 @@ class AlbumCard extends ConsumerWidget {
                   album.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.text,
+                    color: titleColor,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   '$photoCount Photos • $videoCount Videos',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.subtitle,
+                    color: subtitleColor,
                   ),
                 ),
                 Text(
                   '$folderCount Folders',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.subtitle,
+                    color: subtitleColor,
                   ),
                 ),
                 const SizedBox(height: 6),
                 _BottomRow(
+                  isDark: isDark,
                   isFavorite: album.isFavorite,
                   onToggleFavorite: onToggleFavorite,
                   onEdit: onEdit,
@@ -161,10 +174,13 @@ class AlbumCard extends ConsumerWidget {
   }
 
   Widget _buildGridCard(
-      {MediaModel? cover,
+      {required bool isDark,
+      MediaModel? cover,
       required int photoCount,
       required int videoCount,
       required int folderCount}) {
+    final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     // mainAxisSize.min + a fixed gap (instead of a Spacer) so the
     // bottom row sits right under the text instead of being pushed to
     // the bottom of a tall grid cell, which is what was leaving a big
@@ -191,10 +207,10 @@ class AlbumCard extends ConsumerWidget {
             album.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 3),
@@ -204,13 +220,14 @@ class AlbumCard extends ConsumerWidget {
                 : '$photoCount photos • $videoCount videos',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.subtitle,
+              color: subtitleColor,
             ),
           ),
           const SizedBox(height: 4),
           _BottomRow(
+            isDark: isDark,
             isFavorite: album.isFavorite,
             onToggleFavorite: onToggleFavorite,
             onEdit: onEdit,
@@ -227,6 +244,7 @@ enum _AlbumMenuAction { edit, move, delete }
 
 class _BottomRow extends StatelessWidget {
   const _BottomRow({
+    required this.isDark,
     required this.isFavorite,
     required this.onToggleFavorite,
     this.onEdit,
@@ -234,6 +252,7 @@ class _BottomRow extends StatelessWidget {
     this.onDelete,
   });
 
+  final bool isDark;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
   final VoidCallback? onEdit;
@@ -243,6 +262,7 @@ class _BottomRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasMenu = onEdit != null || onMove != null || onDelete != null;
+    final iconColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
 
     return Row(
       children: [
@@ -257,7 +277,7 @@ class _BottomRow extends StatelessWidget {
           icon: Icon(
             isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
             size: 20,
-            color: isFavorite ? AppColors.accent : AppColors.subtitle,
+            color: isFavorite ? AppColors.accent : iconColor,
           ),
         ),
         const Spacer(),
@@ -270,10 +290,10 @@ class _BottomRow extends StatelessWidget {
               minHeight: 32,
             ),
             tooltip: 'More actions',
-            icon: const Icon(
+            icon: Icon(
               Icons.more_vert_rounded,
               size: 20,
-              color: AppColors.subtitle,
+              color: iconColor,
             ),
             onSelected: (action) {
               switch (action) {

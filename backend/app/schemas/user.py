@@ -102,6 +102,10 @@ class UserCompleteProfile(BaseModel):
     specializations: list[str] | None = None
 
 
+class FCMTokenUpdate(BaseModel):
+    fcm_token: str | None = None
+
+
 class UserUpdate(BaseModel):
     """Generic partial profile-update payload (all fields optional, unset
     fields left untouched) — for a future "edit profile" endpoint. Distinct
@@ -191,6 +195,10 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 
+class ActivatePlanRequest(BaseModel):
+    plan: str
+
+
 class ResetPasswordRequest(BaseModel):
     """Payload for POST /auth/reset-password — the token from the
     (dummy) reset-password email/link plus the new password."""
@@ -243,6 +251,7 @@ class UserRead(BaseModel):
     camera_permission_granted: bool
     photo_library_permission_granted: bool
     push_notifications_enabled: bool
+    fcm_token: str | None = None
     allow_downloads: bool
     app_language: str
     created_at: datetime
@@ -290,8 +299,13 @@ class UserRead(BaseModel):
     @computed_field
     @property
     def subscription_status(self) -> str:
-        """Maps DB plan_status to the Flutter app's expected values."""
+        """Maps DB plan_status to the Flutter app's expected values.
+        Returns 'trial' when current_plan is 'trial' and still active,
+        so the Flutter app can correctly identify and style trial plans.
+        """
         if self.plan_status == "active":
+            if self.current_plan == "trial":
+                return "trial"
             return "active"
         if self.plan_status == "expired":
             return "expired"

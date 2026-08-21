@@ -36,6 +36,8 @@ class PermissionRequestSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: ScreenBackdrop(
         child: SafeArea(
@@ -51,25 +53,41 @@ class PermissionRequestSheet extends StatelessWidget {
                     gradient: AppColors.heroGradient,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 36, offset: const Offset(0, 16)),
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 36,
+                        offset: const Offset(0, 16),
+                      ),
                     ],
                   ),
                   child: Icon(icon, color: Colors.white, size: 58),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text(title, style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+                Text(
+                  title,
+                  style: theme.textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 10),
                 Text(
                   description,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 GradientButton(label: 'Allow Access', onPressed: onAllow),
                 const SizedBox(height: AppSpacing.sm),
                 TextButton(
                   onPressed: onSkip,
-                  child: const Text('Not Now', style: TextStyle(color: AppColors.subtitle, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    'Not Now',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
               ],

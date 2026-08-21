@@ -22,6 +22,7 @@ class _QuickActionTileState extends State<QuickActionTile> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTapDown: (_) => setState(() => _scale = 0.95),
       onTapUp: (_) => setState(() => _scale = 1),
@@ -34,9 +35,9 @@ class _QuickActionTileState extends State<QuickActionTile> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
+            color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
             boxShadow: AppShadows.soft(widget.data.gradient.last,
                 opacity: 0.08, blur: 18, y: 9),
           ),
@@ -68,10 +69,10 @@ class _QuickActionTileState extends State<QuickActionTile> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.text,
+                    color: isDark ? AppColors.textOnDark : AppColors.text,
                     height: 1.2),
               ),
             ],

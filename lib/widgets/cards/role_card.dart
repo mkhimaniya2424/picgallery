@@ -25,6 +25,19 @@ class RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Selected/unselected fill and border, computed per-theme instead of
+    // hardcoded light-mode colors — otherwise these override GlassCard's
+    // own dark-mode defaults and the cards stay light in dark theme.
+    final unselectedBorderColor =
+        isDark ? AppColors.darkBorder : AppColors.glassBorder;
+    final selectedFill = isDark
+        ? AppColors.darkSurfaceRaised.withValues(alpha: 0.92)
+        : Colors.white.withValues(alpha: 0.75);
+    final unselectedFill =
+        isDark ? AppColors.darkSurfaceRaised.withValues(alpha: 0.72) : AppColors.glassFill;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
@@ -39,12 +52,10 @@ class RoleCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             borderRadius: AppRadius.lg,
             border: Border.all(
-              color: selected ? AppColors.primary : AppColors.glassBorder,
+              color: selected ? AppColors.primary : unselectedBorderColor,
               width: selected ? 2 : 1.2,
             ),
-            fillColor: selected
-                ? Colors.white.withValues(alpha: 0.75)
-                : AppColors.glassFill,
+            fillColor: selected ? selectedFill : unselectedFill,
             child: Row(
               children: [
                 Container(
@@ -90,7 +101,9 @@ class RoleCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: selected ? AppColors.buttonGradient : null,
                     border: Border.all(
-                        color: selected ? Colors.transparent : AppColors.border,
+                        color: selected
+                            ? Colors.transparent
+                            : (isDark ? AppColors.darkBorder : AppColors.border),
                         width: 1.6),
                   ),
                   child: selected

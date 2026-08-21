@@ -157,6 +157,9 @@ class User(Base):
     camera_permission_granted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     photo_library_permission_granted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     push_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    
+    # Firebase Cloud Messaging token for live push notifications
+    fcm_token: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Privacy & Security screen — "Download Permissions" toggle. Whether
     # this user allows their galleries/media to be downloaded. Defaults

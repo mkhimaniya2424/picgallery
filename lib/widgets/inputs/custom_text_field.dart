@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme/app_theme.dart';
-
 /// Soft, glass-tinted text field used for every input across Picgallery.
 /// Wraps [TextFormField] so it drops straight into a [Form] with
 /// validators, while keeping a consistent premium look.
@@ -41,6 +39,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextFormField(
       controller: widget.controller,
       obscureText: _obscure,
@@ -48,19 +49,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
       validator: widget.validator,
       inputFormatters: widget.inputFormatters,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
-      style: const TextStyle(
-          fontSize: 14.5, fontWeight: FontWeight.w500, color: AppColors.text),
+      style: TextStyle(
+        fontSize: 14.5,
+        fontWeight: FontWeight.w500,
+        color: colorScheme.onSurface,
+      ),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
-        prefixIcon: Icon(widget.icon, color: AppColors.primary, size: 20),
+        prefixIcon: Icon(widget.icon, color: colorScheme.primary, size: 20),
         suffixIcon: widget.obscureText
             ? IconButton(
                 icon: Icon(
                   _obscure
                       ? Icons.visibility_off_rounded
                       : Icons.visibility_rounded,
-                  color: AppColors.subtitle,
+                  color: colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
                 onPressed: () => setState(() => _obscure = !_obscure),

@@ -16,7 +16,8 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode=" adjustResize">
+            android:resizeableActivity="true"
+            android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues
@@ -25,6 +26,16 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Tells Android this activity properly handles runtime window-size
+                 changes (fold/unfold, split-screen, drag-resize on large screens)
+                 via configChanges above, instead of being restarted or dropped
+                 into Size-Compatibility Mode. Without this, foldables like the
+                 Galaxy Z Fold can letterbox the app into its last known (folded)
+                 window size when unfolded, leaving the rest of the screen blank —
+                 which is what was happening on the login screen. -->
+            <meta-data
+              android:name="android.supports_size_changes"
+              android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

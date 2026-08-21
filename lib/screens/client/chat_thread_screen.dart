@@ -94,7 +94,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     Future.microtask(() => ref.read(chatProvider.notifier).markAsRead(widget.threadId));
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: widget.otherPartyName,

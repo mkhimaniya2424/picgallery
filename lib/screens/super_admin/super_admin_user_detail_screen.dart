@@ -30,9 +30,9 @@ class SuperAdminUserDetailScreen extends StatelessWidget {
         : null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        
         elevation: 0,
         title: Text(isStudio ? 'Studio account' : 'Client account',
             style: const TextStyle(

@@ -27,7 +27,7 @@ class TermsConditionsScreen extends ConsumerWidget {
     final contentAsync = ref.watch(termsConditionsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(
         title: 'Terms & Conditions',
       ),
@@ -76,16 +76,21 @@ class _Intro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
+        color: isDark ? AppColors.darkSurface : Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
+        border: Border.all(
+          color: isDark
+              ? AppColors.darkBorder
+              : AppColors.border.withValues(alpha: 0.9),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -115,7 +120,7 @@ class _Intro extends StatelessWidget {
           Text(
             'Last updated: ${content.lastUpdated}',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.subtitle,
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                   fontWeight: FontWeight.w700,
                 ),
           ),
@@ -132,13 +137,18 @@ class _TermsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
+        color: isDark ? AppColors.darkSurface : Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
+        border: Border.all(
+          color: isDark
+              ? AppColors.darkBorder
+              : AppColors.border.withValues(alpha: 0.9),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "198690480208",
+    "project_id": "picgallery-aec7a",
+    "storage_bucket": "picgallery-aec7a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:198690480208:android:9f60e88856ca94819af155",
+        "android_client_info": {
+          "package_name": "com.mk.picgallery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkSD4CxaEhCkoDGS1-M-8AKxFbRjSV2Bg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

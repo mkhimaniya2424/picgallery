@@ -31,10 +31,12 @@ class SectionHeader extends StatelessWidget {
         ),
         Expanded(
           child: Text(title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 17.5,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.text,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text,
                   letterSpacing: -0.2)),
         ),
         if (actionLabel != null)

@@ -16,6 +16,7 @@ from app.models.notification import Notification, NotificationType
 from app.models.studio_backup import StudioBackup
 from app.models.studio_portfolio import StudioPortfolioImage
 from app.models.user import User, UserRole
+from app.core.firebase_service import send_push_notification
 from app.schemas.studio import (
     AvatarUploadResponse,
     FavoriteStudioRead,
@@ -263,6 +264,15 @@ def request_connection(
     )
 
     db.commit()
+
+    # Push notification to studio's device
+    if studio.fcm_token:
+        send_push_notification(
+            token=studio.fcm_token,
+            title="New Connection Request",
+            body=f"{current_user.full_name} wants to connect with your studio.",
+            data={"type": "connection", "connection_id": str(connection.id)},
+        )
 
     background_tasks.add_task(
         deliver_connection_request_email,

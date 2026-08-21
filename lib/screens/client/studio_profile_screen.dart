@@ -46,7 +46,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
 
     if (provider.isLoadingDirectory && provider.studios.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        
         appBar: AppBar(backgroundColor: AppColors.primary, elevation: 0),
         body: const Center(child: LoadingWidget(message: 'Loading studio…')),
       );
@@ -54,7 +54,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
 
     if (provider.directoryError != null && provider.studios.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        
         appBar: AppBar(backgroundColor: AppColors.primary, elevation: 0),
         body: Center(
           child: Padding(
@@ -74,7 +74,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     final studioIndex = provider.studios.indexWhere((s) => s.id == widget.studioId);
     if (studioIndex == -1) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        
         appBar: AppBar(backgroundColor: AppColors.primary, elevation: 0),
         body: const Center(
           child: Padding(
@@ -90,7 +90,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     final studio = provider.studios[studioIndex];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [

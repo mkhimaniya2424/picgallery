@@ -73,7 +73,7 @@ class MainNavScreenState extends State<MainNavScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: AppColors.background,
+      
       extendBodyBehindAppBar: true,
       drawer: ClientDrawer(
         currentIndex: _navIndex,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
 
 /// Soft, glass-tinted outline button for social sign-in options
 /// (Google/Apple). Shared across the auth flow (login + register)
@@ -22,30 +21,46 @@ class SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return InkWell(
       onTap: isLoading ? null : onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: isLoading ? 0.5 : 0.7),
+          color: isDark
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: isLoading ? 0.7 : 0.9)
+              : Colors.white.withValues(alpha: isLoading ? 0.5 : 0.7),
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: colorScheme.outline),
         ),
         child: isLoading
-            ? const Center(
+            ? Center(
                 child: SizedBox(
                   height: 18,
                   width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2.2, color: AppColors.primary),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: colorScheme.primary,
+                  ),
                 ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 20, color: AppColors.text),
+                  Icon(icon, size: 20, color: colorScheme.onSurface),
                   const SizedBox(width: 8),
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5, color: AppColors.text)),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13.5,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
                 ],
               ),
       ),

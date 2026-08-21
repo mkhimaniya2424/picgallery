@@ -18,12 +18,13 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final up = data.trend == TrendDirection.up;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border, width: 1),
         boxShadow:
             AppShadows.soft(data.gradient.last, opacity: 0.10, blur: 24, y: 12),
       ),
@@ -86,20 +87,20 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 10),
           CountUpText(
               value: data.value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.text,
+                  color: isDark ? AppColors.textOnDark : AppColors.text,
                   letterSpacing: -0.4)),
           const SizedBox(height: 2),
           Text(
             data.label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.subtitle),
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
           ),
           const SizedBox(height: 6),
           MiniSparkline(

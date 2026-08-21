@@ -101,7 +101,8 @@ class StudioDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.md + AppSpacing.xs, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
       child: Text(
@@ -109,7 +110,7 @@ class StudioDrawer extends ConsumerWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w900,
-          color: AppColors.subtitle.withValues(alpha: 0.6),
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
           letterSpacing: 1.2,
         ),
       ),
@@ -130,9 +131,11 @@ class StudioDrawer extends ConsumerWidget {
 
     final isDark = settings.themeMode == 'Dark';
 
+    final theme = Theme.of(context);
+
     return Drawer(
       width: drawerWidth,
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       elevation: 4,
       shape: const RoundedRectangleBorder(
         borderRadius:
@@ -146,7 +149,7 @@ class StudioDrawer extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               physics: const BouncingScrollPhysics(),
               children: [
-                _buildSectionHeader('STUDIO'),
+                _buildSectionHeader(context, 'STUDIO'),
                 _StudioDrawerTile(
                   icon: Icons.dashboard_rounded,
                   label: 'Dashboard',
@@ -173,7 +176,7 @@ class StudioDrawer extends ConsumerWidget {
                   onTap: () => _handleTap(context, ref, 'gallery', _DrawerAction.tab, tabIndex: 1),
                 ),
 
-                _buildSectionHeader('CONTENT'),
+                _buildSectionHeader(context, 'CONTENT'),
                 _StudioDrawerTile(
                   icon: Icons.collections_rounded,
                   label: 'Albums',
@@ -199,7 +202,7 @@ class StudioDrawer extends ConsumerWidget {
                   onTap: () => _handleTap(context, ref, 'uploads', _DrawerAction.route, routeName: AppRoutes.uploadQueue),
                 ),
 
-                _buildSectionHeader('RELATIONSHIPS'),
+                _buildSectionHeader(context, 'RELATIONSHIPS'),
                 _StudioDrawerTile(
                   icon: Icons.people_rounded,
                   label: 'Clients',
@@ -207,13 +210,13 @@ class StudioDrawer extends ConsumerWidget {
                   onTap: () => _handleTap(context, ref, 'clients', _DrawerAction.tab, tabIndex: 2),
                 ),
 
-                _buildSectionHeader('BUSINESS'),
+                _buildSectionHeader(context, 'BUSINESS'),
                 _SubscriptionDrawerTile(
                   selected: selectedId == 'subscription_plans',
                   onTap: () => _handleTap(context, ref, 'subscription_plans', _DrawerAction.route, routeName: AppRoutes.subscriptionPlans),
                 ),
 
-                _buildSectionHeader('SETTINGS'),
+                _buildSectionHeader(context, 'SETTINGS'),
                 _StudioDrawerTile(
                   icon: Icons.settings_rounded,
                   label: 'Studio Settings',
@@ -241,7 +244,7 @@ class StudioDrawer extends ConsumerWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: theme.colorScheme.outlineVariant),
           _BottomSection(
             isDark: isDark,
             onToggleDark: (value) {
@@ -284,6 +287,7 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
   @override
   Widget build(BuildContext context) {
     final selected = widget.selected;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
@@ -331,7 +335,7 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
                   Icon(
                     widget.icon,
                     size: 20,
-                    color: selected ? AppColors.primary : AppColors.subtitle,
+                    color: selected ? AppColors.primary : colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -340,7 +344,7 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                        color: selected ? AppColors.primary : AppColors.text,
+                        color: selected ? AppColors.primary : colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -384,6 +388,7 @@ class _SubscriptionDrawerTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const title = 'Premium Plan';
     const subtitle = 'Manage Subscription';
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
@@ -398,11 +403,11 @@ class _SubscriptionDrawerTile extends ConsumerWidget {
               borderRadius: BorderRadius.circular(AppRadius.md),
               color: selected
                   ? AppColors.primary.withValues(alpha: 0.08)
-                  : Colors.amber.shade50.withValues(alpha: 0.22),
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
               border: Border.all(
                 color: selected
                     ? AppColors.primary.withValues(alpha: 0.2)
-                    : Colors.amber.shade200.withValues(alpha: 0.25),
+                    : colorScheme.outline.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
@@ -438,12 +443,12 @@ class _SubscriptionDrawerTile extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
-                          color: selected ? AppColors.primary : AppColors.text,
+                          color: selected ? AppColors.primary : colorScheme.onSurface,
                         ),
                       ),
-                      Text(
+                      const Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: AppColors.gold,
@@ -495,6 +500,8 @@ class _BottomSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -505,15 +512,15 @@ class _BottomSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.dark_mode_outlined,
-                    size: 20, color: AppColors.subtitle),
+                Icon(Icons.dark_mode_outlined,
+                    size: 20, color: colorScheme.primary),
                 const SizedBox(width: AppSpacing.md),
-                const Expanded(
+                Expanded(
                   child: Text('Dark Mode',
                       style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.text)),
+                          color: colorScheme.onSurface)),
                 ),
                 Switch(
                   value: isDark,
@@ -525,22 +532,22 @@ class _BottomSection extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(AppRadius.md),
               onTap: onAboutTap,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   children: [
                     Icon(Icons.info_outline_rounded,
-                        size: 20, color: AppColors.subtitle),
-                    SizedBox(width: AppSpacing.md),
+                        size: 20, color: colorScheme.onSurfaceVariant),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text('About App',
                           style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.text)),
+                              color: colorScheme.onSurface)),
                     ),
                     Icon(Icons.chevron_right_rounded,
-                        size: 18, color: AppColors.subtitle),
+                        size: 18, color: colorScheme.onSurfaceVariant),
                   ],
                 ),
               ),
@@ -549,10 +556,10 @@ class _BottomSection extends StatelessWidget {
             Text(
               AppStrings.appVersion,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.subtitle),
+                  color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(

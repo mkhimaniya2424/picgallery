@@ -200,6 +200,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final taglineColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final trackColor = isDark ? AppColors.darkSurfaceRaised : AppColors.border;
+
     return Scaffold(
       body: ScreenBackdrop(
         child: Center(
@@ -250,12 +254,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   const SizedBox(height: AppSpacing.sm),
                   FadeTransition(
                     opacity: _taglineFade,
-                    child: const Text(
+                    child: Text(
                       AppStrings.tagline,
                       style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.subtitle,
+                          color: taglineColor,
                           letterSpacing: 0.3),
                     ),
                   ),
@@ -266,10 +270,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       width: 120,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: const LinearProgressIndicator(
+                        child: LinearProgressIndicator(
                           minHeight: 4,
-                          backgroundColor: AppColors.border,
-                          valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                          backgroundColor: trackColor,
+                          valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                         ),
                       ),
                     ),
@@ -290,4 +294,4 @@ class _ResolvedDestination {
   final String route;
   final Object? arguments;
   const _ResolvedDestination(this.route, {this.arguments});
-} 
+}

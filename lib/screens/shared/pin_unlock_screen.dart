@@ -85,6 +85,10 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+
     return Scaffold(
       body: ScreenBackdrop(
         child: SafeArea(
@@ -123,7 +127,7 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
                       style: Theme.of(context)
                           .textTheme
                           .bodyLarge
-                          ?.copyWith(color: AppColors.subtitle),
+                          ?.copyWith(color: subtitleColor),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     Form(
@@ -136,12 +140,13 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
                         obscureText: true,
                         maxLength: 4,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 24,
                             letterSpacing: 12,
-                            color: AppColors.text),
-                        decoration: const InputDecoration(
+                            color: textColor),
+                        decoration: InputDecoration(
                           hintText: '••••',
+                          hintStyle: TextStyle(color: subtitleColor),
                           counterText: '',
                         ),
                         validator: (v) {

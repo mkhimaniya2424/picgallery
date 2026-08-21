@@ -15,6 +15,7 @@ from app.models.connection import ConnectionInitiator, ConnectionStatus, StudioC
 from app.models.email_invitation import EmailInvitation
 from app.models.notification import Notification, NotificationType
 from app.models.user import User, UserRole
+from app.core.firebase_service import send_push_notification
 from app.schemas.connection import (
     ClientLookupRead,
     ClientSummary,
@@ -183,6 +184,15 @@ def _invite_existing_client(
     db.commit()
     db.refresh(connection)
 
+    # Push notification to client's device
+    if client.fcm_token:
+        send_push_notification(
+            token=client.fcm_token,
+            title="New Connection Invitation",
+            body=f"{studio_name} wants to connect with you.",
+            data={"type": "connection", "connection_id": str(connection.id)},
+        )
+
     background_tasks.add_task(
         deliver_connection_invite_email,
         to_email=client.email,
@@ -336,28 +346,46 @@ def accept_connection(
     studio = db.get(User, connection.studio_id)
     studio_name = (studio.studio_name or studio.full_name) if studio else ""
     if connection.initiated_by == ConnectionInitiator.client:
-        db.add(
-            Notification(
-                user_id=connection.client_id,
-                type=NotificationType.connection,
-                title="Connected!",
-                subtitle=f"{studio_name} accepted your request.",
-                data={"connection_id": str(connection.id)},
-            )
+        # Studio accepted the client's request → notify the CLIENT
+        notif = Notification(
+            user_id=connection.client_id,
+            type=NotificationType.connection,
+            title="Connected!",
+            subtitle=f"{studio_name} accepted your request.",
+            data={"connection_id": str(connection.id)},
         )
+        db.add(notif)
+        db.commit()
+        db.refresh(connection)
+        # Send live push to client's device
+        if client and client.fcm_token:
+            send_push_notification(
+                token=client.fcm_token,
+                title="Connection Accepted! 🎉",
+                body=f"{studio_name} accepted your connection request.",
+                data={"type": "connection", "connection_id": str(connection.id)},
+            )
     else:
-        db.add(
-            Notification(
-                user_id=connection.studio_id,
-                type=NotificationType.connection,
-                title="Connected!",
-                subtitle=f"{client.full_name if client else 'A client'} accepted your invitation.",
-                data={"connection_id": str(connection.id)},
-            )
+        # Client accepted the studio's invite → notify the STUDIO
+        notif = Notification(
+            user_id=connection.studio_id,
+            type=NotificationType.connection,
+            title="Connected!",
+            subtitle=f"{client.full_name if client else 'A client'} accepted your invitation.",
+            data={"connection_id": str(connection.id)},
         )
+        db.add(notif)
+        db.commit()
+        db.refresh(connection)
+        # Send live push to studio's device
+        if studio and studio.fcm_token:
+            send_push_notification(
+                token=studio.fcm_token,
+                title="New Client Connected! 🎉",
+                body=f"{client.full_name if client else 'A client'} accepted your invitation.",
+                data={"type": "connection", "connection_id": str(connection.id)},
+            )
 
-    db.commit()
-    db.refresh(connection)
     return _serialize(connection, current_user, db)
 
 

@@ -51,7 +51,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -75,17 +75,17 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Invite New Client',
                             style: TextStyle(
-                              color: AppColors.text,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close_rounded,
-                                color: AppColors.subtitle),
+                            icon: Icon(Icons.close_rounded,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -97,25 +97,25 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                       // the backend records the invite and emails them a
                       // signup link, then auto-connects them the moment
                       // they register with this email.
-                      const Text(
+                      Text(
                         "If they already have a PicGallery client account we'll connect right away. Otherwise we'll email them an invitation to join.",
-                        style: TextStyle(color: AppColors.subtitle, fontSize: 13),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email Address',
-                          labelStyle: const TextStyle(color: AppColors.subtitle),
+                          labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           filled: true,
-                          fillColor: AppColors.surfaceElevated,
+                          fillColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none),
-                          prefixIcon: const Icon(Icons.email_rounded,
-                              color: AppColors.subtitle),
+                          prefixIcon: Icon(Icons.email_rounded,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
-                        style: const TextStyle(color: AppColors.text),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         validator: (val) {
                           if (val == null || val.trim().isEmpty)
                             return 'Please enter an email';
@@ -206,7 +206,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       floatingActionButton: FloatingActionButton(
         heroTag: 'admin_clients_fab',
         onPressed: _showInviteClientDialog,
@@ -219,15 +219,15 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
           children: [
             // Tab bar
             Container(
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.border)),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border)),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicatorColor: AppColors.primary,
                 indicatorWeight: 3,
                 labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.subtitle,
+                unselectedLabelColor: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle,
                 labelStyle: const TextStyle(
                     fontWeight: FontWeight.bold, fontSize: 14),
                 unselectedLabelStyle: const TextStyle(
@@ -258,117 +258,108 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
 class _PendingRequestsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connections = ref.watch(connectionsProvider);
-    // `settings.studioId` is a local, editor-only field — it only ever
-    // gets set once the studio saves the Edit Studio Profile screen (see
-    // `edit_studio_profile_screen.dart`), so it defaults to `''` and was
-    // never guaranteed to match the real logged-in studio. Every
-    // connection's `studioId` (from `StudioClientConnection.fromApiJson`)
-    // is always the actual authenticated user's id, so that's what this
-    // must filter against — otherwise a real pending request never
-    // matches and silently never shows up here, even though `GET
-    // /connections` already returned it.
+    final connectionsAsync = ref.watch(connectionsProvider);
     final studioId = ref.watch(authStateProvider).user?.id ?? '';
     final connNotifier = ref.read(connectionsProvider.notifier);
 
-    final pendingRequests = connections
-        .where((c) =>
-            c.studioId == studioId &&
-            c.status == ConnectionStatus.pendingClientRequest)
-        .toList();
-
-    if (connections.isEmpty && studioId.isNotEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.hourglass_empty_rounded,
-                color: AppColors.subtitle, size: 48),
-            SizedBox(height: AppSpacing.md),
-            Text(
-              'Loading requests...',
-              style: TextStyle(
-                color: AppColors.subtitle,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (pendingRequests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person_add_disabled_rounded,
-                color: AppColors.subtitle.withValues(alpha: 0.4), size: 48),
-            const SizedBox(height: AppSpacing.sm),
-            const Text(
-              'No pending requests',
-              style: TextStyle(
-                color: AppColors.subtitle,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Clients can send you a connection request\nfrom the Discover Studios screen.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.subtitle,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: () async {
-        // Connections are reactive via Riverpod, no explicit refresh needed
-      },
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics()),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: pendingRequests.length,
-        itemBuilder: (context, index) {
-          final request = pendingRequests[index];
-          final client = request.clientData;
-          return _PendingRequestCard(
-            request: request,
-            clientName: client?.name ?? 'Unknown Client',
-            clientInitials: client?.initials ?? '??',
-            clientEmail: client?.email ?? '',
-            onAccept: () {
-              connNotifier.studioAcceptRequest(request.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Accepted ${client?.name ?? "client"}'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            onReject: () {
-              connNotifier.studioRejectRequest(request.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Rejected ${client?.name ?? "client"}'),
-                  backgroundColor: AppColors.error,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-          );
-        },
+    return connectionsAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
       ),
+      error: (err, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+            const SizedBox(height: AppSpacing.sm),
+            const Text('Failed to load requests', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+            const SizedBox(height: AppSpacing.sm),
+            TextButton.icon(
+              onPressed: () => connNotifier.refresh(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (connections) {
+        final pendingRequests = connections
+            .where((c) =>
+                c.studioId == studioId &&
+                c.status == ConnectionStatus.pendingClientRequest)
+            .toList();
+
+        if (pendingRequests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_add_disabled_rounded,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4), size: 48),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'No pending requests',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Clients can send you a connection request\nfrom the Discover Studios screen.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => connNotifier.refresh(),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics()),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            itemCount: pendingRequests.length,
+            itemBuilder: (context, index) {
+              final request = pendingRequests[index];
+              final client = request.clientData;
+              return _PendingRequestCard(
+                request: request,
+                clientName: client?.name ?? 'Unknown Client',
+                clientInitials: client?.initials ?? '??',
+                clientEmail: client?.email ?? '',
+                onAccept: () {
+                  connNotifier.studioAcceptRequest(request.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Accepted ${client?.name ?? "client"}'),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                onReject: () {
+                  connNotifier.studioRejectRequest(request.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Rejected ${client?.name ?? "client"}'),
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -378,7 +369,7 @@ class _ConnectedClientsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsync = ref.watch(adminDashboardProvider);
-    final connections = ref.watch(connectionsProvider);
+    final connections = ref.watch(connectionsProvider).valueOrNull ?? [];
     // Same fix as _PendingRequestsTab: filter against the real
     // authenticated studio id, not the stale/local settings.studioId.
     final studioId = ref.watch(authStateProvider).user?.id ?? '';
@@ -401,7 +392,7 @@ class _ConnectedClientsTab extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.people_outline_rounded,
-                    color: AppColors.subtitle.withValues(alpha: 0.4), size: 48),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4), size: 48),
                 const SizedBox(height: AppSpacing.sm),
                 const Text(
                   'No connected clients yet',
@@ -485,9 +476,9 @@ class _PendingRequestCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
         boxShadow:
             AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
       ),
@@ -523,8 +514,8 @@ class _PendingRequestCard extends StatelessWidget {
                 children: [
                   Text(
                     clientName,
-                    style: const TextStyle(
-                      color: AppColors.text,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
                     ),
@@ -550,8 +541,8 @@ class _PendingRequestCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       clientEmail,
-                      style: const TextStyle(
-                        color: AppColors.subtitle,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 11,
                       ),
                     ),
@@ -623,9 +614,9 @@ class _ClientCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
         boxShadow:
             AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
       ),
@@ -667,8 +658,8 @@ class _ClientCard extends StatelessWidget {
                       children: [
                         Text(
                           client.name,
-                          style: const TextStyle(
-                            color: AppColors.text,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 14.5,
                             fontWeight: FontWeight.w800,
                           ),
@@ -714,8 +705,8 @@ class _ClientCard extends StatelessWidget {
                         client.lastActive != null
                             ? 'Active ${relativeTime(client.lastActive!)}'
                             : 'Inactive',
-                        style: const TextStyle(
-                          color: AppColors.subtitle,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
                         ),

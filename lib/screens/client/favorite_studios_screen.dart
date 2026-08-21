@@ -40,7 +40,7 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
     final favoriteStudios = provider.studios.where((s) => s.isFavorite).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Favorite Studios',

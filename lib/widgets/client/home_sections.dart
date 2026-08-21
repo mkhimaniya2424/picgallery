@@ -746,7 +746,13 @@ class ActivityTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => Navigator.of(context).pushNamed(AppRoutes.notifications),
+      // Same fix as RecentActivitySection.onSeeAll and the Home header
+      // bell icon: this pushed the Studio's NotificationsScreen, which
+      // clients can't meaningfully use. Switch to the client's own
+      // Alerts tab (index 2) instead.
+      onTap: () => context
+          .findAncestorStateOfType<MainNavScreenState>()
+          ?.goToTab(2),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -1135,7 +1141,7 @@ class _ConnectedStudiosSectionState extends ConsumerState<ConnectedStudiosSectio
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final clientId = settings.clientId;
-    final connections = ref.watch(connectionsProvider);
+    final connections = ref.watch(connectionsProvider).valueOrNull ?? [];
     final studiosState = ref.watch(studioProvider);
     final studios = studiosState.studios;
 
@@ -1436,8 +1442,16 @@ class RecentActivitySection extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: SectionHeader(
             title: 'Recent Activity',
+            // AppRoutes.notifications points at the Studio's
+            // NotificationsScreen (backed by adminDashboardProvider) —
+            // pushing it from the Client Home tab showed the wrong data
+            // entirely (studio notifications) or failed to load, since
+            // clients don't have a studio dashboard. The client's own
+            // notifications already live on the Alerts bottom-nav tab
+            // (index 2 in MainNavScreen), so "See All" should just
+            // switch to that tab instead of pushing an unrelated route.
             onSeeAll: () =>
-                Navigator.of(context).pushNamed(AppRoutes.notifications),
+                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(2),
           ),
         ),
         Padding(

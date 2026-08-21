@@ -52,7 +52,7 @@ class GalleryScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(
         showBack: false,
         title: l10n.gallery,

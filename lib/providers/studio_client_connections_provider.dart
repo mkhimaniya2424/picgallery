@@ -17,68 +17,47 @@ final connectionsRepositoryProvider = Provider<ConnectionsRepository>((ref) {
   );
 });
 
-class ConnectionsNotifier extends Notifier<List<StudioClientConnection>> {
+class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
   ConnectionsRepository get _repo => ref.read(connectionsRepositoryProvider);
 
-  bool _isLoading = false;
-  String? _error;
-
-  bool get isLoading => _isLoading;
-
-  /// Set when the last [_loadConnections] call failed — [state] is left
-  /// at whatever it held before (stale-but-visible) rather than cleared,
-  /// so screens can show an inline retry instead of an empty state.
-  String? get error => _error;
-
   @override
-  List<StudioClientConnection> build() {
-    _loadConnections();
-    return [];
-  }
-
-  Future<void> _loadConnections() async {
-    _isLoading = true;
-    _error = null;
-    try {
-      final list = await _repo.fetchConnections();
-      state = list;
-    } catch (e) {
-      _error = 'Could not load connections. Pull down to retry.';
-      if (kDebugMode) debugPrint('loadConnections failed: $e');
-    } finally {
-      _isLoading = false;
-    }
+  Future<List<StudioClientConnection>> build() async {
+    return await _repo.fetchConnections();
   }
 
   /// Re-fetches from the server — e.g. pull-to-refresh.
-  Future<void> refresh() => _loadConnections();
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _repo.fetchConnections());
+  }
 
   /// Replaces [connection] in [state] if an entry with the same id
   /// already exists, otherwise appends it. Used after every mutation so
   /// the list reflects the server's response without a full re-fetch.
   void _upsert(StudioClientConnection connection) {
-    final index = state.indexWhere((c) => c.id == connection.id);
+    final current = state.valueOrNull ?? [];
+    final index = current.indexWhere((c) => c.id == connection.id);
     if (index == -1) {
-      state = [...state, connection];
+      state = AsyncData([...current, connection]);
     } else {
-      final copy = [...state];
+      final copy = [...current];
       copy[index] = connection;
-      state = copy;
+      state = AsyncData(copy);
     }
   }
 
   List<StudioClientConnection> connectionsForClient(String clientId) {
-    return state.where((c) => c.clientId == clientId).toList();
+    return (state.valueOrNull ?? []).where((c) => c.clientId == clientId).toList();
   }
 
   List<StudioClientConnection> connectionsForStudio(String studioId) {
-    return state.where((c) => c.studioId == studioId).toList();
+    return (state.valueOrNull ?? []).where((c) => c.studioId == studioId).toList();
   }
 
   /// Returns pending requests for a given studio — i.e. connections a
   /// client initiated that the studio hasn't responded to yet.
   List<StudioClientConnection> pendingRequestsForStudio(String studioId) {
-    return state
+    return (state.valueOrNull ?? [])
         .where((c) =>
             c.studioId == studioId &&
             c.status == ConnectionStatus.pendingClientRequest)
@@ -87,7 +66,7 @@ class ConnectionsNotifier extends Notifier<List<StudioClientConnection>> {
 
   /// Returns connected clients for a given studio.
   List<StudioClientConnection> connectedClientsForStudio(String studioId) {
-    return state
+    return (state.valueOrNull ?? [])
         .where((c) =>
             c.studioId == studioId && c.status == ConnectionStatus.connected)
         .toList();
@@ -148,6 +127,6 @@ class ConnectionsNotifier extends Notifier<List<StudioClientConnection>> {
 }
 
 final connectionsProvider =
-    NotifierProvider<ConnectionsNotifier, List<StudioClientConnection>>(
+    AsyncNotifierProvider<ConnectionsNotifier, List<StudioClientConnection>>(
   ConnectionsNotifier.new,
 );

@@ -150,9 +150,9 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
     final dashboardAsync = ref.watch(adminDashboardProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.text, size: 20),
@@ -181,7 +181,7 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
           // connected.
           if (client == null) {
             final studioId = ref.read(authStateProvider).user?.id ?? '';
-            final connections = ref.read(connectionsProvider);
+            final connections = ref.read(connectionsProvider).valueOrNull ?? [];
             final conn = connections.cast<StudioClientConnection?>().firstWhere(
                   (c) =>
                       c?.clientId == widget.clientId &&

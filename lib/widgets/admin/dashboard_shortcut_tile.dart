@@ -24,15 +24,16 @@ class DashboardShortcutTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.pill),
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 16, 8),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
           boxShadow:
               AppShadows.soft(gradient.last, opacity: 0.07, blur: 14, y: 7),
         ),
@@ -78,10 +79,10 @@ class DashboardShortcutTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.text)),
+                    color: isDark ? AppColors.textOnDark : AppColors.text)),
           ],
         ),
       ),

@@ -15,7 +15,10 @@ import '../../core/theme/app_theme.dart';
 /// transparent stock chrome.
 class AppToast {
   static void show(BuildContext context, String message, {bool isError = false}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final messenger = ScaffoldMessenger.of(context);
+
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
@@ -28,11 +31,20 @@ class AppToast {
         content: Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: theme.brightness == Brightness.dark
+                ? AppColors.darkSurface
+                : AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: (isError ? AppColors.error : AppColors.primary).withValues(alpha: 0.25)),
+            border: Border.all(
+              color: (isError ? AppColors.error : AppColors.primary)
+                  .withValues(alpha: 0.25),
+            ),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 24, offset: const Offset(0, 10)),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
           child: Row(
@@ -57,7 +69,11 @@ class AppToast {
               Flexible(
                 child: Text(
                   message,
-                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.text),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],

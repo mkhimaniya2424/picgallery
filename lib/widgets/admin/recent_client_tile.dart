@@ -26,13 +26,14 @@ class RecentClientTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (galleryLabel, galleryColor) = _galleryLabel;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         boxShadow:
             AppShadows.soft(AppColors.primary, opacity: 0.06, blur: 16, y: 7),
       ),
@@ -61,10 +62,10 @@ class RecentClientTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(data.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.text)),
+                        color: isDark ? AppColors.textOnDark : AppColors.text)),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
@@ -94,7 +95,9 @@ class RecentClientTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
-                  color: data.isPaid ? AppColors.success : AppColors.text,
+                  color: data.isPaid
+                      ? AppColors.success
+                      : (isDark ? AppColors.textOnDark : AppColors.text),
                 ),
               ),
             ],

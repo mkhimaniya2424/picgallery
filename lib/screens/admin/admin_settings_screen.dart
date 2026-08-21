@@ -10,7 +10,6 @@ import '../../models/settings_model.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/studio_provider.dart';
-import '../../providers/user_providers.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'edit_studio_profile_screen.dart';
 
@@ -23,39 +22,6 @@ class AdminSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _syncLanguageFromBackend();
-  }
-
-  /// App Language is now a real backend User column (`app_language`), but
-  /// this whole screen still reads its display value from the local
-  /// SettingsModel cache (`settings.language`) everywhere below. Rather
-  /// than rewrite every read site, mirror the backend's value down into
-  /// that cache once on screen entry — same "prefer cached, refreshMe if
-  /// nothing's loaded yet" fallback used by EditStudioProfileScreen.
-  Future<void> _syncLanguageFromBackend() async {
-    var user = ref.read(authProvider).valueOrNull;
-    if (user == null) {
-      try {
-        await ref.read(authProvider.notifier).refreshMe();
-      } on ApiException {
-        return;
-      }
-      if (!mounted) return;
-      user = ref.read(authProvider).valueOrNull;
-    }
-    if (user == null) return;
-
-    final settings = ref.read(settingsProvider);
-    if (settings.language != user.appLanguage) {
-      await ref
-          .read(settingsProvider.notifier)
-          .updateSettings(settings.copyWith(language: user.appLanguage));
-    }
-  }
-
   void _editGeneralInfo(SettingsModel settings) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -64,66 +30,17 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     );
   }
 
-  void _showLanguageSelector(SettingsModel settings) {
-    final languages = ['English', 'Hindi', 'Spanish', 'German', 'French'];
-    showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Select Language',
-            style:
-                TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
-        children: languages.map((lang) {
-          final isSelected = settings.language == lang;
-          return SimpleDialogOption(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.maybeOf(context);
-              final navigator = Navigator.of(context);
-              navigator.pop();
-              try {
-                final updatedUser = await ref
-                    .read(userRepositoryProvider)
-                    .updateProfile(appLanguage: lang);
-                ref.read(authProvider.notifier).setUser(updatedUser);
-                await ref
-                    .read(settingsProvider.notifier)
-                    .updateSettings(settings.copyWith(language: updatedUser.appLanguage));
-              } on ApiException catch (e) {
-                if (mounted && messenger != null) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text('Error saving language: ${e.message}')),
-                  );
-                }
-              }
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(lang,
-                    style: TextStyle(
-                        color: isSelected ? AppColors.primary : AppColors.text,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal)),
-                if (isSelected)
-                  const Icon(Icons.check_rounded,
-                      color: AppColors.primary, size: 18),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   void _showQualitySelector(SettingsModel settings) {
     final options = ['Original', 'High'];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => SimpleDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Default Upload Quality',
-            style:
-                TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+        title: Text('Default Upload Quality',
+            style: TextStyle(
+                color: isDark ? AppColors.textOnDark : AppColors.text,
+                fontWeight: FontWeight.bold)),
         children: options.map((opt) {
           final isSelected = settings.uploadQuality == opt;
           return SimpleDialogOption(
@@ -138,7 +55,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               children: [
                 Text(opt,
                     style: TextStyle(
-                        color: isSelected ? AppColors.primary : AppColors.text,
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isDark ? AppColors.textOnDark : AppColors.text),
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal)),
                 if (isSelected)
@@ -153,14 +72,16 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   }
 
   void _showThemeSelector(SettingsModel settings) {
-    final options = ['Light', 'Dark', 'System'];
+    final options = ['Light', 'Dark'];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => SimpleDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Select Theme',
-            style:
-                TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+        title: Text('Select Theme',
+            style: TextStyle(
+                color: isDark ? AppColors.textOnDark : AppColors.text,
+                fontWeight: FontWeight.bold)),
         children: options.map((opt) {
           final isSelected = settings.themeMode == opt;
           return SimpleDialogOption(
@@ -175,7 +96,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               children: [
                 Text(opt,
                     style: TextStyle(
-                        color: isSelected ? AppColors.primary : AppColors.text,
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isDark ? AppColors.textOnDark : AppColors.text),
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal)),
                 if (isSelected)
@@ -207,20 +130,23 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   }
 
   void _triggerRestore() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Restore Backup',
-            style:
-                TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+        title: Text('Restore Backup',
+            style: TextStyle(
+                color: isDark ? AppColors.textOnDark : AppColors.text,
+                fontWeight: FontWeight.bold)),
         content: const Text(
             'Do you want to restore the latest backup archive? This will overwrite current temporary configurations.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.subtitle)),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -242,17 +168,20 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   }
 
   void _showAboutDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showAboutDialog(
       context: context,
       applicationName: 'PicGallery',
       applicationVersion: 'v2.1.4-Release',
       applicationLegalese: '© 2026 PicGallery Studio. All Rights Reserved.',
-      children: const [
+      children: [
         Padding(
-          padding: EdgeInsets.only(top: 12),
+          padding: const EdgeInsets.only(top: 12),
           child: Text(
               'Designed as a state-of-the-art photography sharing and proofing ecosystem for pro photographers and studios.',
-              style: TextStyle(color: AppColors.subtitle, fontSize: 12.5)),
+              style: TextStyle(
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                  fontSize: 12.5)),
         ),
       ],
     );
@@ -268,7 +197,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     ].where((s) => s.isNotEmpty).join(' • ');
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(title: 'Studio Settings', showBack: true),
       body: ListView(
         physics: const BouncingScrollPhysics(),
@@ -282,12 +211,6 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               title: 'Studio Identity',
               subtitle: studioSubtitle,
               onTap: () => _editGeneralInfo(settings),
-            ),
-            _SettingsRow(
-              icon: Icons.translate_rounded,
-              title: 'App Language',
-              subtitle: settings.language,
-              onTap: () => _showLanguageSelector(settings),
             ),
           ]),
           const SizedBox(height: AppSpacing.md),
@@ -455,14 +378,17 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(children: children),
-    );
+    return Builder(builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+        ),
+        child: Column(children: children),
+      );
+    });
   }
 }
 
@@ -487,6 +413,7 @@ class _SettingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -506,22 +433,23 @@ class _SettingsRow extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
-                        color: titleColor ?? AppColors.text),
+                        color: titleColor ??
+                            (isDark ? AppColors.textOnDark : AppColors.text)),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(subtitle!,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11.5,
-                            color: AppColors.subtitle,
+                            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                             fontWeight: FontWeight.w500)),
                   ],
                 ],
               ),
             ),
             if (showChevron)
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.subtitle, size: 20),
+              Icon(Icons.chevron_right_rounded,
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, size: 20),
           ],
         ),
       ),
@@ -544,6 +472,7 @@ class _SettingsToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding:
           const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
@@ -554,10 +483,10 @@ class _SettingsToggleRow extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.text),
+                  color: isDark ? AppColors.textOnDark : AppColors.text),
             ),
           ),
           Switch.adaptive(
@@ -600,15 +529,17 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
       surfaceTintColor: Colors.transparent,
       title: Text(
           widget.settings.securityPinEnabled
               ? 'Change Security PIN'
               : 'Setup App Lock PIN',
-          style: const TextStyle(
-              color: AppColors.text, fontWeight: FontWeight.bold)),
+          style: TextStyle(
+              color: isDark ? AppColors.textOnDark : AppColors.text,
+              fontWeight: FontWeight.bold)),
       content: Form(
         key: _formKey,
         child: TextFormField(
@@ -653,8 +584,9 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel',
-              style: TextStyle(color: AppColors.subtitle)),
+          child: Text('Cancel',
+              style: TextStyle(
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -745,12 +677,15 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
   Widget build(BuildContext context) {
     final isError = _status == _BackupStatus.error;
     final isDone = _status == _BackupStatus.success;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
       title: Text(
         isError ? 'Backup Failed' : 'Backing Up Data',
-        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: isDark ? AppColors.textOnDark : AppColors.text,
+            fontWeight: FontWeight.bold),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -761,19 +696,24 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
                 : isDone
                     ? 'Your studio settings backup has been saved.'
                     : 'Backing up your studio settings and configurations...',
-            style: const TextStyle(color: AppColors.subtitle, fontSize: 13.5),
+            style: TextStyle(
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                fontSize: 13.5),
           ),
           if (!isError) ...[
             const SizedBox(height: 20),
             LinearProgressIndicator(
               value: isDone ? 1.0 : null,
               color: AppColors.primary,
-              backgroundColor: AppColors.border,
+              backgroundColor: isDark ? AppColors.darkBorder : AppColors.border,
             ),
             const SizedBox(height: 8),
             Text(
               isDone ? '100% Completed' : 'Uploading…',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: isDark ? AppColors.textOnDark : null),
             ),
           ],
         ],
@@ -782,7 +722,9 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
         if (isError) ...[
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle)),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: _runBackup,
@@ -860,16 +802,19 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
     final isNotFound = _status == _RestoreStatus.notFound;
     final isDone = _status == _RestoreStatus.success;
     final isFailure = isError || isNotFound;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
       title: Text(
         isNotFound
             ? 'No Backup Found'
             : isError
                 ? 'Restore Failed'
                 : 'Restoring Data',
-        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: isDark ? AppColors.textOnDark : AppColors.text,
+            fontWeight: FontWeight.bold),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -882,19 +827,24 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
                     : isDone
                         ? 'Your studio settings have been restored from the latest backup.'
                         : 'Fetching your latest backup and restoring settings...',
-            style: const TextStyle(color: AppColors.subtitle, fontSize: 13.5),
+            style: TextStyle(
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                fontSize: 13.5),
           ),
           if (!isFailure) ...[
             const SizedBox(height: 20),
             LinearProgressIndicator(
               value: isDone ? 1.0 : null,
               color: AppColors.primary,
-              backgroundColor: AppColors.border,
+              backgroundColor: isDark ? AppColors.darkBorder : AppColors.border,
             ),
             const SizedBox(height: 8),
             Text(
               isDone ? '100% Completed' : 'Restoring…',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: isDark ? AppColors.textOnDark : null),
             ),
           ],
         ],
@@ -903,7 +853,9 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
         if (isNotFound) ...[
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle)),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -919,7 +871,9 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
         ] else if (isError) ...[
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle)),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: _runRestore,

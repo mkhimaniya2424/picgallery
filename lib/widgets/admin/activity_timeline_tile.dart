@@ -16,21 +16,22 @@ class ActivityTimelineList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (entries.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         ),
-        child: const Text(
+        child: Text(
           'No activity yet — try a Quick Action above',
           style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.subtitle),
+              color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
         ),
       );
     }
@@ -38,9 +39,9 @@ class ActivityTimelineList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           vertical: AppSpacing.sm, horizontal: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         boxShadow: [
           BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.06),
@@ -76,6 +77,7 @@ class _ActivityRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, gradient) = entry.style;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedContainer(
       duration: AppDurations.medium,
       curve: Curves.easeOut,
@@ -104,7 +106,7 @@ class _ActivityRow extends StatelessWidget {
                     child: Container(
                       width: 2,
                       margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: AppColors.border,
+                      color: isDark ? AppColors.darkBorder : AppColors.border,
                     ),
                   ),
               ],
@@ -120,24 +122,24 @@ class _ActivityRow extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(entry.title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.text)),
+                                  color: isDark ? AppColors.textOnDark : AppColors.text)),
                         ),
                         Text(entry.time,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.subtitle)),
+                                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(entry.subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.subtitle)),
+                            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                   ],
                 ),
               ),

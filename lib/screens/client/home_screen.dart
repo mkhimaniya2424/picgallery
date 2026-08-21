@@ -185,8 +185,13 @@ class HomeScreen extends ConsumerWidget {
               ),
               _HeroIconButton(
                 icon: Icons.notifications_none_rounded,
-                onTap: () =>
-                    Navigator.of(context).pushNamed(AppRoutes.notifications),
+                // Same fix as RecentActivitySection.onSeeAll below: this
+                // used to push AppRoutes.notifications (the Studio's
+                // NotificationsScreen), which isn't the client's screen
+                // at all. Switch to the Alerts bottom-nav tab instead.
+                onTap: () => context
+                    .findAncestorStateOfType<MainNavScreenState>()
+                    ?.goToTab(2),
               ),
               const SizedBox(width: 10),
               InkWell(

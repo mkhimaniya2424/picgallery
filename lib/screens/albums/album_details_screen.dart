@@ -208,7 +208,11 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
               album.isFavorite
                   ? Icons.favorite_rounded
                   : Icons.favorite_border_rounded,
-              color: album.isFavorite ? AppColors.accent : AppColors.text,
+              color: album.isFavorite
+                  ? AppColors.accent
+                  : (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text),
             ),
           ),
         ],
@@ -228,47 +232,58 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                     AlbumDetailsHeader(album: album),
                     const SizedBox(height: AppSpacing.md),
                     if (folder != null || album.description != null)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (album.description != null) ...[
-                              Text(
-                                album.description!,
-                                style: const TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.text),
-                              ),
+                      Builder(builder: (context) {
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkSurface
+                                : Colors.white.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            border: Border.all(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (album.description != null) ...[
+                                Text(
+                                  album.description!,
+                                  style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? AppColors.textOnDark
+                                          : AppColors.text),
+                                ),
+                                if (folder != null)
+                                  const SizedBox(height: AppSpacing.sm),
+                              ],
                               if (folder != null)
-                                const SizedBox(height: AppSpacing.sm),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.folder_rounded,
+                                        size: 16, color: AppColors.primary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Filed under "${folder.name}"',
+                                      style: const TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary),
+                                    ),
+                                  ],
+                                ),
                             ],
-                            if (folder != null)
-                              Row(
-                                children: [
-                                  const Icon(Icons.folder_rounded,
-                                      size: 16, color: AppColors.primary),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Filed under "${folder.name}"',
-                                    style: const TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.primary),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      }),
                     Row(
                       children: [
                         Expanded(
@@ -314,12 +329,15 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Recent Photos',
                           style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.text),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.textOnDark
+                                  : AppColors.text),
                         ),
                         if (hasMoreMedia)
                           TextButton(

@@ -4,13 +4,16 @@
 // providers to test meaningfully, which belongs in dedicated test files,
 // not the default template here.
 
-// import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:picgallery/main.dart';
 import 'package:picgallery/core/constants/app_constants.dart';
 import 'package:picgallery/core/storage/token_storage.dart';
+import 'package:picgallery/core/theme/app_theme.dart';
 import 'package:picgallery/providers/auth_providers.dart';
+import 'package:picgallery/widgets/inputs/custom_text_field.dart';
 
 /// [TokenStorage] is normally backed by flutter_secure_storage, which
 /// talks to a platform channel that isn't available in a plain widget
@@ -23,6 +26,11 @@ class _FakeTokenStorage extends TokenStorage {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() async {
+    await Hive.initFlutter();
+  });
+
   testWidgets('App boots and shows the splash screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -41,5 +49,24 @@ void main() {
     // "Pending timers" when that still-unfired Timer gets torn down.
     await tester.pump(AppDurations.splash);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('Dark mode text fields use dark theme colors', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
+        home: const Scaffold(
+          body: CustomTextField(
+            label: 'Email',
+            icon: Icons.mail_outline_rounded,
+          ),
+        ),
+      ),
+    );
+
+    final text = tester.widget<EditableText>(find.byType(EditableText));
+    expect(text.style.color, AppColors.textOnDark);
   });
 }

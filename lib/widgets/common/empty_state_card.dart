@@ -15,28 +15,31 @@ class EmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 30, color: AppColors.subtitle),
+            Icon(icon,
+                size: 30,
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
             const SizedBox(height: AppSpacing.sm),
           ],
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.subtitle),
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
           ),
         ],
       ),

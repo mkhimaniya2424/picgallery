@@ -421,6 +421,13 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     bool isCircle = false,
     bool isUploading = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final placeholderBg = isDark
+        ? AppColors.darkSurfaceRaised
+        : AppColors.background.withValues(alpha: 0.8);
+    final placeholderBorder = isDark ? AppColors.darkBorder : AppColors.border;
+
     final hasImage = path != null && path.isNotEmpty;
 
     Widget imageChild;
@@ -430,18 +437,18 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
           path,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) =>
-              Icon(placeholderIcon, size: 28, color: AppColors.subtitle),
+              Icon(placeholderIcon, size: 28, color: subtitleColor),
         );
       } else {
         imageChild = Image.file(
           File(path),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) =>
-              Icon(placeholderIcon, size: 28, color: AppColors.subtitle),
+              Icon(placeholderIcon, size: 28, color: subtitleColor),
         );
       }
     } else {
-      imageChild = Icon(placeholderIcon, size: 28, color: AppColors.subtitle);
+      imageChild = Icon(placeholderIcon, size: 28, color: subtitleColor);
     }
 
     Widget clip(Widget child) => isCircle
@@ -452,10 +459,10 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.8),
+        color: placeholderBg,
         borderRadius: isCircle ? null : BorderRadius.circular(12),
         shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(color: placeholderBorder, width: 1.5),
       ),
       child: Stack(
         fit: StackFit.expand,
@@ -635,8 +642,16 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final placeholderBg = isDark
+        ? AppColors.darkSurfaceRaised
+        : AppColors.background.withValues(alpha: 0.8);
+    final placeholderBorder = isDark ? AppColors.darkBorder : AppColors.border;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Edit Studio Profile', showBack: true),
       body: ScreenBackdrop(
@@ -716,23 +731,23 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                               ],
                             ),
                             const SizedBox(width: AppSpacing.md),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Studio Logo & Cover Photo',
                                     style: TextStyle(
-                                      color: AppColors.text,
+                                      color: textColor,
                                       fontSize: 14.5,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Upload JPG/PNG assets. These will be shown on your client facing portal.',
                                     style: TextStyle(
-                                      color: AppColors.subtitle,
+                                      color: subtitleColor,
                                       fontSize: 11.5,
                                     ),
                                   ),
@@ -762,9 +777,9 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'Add a few of your best shots to show clients on your public profile.',
-                          style: TextStyle(color: AppColors.subtitle, fontSize: 11.5),
+                          style: TextStyle(color: subtitleColor, fontSize: 11.5),
                         ),
                         const SizedBox(height: 12),
                         if (_isLoadingPortfolio)
@@ -788,9 +803,9 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                                   onTap: _isAddingPortfolioImage ? null : _pickPortfolioImage,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: AppColors.background.withValues(alpha: 0.8),
+                                      color: placeholderBg,
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: AppColors.border, width: 1.5),
+                                      border: Border.all(color: placeholderBorder, width: 1.5),
                                     ),
                                     child: Center(
                                       child: _isAddingPortfolioImage
@@ -799,7 +814,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                                               width: 20,
                                               child: CircularProgressIndicator(strokeWidth: 2),
                                             )
-                                          : const Icon(Icons.add_rounded, color: AppColors.subtitle, size: 28),
+                                          : Icon(Icons.add_rounded, color: subtitleColor, size: 28),
                                     ),
                                   ),
                                 );
@@ -816,8 +831,8 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                                       image.url,
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => Container(
-                                        color: AppColors.background.withValues(alpha: 0.8),
-                                        child: const Icon(Icons.broken_image_rounded, color: AppColors.subtitle),
+                                        color: placeholderBg,
+                                        child: Icon(Icons.broken_image_rounded, color: subtitleColor),
                                       ),
                                     ),
                                   ),
@@ -875,21 +890,21 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _studioNameController,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Studio Name'),
                           validator: (v) => v == null || v.trim().isEmpty ? 'Enter studio name' : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
                           controller: _photoNameController,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Photographer Name'),
                           validator: (v) => v == null || v.trim().isEmpty ? 'Enter photographer name' : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
                           controller: _studioAddressController,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Studio Address'),
                           maxLines: 2,
                         ),
@@ -907,7 +922,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
                           controller: _emailController,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Email Address'),
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) => v == null || v.trim().isEmpty ? 'Enter email' : null,
@@ -915,7 +930,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
                           controller: _websiteController,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                           decoration: const InputDecoration(labelText: 'Website URL'),
                           keyboardType: TextInputType.url,
                         ),
@@ -949,17 +964,19 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                               selected: isSelected,
                               label: Text(cat),
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : AppColors.text,
+                                color: isSelected ? Colors.white : textColor,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
                               selectedColor: AppColors.primary,
                               checkmarkColor: Colors.white,
-                              backgroundColor: Colors.white,
+                              backgroundColor: isDark ? AppColors.darkSurfaceRaised : Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 side: BorderSide(
-                                  color: isSelected ? AppColors.primary : AppColors.border,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : (isDark ? AppColors.darkBorder : AppColors.border),
                                 ),
                               ),
                               onSelected: (selected) {
@@ -998,7 +1015,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                         TextFormField(
                           controller: _aboutController,
                           maxLines: 4,
-                          style: const TextStyle(color: AppColors.text, fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                           decoration: const InputDecoration(
                             hintText: 'Tell clients about your studio philosophy, equipment, experience, and style...',
                             alignLabelWithHint: true,

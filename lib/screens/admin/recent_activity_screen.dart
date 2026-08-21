@@ -10,7 +10,7 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_tab_placeholder.dart';
 
 /// Full Activity Timeline — every studio event (uploads, albums,
-/// clients, bookings, shared galleries, profile changes, QR check-ins,
+/// clients, bookings, shared galleries, profile changes,
 /// reports), newest first, with a type filter. Reuses the exact same
 /// [ActivityTimelineList] rows the Dashboard's inline preview shows —
 /// just fed the full (optionally filtered) log instead of a section that
@@ -121,6 +121,7 @@ class _TypeFilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final types = [null, ...ActivityType.values];
     return SizedBox(
       height: 36,
@@ -139,17 +140,24 @@ class _TypeFilterRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: isSelected ? AppColors.buttonGradient : null,
-                color: isSelected ? null : Colors.white,
+                color: isSelected
+                    ? null
+                    : (isDark ? AppColors.darkSurfaceRaised : Colors.white),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: Border.all(
-                    color: isSelected ? Colors.transparent : AppColors.border),
+                  color: isSelected
+                      ? Colors.transparent
+                      : (isDark ? AppColors.darkBorder : AppColors.border),
+                ),
               ),
               child: Text(
                 _label(type),
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : AppColors.subtitle,
+                  color: isSelected
+                      ? Colors.white
+                      : (isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
                 ),
               ),
             ),

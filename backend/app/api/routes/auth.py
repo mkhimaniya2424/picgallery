@@ -22,6 +22,7 @@ from app.models.notification import Notification, NotificationType
 from app.models.user import AuthProvider, User, UserRole
 from app.schemas.user import (
     ForgotPasswordRequest,
+    FCMTokenUpdate,
     MessageResponse,
     ResetPasswordRequest,
     SocialLoginRequest,
@@ -496,3 +497,17 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     db.commit()
 
     return MessageResponse(message="Password reset successfully. You can now sign in with your new password.")
+
+@router.put("/fcm-token", response_model=UserRead)
+def update_fcm_token(
+    payload: FCMTokenUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    """Stores the device's FCM push token for the authenticated user,
+    allowing the backend to push live notifications."""
+    if payload.fcm_token is not None:
+        current_user.fcm_token = payload.fcm_token
+        db.commit()
+        db.refresh(current_user)
+    return current_user

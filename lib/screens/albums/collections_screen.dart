@@ -190,7 +190,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
         collectionsCtrl.collections.isEmpty;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(
         title: 'Collections',
         showBack: true,

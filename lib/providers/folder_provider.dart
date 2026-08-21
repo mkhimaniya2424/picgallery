@@ -115,13 +115,13 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
 
   @override
   Future<FolderState> build() async {
-    final initial = FolderState(
+    final initial = const FolderState(
       isLoading: true,
       lastError: null,
       searchQuery: '',
       sortOption: FolderSortOption.name,
       filterOption: FolderFilterOption.all,
-      allFolders: const [],
+      allFolders: [],
     );
 
     state = const AsyncValue.loading();

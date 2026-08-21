@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
+from app.core.firebase_service import send_push_notification
 from app.db.session import SessionLocal
 
 from app.models.notification import Notification, NotificationType
@@ -47,8 +48,8 @@ logger = logging.getLogger(__name__)
 # just take the first match.
 PLAN_REMINDER_THRESHOLDS: dict[str, list[int]] = {
     "trial": [1],
-    "pro": [30, 7, 1],
-    "premium": [30, 7, 1],
+    "pro": [30, 7, 5, 1],
+    "premium": [30, 7, 5, 1],
 }
 
 
@@ -57,11 +58,13 @@ def _days_remaining(plan_expiry: datetime) -> int:
     "23.1 hours left" still counts as 1 day remaining, not 0.
     """
     now = datetime.now(timezone.utc)
+    if plan_expiry.tzinfo is None:
+        now = now.replace(tzinfo=None)
     delta_seconds = (plan_expiry - now).total_seconds()
     return math.ceil(delta_seconds / 86400)
 
 
-def _threshold_to_remind(plan: str, days_remaining: int, last_reminder_days: int | None) -> int | None:
+def _threshold_to_remind(plan: str, days_remaining: int, last_reminder _days: int | None) -> int | None:
     """Returns the threshold to send a reminder for right now, or None
     if nothing is due. Picks the most urgent (smallest) threshold the
     user has reached that hasn't already been sent this cycle.
@@ -153,6 +156,19 @@ def send_plan_reminders(dry_run: bool = False) -> None:
                         },
                     )
                 )
+                
+                if user.fcm_token:
+                    send_push_notification(
+                        token=user.fcm_token,
+                        title=title,
+                        body=subtitle,
+                        data={
+                            "type": "reminder",
+                            "current_plan": user.current_plan or "",
+                            "days_remaining": str(days_remaining),
+                        }
+                    )
+
 
                 user.last_reminder_days = threshold
                 reminded += 1

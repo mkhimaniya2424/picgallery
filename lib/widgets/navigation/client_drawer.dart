@@ -77,7 +77,7 @@ class ClientDrawer extends ConsumerWidget {
     }
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
       child: Text(
@@ -97,7 +97,7 @@ class ClientDrawer extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final authUser = ref.watch(authProvider).valueOrNull;
     final clientNotifier = ref.watch(clientProvider);
-    final connections = ref.watch(connectionsProvider);
+    final connections = ref.watch(connectionsProvider).valueOrNull ?? [];
     final pendingInviteCount = connections
         .where((c) => c.status == ConnectionStatus.pendingStudioRequest)
         .length;
@@ -118,9 +118,12 @@ class ClientDrawer extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final drawerWidth = screenWidth < 420 ? screenWidth * 0.82 : 340.0;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Drawer(
       width: drawerWidth,
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.background,
       child: Column(
         children: [
           // 1. Profile Header
@@ -231,7 +234,7 @@ class ClientDrawer extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               children: [
-                _buildSectionHeader('Main Navigation'),
+                _buildSectionHeader(context, 'Main Navigation'),
                 DrawerMenuItem(
                   icon: Icons.home_rounded,
                   label: 'Home',
@@ -271,8 +274,8 @@ class ClientDrawer extends ConsumerWidget {
                   },
                 ),
 
-                const Divider(height: AppSpacing.md, thickness: 1, color: AppColors.border),
-                _buildSectionHeader('Media & Galleries'),
+                Divider(height: AppSpacing.md, thickness: 1, color: Theme.of(context).dividerColor),
+                _buildSectionHeader(context, 'Media & Galleries'),
                 DrawerMenuItem(
                   icon: Icons.photo_library_rounded,
                   label: 'My Galleries',
@@ -316,8 +319,8 @@ class ClientDrawer extends ConsumerWidget {
                 // client account — no client-facing download-history route
                 // exists yet. Re-add once one does.
 
-                const Divider(height: AppSpacing.md, thickness: 1, color: AppColors.border),
-                _buildSectionHeader('Account Settings'),
+                Divider(height: AppSpacing.md, thickness: 1, color: Theme.of(context).dividerColor),
+                _buildSectionHeader(context, 'Account Settings'),
                 DrawerMenuItem(
                   icon: Icons.notifications_rounded,
                   label: 'Notifications',
@@ -350,7 +353,7 @@ class ClientDrawer extends ConsumerWidget {
           ),
 
           // 3. Logout Item at Bottom
-          const Divider(height: 1, thickness: 1, color: AppColors.border),
+          Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
           _BottomSection(
             isDark: settings.themeMode == 'Dark',
             language: settings.language,
@@ -449,6 +452,8 @@ class _BottomSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
     return SafeArea(
       top: false,
       child: Padding(
@@ -461,14 +466,14 @@ class _BottomSection extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.dark_mode_outlined,
-                    size: 20, color: AppColors.subtitle),
+                    size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.md),
-                const Expanded(
+                Expanded(
                   child: Text('Dark Mode',
                       style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.text)),
+                          color: onSurface)),
                 ),
                 Switch(
                   value: isDark,
@@ -486,14 +491,14 @@ class _BottomSection extends StatelessWidget {
                 child: Row(
                   children: [
                     const Icon(Icons.language_rounded,
-                        size: 20, color: AppColors.subtitle),
+                        size: 20, color: AppColors.primary),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(AppLocalizations.of(context)!.language,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.text)),
+                              color: onSurface)),
                     ),
                     Text(language,
                         style: const TextStyle(
@@ -501,8 +506,8 @@ class _BottomSection extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary)),
                     const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right_rounded,
-                        size: 18, color: AppColors.subtitle),
+                    Icon(Icons.chevron_right_rounded,
+                        size: 18, color: onSurfaceVariant),
                   ],
                 ),
               ),
@@ -511,22 +516,22 @@ class _BottomSection extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(AppRadius.md),
               onTap: onAboutTap,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   children: [
                     Icon(Icons.info_outline_rounded,
-                        size: 20, color: AppColors.subtitle),
-                    SizedBox(width: AppSpacing.md),
+                        size: 20, color: onSurfaceVariant),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text('About App',
                           style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.text)),
+                              color: onSurface)),
                     ),
                     Icon(Icons.chevron_right_rounded,
-                        size: 18, color: AppColors.subtitle),
+                        size: 18, color: onSurfaceVariant),
                   ],
                 ),
               ),
@@ -535,10 +540,10 @@ class _BottomSection extends StatelessWidget {
             Text(
               AppStrings.appVersion,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.subtitle),
+                  color: onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.sm),
             // Logout — red, with confirmation dialog.

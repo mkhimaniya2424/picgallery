@@ -21,7 +21,7 @@ class InvitationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connections = ref.watch(connectionsProvider);
+    final connections = ref.watch(connectionsProvider).valueOrNull ?? [];
     final connNotifier = ref.read(connectionsProvider.notifier);
 
     // Get pending studio invitations for this client
@@ -37,7 +37,7 @@ class InvitationsScreen extends ConsumerWidget {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(
         title: 'Studio Invitations',
         showBack: true,

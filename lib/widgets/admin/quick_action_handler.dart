@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/subscription_guard.dart';
 import '../../models/admin_dashboard_data.dart';
 import '../../providers/admin_dashboard_providers.dart';
+import '../../providers/auth_providers.dart';
 
 /// Shared execution logic for a [QuickActionData] tap.
 ///
@@ -76,17 +79,13 @@ class QuickActionHandler {
         });
         break;
       case 'add_client':
-        _goToClientsTab(toast, onNavigateToTab);
+        _goToClientsTab(context, toast, onNavigateToTab);
         break;
       case 'share_gallery':
-        _goToGalleryTab(toast, onNavigateToTab);
+        _goToGalleryTab(context, toast, onNavigateToTab);
         break;
       case 'scan_qr':
-        // No QR check-in backend exists yet — no endpoint, no model,
-        // nothing for this to call. The old behavior faked a
-        // notification to simulate one; better to say plainly that
-        // it isn't available than to pretend it worked.
-        toast('QR check-in isn\'t available yet');
+        _showQrDialog(context, ref);
         break;
 
       case 'reports':
@@ -104,12 +103,25 @@ class QuickActionHandler {
   /// against [ApiAdminDashboardRepository]. The real invite flow lives
   /// on the Clients tab ([AdminClientsScreen]), so route there instead
   /// of collecting a name here that has nowhere real to go.
+  ///
+  /// When called from the Dashboard's inline grid, [onNavigateToTab]
+  /// switches the bottom-nav tab directly. When called from the
+  /// standalone [QuickActionsScreen] (reached via `pushNamed`, so there's
+  /// no bottom-nav tab to switch), this instead pops back with the
+  /// target tab index as the pop result — `admin_dashboard_screen.dart`
+  /// awaits that result and forwards it to the real `onNavigateToTab`,
+  /// so the tile behaves the same regardless of which screen it was
+  /// tapped from. A toast only remains as a last-resort fallback if
+  /// there's somehow nothing to pop back into.
   static void _goToClientsTab(
+    BuildContext context,
     void Function(String message, {Color? color}) toast,
     ValueChanged<int>? onNavigateToTab,
   ) {
     if (onNavigateToTab != null) {
       onNavigateToTab(2);
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(2);
     } else {
       toast('Open the Clients tab to add a client');
     }
@@ -120,13 +132,17 @@ class QuickActionHandler {
   /// recently" endpoint, so [AdminDashboardRepository.shareGallery]
   /// always throws against [ApiAdminDashboardRepository]. Route to the
   /// Gallery tab so the studio can pick an album and use its real
-  /// Share Settings screen instead of guessing at one here.
+  /// Share Settings screen instead of guessing at one here. Same
+  /// pop-with-tab-index fallback as [_goToClientsTab] above.
   static void _goToGalleryTab(
+    BuildContext context,
     void Function(String message, {Color? color}) toast,
     ValueChanged<int>? onNavigateToTab,
   ) {
     if (onNavigateToTab != null) {
       onNavigateToTab(1);
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(1);
     } else {
       toast('Open the Gallery tab to share an album');
     }
@@ -150,6 +166,100 @@ class QuickActionHandler {
               child: const Text('Done')),
         ],
       ),
+    );
+  }
+
+  /// Encodes the studio's real `AppUser.id` — not the display name,
+  /// which isn't a valid lookup key anywhere in the app — as a
+  /// `picgallery://studio/{studioId}` deep link. `DeepLinkService`
+  /// resolves that into the same `StudioProfileScreen` used everywhere
+  /// else a studio is viewed. There is still no backend "check-in"
+  /// concept, so this is an honest "view studio profile" shortcut, not
+  /// a check-in — hence "Studio Code", not "Check-in", in the label and
+  /// caption.
+  static void _showQrDialog(BuildContext context, WidgetRef ref) {
+    final dashboard = ref.read(adminDashboardProvider).valueOrNull;
+    final studioName = dashboard?.studioName ?? 'PicGallery Studio';
+    final studioId = ref.read(authStateProvider).user?.id;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (studioId == null || studioId.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+          title: Text(
+            'Studio QR Code',
+            style: TextStyle(color: isDark ? AppColors.textOnDark : AppColors.text, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            "Couldn't generate a code — please sign in again and retry.",
+            style: TextStyle(color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, fontSize: 13.5),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+          ],
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
+          title: Text(
+            'Studio QR Code',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDark ? AppColors.textOnDark : AppColors.text,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Scan to view $studioName\'s profile',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                  fontSize: 13.5,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
+                child: QrImageView(
+                  data: 'picgallery://studio/$studioId',
+                  version: QrVersions.auto,
+                  size: 200.0,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Colors.black,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

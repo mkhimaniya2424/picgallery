@@ -20,7 +20,7 @@ class TrashScreen extends ConsumerWidget {
     final deletedMedia = ref.watch(trashProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(
         title: 'Trash',
         showBack: true,

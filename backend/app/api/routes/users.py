@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -7,7 +8,7 @@ from app.api.deps import get_current_user
 from app.core.security import verify_password
 from app.db.session import get_db
 from app.models.user import AuthProvider, User, UserRole
-from app.schemas.user import DeleteAccountRequest, MessageResponse, UserRead, UserUpdate
+from app.schemas.user import ActivatePlanRequest, DeleteAccountRequest, MessageResponse, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -96,6 +97,44 @@ def update_profile(
             value = None
 
         setattr(current_user, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post("/me/plan", response_model=UserRead)
+def activate_plan(
+    payload: ActivatePlanRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    """Activates a subscription plan for the user."""
+    if payload.plan not in ("trial", "pro", "premium"):
+        raise HTTPException(status_code=400, detail="Invalid plan")
+
+    if payload.plan == "trial":
+        if current_user.trial_used:
+            raise HTTPException(status_code=400, detail="Trial already used")
+        current_user.trial_used = True
+        duration = timedelta(days=5)
+    elif payload.plan == "pro":
+        duration = timedelta(days=182)
+    elif payload.plan == "premium":
+        duration = timedelta(days=365)
+    else:
+        duration = timedelta(days=0)
+
+    now = datetime.now(timezone.utc)
+    current_user.current_plan = payload.plan
+    current_user.plan_status = "active"
+    current_user.plan_started_at = now
+    
+    # If adding time to an active plan, append to expiry instead of replacing
+    if current_user.plan_expiry and current_user.plan_expiry > now:
+        current_user.plan_expiry += duration
+    else:
+        current_user.plan_expiry = now + duration
 
     db.commit()
     db.refresh(current_user)

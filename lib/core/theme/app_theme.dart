@@ -70,13 +70,13 @@ class AppColors {
   static const Color darkBackground = Color(0xFF0F0B1A);
 
   /// Elevated card surface sitting above [darkBackground].
-  static const Color darkSurface = Color(0xFF181228);
+  static const Color darkSurface = Color(0xFF221B38);
 
   /// Slightly higher-elevation surface (e.g. tiles nested inside a card).
-  static const Color darkSurfaceRaised = Color(0xFF211A34);
+  static const Color darkSurfaceRaised = Color(0xFF362A57);
 
   /// Hairline border colour for cards/tiles on dark surfaces.
-  static const Color darkBorder = Color(0xFF2C2440);
+  static const Color darkBorder = Color(0xFF675499);
 
   /// Primary (near-white) text colour on dark surfaces.
   static const Color textOnDark = Color(0xFFF5F3FF);
@@ -119,6 +119,217 @@ class AppShadows {
 /// (Bold headings, Medium body, SemiBold buttons) requested in the brief.
 class AppTheme {
   AppTheme._();
+
+  static ThemeData get darkTheme {
+    const colorScheme = ColorScheme(
+      brightness: Brightness.dark,
+      primary: AppColors.primary,
+      onPrimary: Colors.white,
+      secondary: AppColors.secondary,
+      onSecondary: Colors.white,
+      tertiary: AppColors.accent,
+      onTertiary: Colors.white,
+      error: AppColors.error,
+      onError: Colors.white,
+      surface: AppColors.darkSurface,
+      onSurface: AppColors.textOnDark,
+      surfaceContainerHighest: AppColors.darkSurfaceRaised,
+      onSurfaceVariant: AppColors.subtitleOnDark,
+      outline: AppColors.darkBorder,
+      outlineVariant: AppColors.darkBorder,
+      shadow: Colors.black,
+      scrim: Colors.black,
+      inverseSurface: AppColors.textOnDark,
+      onInverseSurface: AppColors.darkBackground,
+      inversePrimary: AppColors.primary,
+    );
+
+    final base = ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: AppColors.darkBackground,
+      fontFamily: GoogleFonts.poppins().fontFamily,
+    );
+
+    final textTheme = GoogleFonts.poppinsTextTheme(base.textTheme).copyWith(
+      displayLarge: GoogleFonts.poppins(
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textOnDark),
+      headlineLarge: GoogleFonts.poppins(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textOnDark),
+      headlineMedium: GoogleFonts.poppins(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textOnDark),
+      titleLarge: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textOnDark),
+      bodyLarge: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textOnDark),
+      bodyMedium: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.subtitleOnDark),
+      labelLarge: GoogleFonts.poppins(
+          fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+    );
+
+    return base.copyWith(
+      textTheme: textTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: AppColors.textOnDark),
+        actionsIconTheme: const IconThemeData(color: AppColors.textOnDark),
+        titleTextStyle: textTheme.titleLarge,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.darkSurfaceRaised,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        labelStyle:
+            TextStyle(color: AppColors.subtitleOnDark, fontSize: 14),
+        hintStyle:
+            TextStyle(color: AppColors.subtitleOnDark.withValues(alpha: 0.6)),
+        prefixIconColor: AppColors.primary,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: AppColors.darkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: AppColors.darkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.6),
+        ),
+      ),
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.darkSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.darkBorder,
+        space: 1,
+        thickness: 1,
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.darkSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.darkBorder),
+        ),
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: AppColors.darkSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.darkSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.subtitleOnDark;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return AppColors.darkSurfaceRaised;
+        }),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStateProperty.all(Colors.white),
+        side: const BorderSide(color: AppColors.darkBorder, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.darkSurfaceRaised,
+        selectedColor: AppColors.primary,
+        disabledColor: AppColors.darkSurface,
+        labelStyle: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textOnDark),
+        secondaryLabelStyle: GoogleFonts.poppins(
+            fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+        side: const BorderSide(color: AppColors.darkBorder),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        showCheckmark: false,
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: AppColors.primary,
+        textColor: AppColors.textOnDark,
+      ),
+      iconTheme: const IconThemeData(color: AppColors.textOnDark),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.darkSurfaceRaised,
+        contentTextStyle: GoogleFonts.poppins(
+            color: AppColors.textOnDark, fontSize: 13),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        behavior: SnackBarBehavior.floating,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primary,
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary),
+        ),
+      ),
+      popupMenuTheme: const PopupMenuThemeData(
+        color: AppColors.darkSurfaceRaised,
+        surfaceTintColor: Colors.transparent,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.darkSurface,
+        headerBackgroundColor: AppColors.darkBackground,
+        headerForegroundColor: AppColors.textOnDark,
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.textOnDark;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateProperty.all(AppColors.primary),
+        todayBorder: const BorderSide(color: AppColors.primary),
+        weekdayStyle: const TextStyle(color: AppColors.subtitleOnDark),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
 
   static ThemeData get lightTheme {
     final base = ThemeData(

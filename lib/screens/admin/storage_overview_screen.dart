@@ -150,29 +150,38 @@ class StorageOverviewScreen extends ConsumerWidget {
                           ),
                         ),
                   const SizedBox(height: AppSpacing.xl),
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.softWash,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.workspace_premium_rounded,
-                            color: AppColors.primary),
-                        SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Text(
-                            'Running low on space? Upgrade your studio plan for more storage.',
-                            style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.text),
+                  Builder(
+                    builder: (context) {
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      return Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          gradient: isDark ? null : AppColors.softWash,
+                          color: isDark ? AppColors.darkSurface : null,
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          border: Border.all(
+                            color: isDark ? AppColors.darkBorder : AppColors.border,
                           ),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.workspace_premium_rounded,
+                                color: AppColors.primary),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                'Running low on space? Upgrade your studio plan for more storage.',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textOnDark : AppColors.text,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               );

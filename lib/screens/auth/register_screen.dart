@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -347,27 +346,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     value: _agreedToTerms,
                     activeColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(top: 3),
-                  child: Text(
-                    'I agree to the Terms & Conditions and Privacy Policy',
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.subtitle,
-                        fontWeight: FontWeight.w500),
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      'I agree to the Terms & Conditions and Privacy Policy',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -392,11 +392,12 @@ class _StepScaffold extends StatelessWidget {
         children: [
           Text(title, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 6),
-          Text(subtitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: AppColors.subtitle)),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xl),
           ...children,
         ],

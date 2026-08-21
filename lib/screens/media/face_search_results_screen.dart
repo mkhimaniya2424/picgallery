@@ -47,7 +47,7 @@ class FaceSearchResultsScreen extends ConsumerWidget {
     final results = state.searchResults;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(
         title: 'Face Search Results',
         showBack: true,

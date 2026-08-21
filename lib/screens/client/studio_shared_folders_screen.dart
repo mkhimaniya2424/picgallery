@@ -90,7 +90,7 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
         : 'Shared Gallery';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(title: title, showBack: true),
       body: SafeArea(
         child: RefreshIndicator(

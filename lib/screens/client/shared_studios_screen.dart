@@ -29,7 +29,7 @@ class SharedStudiosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(title: 'Shared With You', showBack: true),
       body: SafeArea(child: SharedStudiosListView()),
     );

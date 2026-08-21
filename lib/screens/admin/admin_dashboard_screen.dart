@@ -74,7 +74,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppColors.background,
+      
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'dashboard_add_media_fab',
         onPressed: _addMedia,
@@ -284,23 +284,24 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
   List<Widget> _buildHeaderGreeting(AdminDashboardSnapshot snapshot) {
     final hasPhotographerName = snapshot.photographerName.trim().isNotEmpty;
     final hasStudioName = snapshot.studioName.trim().isNotEmpty;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (!hasPhotographerName && !hasStudioName) {
-      return const [
+      return [
         Text(
           'Hi there 👋',
           style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
-              color: AppColors.subtitle),
+              color: colorScheme.onSurfaceVariant),
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           'Set up your studio profile',
           style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: AppColors.text,
+              color: colorScheme.onSurface,
               letterSpacing: -0.3),
         ),
       ];
@@ -309,18 +310,18 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
     return [
       Text(
         hasPhotographerName ? 'Hi, ${snapshot.photographerName} 👋' : 'Hi there 👋',
-        style: const TextStyle(
+        style: TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w700,
-            color: AppColors.subtitle),
+            color: colorScheme.onSurfaceVariant),
       ),
       const SizedBox(height: 2),
       Text(
         hasStudioName ? snapshot.studioName : 'Set up your studio profile',
-        style: const TextStyle(
+        style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
-            color: AppColors.text,
+            color: colorScheme.onSurface,
             letterSpacing: -0.3),
       ),
     ];
@@ -397,8 +398,17 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
       children: [
         SectionHeader(
           title: 'Quick Actions',
-          onAction: () =>
-              Navigator.of(context).pushNamed(AppRoutes.quickActions),
+          onAction: () async {
+            // QuickActionsScreen pops with a bottom-nav tab index
+            // (2=Clients, 1=Gallery) when Add Client / Share Gallery is
+            // tapped there — see QuickActionHandler's doc comment.
+            // Forward that to the real onNavigateToTab so those tiles
+            // work the same from "See all" as they do from this grid.
+            final tabIndex = await Navigator.of(context).pushNamed<int>(AppRoutes.quickActions);
+            if (tabIndex != null) {
+              widget.onNavigateToTab?.call(tabIndex);
+            }
+          },
         ),
         const SizedBox(height: AppSpacing.md),
         if (actions.isEmpty)

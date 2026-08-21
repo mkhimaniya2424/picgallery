@@ -74,13 +74,6 @@ const List<QuickActionData> _kDefaultQuickActions = [
     gradient: [Color(0xFF0EA5E9), Color(0xFF3B82F6)],
   ),
   QuickActionData(
-    id: 'scan_qr',
-    icon: Icons.qr_code_scanner_rounded,
-    label: 'Scan QR\nCheck-in',
-    gradient: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-  ),
-
-  QuickActionData(
     id: 'reports',
     icon: Icons.analytics_rounded,
     label: 'View\nReports',

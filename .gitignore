@@ -27,3 +27,8 @@ media_storage/
 
 # Zip archives
 *.zip
+
+# Firebase credentials
+backend/firebase-adminsdk.json
+**/firebase-adminsdk*.json
+**/service-account*.json

@@ -85,13 +85,18 @@ class _FaqTileState extends State<_FaqTile> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
-        color: Colors.white,
+        border: Border.all(
+          color: isDark
+              ? AppColors.darkBorder
+              : AppColors.border.withValues(alpha: 0.8),
+        ),
+        color: isDark ? AppColors.darkSurface : Colors.white,
       ),
       child: Column(
         children: [
@@ -118,7 +123,7 @@ class _FaqTileState extends State<_FaqTile> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: AppColors.subtitle,
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                   ),
                 ],
               ),

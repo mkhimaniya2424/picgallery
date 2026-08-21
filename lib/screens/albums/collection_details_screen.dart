@@ -124,7 +124,7 @@ class _CollectionDetailsScreenState
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: CustomAppBar(
         title: collection?.name ?? 'Collection',
         showBack: true,
@@ -225,7 +225,7 @@ class _CollectionDetailsScreenState
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.background,
+      
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),

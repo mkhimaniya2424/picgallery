@@ -9,6 +9,7 @@ from app.db.session import get_db
 from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.notification import NotificationRead
+from app.core.firebase_service import send_push_notification
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -96,3 +97,24 @@ def clear_notifications(
         Notification.__table__.delete().where(Notification.user_id == current_user.id)
     )
     db.commit()
+
+
+@router.post("/test-push", status_code=status.HTTP_200_OK)
+def send_test_push_notification(
+    current_user: User = Depends(get_current_user)
+) -> dict:
+    """Sends a test push notification to the current user's registered FCM token."""
+    if not current_user.fcm_token:
+        raise HTTPException(status_code=400, detail="No push token registered for this user.")
+        
+    success = send_push_notification(
+        token=current_user.fcm_token,
+        title="Test Notification",
+        body="This is a test push notification from PicGallery!",
+        data={"type": "test", "user_id": str(current_user.id)}
+    )
+    
+    if success:
+        return {"message": "Test push notification sent successfully."}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send push notification.")

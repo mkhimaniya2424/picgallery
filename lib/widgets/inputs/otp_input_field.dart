@@ -68,6 +68,10 @@ class _OtpInputFieldState extends State<OtpInputField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(widget.length, (i) {
@@ -89,32 +93,30 @@ class _OtpInputFieldState extends State<OtpInputField> {
               keyboardType: TextInputType.number,
               maxLength: 1,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontSize: 22),
+              style: theme.textTheme.headlineMedium?.copyWith(fontSize: 22),
               decoration: InputDecoration(
                 counterText: '',
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.7),
+                fillColor: isDark
+                    ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.7),
                 contentPadding: EdgeInsets.zero,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color:
-                          widget.hasError ? AppColors.error : AppColors.border),
+                    color: widget.hasError ? AppColors.error : colorScheme.outline,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                      color:
-                          widget.hasError ? AppColors.error : AppColors.border),
+                    color: widget.hasError ? AppColors.error : colorScheme.outline,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                    color:
-                        widget.hasError ? AppColors.error : AppColors.primary,
+                    color: widget.hasError ? AppColors.error : colorScheme.primary,
                     width: 1.6,
                   ),
                 ),

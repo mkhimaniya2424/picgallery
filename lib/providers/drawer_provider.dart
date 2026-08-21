@@ -8,7 +8,7 @@ import 'auth_providers.dart';
 
 /// Studio subscription tiers.
 enum SubscriptionPlan {
-  free('FREE', Color(0xFF9CA3AF)),
+  free('UPGRADE', Color(0xFF9CA3AF)),
   trial('TRIAL', Color(0xFF10B981)),
   pro('PRO', AppDrawerPlanColors.pro),
   premium('PREMIUM', AppDrawerPlanColors.premium);
@@ -19,7 +19,7 @@ enum SubscriptionPlan {
 
   String get name {
     switch (this) {
-      case SubscriptionPlan.free:    return 'Free';
+      case SubscriptionPlan.free:    return 'No Plan';
       case SubscriptionPlan.trial:   return 'Trial';
       case SubscriptionPlan.pro:     return 'Pro';
       case SubscriptionPlan.premium: return 'Premium';

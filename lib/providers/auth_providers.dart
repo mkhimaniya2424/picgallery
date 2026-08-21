@@ -185,6 +185,15 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     await _mutate(_repo.getMe);
   }
 
+  /// Calls POST /users/me/plan to activate a plan and updates the state.
+  Future<void> activatePlan(String plan) async {
+    await _mutate(() async {
+      final apiClient = ref.read(apiClientProvider);
+      final json = await apiClient.post('/users/me/plan', body: {'plan': plan});
+      return AppUser.fromJson(json as Map<String, dynamic>);
+    });
+  }
+
   /// Applies an already-fetched [AppUser] straight into state — used by
   /// [EditProfileScreen] (Task 7) after a successful PATCH /users/me, so
   /// the rest of the app (profile screen greeting, etc.) reflects the

@@ -36,7 +36,7 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
     final categories = ['All', 'Wedding', 'Portrait', 'Fashion', 'Editorial', 'Event', 'Landscape', 'Family'];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      
       appBar: const CustomAppBar(
         title: 'Discover Studios',
         showBack: true,
