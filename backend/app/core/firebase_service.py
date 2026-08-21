@@ -42,6 +42,17 @@ def send_push_notification(token: str, title: str, body: str, data: dict | None 
                 title=title,
                 body=body,
             ),
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='high_importance_channel',
+                    sound='default',
+                ),
+            ),
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(sound='default'),
+                ),
+            ),
             data=data or {},
             token=token,
         )

@@ -113,6 +113,13 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
     _upsert(connection);
   }
 
+  /// Removes an accepted connection from the server and local state.
+  Future<void> disconnect(String id) async {
+    await _repo.removeConnection(id);
+    final current = state.valueOrNull ?? [];
+    state = AsyncData(current.where((c) => c.id != id).toList());
+  }
+
   /// Studio approves a client-initiated connection request.
   Future<void> studioAcceptRequest(String id) => _accept(id);
 

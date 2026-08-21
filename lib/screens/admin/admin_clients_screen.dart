@@ -25,6 +25,11 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // Refresh connections every time this screen is opened so the studio
+    // immediately sees new pending requests without a manual pull-to-refresh.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(connectionsProvider.notifier).refresh();
+    });
   }
 
   @override
@@ -213,6 +218,21 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
         backgroundColor: AppColors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+      ),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        title: const Text(
+          'Clients',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh requests',
+            onPressed: () => ref.read(connectionsProvider.notifier).refresh(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

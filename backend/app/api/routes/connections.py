@@ -407,3 +407,29 @@ def decline_connection(
     db.commit()
     db.refresh(connection)
     return _serialize(connection, current_user, db)
+
+
+@router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_connection(
+    connection_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Available to both roles — lets either a studio or a client remove
+    an accepted connection between them.
+    """
+    connection = _get_connection_or_404(db, connection_id)
+    
+    # Either side can remove the connection
+    if current_user.id not in [connection.studio_id, connection.client_id]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to remove this connection."
+        )
+
+    if connection.status != ConnectionStatus.accepted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="You can only remove accepted connections."
+        )
+
+    db.delete(connection)
+    db.commit()

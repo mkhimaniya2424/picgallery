@@ -148,6 +148,15 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(adminDashboardProvider);
+    final studioId = ref.watch(authStateProvider).user?.id ?? '';
+    final connections = ref.watch(connectionsProvider).valueOrNull ?? [];
+    final connection = connections.cast<StudioClientConnection?>().firstWhere(
+          (c) =>
+              c?.clientId == widget.clientId &&
+              c?.studioId == studioId &&
+              c?.status == ConnectionStatus.connected,
+          orElse: () => null,
+        );
 
     return Scaffold(
       
@@ -163,6 +172,47 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
           style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 0.2),
         ),
         centerTitle: true,
+        actions: [
+          if (connection != null)
+            IconButton(
+              icon: const Icon(Icons.person_remove_rounded, color: AppColors.error),
+              tooltip: 'Remove Client',
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Remove Client?'),
+                    content: const Text('Are you sure you want to remove this connected client? They will lose access to any private albums you shared with them.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Remove', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true && context.mounted) {
+                  try {
+                    await ref.read(connectionsProvider.notifier).disconnect(connection.id);
+                    if (context.mounted) {
+                      Navigator.pop(context); // Go back to Clients list
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Client removed successfully.')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                      );
+                    }
+                  }
+                }
+              },
+            ),
+        ],
       ),
       body: dashboardAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),

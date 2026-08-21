@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/studio_client_connection_model.dart';
 import '../../models/studio_model.dart';
+import '../../providers/studio_client_connections_provider.dart';
 import '../../providers/studio_provider.dart';
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/common/inline_error_banner.dart';
@@ -369,7 +371,41 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         break;
 
       case StudioConnectionStatus.connected:
-        _showConnectSnack('You\'re already connected with ${studio.name}.');
+        final confirmDisconnect = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Disconnect from Studio?'),
+            content: Text('Are you sure you want to disconnect from ${studio.name}? You will lose access to any private galleries they shared with you.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Disconnect', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmDisconnect != true) return;
+        
+        final connections = ref.read(connectionsProvider).valueOrNull ?? [];
+        final connection = connections.cast<StudioClientConnection?>().firstWhere(
+              (c) => c?.studioId == studio.id && c?.status == ConnectionStatus.connected,
+              orElse: () => null,
+            );
+            
+        if (connection != null) {
+          try {
+            await ref.read(connectionsProvider.notifier).disconnect(connection.id);
+            // Revert studio connection status back to not connected
+            notifier.updateConnectionStatus(studio.id, StudioConnectionStatus.notConnected);
+            if (!mounted) return;
+            _showConnectSnack('Disconnected from ${studio.name}.');
+          } catch (e) {
+            if (!mounted) return;
+            _showConnectSnack('Could not disconnect. Try again.', isError: true);
+          }
+        }
         break;
     }
   }

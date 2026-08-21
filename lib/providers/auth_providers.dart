@@ -4,6 +4,7 @@ import '../core/network/api_client.dart';
 import '../core/storage/token_storage.dart';
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
+import '../services/push_notification_service.dart';
 import '../services/social_auth_service.dart';
 
 /// Swap this single line to change how the app talks to the backend
@@ -126,8 +127,17 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
         studioAddress: studioAddress,
         businessType: businessType,
       );
+      // Sync FCM token now that we have a valid session
+      _syncFcmToken();
       return token.user;
     });
+  }
+
+  /// Grabs the current FCM token from Firebase and syncs it to the backend.
+  /// Must be called after a valid auth token exists in [ApiClient].
+  void _syncFcmToken() {
+    final apiClient = ref.read(apiClientProvider);
+    PushNotificationService.instance.syncFcmToken(apiClient);
   }
 
   /// POST /auth/login. [role] disambiguates when this email is
@@ -142,6 +152,8 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   }) async {
     await _mutate(() async {
       final token = await _repo.login(email, password, role: role, rememberMe: rememberMe);
+      // Sync FCM token now that we have a valid session
+      _syncFcmToken();
       return token.user;
     });
   }
@@ -157,6 +169,8 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   }) async {
     await _mutate(() async {
       final token = await _repo.socialLogin(provider: provider, idToken: idToken, role: role, fullName: fullName);
+      // Sync FCM token now that we have a valid session
+      _syncFcmToken();
       return token.user;
     });
   }

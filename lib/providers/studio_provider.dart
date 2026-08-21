@@ -254,6 +254,15 @@ class StudioNotifier extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Manually overrides a studio's connection status.
+  void updateConnectionStatus(String id, StudioConnectionStatus status) {
+    final index = _studios.indexWhere((studio) => studio.id == id);
+    if (index != -1) {
+      _studios[index] = _studios[index].copyWith(connectionStatus: status);
+      notifyListeners();
+    }
+  }
 }
 
 final studioProvider = ChangeNotifierProvider<StudioNotifier>((ref) {

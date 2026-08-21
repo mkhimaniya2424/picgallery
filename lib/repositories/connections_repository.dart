@@ -207,11 +207,8 @@ class ApiConnectionsRepository implements ConnectionsRepository {
   }
 
   @override
-  Future<void> removeConnection(String connectionId) {
-    throw UnimplementedError(
-      'ApiConnectionsRepository does not back connection removal — there is '
-      'no DELETE /connections/{id} endpoint yet.',
-    );
+  Future<void> removeConnection(String connectionId) async {
+    await _apiClient.delete('/connections/$connectionId');
   }
 
   @override

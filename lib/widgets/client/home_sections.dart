@@ -13,6 +13,7 @@ import '../../models/notification_alert.dart';
 import '../../models/download_history_model.dart';
 import '../../models/gallery_collection_model.dart';
 import '../../models/studio_client_connection_model.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/connected_albums_provider.dart';
 import '../../providers/home_gallery_view_provider.dart';
 import '../../providers/studio_provider.dart';
@@ -1139,8 +1140,7 @@ class _ConnectedStudiosSectionState extends ConsumerState<ConnectedStudiosSectio
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider);
-    final clientId = settings.clientId;
+    final clientId = ref.watch(authStateProvider).user?.id ?? '';
     final connections = ref.watch(connectionsProvider).valueOrNull ?? [];
     final studiosState = ref.watch(studioProvider);
     final studios = studiosState.studios;

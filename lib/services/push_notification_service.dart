@@ -58,12 +58,12 @@ class PushNotificationService {
     // Listen to token updates and sync with backend
     _firebaseMessaging.getToken().then((token) {
       if (token != null) {
-        _syncToken(apiClient, token);
+        syncFcmToken(apiClient, token: token);
       }
     });
 
     _firebaseMessaging.onTokenRefresh.listen((token) {
-      _syncToken(apiClient, token);
+      syncFcmToken(apiClient, token: token);
     });
 
     // Handle incoming messages in foreground
@@ -104,11 +104,15 @@ class PushNotificationService {
     }
   }
 
-  Future<void> _syncToken(ApiClient apiClient, String token) async {
+  /// Syncs the device FCM token to the backend. Pass [token] if you
+  /// already have it; otherwise it fetches from Firebase automatically.
+  /// Safe to call any time after login — silently no-ops if no token.
+  Future<void> syncFcmToken(ApiClient apiClient, {String? token}) async {
     try {
-      developer.log('Syncing FCM token: $token');
-      // If ApiClient throws, it likely means we aren't logged in yet.
-      await apiClient.put('/auth/fcm-token', body: {'fcm_token': token});
+      final t = token ?? await _firebaseMessaging.getToken();
+      if (t == null) return;
+      developer.log('Syncing FCM token: $t');
+      await apiClient.put('/auth/fcm-token', body: {'fcm_token': t});
     } catch (e) {
       developer.log('Failed to sync FCM token: $e');
     }

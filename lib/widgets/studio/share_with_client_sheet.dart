@@ -51,7 +51,7 @@ Future<void> showShareWithClientSheet(
     builder: (ctx) => _ClientPickerSheet(
       itemLabel: itemLabel,
       connectedClients: connectedClients,
-      isLoading: connections.isEmpty && ref.read(connectionsProvider.notifier).isLoading,
+      isLoading: ref.read(connectionsProvider).isLoading,
     ),
   );
 
