@@ -92,9 +92,9 @@ class ApiClient {
     const envHost = String.fromEnvironment('API_HOST');
     if (envHost.isNotEmpty) return baseUrlForHost(envHost);
 
-    // Temporary override to test the local backend fix!
-    return baseUrlForHost('http://10.0.2.2:8000');
+    return baseUrlForHost('https://api.picgallery.in');
   }
+
   Map<String, String> _headers({bool withAuth = true}) {
     final headers = <String, String>{'Content-Type': 'application/json'};
     if (withAuth && authToken != null) {
