@@ -162,3 +162,51 @@ def send_connection_request_email(*, to_email: str, client_name: str) -> bool:
         f"Open the app and go to Connections to accept or decline."
     )
     return send_email(to_email=to_email, subject=subject, html_body=html_body, text_body=text_body)
+
+
+def send_subscription_activated_email(
+    *,
+    to_email: str,
+    full_name: str,
+    plan: str,
+    expiry: str,
+) -> bool:
+    """Sent to a studio/user immediately after their subscription plan is
+    activated via POST /users/me/plan — confirms the plan name, and the
+    expiry date so they know exactly when it renews/expires.
+
+    `plan` is the raw plan key ("trial" | "pro" | "premium").
+    `expiry` is a pre-formatted human-readable date string (e.g. "29 Aug 2026").
+    """
+    plan_label = {"trial": "5-Day Free Trial", "pro": "Pro (6 Months)", "premium": "Premium (1 Year)"}.get(
+        plan, plan.title()
+    )
+    subject = f"Your picgallery {plan_label} is now active!"
+    html_body = f"""\
+<div style="font-family: -apple-system, Arial, sans-serif; max-width: 480px; margin: auto;">
+  <h2 style="color:#7C3AED;">🎉 Subscription Activated</h2>
+  <p>Hi <strong>{full_name}</strong>,</p>
+  <p>Your <strong>{plan_label}</strong> plan on picgallery is now active.</p>
+  <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+    <tr>
+      <td style="padding:8px 0;color:#888;font-size:13px;">Plan</td>
+      <td style="padding:8px 0;font-weight:700;color:#1a1a1a;">{plan_label}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;color:#888;font-size:13px;">Valid until</td>
+      <td style="padding:8px 0;font-weight:700;color:#1a1a1a;">{expiry}</td>
+    </tr>
+  </table>
+  <p style="color:#444;">You now have access to all features included in your plan. Open the app to get started.</p>
+  <p style="color:#888;font-size:13px;">If you did not make this purchase, please contact picgallery support immediately.</p>
+</div>
+"""
+    text_body = (
+        f"Hi {full_name},\n\n"
+        f"Your picgallery {plan_label} plan is now active.\n\n"
+        f"Plan: {plan_label}\n"
+        f"Valid until: {expiry}\n\n"
+        f"Open the app to enjoy your subscription.\n\n"
+        f"If you did not make this purchase, contact picgallery support immediately."
+    )
+    return send_email(to_email=to_email, subject=subject, html_body=html_body, text_body=text_body)

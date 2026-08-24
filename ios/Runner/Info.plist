@@ -77,6 +77,16 @@
 				<string>com.googleusercontent.apps.198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.mk.picgallery</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>picgallery</string>
+			</array>
+		</dict>
 	</array>
 
 	<key>UIBackgroundModes</key>

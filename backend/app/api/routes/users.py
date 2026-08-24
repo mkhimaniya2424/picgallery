@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.security import verify_password
+from app.core.firebase_service import send_push_notification
+from app.core.email import send_subscription_activated_email
 from app.db.session import get_db
 from app.models.user import AuthProvider, User, UserRole
 from app.schemas.user import ActivatePlanRequest, DeleteAccountRequest, MessageResponse, UserRead, UserUpdate
@@ -129,7 +131,9 @@ def activate_plan(
     current_user.current_plan = payload.plan
     current_user.plan_status = "active"
     current_user.plan_started_at = now
-    
+    # Reset reminder tracking so the new plan cycle sends all thresholds fresh.
+    current_user.last_reminder_days = None
+
     # If adding time to an active plan, append to expiry instead of replacing
     if current_user.plan_expiry and current_user.plan_expiry > now:
         current_user.plan_expiry += duration
@@ -138,6 +142,41 @@ def activate_plan(
 
     db.commit()
     db.refresh(current_user)
+
+    # ── Post-activation notifications (best-effort, never fail the request) ──
+    _plan_label = {
+        "trial": "5-Day Free Trial",
+        "pro": "Pro (6 Months)",
+        "premium": "Premium (1 Year)",
+    }.get(payload.plan, payload.plan.title())
+    _expiry_str = (
+        current_user.plan_expiry.strftime("%d %b %Y, %I:%M %p UTC")
+        if current_user.plan_expiry
+        else "N/A"
+    )
+
+    # Push notification — only if the device has registered an FCM token
+    if current_user.fcm_token:
+        send_push_notification(
+            token=current_user.fcm_token,
+            title="🎉 Subscription Activated!",
+            body=f"Your {_plan_label} plan is now active. Valid until {_expiry_str}.",
+            data={
+                "type": "subscription_activated",
+                "plan": payload.plan,
+                "expiry": _expiry_str,
+            },
+        )
+
+    # Email confirmation — always attempted (send_email is a no-op when SMTP
+    # is not configured, so this is safe in local dev too)
+    send_subscription_activated_email(
+        to_email=current_user.email,
+        full_name=current_user.full_name,
+        plan=payload.plan,
+        expiry=_expiry_str,
+    )
+
     return current_user
 
 
