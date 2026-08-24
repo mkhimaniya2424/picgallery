@@ -25,7 +25,11 @@ class SocialAuthResult {
 class SocialAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: const ['email', 'profile'],
-    serverClientId: '825327920335-tujhmcnp91dfggfk4g52av0fgeaq0vs9.apps.googleusercontent.com',
+    // serverClientId is REQUIRED on Android for google_sign_in to populate
+    // the idToken. Must be the Web OAuth client ID (type 3) from
+    // google-services.json — NOT the Android client ID. The backend
+    // verifies this token's `aud` claim against GOOGLE_CLIENT_IDS in .env.
+    serverClientId: '198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com',
   );
 
   /// Opens the native Google account picker. Throws [SocialAuthCancelled]

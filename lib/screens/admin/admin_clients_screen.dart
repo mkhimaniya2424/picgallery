@@ -24,7 +24,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     // Refresh connections every time this screen is opened so the studio
     // immediately sees new pending requests without a manual pull-to-refresh.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -103,7 +103,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                       // signup link, then auto-connects them the moment
                       // they register with this email.
                       Text(
-                        "If they already have a PicGallery client account we'll connect right away. Otherwise we'll email them an invitation to join.",
+                        "If they already have a PicGallery client account we'll connect right away. Otherwise the invitation will appear in your Sent Invitations tab once they sign up.",
                         style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -154,7 +154,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                                       SnackBar(
                                         content: Text(
                                           result.isPendingSignup
-                                              ? "Invitation emailed to $email — they'll be connected automatically once they sign up."
+                                              ? "Invitation sent to $email — they'll be connected automatically once they sign up."
                                               : 'Invitation sent to ${result.connection!.clientData?.name ?? email}',
                                         ),
                                       ),
@@ -254,6 +254,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                     fontWeight: FontWeight.w600, fontSize: 14),
                 tabs: const [
                   Tab(text: 'Pending Requests'),
+                  Tab(text: 'Sent Invitations'),
                   Tab(text: 'Connected Clients'),
                 ],
               ),
@@ -263,6 +264,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                 controller: _tabController,
                 children: [
                   _PendingRequestsTab(),
+                  _SentInvitationsTab(),
                   _ConnectedClientsTab(),
                 ],
               ),
@@ -607,6 +609,294 @@ class _PendingRequestCard extends StatelessWidget {
   }
 }
 
+/// Tab showing studio-initiated invitations that are still pending
+/// (i.e. the client hasn't accepted or declined yet). The studio can
+/// withdraw any of them by tapping the cancel button.
+class _SentInvitationsTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final connectionsAsync = ref.watch(connectionsProvider);
+    final studioId = ref.watch(authStateProvider).user?.id ?? '';
+    final connNotifier = ref.read(connectionsProvider.notifier);
+
+    return connectionsAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+      error: (err, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+            const SizedBox(height: AppSpacing.sm),
+            const Text('Failed to load invitations',
+                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+            const SizedBox(height: AppSpacing.sm),
+            TextButton.icon(
+              onPressed: () => connNotifier.refresh(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+      data: (connections) {
+        final sentInvites = connections
+            .where((c) =>
+                c.studioId == studioId &&
+                c.status == ConnectionStatus.pendingStudioRequest)
+            .toList()
+          ..sort((a, b) => b.requestedAt.compareTo(a.requestedAt));
+
+        if (sentInvites.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.send_rounded,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
+                    size: 48),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'No sent invitations',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Use the + button to invite a client.\nPending invitations will appear here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => connNotifier.refresh(),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics()),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            itemCount: sentInvites.length,
+            itemBuilder: (context, index) {
+              final invite = sentInvites[index];
+              final client = invite.clientData;
+              return _SentInvitationCard(
+                clientName: client?.name ?? 'Unknown Client',
+                clientInitials: client?.initials ?? '?',
+                clientEmail: client?.email ?? '',
+                sentAt: invite.requestedAt,
+                onCancel: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      title: const Text('Cancel Invitation',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
+                      content: Text(
+                          'Cancel the invitation sent to ${client?.name ?? "this client"}?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Keep'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: TextButton.styleFrom(
+                              foregroundColor: AppColors.error),
+                          child: const Text('Cancel Invitation'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    try {
+                      await connNotifier.disconnect(invite.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Invitation to ${client?.name ?? "client"} cancelled.'),
+                            backgroundColor: AppColors.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to cancel. Please try again.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SentInvitationCard extends StatelessWidget {
+  final String clientName;
+  final String clientInitials;
+  final String clientEmail;
+  final DateTime sentAt;
+  final VoidCallback onCancel;
+
+  const _SentInvitationCard({
+    required this.clientName,
+    required this.clientInitials,
+    required this.clientEmail,
+    required this.sentAt,
+    required this.onCancel,
+  });
+
+  String _formatSentAt() {
+    final now = DateTime.now();
+    final diff = now.difference(sentAt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+    if (diff.inDays < 1) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${sentAt.day}/${sentAt.month}/${sentAt.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurfaceRaised
+            : AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkBorder
+              : AppColors.border,
+        ),
+        boxShadow:
+            AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                clientInitials,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    clientName,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Invite Sent',
+                          style: TextStyle(
+                            color: Color(0xFF6366F1),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatSentAt(),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (clientEmail.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      clientEmail,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Cancel button
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.cancel_outlined,
+                    color: AppColors.error, size: 20),
+                onPressed: onCancel,
+                tooltip: 'Cancel invitation',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ClientCard extends StatelessWidget {
   final ClientData client;

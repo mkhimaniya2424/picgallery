@@ -102,7 +102,7 @@ def send_connection_invite_email(*, to_email: str, studio_name: str) -> bool:
     subject = f"{studio_name} invited you to connect on picgallery"
     html_body = f"""\
 <div style="font-family: -apple-system, Arial, sans-serif; max-width: 480px; margin: auto;">
-  <h2 style="color:#7C3AED;">You've been invited</h2>
+  <h2 style="color:#7C3AED;">{studio_name} invited you to connect</h2>
   <p><strong>{studio_name}</strong> would like to connect with you on picgallery.</p>
   <p style="color:#444;">Open the app and go to Invitations to accept or decline.</p>
   <p style="color:#888;font-size:13px;">If you weren't expecting this, you can safely ignore it.</p>
@@ -128,7 +128,7 @@ def send_signup_invite_email(*, to_email: str, studio_name: str) -> bool:
     subject = f"{studio_name} invited you to picgallery"
     html_body = f"""\
 <div style="font-family: -apple-system, Arial, sans-serif; max-width: 480px; margin: auto;">
-  <h2 style="color:#7C3AED;">You've been invited</h2>
+  <h2 style="color:#7C3AED;">{studio_name} invited you to picgallery</h2>
   <p><strong>{studio_name}</strong> uses picgallery to share and deliver photos, and would like to connect with you.</p>
   <p style="color:#444;">Download the picgallery app and sign up with this email address ({to_email}) — you'll automatically see a connection request from {studio_name} waiting for you to accept.</p>
   <p style="color:#888;font-size:13px;">If you weren't expecting this, you can safely ignore it.</p>

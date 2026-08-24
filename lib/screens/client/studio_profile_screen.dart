@@ -403,7 +403,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             _showConnectSnack('Disconnected from ${studio.name}.');
           } catch (e) {
             if (!mounted) return;
-            _showConnectSnack('Could not disconnect. Try again.', isError: true);
+            _showConnectSnack('Could not disconnect. Try again: $e', isError: true);
           }
         }
         break;

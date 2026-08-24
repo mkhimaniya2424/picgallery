@@ -2,12 +2,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client_user, get_current_studio_user
-from app.core.email import send_connection_request_email as deliver_connection_request_email
+
 from app.core.storage import build_media_url, delete_stored_file, save_upload
 from app.db.session import get_db
 from app.models.connection import ConnectionInitiator, ConnectionStatus, StudioClientConnection
@@ -214,7 +214,6 @@ def unfavorite_studio(
 @router.post("/{studio_id}/connect", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 def request_connection(
     studio_id: uuid.UUID,
-    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_client_user),
     db: Session = Depends(get_db),
 ) -> MessageResponse:
@@ -273,12 +272,6 @@ def request_connection(
             body=f"{current_user.full_name} wants to connect with your studio.",
             data={"type": "connection", "connection_id": str(connection.id)},
         )
-
-    background_tasks.add_task(
-        deliver_connection_request_email,
-        to_email=studio.email,
-        client_name=current_user.full_name,
-    )
 
     return MessageResponse(message="Connection request sent.")
 

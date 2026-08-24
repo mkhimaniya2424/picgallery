@@ -1,14 +1,12 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_studio_user, get_current_user
 from app.core.activity_log import log_activity
-from app.core.email import send_connection_invite_email as deliver_connection_invite_email
-from app.core.email import send_signup_invite_email as deliver_signup_invite_email
 from app.db.session import get_db
 from app.models.activity_log import ActivityType
 from app.models.connection import ConnectionInitiator, ConnectionStatus, StudioClientConnection
@@ -130,7 +128,6 @@ def _invite_existing_client(
     db: Session,
     current_user: User,
     client: User,
-    background_tasks: BackgroundTasks,
 ) -> StudioClientConnection:
     """Shared core of inviting a client who already has an account —
     used by both `POST /connections/invite` (id-based, kept for
@@ -193,19 +190,12 @@ def _invite_existing_client(
             data={"type": "connection", "connection_id": str(connection.id)},
         )
 
-    background_tasks.add_task(
-        deliver_connection_invite_email,
-        to_email=client.email,
-        studio_name=studio_name,
-    )
-
     return connection
 
 
 @router.post("/invite", response_model=ConnectionRead, status_code=status.HTTP_201_CREATED)
 def invite_client(
     payload: ConnectionInviteCreate,
-    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_studio_user),
     db: Session = Depends(get_db),
 ) -> ConnectionRead:
@@ -219,14 +209,13 @@ def invite_client(
     if client is None or client.role != UserRole.client or client.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
 
-    connection = _invite_existing_client(db, current_user, client, background_tasks)
+    connection = _invite_existing_client(db, current_user, client)
     return _serialize(connection, current_user, db)
 
 
 @router.post("/invite-by-email", response_model=ConnectionInviteResult, status_code=status.HTTP_201_CREATED)
 def invite_client_by_email(
     payload: ConnectionInviteByEmailCreate,
-    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_studio_user),
     db: Session = Depends(get_db),
 ) -> ConnectionInviteResult:
@@ -238,11 +227,10 @@ def invite_client_by_email(
       `status="connected"` with the resulting connection.
     - Otherwise, records an `EmailInvitation` (upserting — a repeat
       invite to the same email just bumps `created_at` and resends the
-      email rather than erroring) and emails that address a "download
-      the app and sign up" invite. `auth.register` checks for matching
+      invite rather than erroring). `auth.register` checks for matching
       `EmailInvitation` rows and turns them into a real pending
-      connection the moment that email registers as a client, so the
-      studio doesn't have to remember to re-invite later.
+      connection the moment that email registers as a client — the client
+      will receive a push notification at that point.
     """
     email = payload.email.strip().lower()
 
@@ -255,7 +243,7 @@ def invite_client_by_email(
     ).scalar_one_or_none()
 
     if client is not None:
-        connection = _invite_existing_client(db, current_user, client, background_tasks)
+        connection = _invite_existing_client(db, current_user, client)
         return ConnectionInviteResult(
             status="connected",
             connection=_serialize(connection, current_user, db),
@@ -275,13 +263,6 @@ def invite_client_by_email(
         db.add(EmailInvitation(studio_id=current_user.id, email=email))
 
     db.commit()
-
-    studio_name = current_user.studio_name or current_user.full_name
-    background_tasks.add_task(
-        deliver_signup_invite_email,
-        to_email=email,
-        studio_name=studio_name,
-    )
 
     return ConnectionInviteResult(status="invited_pending_signup", email=email)
 
@@ -415,20 +396,41 @@ def remove_connection(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Available to both roles — lets either a studio or a client remove
-    an accepted connection between them.
+    """Available to both roles.
+
+    - **Accepted** connections: either side may remove (disconnect).
+    - **Pending** connections: only the side that *initiated* the invite/request
+      may withdraw it — studios can cancel a sent invitation, clients can
+      withdraw a connection request they sent.
     """
     connection = _get_connection_or_404(db, connection_id)
-    
-    # Either side can remove the connection
+
+    # Confirm caller is a party to this connection.
     if current_user.id not in [connection.studio_id, connection.client_id]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to remove this connection."
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to remove this connection.",
         )
 
-    if connection.status != ConnectionStatus.accepted:
+    if connection.status == ConnectionStatus.accepted:
+        # Either side can disconnect an accepted connection.
+        pass
+    elif connection.status == ConnectionStatus.pending:
+        # Only the initiator may withdraw their own pending invite/request.
+        initiator_id = (
+            connection.studio_id
+            if connection.initiated_by == ConnectionInitiator.studio
+            else connection.client_id
+        )
+        if current_user.id != initiator_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the sender can withdraw a pending invitation.",
+            )
+    else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="You can only remove accepted connections."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This connection cannot be removed.",
         )
 
     db.delete(connection)

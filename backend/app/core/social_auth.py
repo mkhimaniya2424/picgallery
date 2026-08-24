@@ -97,15 +97,24 @@ def verify_google_id_token(id_token_str: str) -> SocialIdentity:
 
     token_aud = claims.get("aud")
 
-    # TEMP DEBUG (Google sign-in "not issued for this app" investigation) —
-    # logs the exact aud the token carried vs. the exact allow-list this
-    # running process loaded from GOOGLE_CLIENT_IDS. Check your backend's
-    # own console/log output (not the phone) right after a failed iOS
-    # attempt. Safe to remove once the mismatch is found — doesn't log any
-    # token contents beyond these two values.
-    logger.warning("Google sign-in aud check: token_aud=%r allowed=%r", token_aud, settings.GOOGLE_CLIENT_IDS)
+    # `aud` is usually a plain string when serverClientId is set on the client,
+    # but Google's library can also return it as a list when audience=None is
+    # passed to verify_oauth2_token. Normalise to a set so the intersection
+    # check works for both cases.
+    if isinstance(token_aud, list):
+        token_aud_set = set(token_aud)
+    else:
+        token_aud_set = {token_aud} if token_aud else set()
 
-    if token_aud not in settings.GOOGLE_CLIENT_IDS:
+    allowed_set = set(settings.GOOGLE_CLIENT_IDS)
+    aud_match = token_aud_set & allowed_set  # intersection — any overlap is fine
+
+    logger.warning(
+        "Google sign-in aud check: token_aud=%r allowed=%r match=%r",
+        token_aud, settings.GOOGLE_CLIENT_IDS, bool(aud_match),
+    )
+
+    if not aud_match:
         detail = "Google sign-in token was not issued for this app"
         # Only in non-production: put the actual mismatching values right
         # in the error response, so you can see them on-device (in the

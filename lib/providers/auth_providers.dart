@@ -71,7 +71,10 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     if (token == null) return null;
 
     try {
-      return await _repo.getMe();
+      final user = await _repo.getMe();
+      // Sync FCM token for returning users so their device is always up to date
+      _syncFcmToken();
+      return user;
     } on ApiException catch (e) {
       // Only a real auth rejection (expired/invalid token) should log the
       // user out and wipe the saved session. Anything else — no network

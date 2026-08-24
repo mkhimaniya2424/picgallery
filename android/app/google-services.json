@@ -12,7 +12,28 @@
           "package_name": "com.mk.picgallery"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "198690480208-f1b5pmegunhedbrg26r93q7fkd3pnuha.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mk.picgallery",
+            "certificate_hash": "a424a47be421dee0b73621fc96c6906309f687db"
+          }
+        },
+        {
+          "client_id": "198690480208-h99boimj0ih9d4uqde6i37nnglmuvmdb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mk.picgallery",
+            "certificate_hash": "18aeb9bae8bfddf4befac43930a829e37e00cf40"
+          }
+        },
+        {
+          "client_id": "198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDkSD4CxaEhCkoDGS1-M-8AKxFbRjSV2Bg"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mk.picgallery"
+              }
+            }
+          ]
         }
       }
     }
