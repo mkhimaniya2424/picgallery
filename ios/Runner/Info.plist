@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSCameraUsageDescription</key>
-<string>PicGallery needs camera access to capture and upload photos.</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>PicGallery needs photo library access to import and share albums.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -49,24 +45,34 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app saves photos and videos to your gallery.</string>
 
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>PicGallery needs access to your photo library so you can browse, select, and manage your photos and videos.</string>
-
+	<!-- ── Permissions ── -->
 	<key>NSCameraUsageDescription</key>
 	<string>PicGallery needs access to your camera so you can capture photos and videos.</string>
-
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PicGallery needs access to your photo library so you can browse, select, and manage your photos and videos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app saves photos and videos to your gallery.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>PicGallery needs access to the microphone when recording videos.</string>
-
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>PicGallery needs access to your location only when required for app features.</string>
 
+	<!-- ── Google Sign-In ──
+	     GIDClientID   = the iOS OAuth client ID from GoogleService-Info.plist —
+	                     used by the native GID SDK to present the sign-in sheet.
+	     GIDServerClientID = the Web OAuth client ID — tells the SDK to mint an
+	                     id_token whose `aud` claim equals this ID, so the backend
+	                     (verify_google_id_token in social_auth.py) can verify it.
+	                     Without this key the id_token comes back null on iOS. -->
 	<key>GIDClientID</key>
 	<string>198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com</string>
 
+	<!-- ── URL Schemes ──
+	     1. REVERSED_CLIENT_ID  — required by google_sign_in for the OAuth redirect
+	     2. picgallery://       — deep links: payment-success, email-verified, etc. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -89,10 +95,11 @@
 		</dict>
 	</array>
 
+	<!-- ── Background Modes ── -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
 </dict>
-</plist>
+</plist>
