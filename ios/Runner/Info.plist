@@ -65,7 +65,7 @@
 	<string>PicGallery needs access to your location only when required for app features.</string>
 
 	<key>GIDClientID</key>
-	<string>825327920335-h6f1na40fs4kgiedjb7dgjt1dddanpjm.apps.googleusercontent.com</string>
+	<string>198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi.apps.googleusercontent.com</string>
 
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -74,7 +74,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.825327920335-h6f1na40fs4kgiedjb7dgjt1dddanpjm</string>
+				<string>com.googleusercontent.apps.198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi</string>
 			</array>
 		</dict>
 	</array>
