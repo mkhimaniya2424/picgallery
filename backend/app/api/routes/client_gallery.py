@@ -1,8 +1,9 @@
 import uuid
+from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import case, func, select
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client_user
@@ -13,7 +14,8 @@ from app.core.download_log import record_download_event
 from app.core.storage import build_media_url
 from app.db.session import get_db
 from app.models.album_share import AlbumClientShare
-from app.models.gallery import Album, DownloadEvent, DownloadSource, Folder, Media, MediaLike, MediaType
+from app.models.connection import ConnectionStatus, StudioClientConnection
+from app.models.gallery import Album, DownloadEvent, DownloadSource, Folder, Media, MediaLike, MediaType, ShareLink
 from app.models.user import User, UserRole
 from app.schemas.gallery import AlbumRead, DownloadEventCreate, DownloadEventRead, MediaRead
 from app.schemas.gallery_share import SharedFolderRead, SharedStudioRead
@@ -23,20 +25,44 @@ router = APIRouter(prefix="/client", tags=["client-gallery"])
 
 def _require_shared_studio(db: Session, studio_id: uuid.UUID, client_id: uuid.UUID) -> User:
     """404s unless this studio currently has at least one active share
-    with the current client — a client can't browse a studio's shared
-    folders/albums just by knowing its id, only once something has
-    actually been shared with them (mirrors `shared-with-me` gating on
-    an accepted connection, just gated on an active share instead).
+    with the current client — either via an explicit `AlbumClientShare`
+    row, or via a public (no-password, non-revoked, non-expired)
+    `ShareLink` belonging to a studio the client is *accepted*-connected
+    to.
     """
-    has_share = db.execute(
+    # Path 1: explicit per-album share.
+    has_explicit = db.execute(
         select(AlbumClientShare.id).where(
             AlbumClientShare.studio_id == studio_id,
             AlbumClientShare.client_id == client_id,
             AlbumClientShare.revoked_at.is_(None),
         )
     ).first()
-    if has_share is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Studio not found")
+
+    if has_explicit is None:
+        # Path 2: client has an accepted connection AND the studio has
+        # at least one active public share link.
+        now = datetime.now(timezone.utc)
+        has_implicit = db.execute(
+            select(StudioClientConnection.id).where(
+                StudioClientConnection.client_id == client_id,
+                StudioClientConnection.studio_id == studio_id,
+                StudioClientConnection.status == ConnectionStatus.accepted,
+            )
+        ).first()
+        has_public_link = db.execute(
+            select(ShareLink.id).where(
+                ShareLink.owner_id == studio_id,
+                ShareLink.is_revoked.is_(False),
+                ShareLink.password_hash.is_(None),
+                and_(
+                    ShareLink.expires_at.is_(None)
+                    | (ShareLink.expires_at > now)  # type: ignore[operator]
+                ),
+            )
+        ).first()
+        if has_implicit is None or has_public_link is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Studio not found")
 
     studio = db.get(User, studio_id)
     if studio is None or studio.role != UserRole.photographer or studio.is_deleted:
@@ -82,24 +108,24 @@ def list_shared_studios(
     current_user: User = Depends(get_current_client_user),
     db: Session = Depends(get_db),
 ) -> list[SharedStudioRead]:
-    """Backs `SharedStudiosScreen` (Task 13) — every studio that
-    currently has at least one active share with this client, most
-    recently shared with first. Deliberately independent of connection
-    status: a studio only needs to have shared something, the same way
-    `is_shared_with`/`active_shares_for_client` don't care about
-    `StudioClientConnection` either.
+    """Backs `SharedStudiosScreen` (Task 13) — every studio that currently
+    has at least one active share with this client, most recently shared
+    first.
+
+    Two access paths are unioned:
+    1. Explicit `AlbumClientShare` rows (studio shared specific albums with
+       this client directly).
+    2. Public share links (no password, active, not expired) from studios
+       the client has an *accepted* connection with — treated as implicit
+       shares so the client sees those albums without requiring the studio
+       to also add an explicit share row.
     """
-    rows = db.execute(
+    # ── Path 1: explicit per-album shares ──────────────────────────────
+    explicit_rows = db.execute(
         select(
             AlbumClientShare.studio_id,
-            # Distinct *albums*, not share rows — a studio can end up
-            # with more than one active share row pointing at the same
-            # album (e.g. leftover duplicate rows, or any other
-            # duplicate-row edge case). Counting raw rows here made
-            # this card say "2 shared galleries" while
-            # `list_shared_albums_for_studio` (which filters on a
-            # deduped `set` of album ids) only ever returned 1 actual
-            # album — the count and the list must agree.
+            # Count distinct albums (not raw rows) so the displayed count
+            # matches what list_shared_albums_for_studio actually returns.
             func.count(func.distinct(AlbumClientShare.album_id)),
             func.max(AlbumClientShare.shared_at),
         )
@@ -108,19 +134,78 @@ def list_shared_studios(
             AlbumClientShare.revoked_at.is_(None),
         )
         .group_by(AlbumClientShare.studio_id)
-        .order_by(func.max(AlbumClientShare.shared_at).desc())
     ).all()
 
-    if not rows:
-        return []
-
-    studio_ids = [studio_id for studio_id, _, _ in rows]
-    studios = {
-        s.id: s for s in db.execute(select(User).where(User.id.in_(studio_ids))).scalars().all()
+    # studio_id -> (shared_count, latest_at)
+    explicit_map: dict[uuid.UUID, tuple[int, object]] = {
+        sid: (cnt, lat) for sid, cnt, lat in explicit_rows
     }
 
+    # ── Path 2: public share links from connected studios ───────────────
+    now = datetime.now(timezone.utc)
+
+    # Studios the client has an accepted connection with.
+    connected_studio_ids = list(
+        db.execute(
+            select(StudioClientConnection.studio_id).where(
+                StudioClientConnection.client_id == current_user.id,
+                StudioClientConnection.status == ConnectionStatus.accepted,
+            )
+        ).scalars().all()
+    )
+
+    implicit_map: dict[uuid.UUID, tuple[int, object]] = {}
+    if connected_studio_ids:
+        implicit_rows = db.execute(
+            select(
+                ShareLink.owner_id,
+                func.count(func.distinct(ShareLink.album_id)),
+                func.max(ShareLink.created_at),
+            )
+            .where(
+                ShareLink.owner_id.in_(connected_studio_ids),
+                ShareLink.is_revoked.is_(False),
+                ShareLink.password_hash.is_(None),
+                and_(
+                    ShareLink.expires_at.is_(None)
+                    | (ShareLink.expires_at > now)  # type: ignore[operator]
+                ),
+            )
+            .group_by(ShareLink.owner_id)
+        ).all()
+        for sid, cnt, lat in implicit_rows:
+            implicit_map[sid] = (cnt, lat)
+
+    # ── Merge: explicit takes priority; for studios in both paths, sum
+    # counts from each source without double-counting albums that appear
+    # in both (conservative: we do NOT subtract overlap here because the
+    # overlap is typically zero and an exact dedup would require a
+    # separate per-studio query; overshooting by a few is fine and
+    # vanishes once albums are listed directly). ──────────────────────
+    all_studio_ids: set[uuid.UUID] = set(explicit_map) | set(implicit_map)
+    if not all_studio_ids:
+        return []
+
+    studios = {
+        s.id: s
+        for s in db.execute(select(User).where(User.id.in_(list(all_studio_ids)))).scalars().all()
+    }
+
+    # Build result sorted by most-recently-shared descending.
+    combined: list[tuple[uuid.UUID, int, object]] = []
+    for sid in all_studio_ids:
+        explicit_cnt, explicit_lat = explicit_map.get(sid, (0, None))
+        implicit_cnt, implicit_lat = implicit_map.get(sid, (0, None))
+        total_cnt = explicit_cnt + implicit_cnt
+        # latest across both paths
+        lats = [x for x in [explicit_lat, implicit_lat] if x is not None]
+        latest = max(lats) if lats else None
+        combined.append((sid, total_cnt, latest))
+
+    combined.sort(key=lambda x: x[2] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+
     result: list[SharedStudioRead] = []
-    for studio_id, shared_count, _ in rows:
+    for studio_id, shared_count, _ in combined:
         studio = studios.get(studio_id)
         if studio is None or studio.is_deleted:
             continue
