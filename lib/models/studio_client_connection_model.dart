@@ -146,24 +146,20 @@ class StudioClientConnection {
       // known is filled in; the rest is left at neutral defaults
       // rather than fabricated, and callers that need the full picture
       // should still hit the client's own profile endpoint.
-      clientData: viewerIsStudio
-          ? ClientData(
-              id: clientJson['id'] as String,
-              name: clientJson['full_name'] as String? ?? '',
-              initials: _initialsFrom(clientJson['full_name'] as String?),
-              // Was `const []` — `LinearGradient` requires at least two
-              // colors, so any renderer using this straight off the
-              // connection (e.g. `_ConnectedClientsTab`'s fallback for a
-              // client not yet in the dashboard snapshot) would throw at
-              // paint time on an empty list. Always give it a real,
-              // deterministic-by-id gradient instead.
-              gradient: _gradientFor(clientJson['id'] as String),
-              bookingStatus: '',
-              galleryStatus: GalleryStatus.notStarted,
-              outstanding: '',
-              isPaid: false,
-            )
-          : null,
+      clientData: ClientData(
+        id: viewerIsStudio ? (clientJson!['id'] as String) : (studioJson!['id'] as String),
+        name: viewerIsStudio
+            ? (clientJson!['full_name'] as String? ?? '')
+            : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String? ?? ''),
+        initials: _initialsFrom(viewerIsStudio
+            ? (clientJson!['full_name'] as String?)
+            : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String?)),
+        gradient: _gradientFor(viewerIsStudio ? (clientJson!['id'] as String) : (studioJson!['id'] as String)),
+        bookingStatus: '',
+        galleryStatus: GalleryStatus.notStarted,
+        outstanding: '',
+        isPaid: false,
+      ),
     );
   }
 

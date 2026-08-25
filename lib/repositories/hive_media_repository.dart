@@ -67,6 +67,7 @@ class HiveMediaRepository implements MediaRepository {
     bool unfiledOnly = false,
     MediaType? type,
     bool favoritesOnly = false,
+    String? likedByClientId,
   }) async {
     final media = await _loadAll();
     Iterable<MediaModel> out = media.where((m) => !m.isDeleted);
@@ -78,6 +79,7 @@ class HiveMediaRepository implements MediaRepository {
     }
     if (type != null) out = out.where((m) => m.type == type);
     if (favoritesOnly) out = out.where((m) => m.isFavorite);
+    // Local repositories don't track client likes; likedByClientId is ignored here.
     return out.toList(growable: false);
   }
 

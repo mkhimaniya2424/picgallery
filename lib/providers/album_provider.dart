@@ -8,6 +8,7 @@ import '../models/stats_models.dart';
 import '../repositories/album_repository.dart';
 import 'auth_providers.dart';
 import 'folder_provider.dart';
+import 'media_provider.dart';
 
 enum AlbumSortOption {
   recent,
@@ -325,6 +326,13 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
     final next = current.copyWith(allAlbums: nextAlbums, lastError: null);
     state = AsyncValue.data(next);
     _syncFolderCounts(nextAlbums);
+    _syncMedia();
+  }
+
+  void _syncMedia() {
+    try {
+      ref.read(mediaProvider).load();
+    } catch (_) {}
   }
 
   Future<void> moveToFolder(String albumId, String? folderId) {

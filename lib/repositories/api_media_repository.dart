@@ -53,6 +53,7 @@ class ApiMediaRepository implements MediaRepository {
     bool unfiledOnly = false,
     MediaType? type,
     bool favoritesOnly = false,
+    String? likedByClientId,
   }) async {
     final query = <String, String>{
       if (unfiledOnly) 'unfiled_only': 'true',
@@ -60,6 +61,7 @@ class ApiMediaRepository implements MediaRepository {
       if (!unfiledOnly && folderId != null) 'folder_id': folderId,
       if (type != null) 'media_type': type.name,
       if (favoritesOnly) 'favorites_only': 'true',
+      if (likedByClientId != null) 'liked_by_client_id': likedByClientId,
     };
     final path = query.isEmpty ? '/media' : '/media?${Uri(queryParameters: query).query}';
     final json = await _apiClient.get(path);

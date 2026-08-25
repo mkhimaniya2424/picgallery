@@ -208,8 +208,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                   delay: const Duration(milliseconds: 120),
                   child: SectionHeader(
                     title: 'Recent Uploads',
-                    onAction: () => Navigator.of(context)
-                        .pushNamed(AppRoutes.storageOverview),
+                    onAction: () => widget.onNavigateToTab?.call(1),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -219,6 +218,15 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                 ),
 
                 const SizedBox(height: AppSpacing.xl),
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 180),
+                  child: SectionHeader(
+                    title: 'Storage Overview',
+                    onAction: () => Navigator.of(context)
+                        .pushNamed(AppRoutes.storageOverview),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 180),
                   child: StorageUsageCard(
@@ -398,16 +406,12 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
       children: [
         SectionHeader(
           title: 'Quick Actions',
-          onAction: () async {
-            // QuickActionsScreen pops with a bottom-nav tab index
-            // (2=Clients, 1=Gallery) when Add Client / Share Gallery is
-            // tapped there — see QuickActionHandler's doc comment.
-            // Forward that to the real onNavigateToTab so those tiles
-            // work the same from "See all" as they do from this grid.
-            final tabIndex = await Navigator.of(context).pushNamed<int>(AppRoutes.quickActions);
-            if (tabIndex != null) {
-              widget.onNavigateToTab?.call(tabIndex);
-            }
+          onAction: () {
+            Navigator.of(context).pushNamed(AppRoutes.quickActions).then((tabIndex) {
+              if (tabIndex is int && context.mounted) {
+                widget.onNavigateToTab?.call(tabIndex);
+              }
+            });
           },
         ),
         const SizedBox(height: AppSpacing.md),

@@ -89,8 +89,7 @@ class QuickActionHandler {
         break;
 
       case 'reports':
-        onBeforeReport?.call();
-        await _generateAndShowReport(context, ref);
+        Navigator.of(context).pushNamed(AppRoutes.adminAnalytics);
         break;
       default:
         toast(action.label.replaceAll('\n', ' '));
@@ -148,26 +147,7 @@ class QuickActionHandler {
     }
   }
 
-  static Future<void> _generateAndShowReport(
-      BuildContext context, WidgetRef ref) async {
-    final summary =
-        await ref.read(adminDashboardProvider.notifier).generateReport();
-    if (!context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Latest Report'),
-        content: Text(summary,
-            style: const TextStyle(
-                fontSize: 13.5, color: AppColors.subtitle, height: 1.5)),
-        actions: [
-          FilledButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Done')),
-        ],
-      ),
-    );
-  }
+
 
   /// Encodes the studio's real `AppUser.id` — not the display name,
   /// which isn't a valid lookup key anywhere in the app — as a

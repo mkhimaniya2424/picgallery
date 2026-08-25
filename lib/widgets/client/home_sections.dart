@@ -18,7 +18,6 @@ import '../../providers/connected_albums_provider.dart';
 import '../../providers/home_gallery_view_provider.dart';
 import '../../providers/studio_provider.dart';
 import '../../providers/alerts_provider.dart';
-import '../../providers/settings_provider.dart';
 import '../../providers/studio_client_connections_provider.dart';
 
 import '../common/empty_state_card.dart';
@@ -28,6 +27,7 @@ import '../../screens/client/favorite_albums_screen.dart';
 import '../../screens/client/shared_album_preview_screen.dart';
 import '../../screens/client/shared_studios_screen.dart' show SharedStudioCard;
 import '../../providers/client_gallery_provider.dart';
+import '../../screens/client/scan_qr_screen.dart';
 
 // ─── Section Header ─────────────────────────────────────────────────────
 
@@ -1037,6 +1037,15 @@ class QuickActionRow extends StatelessWidget {
         bg: AppColors.primary.withValues(alpha: 0.12),
         fg: AppColors.primary,
         onTap: () => Navigator.of(context).pushNamed(AppRoutes.discoverStudios),
+      ),
+      _QuickAction(
+        icon: Icons.qr_code_scanner_rounded,
+        label: 'Scan QR',
+        bg: AppColors.accent.withValues(alpha: 0.12),
+        fg: AppColors.accent,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ScanQrScreen()),
+        ),
       ),
       _QuickAction(
         icon: Icons.photo_library_rounded,

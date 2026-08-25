@@ -629,8 +629,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 16, vertical: 8),
                                         decoration: BoxDecoration(
-                                          color:
-                                              Colors.black12.withOpacity(0.04),
+                                          color: Colors.black12.withValues(alpha: 0.04),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),

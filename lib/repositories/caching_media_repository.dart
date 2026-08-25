@@ -60,6 +60,7 @@ class CachingMediaRepository implements MediaRepository {
     bool unfiledOnly = false,
     MediaType? type,
     bool favoritesOnly = false,
+    String? likedByClientId,
   }) async {
     try {
       final media = await _api.fetchMedia(
@@ -68,6 +69,7 @@ class CachingMediaRepository implements MediaRepository {
         unfiledOnly: unfiledOnly,
         type: type,
         favoritesOnly: favoritesOnly,
+        likedByClientId: likedByClientId,
       );
       await _bestEffort(() => _cache.mirrorFromRemote(media));
       return media;
@@ -80,6 +82,7 @@ class CachingMediaRepository implements MediaRepository {
         unfiledOnly: unfiledOnly,
         type: type,
         favoritesOnly: favoritesOnly,
+        likedByClientId: likedByClientId,
       );
     }
   }

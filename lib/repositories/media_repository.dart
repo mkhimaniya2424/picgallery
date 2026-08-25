@@ -15,6 +15,7 @@ abstract class MediaRepository {
     bool unfiledOnly = false,
     MediaType? type,
     bool favoritesOnly = false,
+    String? likedByClientId,
   });
 
   Future<MediaModel> createMedia(MediaModel media);

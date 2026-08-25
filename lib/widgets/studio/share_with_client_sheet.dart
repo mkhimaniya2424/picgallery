@@ -37,7 +37,6 @@ Future<void> showShareWithClientSheet(
   // Connections load lazily via connectionsProvider's own Notifier —
   // just make sure it's initialized so the sheet isn't empty on a cold
   // start.
-  final connections = ref.read(connectionsProvider).valueOrNull ?? [];
   final connectedClients = ref
       .read(connectionsProvider.notifier)
       .connectedClientsForStudio(studioId);

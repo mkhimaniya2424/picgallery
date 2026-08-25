@@ -30,11 +30,13 @@ class DeepLinkService {
 
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _sub;
+  GlobalKey<NavigatorState>? _navigatorKey;
 
   /// Call once from main.dart, after `runApp` — [navigatorKey] must be the
   /// same key passed to MaterialApp so we can navigate/show snackbars
   /// without needing a BuildContext from inside a widget.
   Future<void> init(GlobalKey<NavigatorState> navigatorKey) async {
+    _navigatorKey = navigatorKey;
     // App was fully closed and opened directly via the link (cold start).
     // Splash/onboarding/auth may still be deciding the very first screen,
     // so wait briefly for the navigator to actually exist before acting —
@@ -45,36 +47,38 @@ class DeepLinkService {
         for (var i = 0; i < 25 && navigatorKey.currentContext == null; i++) {
           await Future.delayed(const Duration(milliseconds: 200));
         }
-        _handle(initial, navigatorKey);
+        handleLink(initial);
       }
     } catch (_) {
       // No initial link, or platform channel not ready yet — ignore.
     }
 
     // App was already running (backgrounded) when the link arrived.
-    _sub = _appLinks.uriLinkStream.listen((uri) => _handle(uri, navigatorKey));
+    _sub = _appLinks.uriLinkStream.listen((uri) => handleLink(uri));
   }
 
   void dispose() => _sub?.cancel();
 
-  void _handle(Uri uri, GlobalKey<NavigatorState> navigatorKey) {
+  void handleLink(Uri uri) {
+    final navKey = _navigatorKey;
+    if (navKey == null) return;
     if (uri.scheme != 'picgallery') return;
 
     switch (uri.host) {
       case 'email-verified':
-        _handleEmailVerified(navigatorKey);
+        _handleEmailVerified(navKey);
         break;
       case 'studio':
-        _handleStudio(uri, navigatorKey);
+        _handleStudio(uri, navKey);
         break;
       case 'shared':
-        _handleShared(uri, navigatorKey);
+        _handleShared(uri, navKey);
         break;
       case 'payment-success':
-        _handlePaymentSuccess(uri, navigatorKey);
+        _handlePaymentSuccess(uri, navKey);
         break;
       case 'payment-failed':
-        _handlePaymentFailed(navigatorKey);
+        _handlePaymentFailed(navKey);
         break;
       default:
         break;

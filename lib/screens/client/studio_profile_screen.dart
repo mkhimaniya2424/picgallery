@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/studio_client_connection_model.dart';
@@ -165,75 +166,72 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Studio Logo
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: SafeNetworkImage(
+                          studio.logoUrl,
+                          placeholderIcon: Icons.business_rounded,
+                          fit: BoxFit.cover,
+                          borderRadius: BorderRadius.circular(1000),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Name and Rating
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Studio Logo
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: SafeNetworkImage(
-                              studio.logoUrl,
-                              placeholderIcon: Icons.business_rounded,
-                              fit: BoxFit.cover,
-                              borderRadius: BorderRadius.circular(1000),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          // Rating & Quick stats
                           Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.star_rounded, color: AppColors.gold, size: 20),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    studio.rating.toString(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '(${studio.reviewCount} Reviews)',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.8),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
+                            child: Text(
+                              studio.name,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.text,
                               ),
                             ),
                           ),
+                          const SizedBox(width: 8),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded, color: AppColors.gold, size: 20),
+                              const SizedBox(width: 4),
+                              Text(
+                                studio.rating.toString(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.text,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '(${studio.reviewCount})',
+                                style: const TextStyle(
+                                  color: AppColors.subtitle,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Name, Location and Web
-                      Text(
-                        studio.name,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 16),
@@ -503,6 +501,19 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     );
   }
 
+  Future<void> _launchUrl(String urlString) async {
+    final uri = Uri.parse(urlString);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link')),
+        );
+      }
+    }
+  }
+
   Widget _buildAboutTab(StudioModel studio) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,9 +563,74 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                 ),
               ),
               const SizedBox(height: 14),
-              _buildContactRow(Icons.email_outlined, 'Email Address', studio.email),
-              const Divider(color: AppColors.border, height: 20),
-              _buildContactRow(Icons.public_outlined, 'Official Website', studio.website),
+              if (studio.email.isNotEmpty) ...[
+                _buildContactRow(
+                  Icons.email_outlined,
+                  'Email Address',
+                  studio.email,
+                  onTap: () => _launchUrl('mailto:${studio.email}'),
+                ),
+                const Divider(color: AppColors.border, height: 20),
+              ],
+              if (studio.website.isNotEmpty) ...[
+                _buildContactRow(
+                  Icons.public_outlined,
+                  'Official Website',
+                  studio.website,
+                  onTap: () {
+                    var url = studio.website;
+                    if (!url.startsWith('http')) url = 'https://$url';
+                    _launchUrl(url);
+                  },
+                ),
+                const Divider(color: AppColors.border, height: 20),
+              ],
+              if (studio.instagramUrl.isNotEmpty) ...[
+                _buildContactRow(
+                  Icons.camera_alt_outlined,
+                  'Instagram',
+                  studio.instagramUrl,
+                  onTap: () => _launchUrl(studio.instagramUrl),
+                ),
+                const Divider(color: AppColors.border, height: 20),
+              ],
+              if (studio.facebookUrl.isNotEmpty) ...[
+                _buildContactRow(
+                  Icons.facebook_outlined,
+                  'Facebook',
+                  studio.facebookUrl,
+                  onTap: () => _launchUrl(studio.facebookUrl),
+                ),
+                const Divider(color: AppColors.border, height: 20),
+              ],
+              if (studio.youtubeUrl.isNotEmpty) ...[
+                _buildContactRow(
+                  Icons.video_library_outlined,
+                  'YouTube',
+                  studio.youtubeUrl,
+                  onTap: () => _launchUrl(studio.youtubeUrl),
+                ),
+                const Divider(color: AppColors.border, height: 20),
+              ],
+              if (studio.pinterestUrl.isNotEmpty) ...[
+                _buildContactRow(
+                  Icons.image_search_outlined,
+                  'Pinterest',
+                  studio.pinterestUrl,
+                  onTap: () => _launchUrl(studio.pinterestUrl),
+                ),
+                const Divider(color: AppColors.border, height: 20),
+              ],
+              if (studio.email.isEmpty &&
+                  studio.website.isEmpty &&
+                  studio.instagramUrl.isEmpty &&
+                  studio.facebookUrl.isEmpty &&
+                  studio.youtubeUrl.isEmpty &&
+                  studio.pinterestUrl.isEmpty)
+                const Text(
+                  'No contact information provided.',
+                  style: TextStyle(color: AppColors.subtitle, fontSize: 13.5),
+                ),
             ],
           ),
         ),
@@ -591,8 +667,8 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     );
   }
 
-  Widget _buildContactRow(IconData icon, String title, String val) {
-    return Row(
+  Widget _buildContactRow(IconData icon, String title, String val, {VoidCallback? onTap}) {
+    final row = Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
@@ -629,6 +705,18 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         ),
       ],
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          child: row,
+        ),
+      );
+    }
+    return row;
   }
 
   Widget _buildPortfolioTab(StudioModel studio) {

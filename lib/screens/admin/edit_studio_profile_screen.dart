@@ -37,6 +37,10 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
   late final TextEditingController _websiteController;
   late final TextEditingController _aboutController;
   late final TextEditingController _studioAddressController;
+  late final TextEditingController _instagramController;
+  late final TextEditingController _facebookController;
+  late final TextEditingController _youtubeController;
+  late final TextEditingController _pinterestController;
 
   String? _logoPath;
   String? _coverPath;
@@ -157,6 +161,10 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     // fall back to the local settings cache so the value still shows if
     // the auth cache has not refreshed yet.
     _websiteController = TextEditingController(text: cachedUser?.website ?? currentSettings.website);
+    _instagramController = TextEditingController(text: cachedUser?.instagramUrl);
+    _facebookController = TextEditingController(text: cachedUser?.facebookUrl);
+    _youtubeController = TextEditingController(text: cachedUser?.youtubeUrl);
+    _pinterestController = TextEditingController(text: cachedUser?.pinterestUrl);
 
     // Seed specializations from the backend-synced cachedUser field, not from
     // the local-only studio.categories cache (which never gets updated when
@@ -185,6 +193,10 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       _emailController.text = user.email;
       _studioAddressController.text = user.studioAddress ?? _studioAddressController.text;
       _websiteController.text = user.website ?? ref.read(settingsProvider).website;
+      _instagramController.text = user.instagramUrl ?? _instagramController.text;
+      _facebookController.text = user.facebookUrl ?? _facebookController.text;
+      _youtubeController.text = user.youtubeUrl ?? _youtubeController.text;
+      _pinterestController.text = user.pinterestUrl ?? _pinterestController.text;
       _country = user.country ?? _country;
       _state = user.state ?? _state;
       _city = user.city ?? _city;
@@ -199,6 +211,10 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     _websiteController.dispose();
     _aboutController.dispose();
     _studioAddressController.dispose();
+    _instagramController.dispose();
+    _facebookController.dispose();
+    _youtubeController.dispose();
+    _pinterestController.dispose();
     super.dispose();
   }
 
@@ -503,20 +519,18 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       final updatedUser = await ref.read(userRepositoryProvider).updateProfile(
             fullName: _photoNameController.text.trim(),
             studioName: _studioNameController.text.trim(),
-            studioAddress: _studioAddressController.text.trim().isNotEmpty
-                ? _studioAddressController.text.trim()
-                : null,
+            studioAddress: _studioAddressController.text.trim(),
             country: _country,
             state: _state,
             city: _city,
             // Bio maps to the "About / Business Description" textarea.
-            bio: _aboutController.text.trim().isNotEmpty
-                ? _aboutController.text.trim()
-                : null,
+            bio: _aboutController.text.trim(),
             // Website URL
-            website: _websiteController.text.trim().isNotEmpty
-                ? _websiteController.text.trim()
-                : null,
+            website: _websiteController.text.trim(),
+            instagramUrl: _instagramController.text.trim(),
+            facebookUrl: _facebookController.text.trim(),
+            youtubeUrl: _youtubeController.text.trim(),
+            pinterestUrl: _pinterestController.text.trim(),
             // Categories/Specializations map to the specializations column.
             specializations: _selectedCategories.isNotEmpty
                 ? _selectedCategories
@@ -939,7 +953,55 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // 3. Specialization Choice Chips
+                  // 3. Social Media Links
+                  GlassCard(
+                    borderRadius: 16,
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Social Media Links',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _instagramController,
+                          style: TextStyle(color: textColor, fontSize: 14),
+                          decoration: const InputDecoration(labelText: 'Instagram URL'),
+                          keyboardType: TextInputType.url,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _facebookController,
+                          style: TextStyle(color: textColor, fontSize: 14),
+                          decoration: const InputDecoration(labelText: 'Facebook URL'),
+                          keyboardType: TextInputType.url,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _youtubeController,
+                          style: TextStyle(color: textColor, fontSize: 14),
+                          decoration: const InputDecoration(labelText: 'YouTube URL'),
+                          keyboardType: TextInputType.url,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _pinterestController,
+                          style: TextStyle(color: textColor, fontSize: 14),
+                          decoration: const InputDecoration(labelText: 'Pinterest URL'),
+                          keyboardType: TextInputType.url,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // 4. Specialization Choice Chips
                   GlassCard(
                     borderRadius: 16,
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -996,7 +1058,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // 4. Business description multiline card
+                  // 5. Business description multiline card
                   GlassCard(
                     borderRadius: 16,
                     padding: const EdgeInsets.all(AppSpacing.md),

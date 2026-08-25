@@ -149,6 +149,7 @@ class MediaGridScreen extends ConsumerStatefulWidget {
   /// Video Grid; [MediaType.photo] is the Photo Grid; `null` shows both,
   /// matching the existing combined-grid architecture.
   final MediaType? type;
+  final String? likedByClientId;
   final bool showBack;
 
   const MediaGridScreen({
@@ -157,6 +158,7 @@ class MediaGridScreen extends ConsumerStatefulWidget {
     this.folderId,
     this.favoritesOnly = false,
     this.type,
+    this.likedByClientId,
     this.showBack = true,
   });
 
@@ -275,6 +277,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         ? MediaFilterOption.favorites
         : MediaFilterOption.all);
     c.setType(widget.type);
+    c.setLikedByClientId(widget.likedByClientId);
     _resetPagination();
   }
 

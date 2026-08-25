@@ -9,6 +9,7 @@ import '../../providers/admin_dashboard_providers.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/studio_client_connections_provider.dart';
+import '../media/media_grid_screen.dart';
 
 // Deterministic gradient picker matching DashboardClientDto._gradientFor —
 // used when a ClientData is built from connectionsProvider (no gradient set).
@@ -401,6 +402,79 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                   ),
                 ),
 
+                const SizedBox(height: AppSpacing.lg),
+                // Client Selections action
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Scaffold(
+                          appBar: AppBar(
+                            title: Text('Liked by ${c.name}', style: const TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w800)),
+                            leading: IconButton(
+                              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.text, size: 20),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                          body: SafeArea(
+                            child: MediaGridScreen(
+                              likedByClientId: c.id,
+                              showBack: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'View Client Selections',
+                                style: TextStyle(
+                                  color: AppColors.text,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'See all photos and videos this client has liked',
+                                style: TextStyle(
+                                  color: AppColors.subtitle,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Shared Galleries Header
                 Row(

@@ -237,7 +237,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         }
 
         return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          key: const PageStorageKey('OverviewTab'),
           slivers: [
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(
@@ -344,7 +344,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         final viewsSeries = _findSeries(snapshot, 'Gallery Views');
 
         return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          key: const PageStorageKey('ViewsTab'),
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -410,7 +410,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         final totalDownloads = snapshot.totalGalleryDownloads;
 
         return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          key: const PageStorageKey('DownloadsTab'),
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -467,7 +467,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           );
         }
         return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          key: const PageStorageKey('ActivityTab'),
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.all(AppSpacing.md),
