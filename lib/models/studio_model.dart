@@ -18,6 +18,10 @@ class StudioModel {
   final StudioConnectionStatus connectionStatus;
   final String email;
   final String website;
+  final String instagramUrl;
+  final String facebookUrl;
+  final String youtubeUrl;
+  final String pinterestUrl;
 
   /// Client-side favorite/bookmark toggle. Persisted server-side via
   /// `POST/DELETE /studios/{id}/favorite` — see `ApiStudioRepository`.
@@ -40,6 +44,10 @@ class StudioModel {
     required this.connectionStatus,
     required this.email,
     required this.website,
+    this.instagramUrl = '',
+    this.facebookUrl = '',
+    this.youtubeUrl = '',
+    this.pinterestUrl = '',
     this.isFavorite = false,
     this.passwordHash = '',
   });
@@ -73,8 +81,12 @@ class StudioModel {
       location: location,
       galleryUrls: (json['gallery_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
       connectionStatus: StudioConnectionStatus.notConnected,
-      email: '',
-      website: '',
+      email: (json['email'] as String?) ?? '',
+      website: (json['website'] as String?) ?? '',
+      instagramUrl: (json['instagram_url'] as String?) ?? '',
+      facebookUrl: (json['facebook_url'] as String?) ?? '',
+      youtubeUrl: (json['youtube_url'] as String?) ?? '',
+      pinterestUrl: (json['pinterest_url'] as String?) ?? '',
       isFavorite: true,
     );
   }
@@ -107,8 +119,12 @@ class StudioModel {
         (e) => e.name == json['connection_status'],
         orElse: () => StudioConnectionStatus.notConnected,
       ),
-      email: '',
-      website: '',
+      email: (json['email'] as String?) ?? '',
+      website: (json['website'] as String?) ?? '',
+      instagramUrl: (json['instagram_url'] as String?) ?? '',
+      facebookUrl: (json['facebook_url'] as String?) ?? '',
+      youtubeUrl: (json['youtube_url'] as String?) ?? '',
+      pinterestUrl: (json['pinterest_url'] as String?) ?? '',
       isFavorite: json['is_favorite'] as bool? ?? false,
     );
   }
@@ -135,6 +151,10 @@ class StudioModel {
       ),
       email: json['email'] as String? ?? '',
       website: json['website'] as String? ?? '',
+      instagramUrl: json['instagramUrl'] as String? ?? '',
+      facebookUrl: json['facebookUrl'] as String? ?? '',
+      youtubeUrl: json['youtubeUrl'] as String? ?? '',
+      pinterestUrl: json['pinterestUrl'] as String? ?? '',
       isFavorite: json['isFavorite'] as bool? ?? false,
     );
   }
@@ -153,6 +173,10 @@ class StudioModel {
         'connectionStatus': connectionStatus.name,
         'email': email,
         'website': website,
+        'instagramUrl': instagramUrl,
+        'facebookUrl': facebookUrl,
+        'youtubeUrl': youtubeUrl,
+        'pinterestUrl': pinterestUrl,
         'isFavorite': isFavorite,
       };
 
@@ -170,6 +194,10 @@ class StudioModel {
     StudioConnectionStatus? connectionStatus,
     String? email,
     String? website,
+    String? instagramUrl,
+    String? facebookUrl,
+    String? youtubeUrl,
+    String? pinterestUrl,
     bool? isFavorite,
   }) {
     return StudioModel(
@@ -186,6 +214,10 @@ class StudioModel {
       connectionStatus: connectionStatus ?? this.connectionStatus,
       email: email ?? this.email,
       website: website ?? this.website,
+      instagramUrl: instagramUrl ?? this.instagramUrl,
+      facebookUrl: facebookUrl ?? this.facebookUrl,
+      youtubeUrl: youtubeUrl ?? this.youtubeUrl,
+      pinterestUrl: pinterestUrl ?? this.pinterestUrl,
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }

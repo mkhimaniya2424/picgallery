@@ -228,18 +228,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: CustomAppBar(
-        onBack: () {
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          } else {
-            Navigator.of(context).pushReplacementNamed(AppRoutes.roleSelection);
-          }
-        },
-      ),
-      body: ScreenBackdrop(
+    void handleBack() {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.roleSelection);
+      }
+    }
+
+    return PopScope(
+      canPop: Navigator.of(context).canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.roleSelection);
+        }
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: CustomAppBar(onBack: handleBack),
+        body: ScreenBackdrop(
         child: SafeArea(
           top: true,
           child: AuthContainer(
@@ -380,6 +387,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
               ),
             ),
           ),
+        ),
         ),
       ),
     );

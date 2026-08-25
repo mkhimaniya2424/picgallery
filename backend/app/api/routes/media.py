@@ -402,6 +402,7 @@ def list_media(
     unfiled_only: bool = False,
     media_type: MediaType | None = None,
     favorites_only: bool = False,
+    liked_by_client_id: uuid.UUID | None = None,
     trashed: bool = False,
     limit: int = Query(default=100, le=500),
     offset: int = 0,
@@ -420,6 +421,8 @@ def list_media(
         query = query.where(Media.media_type == media_type)
     if favorites_only:
         query = query.where(Media.is_favorite.is_(True))
+    if liked_by_client_id is not None:
+        query = query.join(MediaLike, MediaLike.media_id == Media.id).where(MediaLike.user_id == liked_by_client_id)
 
     query = query.order_by(Media.created_at.desc()).limit(limit).offset(offset)
     items = db.execute(query).scalars().all()

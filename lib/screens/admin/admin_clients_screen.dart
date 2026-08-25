@@ -122,8 +122,9 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                         ),
                         style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         validator: (val) {
-                          if (val == null || val.trim().isEmpty)
+                          if (val == null || val.trim().isEmpty) {
                             return 'Please enter an email';
+                          }
                           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                               .hasMatch(val.trim())) {
                             return 'Please enter a valid email';

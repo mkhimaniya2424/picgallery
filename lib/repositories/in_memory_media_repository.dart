@@ -59,6 +59,7 @@ class InMemoryMediaRepository implements MediaRepository {
     bool unfiledOnly = false,
     MediaType? type,
     bool favoritesOnly = false,
+    String? likedByClientId,
   }) async {
     final media = await _loadAll();
     return media.where((m) {
@@ -68,6 +69,7 @@ class InMemoryMediaRepository implements MediaRepository {
       if (unfiledOnly && m.albumId != null) return false;
       if (type != null && m.type != type) return false;
       if (favoritesOnly && !m.isFavorite) return false;
+      // Local repositories don't track client likes; likedByClientId is ignored here.
       return true;
     }).toList(growable: false);
   }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
 import '../repositories/media_repository.dart';
+import '../providers/auth_providers.dart';
 import '../providers/media_provider.dart';
 import '../services/media_picker_service.dart' show MediaContentType;
 import '../storage/upload_queue_local_store.dart';
@@ -68,6 +69,24 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   bool _simulateCellular = false;
   bool get simulateCellular => _simulateCellular;
 
+  Future<void> scopeToUser(String userId) async {
+    await _localStore.scopeToUser(userId);
+    // Reload jobs from the newly-scoped store
+    final jobs = await _localStore.load();
+    final current = state.value;
+    if (current != null) {
+      state = AsyncValue.data(current.copyWith(jobs: jobs));
+    }
+  }
+
+  Future<void> clearForLogout() async {
+    await _localStore.clearForLogout();
+    final current = state.value;
+    if (current != null) {
+      state = AsyncValue.data(current.copyWith(jobs: []));
+    }
+  }
+
   @override
   FutureOr<UploadQueueState> build() async {
     ref.onDispose(() {
@@ -76,6 +95,17 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       _offlineRetryTicker?.cancel();
       _offlineRetryTicker = null;
     });
+
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
+      final userId = next.user?.id;
+      if (userId != null) {
+        // ignore: unawaited_futures
+        scopeToUser(userId);
+      } else if (previous?.user != null) {
+        // ignore: unawaited_futures
+        clearForLogout();
+      }
+    }, fireImmediately: true);
 
     // Task 19.12: poll for jobs that failed because the device looked
     // offline and requeue them once their backoff window has passed —

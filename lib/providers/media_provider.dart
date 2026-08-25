@@ -75,6 +75,9 @@ class MediaListController extends ChangeNotifier {
   MediaType? _type;
   MediaType? get type => _type;
 
+  String? _likedByClientId;
+  String? get likedByClientId => _likedByClientId;
+
   final List<MediaModel> _allMedia = [];
   List<MediaModel> get allMedia => List.unmodifiable(_allMedia);
 
@@ -227,7 +230,9 @@ class MediaListController extends ChangeNotifier {
     notifyListeners();
     try {
       await _loadUiStateIfNeeded();
-      final media = await _repo.fetchMedia();
+      final media = await _repo.fetchMedia(
+        likedByClientId: _likedByClientId,
+      );
       _allMedia
         ..clear()
         ..addAll(media);
@@ -237,6 +242,12 @@ class MediaListController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void setLikedByClientId(String? id) {
+    if (_likedByClientId == id) return;
+    _likedByClientId = id;
+    notifyListeners();
   }
 
   void setSearchQuery(String value) {

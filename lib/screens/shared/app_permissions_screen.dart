@@ -10,6 +10,7 @@ import '../../widgets/common/app_toast.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/screen_backdrop.dart';
+import '../../services/permission_service.dart';
 
 /// Read/write view of the three permission flags the onboarding
 /// screens (`camera_permission_screen.dart`, etc.) originally set —
@@ -46,11 +47,19 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
   Future<void> _toggle({
     required String key,
     required bool value,
-    required Future<AppUser> Function() call,
+    required Future<bool> Function()? requestPermission,
+    required Future<AppUser> Function(bool) call,
   }) async {
     setState(() => _updating = key);
     try {
-      final updated = await call();
+      bool finalValue = value;
+      if (value && requestPermission != null) {
+        finalValue = await requestPermission();
+        if (!finalValue && mounted) {
+          AppToast.show(context, 'Permission denied in OS settings. Please enable it there first.', isError: true);
+        }
+      }
+      final updated = await call(finalValue);
       ref.read(authProvider.notifier).setUser(updated);
     } on ApiException catch (e) {
       if (mounted) AppToast.show(context, e.message, isError: true);
@@ -94,7 +103,8 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
                       onChanged: (v) => _toggle(
                         key: 'camera',
                         value: v,
-                        call: () => ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: v),
+                        requestPermission: () => PermissionService.instance.checkAndRequestCameraPermission(),
+                        call: (finalV) => ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: finalV),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -107,8 +117,9 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
                       onChanged: (v) => _toggle(
                         key: 'photos',
                         value: v,
-                        call: () =>
-                            ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: v),
+                        requestPermission: () => PermissionService.instance.checkAndRequestStoragePermission(),
+                        call: (finalV) =>
+                            ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: finalV),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -121,7 +132,8 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
                       onChanged: (v) => _toggle(
                         key: 'push',
                         value: v,
-                        call: () => ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: v),
+                        requestPermission: () => PermissionService.instance.checkAndRequestNotificationPermission(),
+                        call: (finalV) => ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: finalV),
                       ),
                     ),
                   ],

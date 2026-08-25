@@ -13,6 +13,16 @@ class HiveAlbumRepository implements AlbumRepository {
   final AlbumLocalStore _store;
   List<AlbumModel>? _cache;
 
+  Future<void> scopeToUser(String userId) async {
+    _cache = null;
+    await _store.scopeToUser(userId);
+  }
+
+  Future<void> clearForLogout() async {
+    _cache = null;
+    await _store.clearForLogout();
+  }
+
   Future<List<AlbumModel>> _ensureLoaded() async {
     _cache ??= await _store.load();
     return _cache!;

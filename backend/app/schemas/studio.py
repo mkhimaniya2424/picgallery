@@ -28,6 +28,12 @@ class StudioSummary(BaseModel):
     experience_years: int | None = None
     pricing_min: float | None = None
     pricing_max: float | None = None
+    email: str | None = None
+    website: str | None = None
+    instagram_url: str | None = None
+    facebook_url: str | None = None
+    youtube_url: str | None = None
+    pinterest_url: str | None = None
     # Showcase Portfolio thumbnails — not a plain column, so it doesn't
     # come through `model_validate` automatically like the other fields
     # here. Callers (see `_studio_summary()` in `api/routes/studios.py`)
