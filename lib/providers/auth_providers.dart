@@ -139,8 +139,13 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   /// Grabs the current FCM token from Firebase and syncs it to the backend.
   /// Must be called after a valid auth token exists in [ApiClient].
   void _syncFcmToken() {
-    final apiClient = ref.read(apiClientProvider);
-    PushNotificationService.instance.syncFcmToken(apiClient);
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      PushNotificationService.instance.syncFcmToken(apiClient);
+    } catch (e) {
+      // Firebase might not be initialized (e.g. missing iOS config).
+      // We shouldn't fail the whole login just because push notifications can't be set up.
+    }
   }
 
   /// POST /auth/login. [role] disambiguates when this email is

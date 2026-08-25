@@ -159,13 +159,11 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Studio Info Header Area
-              Transform.translate(
-                offset: const Offset(0, -40), // slightly higher to overlap well
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              Padding(
+                padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.md, top: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       // Studio Logo
                       Container(
                         width: 80,
@@ -326,7 +324,6 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                     ],
                   ),
                 ),
-              ),
             ],
           ),
         ),
