@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -95,6 +96,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     return Scaffold(
       
       body: NestedScrollView(
+        clipBehavior: Clip.none,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
@@ -115,13 +117,10 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                 IconButton(
                   icon: const Icon(Icons.share_rounded),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Copied ${studio.name} profile link!'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.primary,
-                      ),
-                    );
+                    // Create a shareable URL or deep link for the studio
+                    // For now, share a descriptive text with a placeholder link
+                    final shareText = 'Check out ${studio.name} on PicGallery!\n\nhttps://picgallery.app/studio/${studio.id}';
+                    Share.share(shareText);
                   },
                 ),
               ],
@@ -155,12 +154,13 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         },
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
+          clipBehavior: Clip.none,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Studio Info Header Area
               Transform.translate(
-                offset: const Offset(0, -30),
+                offset: const Offset(0, -40), // slightly higher to overlap well
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: Column(
