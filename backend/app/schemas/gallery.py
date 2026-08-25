@@ -642,14 +642,19 @@ class MediaLikeRead(BaseModel):
     media_id: uuid.UUID
     user_id: uuid.UUID
     created_at: datetime
+    
+    # Resolved on read: the like author's display name. Filled by
+    # the route, never stored on this model.
+    user_full_name: str = ""
 
     @classmethod
-    def from_model(cls, like) -> "MediaLikeRead":
+    def from_model(cls, like, user_full_name: str = "") -> "MediaLikeRead":
         return cls(
             id=like.id,
             media_id=like.media_id,
             user_id=like.user_id,
             created_at=like.created_at,
+            user_full_name=user_full_name,
         )
 
 

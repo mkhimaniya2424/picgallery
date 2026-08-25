@@ -899,11 +899,14 @@ def list_likes(
     """
     _get_accessible_media(db, media_id, current_user)
 
-    likes = db.execute(
-        select(MediaLike).where(MediaLike.media_id == media_id).order_by(MediaLike.created_at.desc())
-    ).scalars().all()
+    rows = db.execute(
+        select(MediaLike, User)
+        .join(User, MediaLike.user_id == User.id)
+        .where(MediaLike.media_id == media_id)
+        .order_by(MediaLike.created_at.desc())
+    ).all()
 
-    return [MediaLikeRead.from_model(l) for l in likes]
+    return [MediaLikeRead.from_model(l, user_full_name=u.full_name) for l, u in rows]
 
 
 # ---------------------------------------------------------------------------

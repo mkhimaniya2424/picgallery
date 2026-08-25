@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
 import '../models/media_comment.dart';
+import '../models/media_like.dart';
 import '../models/media_model.dart';
 import '../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
 import '../storage/media_likes_comments_local_store.dart';
@@ -50,16 +51,20 @@ class MediaLikesCommentsController extends ChangeNotifier {
   final Map<String, ({bool liked, int count})> _likeStates = {};
 
   final List<MediaComment> _comments = [];
+  final List<MediaLike> _likes = [];
 
   /// mediaIds whose comments have already been requested at least once —
   /// lets callers (e.g. [MediaDetailsScreen]'s `Consumer`, which re-runs
   /// its builder on every rebuild) avoid re-triggering [fetchComments]
   /// every single build.
   final Set<String> _fetchedCommentsFor = {};
+  final Set<String> _fetchedLikesFor = {};
 
   /// Whether [fetchComments] has already been called for [mediaId] this
   /// session — check this before calling it again from a `build` method.
   bool hasFetchedComments(String mediaId) => _fetchedCommentsFor.contains(mediaId);
+
+  bool hasFetchedLikes(String mediaId) => _fetchedLikesFor.contains(mediaId);
 
   // -------------------------------------------------------------------
   // Likes
@@ -114,8 +119,35 @@ class MediaLikesCommentsController extends ChangeNotifier {
     } catch (e) {
       _likeStates[mediaId] = current;
       _lastError = e.toString();
+      _lastError = e.toString();
     }
     notifyListeners();
+  }
+
+  List<MediaLike> likesForMedia(String mediaId) =>
+      _likes.where((l) => l.mediaId == mediaId).toList(growable: false);
+
+  Future<void> fetchLikes(String mediaId) async {
+    _fetchedLikesFor.add(mediaId);
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.get('/media/$mediaId/likes');
+      final list = response as List<dynamic>;
+      _likes.removeWhere((l) => l.mediaId == mediaId);
+      _likes.addAll(
+        list
+            .map((e) => MediaLike.fromApiJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+      _lastError = null;
+    } catch (e) {
+      _lastError = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // -------------------------------------------------------------------

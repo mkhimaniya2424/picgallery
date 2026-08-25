@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -15,6 +16,12 @@ import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/inputs/custom_text_field.dart';
+import '../../services/download_service_impl.dart';
+import '../../services/media_file_cache.dart';
+import '../../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+
+const _gridFileCache = MediaFileCache();
+const _gridDownloadService = DownloadServiceImpl();
 
 /// A guest's view of a shared album — reached either via a
 /// `picgallery://shared/{token}` deep link (real client scanning the
@@ -40,6 +47,23 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePasscode = true;
+  final Set<String> _selectedIds = {};
+
+  bool get _isSelectionMode => _selectedIds.isNotEmpty;
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() => _selectedIds.clear());
+  }
 
   @override
   void dispose() {
@@ -351,6 +375,50 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                 ),
         ],
       ),
+      floatingActionButton: _isSelectionMode && data.allowDownload
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final ids = _selectedIds.toList(growable: false);
+                _clearSelection();
+                if (ids.isEmpty) return;
+
+                // For web/mobile downloading, loop through ids and download individually.
+                final apiClient = ref.read(apiClientProvider);
+                for (final id in ids) {
+                  final m = albumMedia.firstWhere((x) => x.id == id, orElse: () => albumMedia.first);
+                  if (m.id != id) continue; // Not found
+
+                  if (kIsWeb) {
+                    final result = await _gridFileCache.bytesFor(m);
+                    if (result == null) continue;
+                    if (!context.mounted) continue;
+                    await _gridDownloadService.downloadBytes(
+                      context: context,
+                      bytes: result.bytes,
+                      fileName: result.fileName,
+                      mediaId: m.id,
+                      apiClient: apiClient,
+                      isClientUser: true,
+                    );
+                  } else {
+                    final filePath = await _gridFileCache.localPathFor(m);
+                    if (filePath == null) continue;
+                    if (!context.mounted) continue;
+                    await _gridDownloadService.downloadOriginal(
+                      context: context,
+                      filePath: filePath,
+                      mediaId: m.id,
+                      apiClient: apiClient,
+                      isClientUser: true,
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.download_rounded),
+              label: Text('Download ${_selectedIds.length} items'),
+              backgroundColor: AppColors.primary,
+            )
+          : null,
     );
   }
 
@@ -450,6 +518,10 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
 
     return GestureDetector(
       onTap: () {
+        if (_isSelectionMode) {
+          _toggleSelection(m.id);
+          return;
+        }
         // mediaItems is passed explicitly (rather than relying on
         // mediaProvider) because this media belongs to a studio the
         // guest doesn't own/isn't signed in as — mediaProvider would be
@@ -485,6 +557,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
           );
         }
       },
+      onLongPress: () => _toggleSelection(m.id),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: Stack(
@@ -532,6 +605,15 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                       ),
                     ),
                   ),
+                ),
+              ),
+            if (_selectedIds.contains(m.id))
+              Positioned.fill(
+                child: Container(
+                  color: AppColors.primary.withOpacity(0.3),
+                  alignment: Alignment.topLeft,
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(Icons.check_circle_rounded, color: Colors.white),
                 ),
               ),
           ],

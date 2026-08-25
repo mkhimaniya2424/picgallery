@@ -482,15 +482,34 @@ class MediaDetailsScreen extends ConsumerWidget {
                     ref.read(mediaLikesCommentsProvider).fetchComments(media.id);
                   });
                 }
+                if (!lc.hasFetchedLikes(media.id)) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ref.read(mediaLikesCommentsProvider).fetchLikes(media.id);
+                  });
+                }
+                
+                final likes = lc.likesForMedia(media.id);
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MediaLikeButton(
-                      liked: likeState.liked,
-                      likeCount: likeState.count,
-                      onToggle: () => lc.toggleLike(media.id),
+                    Row(
+                      children: [
+                        MediaLikeButton(
+                          liked: likeState.liked,
+                          likeCount: likeState.count,
+                          onToggle: () => lc.toggleLike(media.id),
+                        ),
+                      ],
                     ),
+                    if (likes.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                        child: Text(
+                          'Liked by: ${likes.map((l) => l.userFullName).join(', ')}',
+                          style: TextStyle(color: AppColors.subtitle, fontSize: 12),
+                        ),
+                      ),
                     const Divider(height: 24),
                     MediaCommentsSection(
                       comments: lc.commentsForMedia(media.id),

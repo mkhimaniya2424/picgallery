@@ -24,6 +24,7 @@ import '../../widgets/media/media_comments_section.dart';
 import 'media_batch_workflows.dart';
 import '../../providers/share_link_provider.dart';
 import '../../providers/media_likes_comments_provider.dart';
+import '../../widgets/media/media_like_button.dart';
 
 const _viewerFileCache = MediaFileCache();
 
@@ -789,40 +790,53 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                         label: 'Save',
                                         onTap: downloadCurrent,
                                       ),
-                                    if (widget.shareLinkId == null)
-                                      Consumer(builder: (context, ref, _) {
-                                        final lc =
-                                            ref.watch(mediaLikesCommentsProvider);
-                                        lc.seedLikeState(current);
-                                        final likeState =
-                                            lc.likeStateFor(current.id);
-                                        return Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            _ActionChip(
-                                              icon: likeState.liked
-                                                  ? Icons.favorite_rounded
-                                                  : Icons.favorite_border_rounded,
-                                              iconColor: likeState.liked
-                                                  ? AppColors.accent
-                                                  : null,
-                                              label: likeState.count > 0
-                                                  ? '${likeState.count}'
-                                                  : 'Like',
-                                              onTap: () =>
-                                                  lc.toggleLike(current.id),
-                                            ),
-                                            const SizedBox(
-                                                width: AppSpacing.xs + 2),
-                                            _ActionChip(
-                                              icon: Icons.mode_comment_outlined,
-                                              label: 'Comments',
-                                              onTap: () =>
-                                                  _openComments(current),
-                                            ),
-                                          ],
-                                        );
-                                      }),
+                                    // Allow likes/comments regardless of shareLinkId.
+                                    // The user must be authenticated to like/comment, but we handle
+                                    // that by checking if they have an active session (which the 
+                                    // backend requires for /like and /comments).
+                                    Consumer(builder: (context, ref, _) {
+                                      final lc =
+                                          ref.watch(mediaLikesCommentsProvider);
+                                      lc.seedLikeState(current);
+                                      final likeState =
+                                          lc.likeStateFor(current.id);
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          MediaLikeButton(
+                                            liked: likeState.liked,
+                                            likeCount: likeState.count,
+                                            onToggle: () {
+                                              final auth = ref.read(authStateProvider);
+                                              if (auth.user == null) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Please log in or create an account to like photos.'))
+                                                );
+                                                return;
+                                              }
+                                              lc.toggleLike(current.id);
+                                            },
+                                          ),
+                                          const SizedBox(width: AppSpacing.sm),
+                                          _ActionChip(
+                                            icon: Icons.chat_bubble_outline_rounded,
+                                            label: current.commentCount > 0
+                                                ? '${current.commentCount}'
+                                                : 'Comment',
+                                            onTap: () {
+                                              final auth = ref.read(authStateProvider);
+                                              if (auth.user == null) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Please log in or create an account to comment.'))
+                                                );
+                                                return;
+                                              }
+                                              _openComments(current);
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    }),
                                     if (!widget.readOnly) ...[
                                       _ActionChip(
                                         icon: Icons.drive_file_move_rounded,

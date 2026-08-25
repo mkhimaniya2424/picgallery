@@ -4,12 +4,14 @@ class MediaLike {
   final String id;
   final String mediaId;
   final String userId;
+  final String userFullName;
   final DateTime createdAt;
 
   const MediaLike({
     required this.id,
     required this.mediaId,
     required this.userId,
+    this.userFullName = '',
     required this.createdAt,
   });
 
@@ -17,12 +19,14 @@ class MediaLike {
     String? id,
     String? mediaId,
     String? userId,
+    String? userFullName,
     DateTime? createdAt,
   }) {
     return MediaLike(
       id: id ?? this.id,
       mediaId: mediaId ?? this.mediaId,
       userId: userId ?? this.userId,
+      userFullName: userFullName ?? this.userFullName,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -31,6 +35,7 @@ class MediaLike {
         'id': id,
         'mediaId': mediaId,
         'userId': userId,
+        'userFullName': userFullName,
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -43,6 +48,7 @@ class MediaLike {
       id: json['id'] as String? ?? '',
       mediaId: json['mediaId'] as String? ?? '',
       userId: json['userId'] as String? ?? '',
+      userFullName: json['userFullName'] as String? ?? '',
       createdAt: createdAt,
     );
   }
@@ -53,6 +59,7 @@ class MediaLike {
       id: json['id'] as String,
       mediaId: json['media_id'] as String,
       userId: json['user_id'] as String,
+      userFullName: json['user_full_name'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
