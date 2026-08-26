@@ -30,7 +30,17 @@ class PushNotificationPermissionScreen extends ConsumerWidget {
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
     final granted = await PermissionService.instance.checkAndRequestNotificationPermission();
     try {
-      await ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: granted);
+      final updated = await ref
+          .read(authRepositoryProvider)
+          .updatePermissions(pushNotificationsEnabled: granted);
+      // Without this, the PUT succeeds server-side but the app's cached
+      // AppUser (authProvider) still holds the pre-onboarding value —
+      // so Notification Settings shows the toggle OFF right after
+      // onboarding even when the user just granted permission, until
+      // something else (pull-to-refresh, editing the profile) happens
+      // to call refreshMe(). Same fix applies to camera/photo-library
+      // permission screens, which have the identical discard pattern.
+      ref.read(authProvider.notifier).setUser(updated);
     } on ApiException {
       // Best-effort — finish regardless, same as "Not Now".
     }

@@ -39,8 +39,8 @@ class AppStrings {
   static const String appName = 'picgallery';
   static const String tagline = 'Store • Manage • Share Memories';
 
-  /// Shown in the Studio Drawer footer. Swap for `package_info_plus`'s
-  /// `PackageInfo.fromPlatform()` once that dependency is added to the
-  /// project, so this always matches the shipped build number.
-  static const String appVersion = 'v1.0.0';
+  // App version is no longer hardcoded here — it's read at runtime from
+  // the platform via `packageInfoProvider` / `appVersionLabelProvider`
+  // (see providers/app_info_provider.dart), so it always matches the
+  // shipped build instead of drifting out of sync.
 }

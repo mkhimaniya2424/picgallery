@@ -164,6 +164,11 @@ class UserUpdate(BaseModel):
     allow_downloads: bool | None = None
     private_profile: bool | None = None
 
+    # Notification Settings screen — "Push Notifications" and "Email Notifications" toggles.
+    # Shared by both roles. Persisted server-side for cross-device consistency.
+    push_notifications_enabled: bool | None = None
+    email_notifications_enabled: bool | None = None
+
     # App Settings screen — "App Language" picker. Shared by both roles.
     app_language: str | None = Field(default=None, max_length=30)
 

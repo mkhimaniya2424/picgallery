@@ -5,7 +5,11 @@ class SettingsModel {
   final String studioId;
   final String clientId;
   final bool emailNotifications;
-  final bool pushNotifications;
+  // Formerly a device-local (Hive) toggle for push notifications. Push
+  // and Email Notifications are both handled server-side now via
+  // User.pushNotificationsEnabled / User.emailNotificationsEnabled
+  // (see AppPermissionsScreen), so this local mirror was unused and
+  // has been removed.
   // final bool smsAlerts;
   final bool securityPinEnabled;
   final String securityPin;
@@ -26,7 +30,6 @@ class SettingsModel {
     this.studioId = '',
     this.clientId = '',
     this.emailNotifications = true,
-    this.pushNotifications = true,
     // this.smsAlerts = false,
     this.securityPinEnabled = false,
     this.securityPin = '',
@@ -47,7 +50,6 @@ class SettingsModel {
     String? studioId,
     String? clientId,
     bool? emailNotifications,
-    bool? pushNotifications,
     // bool? smsAlerts,
     bool? securityPinEnabled,
     String? securityPin,
@@ -66,7 +68,6 @@ class SettingsModel {
     studioId: studioId ?? this.studioId,
     clientId: clientId ?? this.clientId,
     emailNotifications: emailNotifications ?? this.emailNotifications,
-    pushNotifications: pushNotifications ?? this.pushNotifications,
     // smsAlerts: smsAlerts ?? this.smsAlerts,
     securityPinEnabled: securityPinEnabled ?? this.securityPinEnabled,
     securityPin: securityPin ?? this.securityPin,
@@ -87,7 +88,6 @@ class SettingsModel {
     'studioId': studioId,
     'clientId': clientId,
     'emailNotifications': emailNotifications,
-    'pushNotifications': pushNotifications,
     // 'smsAlerts': smsAlerts,
     'securityPinEnabled': securityPinEnabled,
     'securityPin': securityPin,
@@ -108,7 +108,6 @@ class SettingsModel {
     studioId: json['studioId'] as String? ?? '',
     clientId: json['clientId'] as String? ?? '',
     emailNotifications: json['emailNotifications'] as bool? ?? true,
-    pushNotifications: json['pushNotifications'] as bool? ?? true,
     // smsAlerts: json['smsAlerts'] as bool? ?? false,
     securityPinEnabled: json['securityPinEnabled'] as bool? ?? false,
     securityPin: json['securityPin'] as String? ?? '',

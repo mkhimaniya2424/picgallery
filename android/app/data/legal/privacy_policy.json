@@ -1,0 +1,48 @@
+{
+  "last_updated": "2026-07-01",
+  "intro_title": "Privacy Policy",
+  "intro_paragraphs": [
+    "This Privacy Policy explains how picgallery collects, uses, and protects information when you use the application.",
+    "We aim to keep your data safe and to give you clear controls over your preferences."
+  ],
+  "sections": [
+    {
+      "title": "Information We Collect",
+      "paragraphs": [
+        "We may collect account information (e.g., name and email), usage data, and content-related metadata you generate within the app.",
+        "For studio owners, we may also collect studio profile details to enable discovery and contact."
+      ],
+      "bullets": [
+        "Account profile information",
+        "Device and usage analytics (non-identifying)",
+        "Content and interaction metadata"
+      ]
+    },
+    {
+      "title": "How We Use Information",
+      "paragraphs": [
+        "We use information to operate the service, personalize experiences, and improve performance and reliability.",
+        "We may also use information to communicate with you about support requests and account changes."
+      ],
+      "bullets": []
+    },
+    {
+      "title": "Security",
+      "paragraphs": [
+        "We use reasonable technical and organizational measures designed to protect information.",
+        "However, no method of transmission or storage is completely secure."
+      ],
+      "bullets": [
+        "Access controls and monitoring",
+        "Encryption in transit where appropriate"
+      ]
+    },
+    {
+      "title": "Contact",
+      "paragraphs": [
+        "Questions or requests related to privacy can be sent to support."
+      ],
+      "bullets": []
+    }
+  ]
+}

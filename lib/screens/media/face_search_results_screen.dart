@@ -47,7 +47,6 @@ class FaceSearchResultsScreen extends ConsumerWidget {
     final results = state.searchResults;
 
     return Scaffold(
-      
       appBar: CustomAppBar(
         title: 'Face Search Results',
         showBack: true,

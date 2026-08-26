@@ -1,0 +1,51 @@
+{
+  "last_updated": "2026-07-01",
+  "faq_sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "question": "How do I create a profile?",
+          "answer": "Open Profile and complete your account details. If you're a studio owner, add your studio information too."
+        },
+        {
+          "question": "Where can I find my collections?",
+          "answer": "Go to Collections from your Profile menu. You can create and manage collections from there."
+        }
+      ]
+    },
+    {
+      "title": "Account & Security",
+      "items": [
+        {
+          "question": "How do privacy settings work?",
+          "answer": "Use Privacy & Security in your Profile to adjust what information is shown and how your activity is handled."
+        },
+        {
+          "question": "I forgot my password",
+          "answer": "Use the \"Forgot Password\" option on the login screen to reset using your email."
+        }
+      ]
+    },
+    {
+      "title": "Troubleshooting",
+      "items": [
+        {
+          "question": "App is slow or stuck",
+          "answer": "Try restarting the app. If the issue continues, contact support and include your device model and app version."
+        }
+      ]
+    }
+  ],
+  "contact": {
+    "title": "Contact Support",
+    "email": "support@picgallery.example",
+    "phone": "+1 (555) 010-2030",
+    "actions": [
+      { "label": "Email us", "payload": "support@picgallery.example", "type": "email" },
+      { "label": "Call support", "payload": "+1 (555) 010-2030", "type": "phone" },
+      { "label": "Copy email", "payload": "support@picgallery.example", "type": "copy" }
+    ]
+  }
+}
+      

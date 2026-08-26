@@ -6,17 +6,25 @@ import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/user_providers.dart';
 import '../../widgets/common/app_toast.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/screen_backdrop.dart';
 import '../../services/permission_service.dart';
 
-/// Read/write view of the three permission flags the onboarding
-/// screens (`camera_permission_screen.dart`, etc.) originally set —
-/// lets the user come back later and see/change what they granted,
-/// instead of those flags only ever being set once during onboarding
-/// and never visible again.
+/// Read/write view of the three OS permission flags the onboarding
+/// screens (`camera_permission_screen.dart`, etc.) originally set, plus
+/// the Email Notifications preference — lets the user come back later
+/// and see/change what they granted, instead of those flags only ever
+/// being set once during onboarding and never visible again.
+///
+/// Email Notifications was moved here from the old (now removed)
+/// Notification Settings screen so every notification-related toggle
+/// lives in one place. Unlike the other three rows it's a pure
+/// server-side preference with no matching OS permission, so it's
+/// wired straight to `UserRepository.updateProfile` (PATCH /users/me)
+/// with no `requestPermission` step.
 ///
 /// Same real `PUT /auth/permissions` endpoint as onboarding (only the
 /// one flag that changed is sent). NOTE: toggling a switch here still
@@ -40,8 +48,8 @@ class AppPermissionsScreen extends ConsumerStatefulWidget {
 
 class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
   /// Which permission (if any) has an update in flight — 'camera' |
-  /// 'photos' | 'push' | null — so only the row being changed shows a
-  /// spinner and the others stay interactive.
+  /// 'photos' | 'push' | 'email' | null — so only the row being changed
+  /// shows a spinner and the others stay interactive.
   String? _updating;
 
   Future<void> _toggle({
@@ -90,7 +98,7 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'These reflect what you allowed during setup — flip any of them here instead.',
+                      'Device permissions and notification preferences, all in one place.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -136,6 +144,26 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
                         call: (finalV) => ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: finalV),
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    _PermissionCard(
+                      icon: Icons.email_outlined,
+                      title: 'Email Notifications',
+                      description: 'Receive booking, gallery, and account emails.',
+                      granted: user.emailNotificationsEnabled,
+                      grantedLabel: 'Enabled',
+                      notGrantedLabel: 'Disabled',
+                      isUpdating: _updating == 'email',
+                      // No `requestPermission` — this is a pure server-side
+                      // preference, not an OS permission, so `_toggle` skips
+                      // straight to `call` with the raw switch value.
+                      onChanged: (v) => _toggle(
+                        key: 'email',
+                        value: v,
+                        requestPermission: null,
+                        call: (finalV) =>
+                            ref.read(userRepositoryProvider).updateProfile(emailNotificationsEnabled: finalV),
+                      ),
+                    ),
                   ],
                 ),
         ),
@@ -151,6 +179,8 @@ class _PermissionCard extends StatelessWidget {
   final bool granted;
   final bool isUpdating;
   final ValueChanged<bool> onChanged;
+  final String grantedLabel;
+  final String notGrantedLabel;
 
   const _PermissionCard({
     required this.icon,
@@ -159,6 +189,8 @@ class _PermissionCard extends StatelessWidget {
     required this.granted,
     required this.isUpdating,
     required this.onChanged,
+    this.grantedLabel = 'Granted',
+    this.notGrantedLabel = 'Not Granted',
   });
 
   @override
@@ -230,7 +262,7 @@ class _PermissionCard extends StatelessWidget {
                             : null,
                       ),
                       child: Text(
-                        granted ? 'Granted' : 'Not Granted',
+                        granted ? grantedLabel : notGrantedLabel,
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,

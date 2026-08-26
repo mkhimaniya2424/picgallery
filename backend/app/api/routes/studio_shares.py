@@ -137,7 +137,8 @@ def share_album(
                 subtitle=body,
                 data={"album_id": str(album.id)}
             ))
-            if client.fcm_token:
+            # Gated on the client's push_notifications_enabled toggle.
+            if client.fcm_token and client.push_notifications_enabled:
                 send_push_notification(
                     token=client.fcm_token,
                     title=title,
@@ -205,7 +206,8 @@ def share_folder(
                 subtitle=body,
                 data={"folder_id": str(folder.id)}
             ))
-            if client.fcm_token:
+            # Gated on the client's push_notifications_enabled toggle.
+            if client.fcm_token and client.push_notifications_enabled:
                 send_push_notification(
                     token=client.fcm_token,
                     title=title,

@@ -74,10 +74,16 @@ class AppUser {
   final bool cameraPermissionGranted;
   final bool photoLibraryPermissionGranted;
   final bool pushNotificationsEnabled;
+  final bool emailNotificationsEnabled;
 
   /// Privacy & Security screen — "Download Permissions" toggle. Whether
   /// this user allows their galleries/media to be downloaded.
   final bool allowDownloads;
+
+  /// Privacy & Security screen — "Account Privacy" toggle. Controls
+  /// profile visibility for both studios and clients (`private_profile`
+  /// on the backend).
+  final bool privateProfile;
 
   /// App Settings screen — "App Language" picker (e.g. "English",
   /// "Hindi", "Spanish"). Shared by both roles.
@@ -156,7 +162,9 @@ class AppUser {
     required this.cameraPermissionGranted,
     required this.photoLibraryPermissionGranted,
     required this.pushNotificationsEnabled,
+    this.emailNotificationsEnabled = true,
     required this.allowDownloads,
+    this.privateProfile = false,
     this.appLanguage = 'English',
     required this.createdAt,
     this.yearEstablished,
@@ -207,7 +215,9 @@ class AppUser {
       cameraPermissionGranted: json['camera_permission_granted'] as bool,
       photoLibraryPermissionGranted: json['photo_library_permission_granted'] as bool,
       pushNotificationsEnabled: json['push_notifications_enabled'] as bool,
+      emailNotificationsEnabled: json['email_notifications_enabled'] as bool? ?? true,
       allowDownloads: json['allow_downloads'] as bool,
+      privateProfile: json['private_profile'] as bool? ?? false,
       appLanguage: json['app_language'] as String? ?? 'English',
       createdAt: DateTime.parse(json['created_at'] as String),
       yearEstablished: json['year_established'] as int?,
@@ -258,7 +268,9 @@ class AppUser {
       'camera_permission_granted': cameraPermissionGranted,
       'photo_library_permission_granted': photoLibraryPermissionGranted,
       'push_notifications_enabled': pushNotificationsEnabled,
+      'email_notifications_enabled': emailNotificationsEnabled,
       'allow_downloads': allowDownloads,
+      'private_profile': privateProfile,
       'app_language': appLanguage,
       'created_at': createdAt.toIso8601String(),
       'year_established': yearEstablished,
@@ -307,7 +319,9 @@ class AppUser {
     bool? cameraPermissionGranted,
     bool? photoLibraryPermissionGranted,
     bool? pushNotificationsEnabled,
+    bool? emailNotificationsEnabled,
     bool? allowDownloads,
+    bool? privateProfile,
     String? appLanguage,
     DateTime? createdAt,
     int? yearEstablished,
@@ -355,7 +369,9 @@ class AppUser {
       photoLibraryPermissionGranted:
           photoLibraryPermissionGranted ?? this.photoLibraryPermissionGranted,
       pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
       allowDownloads: allowDownloads ?? this.allowDownloads,
+      privateProfile: privateProfile ?? this.privateProfile,
       appLanguage: appLanguage ?? this.appLanguage,
       createdAt: createdAt ?? this.createdAt,
       yearEstablished: yearEstablished ?? this.yearEstablished,

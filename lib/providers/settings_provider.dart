@@ -23,6 +23,13 @@ class SettingsNotifier extends Notifier<SettingsModel> {
     }
   }
 
+  /// Persists a settings change locally. Used for every device-local
+  /// preference (upload quality, theme, language, gallery view mode,
+  /// PIN lock, etc.) — anything server-backed (Push/Email
+  /// Notifications) is instead written straight to the server via
+  /// [UserRepository.updateProfile] / [AuthRepository.updatePermissions]
+  /// from `AppPermissionsScreen`, with [authProvider] as the source of
+  /// truth, not this local store.
   Future<void> updateSettings(SettingsModel newSettings) async {
     state = newSettings;
     await _store.save(newSettings.toJson());

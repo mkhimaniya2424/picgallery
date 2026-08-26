@@ -10,7 +10,7 @@ db.add(Notification(...)) below.)
 
 Thresholds (days remaining):
     trial            -> [1]
-    pro / premium    -> [30, 7, 1]
+    pro / premium    -> [30, 7, 5, 1]
 
 `User.last_reminder_days` tracks the most urgent (smallest) threshold
 already reminded for on the CURRENT plan cycle. `pricing.php`'s
@@ -20,7 +20,13 @@ so a fresh cycle always starts able to send every threshold again.
 Safe to re-run as often as you like (designed to run daily via cron —
 see Step 5 for the exact crontab line): a threshold is only ever
 reminded once per cycle, and per-user failures are logged and skipped
-rather than aborting the whole run.
+rather than aborting the whole run. Each user's Notification row +
+`last_reminder_days` update is committed individually (not batched
+into one commit at the end) specifically so that a later user's
+failure can never roll back an earlier user's already-successful
+reminder — `db.rollback()` reverts the *whole* pending transaction,
+not just the most recent change, so batching them would have silently
+discarded every prior user's reminder the moment any one user failed.
 
 Usage (from the `backend` directory, with the venv active):
 
@@ -64,7 +70,7 @@ def _days_remaining(plan_expiry: datetime) -> int:
     return math.ceil(delta_seconds / 86400)
 
 
-def _threshold_to_remind(plan: str, days_remaining: int, last_reminder _days: int | None) -> int | None:
+def _threshold_to_remind(plan: str, days_remaining: int, last_reminder_days: int | None) -> int | None:
     """Returns the threshold to send a reminder for right now, or None
     if nothing is due. Picks the most urgent (smallest) threshold the
     user has reached that hasn't already been sent this cycle.
@@ -156,8 +162,35 @@ def send_plan_reminders(dry_run: bool = False) -> None:
                         },
                     )
                 )
-                
-                if user.fcm_token:
+                user.last_reminder_days = threshold
+
+                # Commit per-user, not once after the whole loop. A
+                # `db.rollback()` in the except block below reverts the
+                # *entire* pending transaction, not just the change that
+                # triggered it — so if the notification + last_reminder_days
+                # update for every prior user in this run were still
+                # sitting uncommitted when some later user blew up, they'd
+                # all be silently discarded even though this function
+                # already logged/counted them as "reminded". Committing
+                # here means a later user's failure can only ever roll
+                # back that one user's own uncommitted change.
+                db.commit()
+            except Exception:
+                # One bad row should never abort the whole run, and (as of
+                # the per-user commit above) never undoes another user's
+                # already-committed reminder either.
+                db.rollback()
+                logger.exception("Failed to process reminder for user %s — skipped.", user.id)
+                skipped += 1
+                continue
+
+            # Push is best-effort and deliberately outside the try/db.commit
+            # above: the in-app Notification row is already durably saved
+            # at this point, so a push failure (bad token, FCM outage,
+            # etc.) should never be treated as this user's reminder having
+            # failed, and must not trigger a rollback of anything.
+            try:
+                if user.fcm_token and user.push_notifications_enabled:
                     send_push_notification(
                         token=user.fcm_token,
                         title=title,
@@ -166,23 +199,15 @@ def send_plan_reminders(dry_run: bool = False) -> None:
                             "type": "reminder",
                             "current_plan": user.current_plan or "",
                             "days_remaining": str(days_remaining),
-                        }
+                        },
                     )
-
-
-                user.last_reminder_days = threshold
-                reminded += 1
             except Exception:
-                # One bad row should never abort the whole run — the
-                # DB session is rolled back for that user's change and
-                # every other user is still processed normally.
-                db.rollback()
-                logger.exception("Failed to process reminder for user %s — skipped.", user.id)
-                skipped += 1
-                continue
+                logger.exception(
+                    "Push notification failed for user %s (in-app notification was already saved).",
+                    user.id,
+                )
 
-        if not dry_run:
-            db.commit()
+            reminded += 1
 
         logger.info(
             "Done. %d reminded, %d skipped%s.",

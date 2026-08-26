@@ -39,13 +39,12 @@
   ],
   "contact": {
     "title": "Contact Support",
-    "email": "support@picgallery.example",
-    "phone": "+1 (555) 010-2030",
+    "email": "info@picgallery.in",
+    "phone": "+91 9662220012",
     "actions": [
-      { "label": "Email us", "payload": "support@picgallery.example", "type": "email" },
-      { "label": "Call support", "payload": "+1 (555) 010-2030", "type": "phone" },
-      { "label": "Copy email", "payload": "support@picgallery.example", "type": "copy" }
+      { "label": "Email us", "payload": "info@picgallery.in", "type": "email" },
+      { "label": "Call support", "payload": "+919662220012", "type": "phone" },
+      { "label": "Copy email", "payload": "info@picgallery.in", "type": "copy" }
     ]
   }
 }
-      

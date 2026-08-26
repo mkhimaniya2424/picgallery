@@ -30,7 +30,6 @@ class ProfileScreen extends ConsumerWidget {
     (icon: Icons.person_outline_rounded, label: 'Edit Profile'),
     (icon: Icons.favorite_rounded, label: 'Favorite Studios'),
     (icon: Icons.lock_outline_rounded, label: 'Privacy & Security'),
-    (icon: Icons.notifications_none_rounded, label: 'Notification Settings'),
     (icon: Icons.verified_user_outlined, label: 'App Permissions'),
     (icon: Icons.info_outline_rounded, label: 'About'),
     (icon: Icons.help_outline_rounded, label: 'Help & Support'),
@@ -50,8 +49,6 @@ class ProfileScreen extends ConsumerWidget {
           return l10n.editProfile;
         case 'Privacy & Security':
           return l10n.privacySecurity;
-        case 'Notification Settings':
-          return l10n.notifications;
         case 'About':
           return l10n.about;
         case 'Help & Support':
@@ -123,25 +120,21 @@ class ProfileScreen extends ConsumerWidget {
                           ? () => Navigator.of(context).pushNamed(
                                 AppRoutes.editProfile,
                               )
-                          : item.label == 'Notification Settings'
+                          : item.label == 'Privacy & Security'
                               ? () => Navigator.of(context).pushNamed(
-                                    '/profile/notifications',
+                                    '/profile/privacy',
                                   )
-                              : item.label == 'Privacy & Security'
+                              : item.label == 'App Permissions'
                                   ? () => Navigator.of(context).pushNamed(
-                                        '/profile/privacy',
+                                        AppRoutes.permissions,
                                       )
-                                  : item.label == 'App Permissions'
-                                      ? () => Navigator.of(context).pushNamed(
-                                            AppRoutes.permissions,
-                                          )
-                                      : item.label == 'About'
+                                  : item.label == 'About'
+                                      ? () => Navigator.of(context)
+                                          .pushNamed('/profile/about')
+                                      : item.label == 'Help & Support'
                                           ? () => Navigator.of(context)
-                                              .pushNamed('/profile/about')
-                                          : item.label == 'Help & Support'
-                                              ? () => Navigator.of(context)
-                                                  .pushNamed(AppRoutes.helpSupport)
-                                              : null,
+                                              .pushNamed(AppRoutes.helpSupport)
+                                          : null,
                 );
               }),
             ),

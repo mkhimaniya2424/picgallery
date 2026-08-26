@@ -58,6 +58,15 @@ class UserRepository {
     // Privacy & Security screen — "Download Permissions" toggle. Shared
     // by both roles.
     bool? allowDownloads,
+    // Privacy & Security screen — "Account Privacy" toggle. Shared by
+    // both roles.
+    bool? privateProfile,
+    // Notification Settings screen — "Push Notifications" toggle.
+    // Shared by both roles.
+    bool? pushNotificationsEnabled,
+    // Notification Settings screen — "Email Notifications" toggle.
+    // Shared by both roles.
+    bool? emailNotificationsEnabled,
     // App Settings screen — "App Language" picker. Shared by both roles.
     String? appLanguage,
   }) async {
@@ -95,6 +104,13 @@ class UserRepository {
     if (profilePhotoUrl != null) body['profile_photo_url'] = profilePhotoUrl;
     if (preferredPhotoTypes != null) body['preferred_photo_types'] = preferredPhotoTypes;
     if (allowDownloads != null) body['allow_downloads'] = allowDownloads;
+    if (privateProfile != null) body['private_profile'] = privateProfile;
+    if (pushNotificationsEnabled != null) {
+      body['push_notifications_enabled'] = pushNotificationsEnabled;
+    }
+    if (emailNotificationsEnabled != null) {
+      body['email_notifications_enabled'] = emailNotificationsEnabled;
+    }
     if (appLanguage != null) body['app_language'] = appLanguage;
 
     final json = await _apiClient.patch('/users/me', body: body);

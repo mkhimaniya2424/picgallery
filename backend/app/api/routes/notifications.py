@@ -103,7 +103,14 @@ def clear_notifications(
 def send_test_push_notification(
     current_user: User = Depends(get_current_user)
 ) -> dict:
-    """Sends a test push notification to the current user's registered FCM token."""
+    """Sends a test push notification to the current user's registered FCM token.
+
+    Deliberately NOT gated on `push_notifications_enabled` — this is a
+    user-initiated "does my device actually receive pushes" check from
+    Notification Settings, not an event-triggered notification, so it
+    should fire even while the toggle is off (e.g. to confirm FCM
+    wiring before turning notifications back on).
+    """
     if not current_user.fcm_token:
         raise HTTPException(status_code=400, detail="No push token registered for this user.")
         

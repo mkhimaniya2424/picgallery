@@ -68,9 +68,7 @@ import '../../screens/albums/collections_screen.dart';
 import '../../screens/albums/collection_details_screen.dart';
 import '../../screens/download_history/download_history_screen.dart';
 import '../../screens/client/invitations_screen.dart';
-import '../../screens/client/profile_settings/notification_settings_screen.dart';
 import '../../screens/client/profile_settings/privacy_settings_screen.dart';
-import '../../screens/client/profile_settings/language_selection_screen.dart';
 import '../../screens/client/profile_settings/about_screen.dart';
 import '../../screens/media/face_search_landing_screen.dart';
 import '../../screens/media/face_search_upload_screen.dart';
@@ -163,9 +161,7 @@ class AppRoutes {
   static const String invitations = '/invitations';
 
   // Client profile settings sub-screens
-  static const String profileNotificationSettings = '/profile/notifications';
   static const String profilePrivacySettings = '/profile/privacy';
-  static const String profileLanguage = '/profile/language';
   static const String profileAbout = '/profile/about';
 
   static const String notifications = '/notifications';
@@ -319,12 +315,8 @@ class AppRoutes {
         return _slide(const DownloadHistoryScreen());
       case invitations:
         return _slide(const InvitationsScreen());
-      case profileNotificationSettings:
-        return _slide(const NotificationSettingsScreen());
       case profilePrivacySettings:
         return _slide(const PrivacySettingsScreen());
-      case profileLanguage:
-        return _slide(const LanguageSelectionScreen());
       case profileAbout:
         return _slide(const AboutScreen());
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../providers/app_info_provider.dart';
 import '../../../widgets/common/custom_app_bar.dart';
 
 class AboutScreen extends ConsumerWidget {
@@ -11,9 +12,15 @@ class AboutScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // App version is stored as a constant in AppStrings.
-    // Keep it frontend-only.
-    const version = AppStrings.appVersion;
+    // App version is read live from the platform (package_info_plus)
+    // instead of a hardcoded constant, so it always matches the
+    // installed build.
+    final versionAsync = ref.watch(appVersionLabelProvider);
+    final version = versionAsync.when(
+      data: (value) => value,
+      loading: () => '…',
+      error: (_, __) => '',
+    );
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'About', showBack: true),
@@ -71,12 +78,6 @@ class AboutScreen extends ConsumerWidget {
               subtitle: 'Get help and view FAQs',
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.helpSupport),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _SectionTile(
-              icon: Icons.code_rounded,
-              title: 'Open Source Licenses',
-              subtitle: 'View open source licenses',
             ),
           ],
         ),
