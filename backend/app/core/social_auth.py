@@ -148,14 +148,15 @@ def verify_apple_identity_token(identity_token: str) -> SocialIdentity:
             identity_token,
             jwk,
             algorithms=[jwk.get("alg", "RS256")],
-            audience=settings.APPLE_CLIENT_IDS,
+            audience=settings.APPLE_CLIENT_IDS[0],
             issuer=APPLE_ISSUER,
             options={"verify_at_hash": False},
         )
     except JOSEError as exc:
+        logger.exception("APPLE TOKEN VERIFICATION FAILED")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired Apple sign-in token",
+            detail=f"Apple token verification failed: {type(exc).__name__}: {exc}",
         ) from exc
 
     if claims.get("exp", 0) < time.time():

@@ -24,6 +24,16 @@ final termsConditionsProvider = FutureProvider<TermsContent>((ref) {
   return ref.watch(legalRepositoryProvider).fetchTermsConditions();
 });
 
-final helpSupportProvider = FutureProvider<HelpSupportContent>((ref) {
-  return ref.watch(legalRepositoryProvider).fetchHelpSupport();
+/// Falls back to [helpSupportContentLocal] (bundled with the app) if the
+/// `/legal/help-support` request fails for any reason — no network, the
+/// backend is down, etc. Contact Support (mailto:/tel: buttons) should
+/// always work for a user trying to reach out for help, even when the
+/// thing they'd normally contact support about is "the app can't reach
+/// the server".
+final helpSupportProvider = FutureProvider<HelpSupportContent>((ref) async {
+  try {
+    return await ref.watch(legalRepositoryProvider).fetchHelpSupport();
+  } catch (_) {
+    return helpSupportContentLocal;
+  }
 });

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -26,9 +25,6 @@ class SocialAuthResult {
 class SocialAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: const ['email', 'profile'],
-    clientId: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-        ? '198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi.apps.googleusercontent.com'
-        : null,
     // serverClientId is REQUIRED on Android for google_sign_in to populate
     // the idToken. Must be the Web OAuth client ID (type 3) from
     // google-services.json — NOT the Android client ID. The backend
@@ -47,11 +43,7 @@ class SocialAuthService {
     // Google account, or simply wanting to switch accounts, without
     // having logged out first. Forcing a sign-out first guarantees
     // the native picker always appears.
-    try {
-      await _googleSignIn.signOut();
-    } catch (_) {
-      // Ignored if no user was signed in
-    }
+    await _googleSignIn.signOut();
     final GoogleSignInAccount? account = await _googleSignIn.signIn();
     if (account == null) throw SocialAuthCancelled();
 

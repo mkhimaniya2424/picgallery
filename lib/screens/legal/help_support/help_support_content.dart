@@ -151,22 +151,22 @@ const helpSupportContentLocal = HelpSupportContent(
   ],
   contact: SupportContact(
     title: 'Contact Support',
-    email: 'support@PicGallery.example',
-    phone: '+1 (555) 010-2030',
+    email: 'picgallery448@gmail.com',
+    phone: '+91 9662220012',
     actions: [
       SupportAction(
         label: 'Email us',
-        payload: 'support@PicGallery.example',
+        payload: 'picgallery448@gmail.com',
         type: SupportActionType.email,
       ),
       SupportAction(
         label: 'Call support',
-        payload: '+1 (555) 010-2030',
+        payload: '+919662220012',
         type: SupportActionType.phone,
       ),
       SupportAction(
         label: 'Copy email',
-        payload: 'support@PicGallery.example',
+        payload: 'picgallery448@gmail.com',
         type: SupportActionType.copy,
       ),
     ],
