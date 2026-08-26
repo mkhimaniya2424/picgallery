@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Thin, testable wrapper around [FlutterSecureStorage] for persisting the
@@ -12,6 +13,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// showing up as an Android "app isn't responding" dialog right after
 /// login). EncryptedSharedPreferences uses AES via Jetpack Security
 /// instead, which doesn't have this hang.
+///
+/// Uses `KeychainAccessibility.first_unlock` on iOS so Keychain items
+/// can be accessed reliably without throwing PlatformException (OSStatus -34018).
 class TokenStorage {
   static const String _tokenKey = 'auth_access_token';
   static const String _rememberMeKey = 'auth_remember_me';
@@ -20,22 +24,55 @@ class TokenStorage {
     encryptedSharedPreferences: true,
   );
 
+  static const IOSOptions _iosOptions = IOSOptions(
+    accessibility: KeychainAccessibility.first_unlock,
+  );
+
   final FlutterSecureStorage _storage;
 
   TokenStorage({FlutterSecureStorage? storage})
       : _storage = storage ??
-            const FlutterSecureStorage(aOptions: _androidOptions);
+            const FlutterSecureStorage(
+              aOptions: _androidOptions,
+              iOptions: _iosOptions,
+            );
 
   Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token, aOptions: _androidOptions);
+    try {
+      await _storage.write(
+        key: _tokenKey,
+        value: token,
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (e) {
+      debugPrint('TokenStorage: failed to save token: $e');
+    }
   }
 
   Future<String?> readToken() async {
-    return _storage.read(key: _tokenKey, aOptions: _androidOptions);
+    try {
+      return await _storage.read(
+        key: _tokenKey,
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (e) {
+      debugPrint('TokenStorage: failed to read token: $e');
+      return null;
+    }
   }
 
   Future<void> clearToken() async {
-    await _storage.delete(key: _tokenKey, aOptions: _androidOptions);
+    try {
+      await _storage.delete(
+        key: _tokenKey,
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (e) {
+      debugPrint('TokenStorage: failed to clear token: $e');
+    }
   }
 
   /// Persists the "Remember me" checkbox choice itself (separate from the
@@ -45,20 +82,42 @@ class TokenStorage {
   /// opted in to being remembered" from "opted in but the stored token is
   /// simply missing/expired".
   Future<void> saveRememberMe(bool rememberMe) async {
-    await _storage.write(
-      key: _rememberMeKey,
-      value: rememberMe.toString(),
-      aOptions: _androidOptions,
-    );
+    try {
+      await _storage.write(
+        key: _rememberMeKey,
+        value: rememberMe.toString(),
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (e) {
+      debugPrint('TokenStorage: failed to save rememberMe: $e');
+    }
   }
 
   /// Defaults to `false` (not remembered) if nothing has been saved yet.
   Future<bool> readRememberMe() async {
-    final value = await _storage.read(key: _rememberMeKey, aOptions: _androidOptions);
-    return value == 'true';
+    try {
+      final value = await _storage.read(
+        key: _rememberMeKey,
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+      return value == 'true';
+    } catch (e) {
+      debugPrint('TokenStorage: failed to read rememberMe: $e');
+      return false;
+    }
   }
 
   Future<void> clearRememberMe() async {
-    await _storage.delete(key: _rememberMeKey, aOptions: _androidOptions);
+    try {
+      await _storage.delete(
+        key: _rememberMeKey,
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (e) {
+      debugPrint('TokenStorage: failed to clear rememberMe: $e');
+    }
   }
 }
