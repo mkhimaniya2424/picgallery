@@ -31,7 +31,7 @@ Future<void> main() async {
   // Initialize Firebase (the user needs to provide google-services.json / GoogleService-Info.plist)
   try {
     await Firebase.initializeApp();
-    await PushNotificationService.instance.init(apiClient);
+    await PushNotificationService.instance.init(apiClient, navigatorKey);
   } catch (e) {
     debugPrint('Firebase initialization failed (missing config?): $e');
   }

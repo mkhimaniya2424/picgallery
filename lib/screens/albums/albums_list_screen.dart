@@ -136,6 +136,13 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
         showBack: false,
         actions: [
           IconButton(
+            tooltip: 'Manage Collections',
+            icon: const Icon(Icons.collections_bookmark_rounded),
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.collections);
+            },
+          ),
+          IconButton(
             tooltip: 'Manage Folders',
             icon: const Icon(Icons.folder_rounded),
             onPressed: () {

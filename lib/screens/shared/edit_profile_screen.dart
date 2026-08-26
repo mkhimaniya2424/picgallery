@@ -36,13 +36,14 @@ const List<String> kWeekDays = [
   'Sunday',
 ];
 
-/// Fixed option set for the Client Preferences "Gender" field.
-const List<String> kGenderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
-
 /// Edit Profile screen (Task 7): Personal Details (Name, read-only
 /// Country/State/City, plus (Task 8) role-specific sections —
 /// Studio Details + Social Media Links (Task 9) for photographer
 /// accounts, Preferences for client accounts — and a shared Bio field.
+/// Client Preferences only keeps Preferred Photo Types; Gender, Date of
+/// Birth, Preferred City, and Budget Min/Max were removed since they
+/// were never surfaced anywhere else in the app (unlike Preferred Photo
+/// Types, which studios see via `ClientSummary` on Connections).
 ///
 /// Loads the current user the same way `CompleteProfileScreen` does —
 /// prefer whatever's already cached in [authProvider], but force a
@@ -54,8 +55,8 @@ const List<String> kGenderOptions = ['Male', 'Female', 'Other', 'Prefer not to s
 /// `AuthNotifier.setUser()`, so every other screen watching the
 /// current user (e.g. the Profile tab's greeting) updates immediately.
 ///
-/// Standalone screen only, per Task 7 — nothing navigates here yet
-/// (`ProfileScreen`'s "Edit Profile" row is still a no-op).
+/// Reached from `ProfileScreen`'s "Edit Profile" row via
+/// `AppRoutes.editProfile`.
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -93,13 +94,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _youtubeController = TextEditingController();
   final _pinterestController = TextEditingController();
 
-  // Client-only fields (Task 8) — client role only.
-  String? _gender;
-  DateTime? _dateOfBirth;
+  // Client-only fields (Task 8) — client role only. Gender, Date of
+  // Birth, Preferred City, and Budget Min/Max were dropped: they were
+  // only ever shown back to the client themselves (never surfaced to
+  // studios or anywhere else in the app), unlike `preferredPhotoTypes`
+  // which studios do see via `ClientSummary` on the Connections screen.
   final Set<String> _preferredPhotoTypes = {};
-  final _preferredCityController = TextEditingController();
-  final _budgetMinController = TextEditingController();
-  final _budgetMaxController = TextEditingController();
 
   bool _seeded = false;
   bool _isSaving = false;
@@ -154,14 +154,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _youtubeController.text = user.youtubeUrl ?? '';
       _pinterestController.text = user.pinterestUrl ?? '';
     } else {
-      _gender = user.gender;
-      _dateOfBirth = user.dateOfBirth;
       _preferredPhotoTypes
         ..clear()
         ..addAll(user.preferredPhotoTypes ?? const []);
-      _preferredCityController.text = user.preferredCity ?? '';
-      _budgetMinController.text = user.budgetMin?.toString() ?? '';
-      _budgetMaxController.text = user.budgetMax?.toString() ?? '';
     }
 
     _seeded = true;
@@ -186,17 +181,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         uri.host.isNotEmpty &&
         uri.host.contains('.');
     return looksValid ? null : 'Enter a valid URL, e.g. https://instagram.com/yourstudio';
-  }
-
-  Future<void> _pickDateOfBirth() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dateOfBirth ?? DateTime(now.year - 18, now.month, now.day),
-      firstDate: DateTime(now.year - 100),
-      lastDate: now,
-    );
-    if (picked != null) setState(() => _dateOfBirth = picked);
   }
 
   Future<void> _handleSave() async {
@@ -230,12 +214,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             facebookUrl: isPhotographer ? _facebookController.text.trim() : null,
             youtubeUrl: isPhotographer ? _youtubeController.text.trim() : null,
             pinterestUrl: isPhotographer ? _pinterestController.text.trim() : null,
-            gender: !isPhotographer ? _gender : null,
-            dateOfBirth: !isPhotographer ? _dateOfBirth : null,
             preferredPhotoTypes: !isPhotographer ? _preferredPhotoTypes.toList() : null,
-            preferredCity: !isPhotographer ? _emptyToNull(_preferredCityController.text) : null,
-            budgetMin: !isPhotographer ? _parseDouble(_budgetMinController.text) : null,
-            budgetMax: !isPhotographer ? _parseDouble(_budgetMaxController.text) : null,
           );
       ref.read(authProvider.notifier).setUser(updated);
 
@@ -267,9 +246,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _facebookController.dispose();
     _youtubeController.dispose();
     _pinterestController.dispose();
-    _preferredCityController.dispose();
-    _budgetMinController.dispose();
-    _budgetMaxController.dispose();
     super.dispose();
   }
 
@@ -564,21 +540,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Gender', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
-        const SizedBox(height: AppSpacing.sm),
-        _SingleChoiceChips(
-          options: kGenderOptions,
-          selected: _gender,
-          onSelected: (v) => setState(() => _gender = v),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        _DateField(
-          label: 'Date of Birth',
-          icon: Icons.cake_outlined,
-          value: _dateOfBirth,
-          onTap: _pickDateOfBirth,
-        ),
-        const SizedBox(height: AppSpacing.lg),
         Text('Preferred Photo Types', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
@@ -606,34 +567,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             );
           }).toList(),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        CustomTextField(
-          label: 'Preferred City',
-          icon: Icons.location_city_rounded,
-          controller: _preferredCityController,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: CustomTextField(
-                label: 'Budget Min',
-                icon: Icons.currency_rupee,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                controller: _budgetMinController,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: CustomTextField(
-                label: 'Budget Max',
-                icon: Icons.currency_rupee,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                controller: _budgetMaxController,
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -642,8 +575,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 /// Single-select chip row — same visual language as the [FilterChip]
 /// multi-select pattern used for Specializations/Availability Days, but
 /// picking a new option deselects the previous one. Used for fields
-/// backed by a single nullable string (Studio Type, Gender) rather than
-/// a `List<String>`.
+/// backed by a single nullable string (Studio Type) rather than a
+/// `List<String>`.
 class _SingleChoiceChips extends StatelessWidget {
   final List<String> options;
   final String? selected;
@@ -675,45 +608,6 @@ class _SingleChoiceChips extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         );
       }).toList(),
-    );
-  }
-}
-
-/// Tappable, [CustomTextField]-styled field that opens [showDatePicker]
-/// instead of the keyboard — used for Date of Birth.
-class _DateField extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final DateTime? value;
-  final VoidCallback onTap;
-
-  const _DateField({required this.label, required this.icon, required this.value, required this.onTap});
-
-  String _format(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-          suffixIcon: Icon(Icons.calendar_month_rounded,
-              color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
-        ),
-        child: Text(
-          value != null ? _format(value!) : 'Select date',
-          style: TextStyle(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w500,
-            color: value != null
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
     );
   }
 }

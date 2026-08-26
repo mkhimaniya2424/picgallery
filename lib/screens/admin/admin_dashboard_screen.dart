@@ -232,7 +232,6 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                   child: StorageUsageCard(
                     usedLabel: _storageStat(snapshot).value,
                     totalLabel: '',
-                    percentUsed: _storagePercent(snapshot),
                     onTap: () => Navigator.of(context)
                         .pushNamed(AppRoutes.storageOverview),
                   ),
@@ -360,13 +359,6 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
   StatCardData _storageStat(AdminDashboardSnapshot snapshot) =>
       snapshot.stats.firstWhere((s) => s.label == 'Storage Used',
           orElse: () => snapshot.stats.first);
-
-  double _storagePercent(AdminDashboardSnapshot snapshot) {
-    final totalMedia =
-        snapshot.recentUploads.fold<int>(0, (sum, u) => sum + u.mediaCount);
-    final storageGb = totalMedia * 1.4 / 1000;
-    return storageGb / 1024;
-  }
 
   int _calculateCrossAxisCount(double width) {
     if (width < 600) return 2;

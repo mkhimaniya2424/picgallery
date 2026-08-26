@@ -21,11 +21,14 @@ import '../../widgets/cards/glass_card.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
+  // "Collections" and "Download History" removed: GET /collections and
+  // GET /download-history are studio-only (get_current_studio_user) and
+  // 403 for a client account — same reason they were already stripped
+  // from client_drawer.dart. Re-add if a client-scoped route ever
+  // exists for either.
   static const _menu = [
     (icon: Icons.person_outline_rounded, label: 'Edit Profile'),
-    (icon: Icons.collections_bookmark_rounded, label: 'Collections'),
     (icon: Icons.favorite_rounded, label: 'Favorite Studios'),
-    (icon: Icons.download_for_offline_rounded, label: 'Download History'),
     (icon: Icons.lock_outline_rounded, label: 'Privacy & Security'),
     (icon: Icons.notifications_none_rounded, label: 'Notification Settings'),
     (icon: Icons.verified_user_outlined, label: 'App Permissions'),
@@ -45,10 +48,6 @@ class ProfileScreen extends ConsumerWidget {
       switch (label) {
         case 'Edit Profile':
           return l10n.editProfile;
-        case 'Collections':
-          return l10n.collections;
-        case 'Download History':
-          return l10n.downloads;
         case 'Privacy & Security':
           return l10n.privacySecurity;
         case 'Notification Settings':
@@ -116,46 +115,33 @@ class ProfileScreen extends ConsumerWidget {
                 return _MenuRow(
                   icon: item.icon,
                   label: getMenuLabel(item.label),
-                  showDivider: i != _menu.length - 1,
-                  onTap: item.label == 'Collections'
+                  onTap: item.label == 'Favorite Studios'
                       ? () => Navigator.of(context).pushNamed(
-                            AppRoutes.collections,
+                            AppRoutes.favoriteStudios,
                           )
-                      : item.label == 'Favorite Studios'
+                      : item.label == 'Edit Profile'
                           ? () => Navigator.of(context).pushNamed(
-                                AppRoutes.favoriteStudios,
+                                AppRoutes.editProfile,
                               )
-                          : item.label == 'Download History'
-                          ? () => Navigator.of(context).pushNamed(
-                                AppRoutes.downloadHistory,
-                              )
-                          : item.label == 'Edit Profile'
+                          : item.label == 'Notification Settings'
                               ? () => Navigator.of(context).pushNamed(
-                                    AppRoutes.editProfile,
+                                    '/profile/notifications',
                                   )
-                              : item.label == 'Notification Settings'
+                              : item.label == 'Privacy & Security'
                                   ? () => Navigator.of(context).pushNamed(
-                                        '/profile/notifications',
+                                        '/profile/privacy',
                                       )
-                                  : item.label == 'Privacy & Security'
+                                  : item.label == 'App Permissions'
                                       ? () => Navigator.of(context).pushNamed(
-                                            '/profile/privacy',
+                                            AppRoutes.permissions,
                                           )
-                                      : item.label == 'App Permissions'
-                                          ? () => Navigator.of(context).pushNamed(
-                                                AppRoutes.permissions,
-                                              )
-                                          : item.label == 'About'
+                                      : item.label == 'About'
+                                          ? () => Navigator.of(context)
+                                              .pushNamed('/profile/about')
+                                          : item.label == 'Help & Support'
                                               ? () => Navigator.of(context)
-                                                      .pushNamed(
-                                                    '/profile/about',
-                                                  )
-                                              : item.label == 'Help & Support'
-                                                  ? () => Navigator.of(context)
-                                                          .pushNamed(
-                                                        AppRoutes.helpSupport,
-                                                      )
-                                                  : null,
+                                                  .pushNamed(AppRoutes.helpSupport)
+                                              : null,
                 );
               }),
             ),
@@ -169,7 +155,6 @@ class ProfileScreen extends ConsumerWidget {
               label: l10n.logOut,
               iconColor: AppColors.error,
               labelColor: AppColors.error,
-              showDivider: false,
               onTap: () async {
                 // Clear the real session (token + cached AppUser) *and*
                 // the locally-persisted identity fields — leaving
@@ -204,7 +189,6 @@ class ProfileScreen extends ConsumerWidget {
 class _MenuRow extends StatelessWidget {
   final IconData icon;
   final String label;
-  final bool showDivider;
   final Color? iconColor;
   final Color? labelColor;
   final VoidCallback? onTap;
@@ -212,7 +196,6 @@ class _MenuRow extends StatelessWidget {
   const _MenuRow({
     required this.icon,
     required this.label,
-    this.showDivider = true,
     this.iconColor,
     this.labelColor,
     this.onTap,
@@ -220,35 +203,30 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap ?? () {},
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: 14),
-            child: Row(
-              children: [
-                Icon(icon, size: 20, color: iconColor ?? AppColors.primary),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                        color: labelColor ?? Theme.of(context).colorScheme.onSurface),
-                  ),
-                ),
-                if (labelColor == null)
-                  Icon(Icons.chevron_right_rounded,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
-              ],
+    return InkWell(
+      onTap: onTap ?? () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: iconColor ?? AppColors.primary),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: labelColor ?? Theme.of(context).colorScheme.onSurface),
+              ),
             ),
-          ),
+            if (labelColor == null)
+              Icon(Icons.chevron_right_rounded,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
+          ],
         ),
-        if (showDivider) Divider(height: 1, color: Theme.of(context).dividerColor),
-      ],
+      ),
     );
   }
 }

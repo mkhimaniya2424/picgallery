@@ -634,7 +634,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                               BorderRadius.circular(8),
                                         ),
                                         child: Text(
-                                          'Picgallery',
+                                          AppStrings.appName,
                                           style: TextStyle(
                                             color:
                                                 Colors.white.withOpacity(0.24),

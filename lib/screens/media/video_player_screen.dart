@@ -574,7 +574,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        'Picgallery',
+                                        AppStrings.appName,
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.24),
                                           fontSize: 28,

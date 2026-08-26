@@ -65,53 +65,59 @@ class NotificationsScreen extends ConsumerWidget {
                   'New booking, upload and gallery\nupdates will show up here.',
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
-            itemCount: notifications.length,
-            itemBuilder: (context, i) {
-              final n = notifications[i];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Dismissible(
-                  key: ValueKey(n.id),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () =>
+                ref.read(adminDashboardProvider.notifier).refresh(),
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: notifications.length,
+              itemBuilder: (context, i) {
+                final n = notifications[i];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Dismissible(
+                    key: ValueKey(n.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                      ),
+                      child: const Icon(Icons.delete_outline_rounded,
+                          color: Colors.white),
                     ),
-                    child: const Icon(Icons.delete_outline_rounded,
-                        color: Colors.white),
-                  ),
-                  onDismissed: (_) => ref
-                      .read(adminDashboardProvider.notifier)
-                      .deleteNotification(n.id),
-                  child: GlassCard(
-                    fillColor: Colors.white.withValues(alpha: 0.7),
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: NotificationTile(
-                      data: n,
-                      isLast: true,
-                      onTap: () async {
-                        if (!n.isRead) {
-                          await ref
-                              .read(adminDashboardProvider.notifier)
-                              .markNotificationRead(n.id);
-                        }
-                        if (!context.mounted) return;
-                        Navigator.pushNamed(
-                            context, AppRoutes.notificationDetail,
-                            arguments: n);
-                      },
+                    onDismissed: (_) => ref
+                        .read(adminDashboardProvider.notifier)
+                        .deleteNotification(n.id),
+                    child: GlassCard(
+                      fillColor: Colors.white.withValues(alpha: 0.7),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: NotificationTile(
+                        data: n,
+                        isLast: true,
+                        onTap: () async {
+                          if (!n.isRead) {
+                            await ref
+                                .read(adminDashboardProvider.notifier)
+                                .markNotificationRead(n.id);
+                          }
+                          if (!context.mounted) return;
+                          Navigator.pushNamed(
+                              context, AppRoutes.notificationDetail,
+                              arguments: n);
+                        },
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

@@ -56,10 +56,6 @@ class StorageOverviewScreen extends ConsumerWidget {
               final storageStat = stat('Storage Used');
               final photos = stat('Total Photos');
               final videos = stat('Total Videos');
-              final percentMatch =
-                  RegExp(r'(\d+)').firstMatch(storageStat.delta);
-              final percent =
-                  (int.tryParse(percentMatch?.group(1) ?? '0') ?? 0) / 100;
 
               final albumUploads =
                   snapshot.recentUploads.where((u) => !u.isVideo).toList();
@@ -73,7 +69,6 @@ class StorageOverviewScreen extends ConsumerWidget {
                   StorageUsageCard(
                     usedLabel: storageStat.value,
                     totalLabel: '',
-                    percentUsed: percent,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   const SectionHeader(title: 'Breakdown', actionLabel: null),

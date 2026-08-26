@@ -17,6 +17,12 @@ class AlertsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(alertsProvider);
 
+    if (controller.isLoading && controller.items.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
     if (controller.items.isEmpty) {
       return const EmptyTabPlaceholder(
         icon: Icons.notifications_rounded,

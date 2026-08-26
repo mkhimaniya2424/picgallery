@@ -594,7 +594,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          'picgallery',
+                          AppStrings.appName,
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.24),
                             fontSize: 11,

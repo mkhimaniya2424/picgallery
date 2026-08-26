@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/admin_dashboard_providers.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/drawer_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'drawer_header.dart';
@@ -74,11 +75,30 @@ class StudioDrawer extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      // Clear the real session (token + cached AppUser) *and* the
+      // locally-persisted settings cache — same fix already applied in
+      // ClientDrawer._confirmLogout. Without this, tapping Logout only
+      // navigated to the login screen while the token stayed valid and
+      // studioName/photographerName stayed cached, letting a stale
+      // studio identity from a previous account bleed into the next
+      // account signed in on the same device.
       final container = ProviderScope.containerOf(context, listen: false);
+      await container.read(authProvider.notifier).logout();
+      final currentSettings = container.read(settingsProvider);
+      await container.read(settingsProvider.notifier).updateSettings(
+            currentSettings.copyWith(
+              studioName: '',
+              photographerName: '',
+              email: '',
+            ),
+          );
+
       container.read(selectedDrawerItemProvider.notifier).select('dashboard');
 
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+      if (context.mounted) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+      }
     }
   }
 

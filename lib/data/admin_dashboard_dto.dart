@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/utils/media_format_utils.dart';
 import '../models/admin_dashboard_data.dart';
 import '../models/album_model.dart';
 
@@ -166,8 +167,15 @@ class DashboardStatsDto {
         trend: pendingClientRequests == 0 ? TrendDirection.up : TrendDirection.down,
       ),
       StatCardData(
+        // Was hard-coded to "X.X GB" regardless of scale, so a studio
+        // that had barely started uploading (a few MB in) saw "0.0 GB"
+        // — technically correct, but useless. storageUsedBytes was
+        // already being parsed from the API and just sitting unused;
+        // MediaFormatUtils.formatFileSize picks the right unit
+        // (B/KB/MB/GB/TB) off the real byte count, same formatting
+        // every other file-size display in the app already uses.
         label: 'Storage Used',
-        value: '${storageUsedGb.toStringAsFixed(storageUsedGb >= 100 ? 0 : 1)} GB',
+        value: MediaFormatUtils.formatFileSize(storageUsedBytes),
         icon: Icons.storage_rounded,
         gradient: const [Color(0xFF7C5CFF), Color(0xFFA855F7)],
         sparkline: _flatSparkline(storageUsedGb),

@@ -13,7 +13,7 @@ workflows:
 
       ios_signing:
         provisioning_profiles:
-          - picgallery_appstore_profile
+          - picgallery_appstore_profile_v2
 
       vars:
         BUNDLE_ID: com.mk.picgallery

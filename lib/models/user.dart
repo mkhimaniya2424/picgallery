@@ -105,13 +105,12 @@ class AppUser {
 
   // Client optional profile fields (Task 4 backend / Task 8 Flutter) —
   // populated only for client accounts, always null for photographers.
+  // Gender, Date of Birth, Preferred City, and Budget Min/Max were
+  // dropped from the app (edit screen no longer collects them; they
+  // were never surfaced anywhere else) — only Preferred Photo Types
+  // remains, since studios see it via `ClientSummary` on Connections.
   final String? profilePhotoUrl;
-  final String? gender;
-  final DateTime? dateOfBirth;
   final List<String>? preferredPhotoTypes;
-  final String? preferredCity;
-  final double? budgetMin;
-  final double? budgetMax;
 
   // Subscription backend fields (mirrors PlatformUserRead)
   final String subscriptionStatus; // "active" | "trial" | "expired" | "none"
@@ -177,12 +176,7 @@ class AppUser {
     this.pinterestUrl,
     this.website,
     this.profilePhotoUrl,
-    this.gender,
-    this.dateOfBirth,
     this.preferredPhotoTypes,
-    this.preferredCity,
-    this.budgetMin,
-    this.budgetMax,
     this.subscriptionStatus = 'none',
     this.currentPlan,
     this.planStartedAt,
@@ -233,13 +227,8 @@ class AppUser {
       pinterestUrl: json['pinterest_url'] as String?,
       website: json['website'] as String?,
       profilePhotoUrl: json['profile_photo_url'] as String?,
-      gender: json['gender'] as String?,
-      dateOfBirth: json['date_of_birth'] == null ? null : DateTime.parse(json['date_of_birth'] as String),
       preferredPhotoTypes:
           (json['preferred_photo_types'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      preferredCity: json['preferred_city'] as String?,
-      budgetMin: (json['budget_min'] as num?)?.toDouble(),
-      budgetMax: (json['budget_max'] as num?)?.toDouble(),
       subscriptionStatus: json['subscription_status'] as String? ?? 'none',
       currentPlan: json['current_plan'] as String?,
       planStartedAt: _parseUtcTimestamp(json['plan_started_at'] as String?),
@@ -289,12 +278,7 @@ class AppUser {
       'pinterest_url': pinterestUrl,
       'website': website,
       'profile_photo_url': profilePhotoUrl,
-      'gender': gender,
-      'date_of_birth': dateOfBirth?.toIso8601String().split('T').first,
       'preferred_photo_types': preferredPhotoTypes,
-      'preferred_city': preferredCity,
-      'budget_min': budgetMin,
-      'budget_max': budgetMax,
       'subscription_status': subscriptionStatus,
       'current_plan': currentPlan,
       'plan_started_at': planStartedAt?.toIso8601String(),
@@ -343,12 +327,7 @@ class AppUser {
     String? pinterestUrl,
     String? website,
     String? profilePhotoUrl,
-    String? gender,
-    DateTime? dateOfBirth,
     List<String>? preferredPhotoTypes,
-    String? preferredCity,
-    double? budgetMin,
-    double? budgetMax,
     String? subscriptionStatus,
     String? currentPlan,
     DateTime? planStartedAt,
@@ -396,12 +375,7 @@ class AppUser {
       pinterestUrl: pinterestUrl ?? this.pinterestUrl,
       website: website ?? this.website,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
-      gender: gender ?? this.gender,
-      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       preferredPhotoTypes: preferredPhotoTypes ?? this.preferredPhotoTypes,
-      preferredCity: preferredCity ?? this.preferredCity,
-      budgetMin: budgetMin ?? this.budgetMin,
-      budgetMax: budgetMax ?? this.budgetMax,
       subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
       currentPlan: currentPlan ?? this.currentPlan,
       planStartedAt: planStartedAt ?? this.planStartedAt,

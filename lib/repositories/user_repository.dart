@@ -49,13 +49,12 @@ class UserRepository {
     String? website,
     // Client optional profile fields (Task 8) — meaningful only for
     // client accounts; callers should leave these null for photographers.
+    // Gender, Date of Birth, Preferred City, and Budget Min/Max were
+    // dropped from the edit screen (never surfaced anywhere else in the
+    // app) — Preferred Photo Types remains since studios see it via
+    // `ClientSummary` on Connections.
     String? profilePhotoUrl,
-    String? gender,
-    DateTime? dateOfBirth,
     List<String>? preferredPhotoTypes,
-    String? preferredCity,
-    double? budgetMin,
-    double? budgetMax,
     // Privacy & Security screen — "Download Permissions" toggle. Shared
     // by both roles.
     bool? allowDownloads,
@@ -94,14 +93,7 @@ class UserRepository {
     if (website != null) body['website'] = website;
 
     if (profilePhotoUrl != null) body['profile_photo_url'] = profilePhotoUrl;
-    if (gender != null) body['gender'] = gender;
-    if (dateOfBirth != null) {
-      body['date_of_birth'] = dateOfBirth.toIso8601String().split('T').first;
-    }
     if (preferredPhotoTypes != null) body['preferred_photo_types'] = preferredPhotoTypes;
-    if (preferredCity != null) body['preferred_city'] = preferredCity;
-    if (budgetMin != null) body['budget_min'] = budgetMin;
-    if (budgetMax != null) body['budget_max'] = budgetMax;
     if (allowDownloads != null) body['allow_downloads'] = allowDownloads;
     if (appLanguage != null) body['app_language'] = appLanguage;
 

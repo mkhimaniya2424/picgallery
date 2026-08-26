@@ -42,19 +42,81 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
     state = await AsyncValue.guard(_repo.fetchSnapshot);
   }
 
+  /// These three mutations update `state` in place (optimistic, rolled
+  /// back on failure) instead of calling [refresh] — which re-fetches
+  /// the *whole* dashboard (clients/uploads/analytics/notifications)
+  /// through `AsyncValue.guard`, briefly putting `state` into
+  /// `AsyncLoading` and flashing the entire Notifications screen to a
+  /// spinner for what should be a single-row change. This mirrors
+  /// `AlertsController`'s optimistic-update-with-rollback pattern for
+  /// the same underlying `/notifications` endpoints.
+
   Future<void> markNotificationRead(String id) async {
-    await _repo.markNotificationRead(id);
-    await refresh();
+    final snapshot = state.valueOrNull;
+    if (snapshot == null) return;
+    final idx = snapshot.notifications.indexWhere((n) => n.id == id);
+    if (idx == -1 || snapshot.notifications[idx].isRead) return;
+
+    final previous = snapshot.notifications;
+    final updated = [...previous];
+    updated[idx] = updated[idx].copyWith(isRead: true);
+    state = AsyncData(snapshot.copyWith(notifications: updated));
+
+    try {
+      await _repo.markNotificationRead(id);
+    } catch (_) {
+      final current = state.valueOrNull;
+      if (current != null) {
+        state = AsyncData(current.copyWith(notifications: previous));
+      }
+      rethrow;
+    }
   }
 
   Future<void> markAllNotificationsRead() async {
-    await _repo.markAllNotificationsRead();
-    await refresh();
+    final snapshot = state.valueOrNull;
+    if (snapshot == null) return;
+    final previous = snapshot.notifications;
+    if (previous.every((n) => n.isRead)) return;
+
+    final updated = previous.map((n) => n.copyWith(isRead: true)).toList();
+    state = AsyncData(snapshot.copyWith(notifications: updated));
+
+    try {
+      await _repo.markAllNotificationsRead();
+    } catch (_) {
+      final current = state.valueOrNull;
+      if (current != null) {
+        state = AsyncData(current.copyWith(notifications: previous));
+      }
+      rethrow;
+    }
   }
 
   Future<void> deleteNotification(String id) async {
-    await _repo.deleteNotification(id);
-    await refresh();
+    final snapshot = state.valueOrNull;
+    if (snapshot == null) return;
+    final idx = snapshot.notifications.indexWhere((n) => n.id == id);
+    if (idx == -1) return;
+
+    final previous = snapshot.notifications;
+    final updated = [...previous]..removeAt(idx);
+    // Removing the row from `state` on this same frame — rather than
+    // only after the network call below resolves — is what a
+    // Dismissible needs: it requires the dismissed item to actually
+    // leave the tree immediately, or Flutter throws "A dismissed
+    // Dismissible widget is still part of the tree."
+    state = AsyncData(snapshot.copyWith(notifications: updated));
+
+    try {
+      await _repo.deleteNotification(id);
+    } catch (_) {
+      final current = state.valueOrNull;
+      if (current != null) {
+        state = AsyncData(current.copyWith(notifications: previous));
+      }
+      rethrow;
+    }
   }
 
 
