@@ -141,7 +141,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
         return _buildPasscodeGate(context, controller);
 
       case PublicGalleryStatus.loaded:
-        return _buildGallery(context, controller.data!);
+        return _buildGallery(context, controller.data!, controller);
     }
   }
 
@@ -235,7 +235,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   // -------------------------------------------------------------
   // PUBLIC OR UNLOCKED GALLERY SCREEN (Parallax Cover, Info, Grid)
   // -------------------------------------------------------------
-  Widget _buildGallery(BuildContext context, PublicGalleryData data) {
+  Widget _buildGallery(BuildContext context, PublicGalleryData data, PublicGalleryController controller) {
     final albumMedia = List<MediaModel>.from(data.media)
       ..sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
     final hasCover = albumMedia.isNotEmpty;
