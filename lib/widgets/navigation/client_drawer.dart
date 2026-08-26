@@ -130,7 +130,15 @@ class ClientDrawer extends ConsumerWidget {
           InkWell(
             onTap: () {
               Navigator.of(context).pop(); // Close drawer
-              Navigator.of(context).pushNamed(AppRoutes.profile);
+              // AppRoutes.profile ('/profile') has no matching case in
+              // AppRoutes.onGenerateRoute — it falls through to the
+              // `default:` branch, which just pops (or, if there's
+              // nothing to pop to, redirects to the Studio's adminHome).
+              // Either way this silently did nothing for a client. The
+              // real Profile screen only exists as tab index 3 inside
+              // MainNavScreen — same destination the "Settings" item
+              // below already reaches correctly.
+              onNavigateToTab(3);
             },
             child: Container(
               width: double.infinity,

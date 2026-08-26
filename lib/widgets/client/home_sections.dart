@@ -1282,7 +1282,14 @@ class ContinueViewingSection extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: SectionHeader(
             title: 'Continue browsing',
-            onSeeAll: () => Navigator.of(context).pushNamed(AppRoutes.media),
+            // AppRoutes.media pushes MediaGridScreen, backed by
+            // mediaProvider -> GET /media, which is studio-only
+            // (get_current_studio_user) and 403s for a client account —
+            // same class of bug already fixed on RecentActivitySection's
+            // "See All" below. The client-facing equivalent of "all
+            // galleries" is just the Gallery bottom-nav tab itself.
+            onSeeAll: () =>
+                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(1),
             showViewToggle: true,
           ),
         ),
@@ -1328,7 +1335,11 @@ class RecentlyViewedSection extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: SectionHeader(
             title: 'Recently Viewed',
-            onSeeAll: () => Navigator.of(context).pushNamed(AppRoutes.media),
+            // See ContinueViewingSection above — AppRoutes.media 403s
+            // for a client account; the Gallery tab is the real
+            // client-facing "all galleries" destination.
+            onSeeAll: () =>
+                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(1),
             showViewToggle: true,
           ),
         ),
@@ -1364,7 +1375,11 @@ class TrendingGalleriesSection extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: SectionHeader(
             title: 'Trending',
-            onSeeAll: () => Navigator.of(context).pushNamed(AppRoutes.media),
+            // See ContinueViewingSection above — AppRoutes.media 403s
+            // for a client account; the Gallery tab is the real
+            // client-facing "all galleries" destination.
+            onSeeAll: () =>
+                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(1),
             showViewToggle: true,
           ),
         ),

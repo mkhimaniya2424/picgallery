@@ -158,6 +158,13 @@ class PublicGalleryController extends ChangeNotifier {
   /// who downloaded what from their password-protected shares.
   String? _password;
 
+  /// Exposes [_password] so callers that need to re-authenticate against
+  /// this same gallery from elsewhere (e.g. kicking off a face search via
+  /// `/public/share-links/{token}/face-search`, which is password-gated
+  /// exactly like every other endpoint on a private link) don't have to
+  /// re-prompt for a password the guest already entered once this session.
+  String? get password => _password;
+
   /// Runs once on creation: checks whether the link needs a passcode
   /// before ever fetching (and counting a view for) the full gallery.
   Future<void> checkStatus() async {
