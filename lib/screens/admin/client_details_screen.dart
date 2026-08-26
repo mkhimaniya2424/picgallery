@@ -118,33 +118,6 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
     );
   }
 
-  void _confirmDelete(ClientData client) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Remove Client', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to remove ${client.name}? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle, fontWeight: FontWeight.w600)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back from details screen
-              await ref.read(adminDashboardProvider.notifier).removeClient(client.id);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Remove', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -339,10 +312,6 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 24),
-                        onPressed: () => _confirmDelete(c),
-                      ),
                     ],
                   ),
                 ),
@@ -481,7 +450,7 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Shared Galleries',
+                      'Assigned Galleries',
                       style: TextStyle(
                         color: AppColors.text,
                         fontSize: 16,

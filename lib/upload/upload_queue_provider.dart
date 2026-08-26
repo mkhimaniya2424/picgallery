@@ -314,6 +314,25 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       // is caught too, not just at start time.
       final gate = await canUploadNow(ref);
 
+      // The per-batch "Upload using WiFi only" option (`job.wifiOnly`,
+      // set on the upload wizard's options step) is a separate opt-in
+      // from the global Settings toggle above, and needs its own real
+      // connectivity check — it used to only ever get enforced via the
+      // dev-only `_simulateCellular` debug switch, which meant a user
+      // who enabled it while the global setting was off (and wasn't
+      // simulating) would upload over cellular anyway despite the
+      // toggle's own "Pauses uploads on cellular data networks"
+      // subtitle. Only bother calling the platform channel when some
+      // job actually has the option on and we're not already faking
+      // the answer via simulation.
+      final anyJobWantsWifiOnly = s.jobs.any((j) =>
+          j.wifiOnly &&
+          (j.status == UploadJobStatus.uploading ||
+              j.status == UploadJobStatus.queued));
+      final realOnWifi = (anyJobWantsWifiOnly && !_simulateCellular)
+          ? await ref.read(networkConnectivityServiceProvider).isOnWifi()
+          : true;
+
       final anyUploading =
           s.jobs.any((j) => j.status == UploadJobStatus.uploading);
       final hasQueued = s.jobs.any((j) => j.status == UploadJobStatus.queued);
@@ -326,17 +345,19 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
           final blockedBySimulation = job.wifiOnly && _simulateCellular;
           final blockedByRealGate = !gate.canUpload;
+          final blockedByJobWifiOnly =
+              job.wifiOnly && !_simulateCellular && !realOnWifi;
 
-          if (blockedBySimulation || blockedByRealGate) {
+          if (blockedBySimulation || blockedByRealGate || blockedByJobWifiOnly) {
             // Block and queue the job instead of silently uploading over
             // mobile data — either the per-batch WiFi-only option was
-            // tripped by the dev "simulate cellular" toggle, or the
-            // global Settings > Wi-Fi Only Uploads gate found no real
-            // Wi-Fi connection right now.
+            // tripped (by the dev "simulate cellular" toggle, or by a
+            // real absence of Wi-Fi), or the global Settings > Wi-Fi
+            // Only Uploads gate found no real Wi-Fi connection right now.
             final updatedJobs = [...s.jobs];
             updatedJobs[idx] = job.copyWith(
               status: UploadJobStatus.paused,
-              errorMessage: blockedBySimulation
+              errorMessage: (blockedBySimulation || blockedByJobWifiOnly)
                   ? "Paused: WiFi required (on Cellular Network)"
                   : (gate.reason ?? "Waiting for Wi-Fi to upload"),
             );
@@ -354,14 +375,17 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       // Cellular network check mid-upload — same caveat as pause/cancel:
       // this can't abort bytes already handed to `package:http`, only
       // update what the UI shows for a job that hasn't finished yet.
-      if (_simulateCellular || !gate.canUpload) {
+      final jobWifiOnlyBlocked = !_simulateCellular && !realOnWifi;
+      if (_simulateCellular || !gate.canUpload || jobWifiOnlyBlocked) {
         final blocked = s.jobs.where((j) =>
             j.status == UploadJobStatus.uploading &&
-            (j.wifiOnly || !gate.canUpload));
+            (j.wifiOnly && (_simulateCellular || jobWifiOnlyBlocked) ||
+                !gate.canUpload));
         if (blocked.isNotEmpty) {
           final updatedJobs = s.jobs.map((j) {
             if (j.status == UploadJobStatus.uploading &&
-                (j.wifiOnly || !gate.canUpload)) {
+                (j.wifiOnly && (_simulateCellular || jobWifiOnlyBlocked) ||
+                    !gate.canUpload)) {
               return j.copyWith(
                 status: UploadJobStatus.paused,
                 errorMessage: (!gate.canUpload && (gate.reason != null))
@@ -463,10 +487,27 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       // single-file uploader uses, so "High" compresses photos to
       // ~2048px long edge / JPEG quality 85 consistently regardless of
       // which upload path a file went through.
+      //
+      // The wizard's per-batch "Compress Media" / "Keep Original
+      // Quality" toggles used to be stored on the job and never
+      // actually read anywhere — picking either had no effect and the
+      // batch silently followed the global setting regardless. They
+      // now override the global setting for this job specifically:
+      // explicitly turning on "Compress Media", or explicitly turning
+      // off "Keep Original Quality" (both mean the same thing — the
+      // user is opting this batch into compression), forces
+      // compression even if the global default is "Original". Leaving
+      // both at their defaults (compress=false, keepOriginalQuality=
+      // true — i.e. the user didn't touch either switch) falls through
+      // to the global setting unchanged, same as before this fix.
+      final forceCompress =
+          (job.compress || !job.keepOriginalQuality) ? true : null;
+
       final preparedBytes = await prepareMediaBytesForUpload(
         ref,
         bytes: bytes,
         contentType: contentType,
+        forceCompress: forceCompress,
       );
 
       await _mediaRepo.uploadMedia(

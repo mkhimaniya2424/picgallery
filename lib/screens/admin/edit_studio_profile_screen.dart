@@ -542,13 +542,13 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       // parts of the app (e.g. widgets still reading settingsProvider
       // directly rather than authProvider) stay in sync until they're
       // migrated over to the backend-backed value as well. Email isn't
-      // editable via the backend from this screen, so it isn't sent above;
-      // it's still mirrored here so the cache doesn't go stale relative to
-      // whatever the user typed in that field.
+      // editable via the backend (or this screen — the field is disabled),
+      // so it's mirrored straight from the canonical backend value instead
+      // of the controller, which never changes anyway.
       final updatedSettings = widget.settings.copyWith(
         studioName: updatedUser.studioName,
         photographerName: updatedUser.fullName,
-        email: _emailController.text.trim(),
+        email: updatedUser.email,
         website: _websiteController.text.trim(),
       );
       await settingsNotifier.updateSettings(updatedSettings);
@@ -937,9 +937,13 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                         TextFormField(
                           controller: _emailController,
                           style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Email Address'),
+                          enabled: false,
+                          decoration: const InputDecoration(
+                            labelText: 'Email Address',
+                            helperText: 'Email can\'t be changed here. Contact support to update it.',
+                            helperMaxLines: 2,
+                          ),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v == null || v.trim().isEmpty ? 'Enter email' : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(

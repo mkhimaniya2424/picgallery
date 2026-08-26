@@ -6,12 +6,11 @@ class SettingsModel {
   final String clientId;
   final bool emailNotifications;
   final bool pushNotifications;
-  final bool smsAlerts;
+  // final bool smsAlerts;
   final bool securityPinEnabled;
   final String securityPin;
   final bool requirePinOnLaunch;
   final bool privateProfile;
-  final bool searchEngineIndexing;
   final bool wifiOnlyUploads;
   final String uploadQuality; // "Original", "High"
   final String themeMode; // "Light", "Dark", "System"
@@ -28,12 +27,11 @@ class SettingsModel {
     this.clientId = '',
     this.emailNotifications = true,
     this.pushNotifications = true,
-    this.smsAlerts = false,
+    // this.smsAlerts = false,
     this.securityPinEnabled = false,
     this.securityPin = '',
     this.requirePinOnLaunch = false,
     this.privateProfile = false,
-    this.searchEngineIndexing = true,
     this.wifiOnlyUploads = false,
     this.uploadQuality = 'High',
     this.themeMode = 'System',
@@ -50,12 +48,11 @@ class SettingsModel {
     String? clientId,
     bool? emailNotifications,
     bool? pushNotifications,
-    bool? smsAlerts,
+    // bool? smsAlerts,
     bool? securityPinEnabled,
     String? securityPin,
     bool? requirePinOnLaunch,
     bool? privateProfile,
-    bool? searchEngineIndexing,
     bool? wifiOnlyUploads,
     String? uploadQuality,
     String? themeMode,
@@ -70,12 +67,11 @@ class SettingsModel {
     clientId: clientId ?? this.clientId,
     emailNotifications: emailNotifications ?? this.emailNotifications,
     pushNotifications: pushNotifications ?? this.pushNotifications,
-    smsAlerts: smsAlerts ?? this.smsAlerts,
+    // smsAlerts: smsAlerts ?? this.smsAlerts,
     securityPinEnabled: securityPinEnabled ?? this.securityPinEnabled,
     securityPin: securityPin ?? this.securityPin,
     requirePinOnLaunch: requirePinOnLaunch ?? this.requirePinOnLaunch,
     privateProfile: privateProfile ?? this.privateProfile,
-    searchEngineIndexing: searchEngineIndexing ?? this.searchEngineIndexing,
     wifiOnlyUploads: wifiOnlyUploads ?? this.wifiOnlyUploads,
     uploadQuality: uploadQuality ?? this.uploadQuality,
     themeMode: themeMode ?? this.themeMode,
@@ -92,12 +88,11 @@ class SettingsModel {
     'clientId': clientId,
     'emailNotifications': emailNotifications,
     'pushNotifications': pushNotifications,
-    'smsAlerts': smsAlerts,
+    // 'smsAlerts': smsAlerts,
     'securityPinEnabled': securityPinEnabled,
     'securityPin': securityPin,
     'requirePinOnLaunch': requirePinOnLaunch,
     'privateProfile': privateProfile,
-    'searchEngineIndexing': searchEngineIndexing,
     'wifiOnlyUploads': wifiOnlyUploads,
     'uploadQuality': uploadQuality,
     'themeMode': themeMode,
@@ -114,12 +109,11 @@ class SettingsModel {
     clientId: json['clientId'] as String? ?? '',
     emailNotifications: json['emailNotifications'] as bool? ?? true,
     pushNotifications: json['pushNotifications'] as bool? ?? true,
-    smsAlerts: json['smsAlerts'] as bool? ?? false,
+    // smsAlerts: json['smsAlerts'] as bool? ?? false,
     securityPinEnabled: json['securityPinEnabled'] as bool? ?? false,
     securityPin: json['securityPin'] as String? ?? '',
     requirePinOnLaunch: json['requirePinOnLaunch'] as bool? ?? false,
     privateProfile: json['privateProfile'] as bool? ?? false,
-    searchEngineIndexing: json['searchEngineIndexing'] as bool? ?? true,
     wifiOnlyUploads: json['wifiOnlyUploads'] as bool? ?? false,
     uploadQuality: json['uploadQuality'] as String? ?? 'High',
     themeMode: json['themeMode'] as String? ?? 'System',

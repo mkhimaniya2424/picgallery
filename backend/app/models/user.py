@@ -167,6 +167,14 @@ class User(Base):
     # available before this setting existed.
     allow_downloads: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    # Privacy & Security screen — "Account Privacy" toggle. Used by both
+    # studios and clients to control their profile visibility. (The
+    # matching "Search Engine Indexing" / "Visibility Preferences" field
+    # that used to sit alongside this was removed from the app — the
+    # `search_engine_indexing` DB column is left in place unused rather
+    # than dropped here, since removing a column needs its own migration.)
+    private_profile: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     # App Settings screen — "App Language" picker. Distinct from
     # `languages` above (the studio's spoken-language tags shown on its
     # public profile) — this is the user's own UI language preference.

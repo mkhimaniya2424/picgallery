@@ -270,7 +270,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8), 
                             ),
                             child: Text(
                               cat,

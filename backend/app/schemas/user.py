@@ -162,6 +162,7 @@ class UserUpdate(BaseModel):
     # Privacy & Security screen — "Download Permissions" toggle. Shared
     # by both roles (unlike the studio/client-only fields above).
     allow_downloads: bool | None = None
+    private_profile: bool | None = None
 
     # App Settings screen — "App Language" picker. Shared by both roles.
     app_language: str | None = Field(default=None, max_length=30)
@@ -253,6 +254,7 @@ class UserRead(BaseModel):
     push_notifications_enabled: bool
     fcm_token: str | None = None
     allow_downloads: bool
+    private_profile: bool
     app_language: str
     created_at: datetime
 

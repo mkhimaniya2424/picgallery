@@ -208,7 +208,13 @@ class _PermissionCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(title, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: textColor)),
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: textColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

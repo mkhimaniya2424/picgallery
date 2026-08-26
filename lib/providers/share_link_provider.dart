@@ -145,6 +145,19 @@ class PublicGalleryController extends ChangeNotifier {
   PublicGalleryData? _data;
   PublicGalleryData? get data => _data;
 
+  /// The password that successfully unlocked this gallery, remembered
+  /// so [recordDownload] can re-send it. `/public/share-links/{token}`
+  /// isn't session-based — every request re-validates the password
+  /// server-side (`_assert_password_ok`), including the download-record
+  /// endpoint. Previously nothing kept this around after [unlock], so
+  /// every download from a password-protected gallery silently failed
+  /// its 401 in [recordDownload]'s catch-all: `downloads_count` never
+  /// incremented and no Download History row was ever written for any
+  /// private gallery, even though the actual file save (which doesn't
+  /// go through this endpoint) worked fine — a studio just never saw
+  /// who downloaded what from their password-protected shares.
+  String? _password;
+
   /// Runs once on creation: checks whether the link needs a passcode
   /// before ever fetching (and counting a view for) the full gallery.
   Future<void> checkStatus() async {
@@ -179,6 +192,7 @@ class PublicGalleryController extends ChangeNotifier {
     try {
       _data = await _repo.fetchPublicGallery(token: token, password: password);
       _status = PublicGalleryStatus.loaded;
+      _password = password;
     } catch (e) {
       _handleError(e, isPasswordAttempt: password != null && password.isNotEmpty);
     }
@@ -213,9 +227,20 @@ class PublicGalleryController extends ChangeNotifier {
   /// replaces — a failed analytics/history write shouldn't block the
   /// download itself, which has already happened by the time this is
   /// called from the viewer/player screens.
+  ///
+  /// Defaults [password] to whatever unlocked this gallery ([_password])
+  /// — callers (`ImageViewerScreen`/`VideoPlayerScreen`) never had the
+  /// password to pass in the first place, so without this default every
+  /// call against a private gallery re-validated with `password: null`
+  /// and 401'd every time. An explicit [password] argument still wins,
+  /// for any future caller that has a fresher one than what's cached.
   Future<void> recordDownload({String? password, String? mediaId}) async {
     try {
-      await _repo.recordDownload(token: token, password: password, mediaId: mediaId);
+      await _repo.recordDownload(
+        token: token,
+        password: password ?? _password,
+        mediaId: mediaId,
+      );
     } catch (_) {
       // Best-effort only.
     }

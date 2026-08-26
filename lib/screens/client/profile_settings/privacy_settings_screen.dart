@@ -70,15 +70,6 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
               disabled: _savingDownloads,
               onChanged: _handleAllowDownloadsChanged,
             ),
-            const SizedBox(height: AppSpacing.md),
-            _ToggleTile(
-              icon: Icons.visibility_rounded,
-              title: 'Visibility Preferences',
-              value: settings.searchEngineIndexing,
-              onChanged: (v) => ref
-                  .read(settingsProvider.notifier)
-                  .updateSettings(settings.copyWith(searchEngineIndexing: v)),
-            ),
           ],
         ),
       ),

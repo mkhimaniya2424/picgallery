@@ -38,14 +38,14 @@ class NotificationSettingsScreen extends ConsumerWidget {
                   .updateSettings(settings.copyWith(emailNotifications: v)),
             ),
             const SizedBox(height: AppSpacing.md),
-            _ToggleTile(
-              icon: Icons.sms_outlined,
-              title: 'SMS Alerts',
-              value: settings.smsAlerts,
-              onChanged: (v) => ref
-                  .read(settingsProvider.notifier)
-                  .updateSettings(settings.copyWith(smsAlerts: v)),
-            ),
+            // _ToggleTile(
+            //   icon: Icons.sms_outlined,
+            //   title: 'SMS Alerts',
+            //   value: settings.smsAlerts,
+            //   onChanged: (v) => ref
+            //       .read(settingsProvider.notifier)
+            //       .updateSettings(settings.copyWith(smsAlerts: v)),
+            // ),
           ],
         ),
       ),

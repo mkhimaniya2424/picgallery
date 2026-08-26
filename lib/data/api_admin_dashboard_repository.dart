@@ -79,6 +79,12 @@ const List<QuickActionData> _kDefaultQuickActions = [
     label: 'View\nReports',
     gradient: [Color(0xFF8B5CF6), Color(0xFFD946EF)],
   ),
+  QuickActionData(
+    id: 'show_qr',
+    icon: Icons.qr_code_rounded,
+    label: 'Show\nMy QR',
+    gradient: [Color(0xFF14B8A6), Color(0xFF06B6D4)],
+  ),
 ];
 
 class ApiAdminDashboardRepository implements AdminDashboardRepository {
@@ -156,8 +162,10 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
       for (final item in clientStatsItems)
         item['client_id'] as String: (item['total_views'] as num?)?.toInt() ?? 0,
     };
-
-
+    final galleriesByClientId = <String, List<String>>{
+      for (final item in clientStatsItems)
+        item['client_id'] as String: (item['assigned_gallery_ids'] as List<dynamic>? ?? []).cast<String>(),
+    };
 
     final currentUserId = _currentUserId();
 
@@ -168,8 +176,6 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
             ))
         .toList(growable: false);
 
-
-
     final clients = connectionDtos
         .where((dto) => dto.isActiveClient)
         .map((dto) {
@@ -177,10 +183,12 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
           if (cd == null) return null;
           final views = viewsByClientId[cd.id] ?? 0;
           final downloads = downloadsByClientId[cd.id] ?? 0;
-          if (views == 0 && downloads == 0) return cd;
+          final assignedGalleries = galleriesByClientId[cd.id] ?? const [];
+          if (views == 0 && downloads == 0 && assignedGalleries.isEmpty) return cd;
           return cd.copyWith(
             totalViews: views,
             totalDownloads: downloads,
+            assignedGalleryIds: assignedGalleries,
           );
         })
         .whereType<ClientData>()
@@ -270,11 +278,35 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
   }
 
   @override
-  Future<void> assignGalleriesToClient(String clientId, List<String> galleryIds) {
-    throw UnimplementedError(
-      'ApiAdminDashboardRepository does not back this yet — no endpoint '
-      'assigns galleries to a client yet.',
-    );
+  Future<void> assignGalleriesToClient(String clientId, List<String> galleryIds) async {
+    // 1. Fetch current active shares for this client
+    final currentSharesResponse = await _apiClient.get('/studio/shares?client_id=$clientId');
+    final currentShares = (currentSharesResponse as List<dynamic>).cast<Map<String, dynamic>>();
+    
+    final currentAlbumIds = <String, String>{}; // Maps album_id -> share_id
+    for (final share in currentShares) {
+      currentAlbumIds[share['album_id'] as String] = share['id'] as String;
+    }
+    
+    final desiredSet = galleryIds.toSet();
+    final currentSet = currentAlbumIds.keys.toSet();
+    
+    final toAdd = desiredSet.difference(currentSet);
+    final toRemove = currentSet.difference(desiredSet);
+    
+    // 2. Add new shares
+    for (final albumId in toAdd) {
+      await _apiClient.post('/studio/shares', body: {
+        'album_id': albumId,
+        'client_id': clientId,
+      });
+    }
+    
+    // 3. Revoke removed shares
+    for (final albumId in toRemove) {
+      final shareId = currentAlbumIds[albumId]!;
+      await _apiClient.delete('/studio/shares/$shareId');
+    }
   }
 
   @override

@@ -283,15 +283,6 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                     .updateSettings(settings.copyWith(privateProfile: val));
               },
             ),
-            _SettingsToggleRow(
-              icon: Icons.search_off_rounded,
-              title: 'Search Engine Indexing',
-              value: settings.searchEngineIndexing,
-              onChanged: (val) async {
-                await ref.read(settingsProvider.notifier).updateSettings(
-                    settings.copyWith(searchEngineIndexing: val));
-              },
-            ),
             _SettingsRow(
               icon: Icons.verified_user_outlined,
               title: 'App Permissions',

@@ -358,25 +358,49 @@ class _PendingRequestsTab extends ConsumerWidget {
                 clientName: client?.name ?? 'Unknown Client',
                 clientInitials: client?.initials ?? '??',
                 clientEmail: client?.email ?? '',
-                onAccept: () {
-                  connNotifier.studioAcceptRequest(request.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Accepted ${client?.name ?? "client"}'),
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                onAccept: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await connNotifier.studioAcceptRequest(request.id);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Accepted ${client?.name ?? "client"}'),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(e is NotFoundException
+                            ? e.message
+                            : 'Could not accept the request. Please try again.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
                 },
-                onReject: () {
-                  connNotifier.studioRejectRequest(request.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Rejected ${client?.name ?? "client"}'),
-                      backgroundColor: AppColors.error,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                onReject: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await connNotifier.studioRejectRequest(request.id);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('Rejected ${client?.name ?? "client"}'),
+                        backgroundColor: AppColors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(e is NotFoundException
+                            ? e.message
+                            : 'Could not reject the request. Please try again.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
                 },
               );
             },
@@ -477,13 +501,13 @@ class _ConnectedClientsTab extends ConsumerWidget {
   }
 }
 
-class _PendingRequestCard extends StatelessWidget {
+class _PendingRequestCard extends StatefulWidget {
   final StudioClientConnection request;
   final String clientName;
   final String clientInitials;
   final String clientEmail;
-  final VoidCallback onAccept;
-  final VoidCallback onReject;
+  final Future<void> Function() onAccept;
+  final Future<void> Function() onReject;
 
   const _PendingRequestCard({
     required this.request,
@@ -495,7 +519,31 @@ class _PendingRequestCard extends StatelessWidget {
   });
 
   @override
+  State<_PendingRequestCard> createState() => _PendingRequestCardState();
+}
+
+class _PendingRequestCardState extends State<_PendingRequestCard> {
+  // Tracks whether THIS card's accept/reject call is in flight, so we can
+  // disable both buttons and show a spinner instead of letting a slow
+  // network response invite a double-tap (which would fire a second
+  // accept/decline at an already-transitioning connection).
+  bool _isProcessing = false;
+
+  Future<void> _handle(Future<void> Function() action) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final clientName = widget.clientName;
+    final clientInitials = widget.clientInitials;
+    final clientEmail = widget.clientEmail;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
@@ -574,35 +622,45 @@ class _PendingRequestCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.check_rounded,
-                        color: AppColors.success, size: 20),
-                    onPressed: onAccept,
-                    tooltip: 'Accept',
-                  ),
+            if (_isProcessing)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation(AppColors.primary),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+              )
+            else
+              Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.check_rounded,
+                          color: AppColors.success, size: 20),
+                      onPressed: () => _handle(widget.onAccept),
+                      tooltip: 'Accept',
+                    ),
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppColors.error, size: 20),
-                    onPressed: onReject,
-                    tooltip: 'Reject',
+                  const SizedBox(height: 4),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close_rounded,
+                          color: AppColors.error, size: 20),
+                      onPressed: () => _handle(widget.onReject),
+                      tooltip: 'Reject',
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),

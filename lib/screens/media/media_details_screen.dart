@@ -9,7 +9,8 @@ import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/media_format_utils.dart';
 import '../../models/media_model.dart';
-import '../../providers/auth_providers.dart' show apiClientProvider;
+import '../../models/user.dart' show AppUserRole;
+import '../../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
 import '../../providers/media_provider.dart';
 import '../../providers/media_likes_comments_provider.dart';
 import '../../services/download_service.dart';
@@ -41,7 +42,7 @@ class MediaDetailsArgs {
 
 /// Media Details — full metadata + primary actions (favorite, delete,
 /// open full-screen viewer/player) for a single photo or video.
-class MediaDetailsScreen extends ConsumerWidget {
+class MediaDetailsScreen extends ConsumerStatefulWidget {
   final String mediaId;
   final List<String>? mediaIds;
   final String? heroTag;
@@ -53,9 +54,24 @@ class MediaDetailsScreen extends ConsumerWidget {
     this.heroTag,
   });
 
+  @override
+  ConsumerState<MediaDetailsScreen> createState() => _MediaDetailsScreenState();
+}
+
+class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
   static const ShareService _shareService = ShareServiceImpl();
   static const DownloadService _downloadService = DownloadServiceImpl();
   static const MediaFileCache _fileCache = MediaFileCache();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(mediaLikesCommentsProvider).fetchComments(widget.mediaId);
+      ref.read(mediaLikesCommentsProvider).fetchLikes(widget.mediaId);
+    });
+  }
 
   MediaModel? _find(List<MediaModel> all, String id) {
     for (final m in all) {
@@ -228,9 +244,11 @@ class MediaDetailsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final auth = ref.watch(authStateProvider);
+    final isClientUser = auth.user?.role == AppUserRole.client;
     final c = ref.watch(mediaProvider);
-    final media = _find(c.allMedia, mediaId);
+    final media = _find(c.allMedia, widget.mediaId);
 
     if (media == null) {
       return const Scaffold(
@@ -244,7 +262,7 @@ class MediaDetailsScreen extends ConsumerWidget {
       );
     }
 
-    final ids = mediaIds != null ? mediaIds!.toSet().toList() : [media.id];
+    final ids = widget.mediaIds != null ? widget.mediaIds!.toSet().toList() : [media.id];
     final index = ids.indexOf(media.id);
     final safeIndex = index == -1 ? 0 : index;
 
@@ -273,11 +291,16 @@ class MediaDetailsScreen extends ConsumerWidget {
             ? AppRoutes.imageViewer
             : AppRoutes.videoPlayer,
         arguments: media.type == MediaType.photo
-            ? ImageViewerArgs(mediaIds: ids, initialIndex: safeIndex)
+            ? ImageViewerArgs(
+                mediaIds: ids, 
+                initialIndex: safeIndex,
+                readOnly: isClientUser,
+              )
             : VideoPlayerArgs(
                 mediaId: media.id,
                 mediaIds: ids,
                 initialIndex: safeIndex,
+                readOnly: isClientUser,
               ),
       );
     }
@@ -304,6 +327,7 @@ class MediaDetailsScreen extends ConsumerWidget {
       bottomNavigationBar: _MediaStitchBottomBar(
         isFavorite: media.isFavorite,
         isVideo: media.type == MediaType.video,
+        showDelete: !isClientUser,
         onPrimary: openFullScreen,
         onFavorite: () => ref.read(mediaProvider).toggleFavorite(media.id),
         onDelete: () => _confirmDelete(context, ref, media),
@@ -332,7 +356,7 @@ class MediaDetailsScreen extends ConsumerWidget {
                           ? media.width / media.height
                           : 1,
                       child: Hero(
-                        tag: heroTag ?? 'hero-media-${media.id}',
+                        tag: widget.heroTag ?? 'hero-media-${media.id}',
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -433,27 +457,29 @@ class MediaDetailsScreen extends ConsumerWidget {
                     label: 'Save to Gallery',
                     onTap: () => _saveMediaToGallery(context, ref, media),
                   ),
-                  _DetailsActionChip(
-                    icon: Icons.drive_file_move_rounded,
-                    label: 'Move',
-                    onTap: () => MediaBatchWorkflows.openMove(
-                      context: context,
-                      mediaIds: [media.id],
+                  if (!isClientUser) ...[
+                    _DetailsActionChip(
+                      icon: Icons.drive_file_move_rounded,
+                      label: 'Move',
+                      onTap: () => MediaBatchWorkflows.openMove(
+                        context: context,
+                        mediaIds: [media.id],
+                      ),
                     ),
-                  ),
-                  _DetailsActionChip(
-                    icon: Icons.copy_all_rounded,
-                    label: 'Copy',
-                    onTap: () => MediaBatchWorkflows.openCopy(
-                      context: context,
-                      mediaIds: [media.id],
+                    _DetailsActionChip(
+                      icon: Icons.copy_all_rounded,
+                      label: 'Copy',
+                      onTap: () => MediaBatchWorkflows.openCopy(
+                        context: context,
+                        mediaIds: [media.id],
+                      ),
                     ),
-                  ),
-                  _DetailsActionChip(
-                    icon: Icons.drive_file_rename_outline_rounded,
-                    label: 'Rename',
-                    onTap: () => _renameMedia(context, ref, media),
-                  ),
+                    _DetailsActionChip(
+                      icon: Icons.drive_file_rename_outline_rounded,
+                      label: 'Rename',
+                      onTap: () => _renameMedia(context, ref, media),
+                    ),
+                  ],
                 ],
               ),
 
@@ -471,22 +497,7 @@ class MediaDetailsScreen extends ConsumerWidget {
                 lc.seedLikeState(media);
                 final likeState = lc.likeStateFor(media.id);
 
-                // Fetch comments once per media, deferred until after this
-                // frame finishes building — calling fetchComments()
-                // directly here (synchronously, during build) triggers
-                // notifyListeners() before the widget tree is done
-                // building, which Riverpod disallows ("Tried to modify a
-                // provider while the widget tree was building").
-                if (!lc.hasFetchedComments(media.id)) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ref.read(mediaLikesCommentsProvider).fetchComments(media.id);
-                  });
-                }
-                if (!lc.hasFetchedLikes(media.id)) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ref.read(mediaLikesCommentsProvider).fetchLikes(media.id);
-                  });
-                }
+                // The `initState` already requests fresh comments when this screen opens.
                 
                 final likes = lc.likesForMedia(media.id);
 
@@ -613,6 +624,7 @@ class _DetailsActionChip extends StatelessWidget {
 class _MediaStitchBottomBar extends StatelessWidget {
   final bool isVideo;
   final bool isFavorite;
+  final bool showDelete;
   final VoidCallback onPrimary;
   final VoidCallback onFavorite;
   final VoidCallback onDelete;
@@ -620,6 +632,7 @@ class _MediaStitchBottomBar extends StatelessWidget {
   const _MediaStitchBottomBar({
     required this.isVideo,
     required this.isFavorite,
+    required this.showDelete,
     required this.onPrimary,
     required this.onFavorite,
     required this.onDelete,
@@ -666,17 +679,19 @@ class _MediaStitchBottomBar extends StatelessWidget {
                 tooltip: isFavorite ? 'Unfavorite' : 'Favorite',
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: IconButton.filledTonal(
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded),
-                tooltip: 'Delete',
-                style: IconButton.styleFrom(
-                  foregroundColor: AppColors.error,
+            if (showDelete) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: IconButton.filledTonal(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  tooltip: 'Delete',
+                  style: IconButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),

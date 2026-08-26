@@ -140,11 +140,30 @@ def get_client_stats(
 
     downloads_by_client: dict = {str(row[0]): row[1] for row in download_rows}
 
+    # --- assigned galleries per client ---
+    from app.models.album_share import AlbumClientShare
+    share_rows = db.execute(
+        select(AlbumClientShare.client_id, AlbumClientShare.album_id)
+        .where(
+            AlbumClientShare.studio_id == current_user.id,
+            AlbumClientShare.client_id.in_(client_ids),
+            AlbumClientShare.revoked_at.is_(None)
+        )
+    ).all()
+
+    galleries_by_client: dict[str, list[str]] = {}
+    for cid, aid in share_rows:
+        cid_str = str(cid)
+        if cid_str not in galleries_by_client:
+            galleries_by_client[cid_str] = []
+        galleries_by_client[cid_str].append(str(aid))
+
     items = [
         ClientStatsRead(
             client_id=str(cid),
             total_views=0,  # per-viewer tracking not yet available
             total_downloads=downloads_by_client.get(str(cid), 0),
+            assigned_gallery_ids=galleries_by_client.get(str(cid), [])
         )
         for cid in client_ids
     ]

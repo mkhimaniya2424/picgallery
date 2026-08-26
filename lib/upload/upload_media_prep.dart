@@ -23,13 +23,24 @@ final imageCompressionServiceProvider =
 ///   [bytes] are returned unchanged for now rather than silently
 ///   dropping quality settings on a format we can't safely re-encode
 ///   client-side.
+///
+/// [forceCompress], when non-null, overrides the global setting above
+/// for this one call — this is how the upload wizard's per-batch
+/// "Compress Media" / "Keep Original Quality" toggles (job.compress /
+/// job.keepOriginalQuality on UploadJobModel) take effect: the batch
+/// queue derives a bool from those two switches and passes it here so
+/// an explicit per-batch choice wins over whatever the global default
+/// happens to be for that job. Leave it null (as the single-file
+/// uploader does) to fall through to the global setting untouched.
 Future<List<int>> prepareMediaBytesForUpload(
   Ref ref, {
   required List<int> bytes,
   required String contentType,
+  bool? forceCompress,
 }) async {
   final settings = ref.read(settingsProvider);
-  if (settings.uploadQuality != 'High') {
+  final shouldCompress = forceCompress ?? (settings.uploadQuality == 'High');
+  if (!shouldCompress) {
     return bytes;
   }
 

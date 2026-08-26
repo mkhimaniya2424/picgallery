@@ -29,7 +29,6 @@ class ProfileScreen extends ConsumerWidget {
     (icon: Icons.lock_outline_rounded, label: 'Privacy & Security'),
     (icon: Icons.notifications_none_rounded, label: 'Notification Settings'),
     (icon: Icons.verified_user_outlined, label: 'App Permissions'),
-    (icon: Icons.language_rounded, label: 'Language'),
     (icon: Icons.info_outline_rounded, label: 'About'),
     (icon: Icons.help_outline_rounded, label: 'Help & Support'),
   ];
@@ -54,8 +53,6 @@ class ProfileScreen extends ConsumerWidget {
           return l10n.privacySecurity;
         case 'Notification Settings':
           return l10n.notifications;
-        case 'Language':
-          return l10n.language;
         case 'About':
           return l10n.about;
         case 'Help & Support':
@@ -147,11 +144,6 @@ class ProfileScreen extends ConsumerWidget {
                                       : item.label == 'App Permissions'
                                           ? () => Navigator.of(context).pushNamed(
                                                 AppRoutes.permissions,
-                                              )
-                                      : item.label == 'Language'
-                                          ? () =>
-                                              Navigator.of(context).pushNamed(
-                                                '/profile/language',
                                               )
                                           : item.label == 'About'
                                               ? () => Navigator.of(context)

@@ -84,7 +84,7 @@ class QuickActionHandler {
       case 'share_gallery':
         _goToGalleryTab(context, toast, onNavigateToTab);
         break;
-      case 'scan_qr':
+      case 'show_qr':
         _showQrDialog(context, ref);
         break;
 

@@ -83,14 +83,24 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
     }
 
     void openItem(DownloadHistoryModel item) {
-      final media = findMedia(item.mediaId);
-      if (media == null) {
-        SnackBarHelper.showError(
-          context,
-          'This media is no longer available.',
-        );
-        return;
-      }
+      final media = findMedia(item.mediaId) ??
+          media_model.MediaModel(
+            id: item.mediaId ?? item.id,
+            type: item.mediaType == MediaType.photo
+                ? media_model.MediaType.photo
+                : media_model.MediaType.video,
+            filePath: item.filePath,
+            thumbnailPath: item.thumbnailPath,
+            fileName: item.fileName,
+            size: item.size,
+            width: 0,
+            height: 0,
+            createdAt: item.downloadedAt,
+            modifiedAt: item.downloadedAt,
+            remoteUrl: item.fileUrl,
+            remoteThumbnailUrl: item.thumbnailUrl,
+          );
+
       if (media.type == media_model.MediaType.video) {
         Navigator.of(context).pushNamed(
           AppRoutes.videoPlayer,
@@ -98,6 +108,8 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
             mediaId: media.id,
             mediaIds: [media.id],
             initialIndex: 0,
+            mediaItems: [media],
+            readOnly: true,
           ),
         );
       } else {
@@ -106,6 +118,8 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
           arguments: ImageViewerArgs(
             mediaIds: [media.id],
             initialIndex: 0,
+            mediaItems: [media],
+            readOnly: true,
           ),
         );
       }

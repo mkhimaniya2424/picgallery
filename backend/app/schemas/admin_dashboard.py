@@ -50,6 +50,7 @@ class ClientStatsRead(BaseModel):
     client_id: str
     total_views: int = 0
     total_downloads: int = 0
+    assigned_gallery_ids: list[str] = []
 
 
 class ClientStatsListRead(BaseModel):
