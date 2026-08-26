@@ -8,6 +8,7 @@ import '../../core/utils/subscription_guard.dart';
 import '../../models/album_model.dart';
 import '../../models/folder_model.dart';
 import '../../providers/album_provider.dart';
+import '../../providers/face_search_provider.dart';
 import '../../providers/folder_provider.dart';
 
 import '../../widgets/common/custom_app_bar.dart';
@@ -135,6 +136,19 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
         title: 'Albums',
         showBack: false,
         actions: [
+          IconButton(
+            tooltip: 'Find by Face',
+            icon: const Icon(Icons.face_retouching_natural_rounded),
+            onPressed: () {
+              // Scopes the search to the studio's own library — mirrors
+              // POST /faces/search (owner-only), same backend endpoint
+              // the client-drawer's "Face Search" entry uses for
+              // useClientGallery(), just pointed at the studio's own
+              // photos instead of a client's shared galleries.
+              ref.read(faceSearchProvider.notifier).useMyLibrary();
+              Navigator.of(context).pushNamed(AppRoutes.faceSearchLanding);
+            },
+          ),
           IconButton(
             tooltip: 'Manage Collections',
             icon: const Icon(Icons.collections_bookmark_rounded),

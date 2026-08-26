@@ -1,0 +1,36 @@
+{
+  "last_updated": "2026-07-01",
+  "intro_title": "Terms & Conditions",
+  "intro_paragraphs": [
+    "By using picgallery, you agree to be bound by these Terms & Conditions.",
+    "If you do not agree, please do not use the application."
+  ],
+  "sections": [
+    {
+      "title": "Use of the Service",
+      "paragraphs": [
+        "You agree to use the service in a lawful manner and not to interfere with its operation.",
+        "You are responsible for maintaining the confidentiality of any account credentials you use to access the service."
+      ]
+    },
+    {
+      "title": "User Content",
+      "paragraphs": [
+        "You retain ownership of your content but grant the service a license to host, display, and distribute content as necessary to operate the platform.",
+        "You must ensure that your content does not violate applicable laws or third-party rights."
+      ]
+    },
+    {
+      "title": "Limitation of Liability",
+      "paragraphs": [
+        "To the maximum extent permitted by law, picgallery shall not be liable for any indirect, incidental, special, consequential, or punitive damages."
+      ]
+    },
+    {
+      "title": "Changes",
+      "paragraphs": [
+        "We may update these Terms & Conditions from time to time. Your continued use of the service after changes are posted constitutes acceptance of the revised terms."
+      ]
+    }
+  ]
+}

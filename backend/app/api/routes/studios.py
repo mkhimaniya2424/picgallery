@@ -264,8 +264,9 @@ def request_connection(
 
     db.commit()
 
-    # Push notification to studio's device
-    if studio.fcm_token:
+    # Push notification to studio's device — gated on the studio's
+    # push_notifications_enabled toggle.
+    if studio.fcm_token and studio.push_notifications_enabled:
         send_push_notification(
             token=studio.fcm_token,
             title="New Connection Request",

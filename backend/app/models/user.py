@@ -1,213 +1,341 @@
-import enum
 import uuid
 from datetime import date, datetime
-from decimal import Decimal
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, Integer, Numeric, String, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, field_validator, model_validator
 
-from app.db.base import Base
+from app.models.user import AuthProvider, UserRole
 
 
-class UserRole(str, enum.Enum):
-    """Mirrors the `UserRole` enum in the Flutter app (app_routes.dart)."""
-    photographer = "photographer"
-    client = "client"
+class UserRegister(BaseModel):
+    """Payload for POST /auth/register — mirrors the 3-step Flutter form."""
 
+    # Step 1
+    full_name: str = Field(min_length=1, max_length=150)
+    email: EmailStr
 
-class AuthProvider(str, enum.Enum):
-    """How this account authenticates. `local` = email/password (the
-    original flow); `google`/`apple` = Sign in with Google/Apple, whose
-    ID tokens are verified server-side in `core/social_auth.py` instead
-    of checking a password."""
-    local = "local"
-    google = "google"
-    apple = "apple"
-
-
-class User(Base):
-    __tablename__ = "users"
-    __table_args__ = (
-        # Same email can register once as a client AND once as a
-        # photographer — just not twice under the same role. Replaces
-        # the old plain unique=True on `email`.
-        UniqueConstraint("email", "role", name="uq_users_email_role"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    # Step 1 — identity
-    full_name: Mapped[str] = mapped_column(String(150), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
-    # `phone` was removed as a feature (column dropped from the DB
-    # directly) — kept out of the ORM model entirely so SELECT/INSERT
-    # never reference a column that no longer exists.
-
-    # Step 2 — auth. Nullable because Google/Apple sign-in accounts have
-    # no password at all — the provider's ID token is the credential
-    # instead (see auth_provider/provider_user_id below and
-    # core/social_auth.py).
-    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Step 2
+    password: str = Field(min_length=8, max_length=128)
 
     # Role
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole, name="user_role"), nullable=False)
+    role: UserRole
 
-    # Sign in with Google / Sign in with Apple. auth_provider records how
-    # the account was created; provider_user_id is the stable subject
-    # ("sub") claim from that provider's verified ID token, used to
-    # re-recognize the same external account on later sign-ins.
-    auth_provider: Mapped[AuthProvider] = mapped_column(
-        Enum(AuthProvider, name="auth_provider"), nullable=False, default=AuthProvider.local
+    # Step 3 — required only when role == photographer
+    studio_name: str | None = None
+    studio_address: str | None = None
+    business_type: str | None = None
+
+    agreed_to_terms: bool
+
+    @model_validator(mode="after")
+    def check_terms_and_studio(self) -> "UserRegister":
+        if not self.agreed_to_terms:
+            raise ValueError("You must agree to the Terms & Conditions")
+        if self.role == UserRole.photographer and not self.studio_name:
+            raise ValueError("studio_name is required for photographers")
+        if not any(ch.isdigit() for ch in self.password):
+            raise ValueError("Password must include at least one number")
+        return self
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+    # Optional: only needed to disambiguate when this email is
+    # registered under BOTH roles (see auth.py's login()). If omitted
+    # and the email maps to exactly one account, login proceeds as
+    # before; if it maps to two, the backend asks the client to specify.
+    role: UserRole | None = None
+
+
+class SocialLoginRequest(BaseModel):
+    """Payload for POST /auth/social-login — Sign in with Google / Sign
+    in with Apple. `id_token` is the provider's signed ID token (Google)
+    or identity token (Apple); the backend verifies it against the
+    provider's own public keys in `core/social_auth.py` rather than
+    trusting anything in this request body except which provider to
+    check it against.
+
+    `role` is required and works exactly like the Role Selection screen
+    feeding into email Register: the same Google/Apple account can back
+    a separate Client row and a separate Studio row, one per role, same
+    as email/password accounts (`uq_users_email_role`).
+
+    `full_name` is optional and only ever meaningful on first sign-up —
+    Apple's identity token never carries a name at all (Apple hands the
+    given/family name to the client once, out-of-band, on the very
+    first authorization only), so the app passes it through here
+    instead. Google's token does carry a name, used as a fallback when
+    this field is omitted.
+    """
+
+    provider: AuthProvider
+    id_token: str
+    role: UserRole
+    full_name: str | None = Field(default=None, max_length=150)
+
+    @field_validator("provider")
+    @classmethod
+    def _provider_must_be_social(cls, value: AuthProvider) -> AuthProvider:
+        if value == AuthProvider.local:
+            raise ValueError("provider must be 'google' or 'apple'")
+        return value
+
+
+class UserCompleteProfile(BaseModel):
+    """Payload for PUT /auth/complete-profile — the final onboarding step.
+
+    `studio_name` / `specializations` are only required when the
+    authenticated user's role is photographer; that's enforced in the
+    route against `current_user.role`, not a role field here, since the
+    access token already carries the role.
+    """
+
+    full_name: str = Field(min_length=1, max_length=150)
+    country: str | None = Field(default=None, max_length=100)
+    state: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=100)
+    address: str | None = Field(default=None, max_length=255)
+    bio: str | None = Field(default=None, max_length=500)
+
+    # Studio business details (photographer role only)
+    studio_name: str | None = Field(default=None, max_length=150)
+    specializations: list[str] | None = None
+
+
+class FCMTokenUpdate(BaseModel):
+    fcm_token: str | None = None
+
+
+class UserUpdate(BaseModel):
+    """Generic partial profile-update payload (all fields optional, unset
+    fields left untouched) — for a future "edit profile" endpoint. Distinct
+    from `UserCompleteProfile`, which is the one-time onboarding step and
+    requires `full_name`.
+    """
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=150)
+    country: str | None = Field(default=None, max_length=100)
+    state: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=100)
+    address: str | None = Field(default=None, max_length=255)
+    bio: str | None = Field(default=None, max_length=500)
+
+    # Studio's own street address (photographer role only) — distinct
+    # from `address` above, which is the person's own address and is
+    # shared by both roles. Was previously only settable once, at
+    # registration (`UserRegister.studio_address`); wired up here so
+    # it's editable afterward too, same as `specializations` was.
+    studio_address: str | None = Field(default=None, max_length=255)
+
+    # Studio profile fields (Task 3) — meaningful only for photographer
+    # ("Studio") accounts; a future edit-profile endpoint is expected to
+    # ignore/reject these for client accounts. All optional/nullable.
+    year_established: int | None = None
+    team_size: int | None = None
+    service_areas: list[str] | None = None
+    specializations: list[str] | None = None
+    studio_type: str | None = Field(default=None, max_length=100)
+    experience_years: int | None = None
+    languages: list[str] | None = None
+    equipment_highlights: str | None = None
+    pricing_min: float | None = None
+    pricing_max: float | None = None
+    package_details: str | None = None
+    availability_days: list[str] | None = None
+    instagram_url: str | None = Field(default=None, max_length=500)
+    facebook_url: str | None = Field(default=None, max_length=500)
+    youtube_url: str | None = Field(default=None, max_length=500)
+    pinterest_url: str | None = Field(default=None, max_length=500)
+    website: str | None = Field(default=None, max_length=500)
+
+    # Client optional profile fields (Task 4) — meaningful only for
+    # client accounts; a future edit-profile endpoint is expected to
+    # ignore/reject these for photographer accounts. All optional/nullable.
+    profile_photo_url: str | None = Field(default=None, max_length=500)
+    gender: str | None = Field(default=None, max_length=20)
+    date_of_birth: date | None = None
+    preferred_photo_types: list[str] | None = None
+    preferred_city: str | None = Field(default=None, max_length=100)
+    budget_min: float | None = None
+    budget_max: float | None = None
+
+    # Privacy & Security screen — "Download Permissions" toggle. Shared
+    # by both roles (unlike the studio/client-only fields above).
+    allow_downloads: bool | None = None
+    private_profile: bool | None = None
+
+    # Notification Settings screen — "Push Notifications" and "Email Notifications" toggles.
+    # Shared by both roles. Persisted server-side for cross-device consistency.
+    push_notifications_enabled: bool | None = None
+    email_notifications_enabled: bool | None = None
+
+    # App Settings screen — "App Language" picker. Shared by both roles.
+    app_language: str | None = Field(default=None, max_length=30)
+
+
+class UserUpdatePermissions(BaseModel):
+    """Payload for PUT /auth/permissions — items 15-17 (Camera / Photo
+    Library / Push Notification prompts). All fields optional so each
+    screen can send just the one flag it owns; unset fields are left
+    untouched. The client requests the real OS permission first (via
+    `permission_handler`) and sends the actual result here — this
+    endpoint has no way to independently verify OS permission state
+    itself, it just records the flag it's given.
+    """
+
+    camera_permission_granted: bool | None = None
+    photo_library_permission_granted: bool | None = None
+    push_notifications_enabled: bool | None = None
+
+
+class VerifyEmailRequest(BaseModel):
+    """Payload for POST /auth/verify-email — the token from the (dummy)
+    verification email/link."""
+
+    token: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Payload for POST /auth/forgot-password."""
+
+    email: EmailStr
+
+
+class ActivatePlanRequest(BaseModel):
+    plan: str
+
+
+class ResetPasswordRequest(BaseModel):
+    """Payload for POST /auth/reset-password — the token from the
+    (dummy) reset-password email/link plus the new password."""
+
+    token: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def _password_has_digit(cls, value: str) -> str:
+        if not any(ch.isdigit() for ch in value):
+            raise ValueError("Password must include at least one number")
+        return value
+
+
+class DeleteAccountRequest(BaseModel):
+    """Payload for DELETE /users/me. `password` is required for local
+    (email/password) accounts and is verified against the stored hash
+    before anything is deleted. It's optional here — rather than
+    required — only because Google/Apple sign-in accounts have no
+    password at all (see `User.hashed_password`); the route itself
+    still enforces it for local accounts."""
+
+    password: str | None = None
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+class UserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    full_name: str
+    email: EmailStr
+    role: UserRole
+    studio_name: str | None
+    studio_address: str | None
+    business_type: str | None
+    avatar_url: str | None
+    cover_image_url: str | None = None
+    country: str | None
+    state: str | None
+    city: str | None
+    address: str | None
+    bio: str | None
+    specializations: list[str] | None = None
+    is_email_verified: bool
+    camera_permission_granted: bool
+    photo_library_permission_granted: bool
+    push_notifications_enabled: bool
+    fcm_token: str | None = None
+    allow_downloads: bool
+    private_profile: bool
+    app_language: str
+    created_at: datetime
+
+    # Studio profile fields (Task 3) — nullable, populated only for
+    # photographer ("Studio") accounts.
+    year_established: int | None = None
+    team_size: int | None = None
+    service_areas: list[str] | None = None
+    studio_type: str | None = None
+    experience_years: int | None = None
+    languages: list[str] | None = None
+    equipment_highlights: str | None = None
+    pricing_min: float | None = None
+    pricing_max: float | None = None
+    package_details: str | None = None
+    availability_days: list[str] | None = None
+    instagram_url: str | None = None
+    facebook_url: str | None = None
+    youtube_url: str | None = None
+    pinterest_url: str | None = None
+    website: str | None = None
+
+    # Client optional profile fields (Task 4) — nullable, populated only
+    # for client accounts.
+    profile_photo_url: str | None = None
+    gender: str | None = None
+    date_of_birth: date | None = None
+    preferred_photo_types: list[str] | None = None
+    preferred_city: str | None = None
+    budget_min: float | None = None
+    budget_max: float | None = None
+
+    # Subscription fields — from the DB columns added via SQL migration.
+    # Exposed as-is so the Flutter app can derive plan/status locally.
+    current_plan: str | None = None       # "trial" | "pro" | "premium" | None
+    plan_status: str | None = None        # "active" | "inactive" | "expired" | None
+    plan_expiry: datetime | None = None   # UTC expiry timestamp
+    trial_used: bool = False              # whether free trial has been used
+    plan_started_at: datetime | None = None
+
+    # ── Computed convenience fields for the Flutter AppUser model ────────────
+    # Flutter reads `subscription_status` and `current_plan` directly.
+    # We map plan_status to subscription_status to match what Flutter expects.
+    @computed_field
+    @property
+    def subscription_status(self) -> str:
+        """Maps DB plan_status to the Flutter app's expected values.
+        Returns 'trial' when current_plan is 'trial' and still active,
+        so the Flutter app can correctly identify and style trial plans.
+        """
+        if self.plan_status == "active":
+            if self.current_plan == "trial":
+                return "trial"
+            return "active"
+        if self.plan_status == "expired":
+            return "expired"
+        return "none"
+
+    @field_validator(
+        "specializations",
+        "service_areas",
+        "languages",
+        "availability_days",
+        "preferred_photo_types",
+        mode="before",
     )
-    provider_user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    @classmethod
+    def _split_csv_fields(cls, value):
+        # DB stores these as a comma-separated string; expose them to
+        # clients as a list to match the Flutter chip-selection UI.
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
+        return value
 
-    # Step 3 — photographer-only studio details (nullable for clients)
-    studio_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
-    studio_address: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    business_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
-    # Complete Profile step — shared by both roles
-    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-
-    # Studio cover photo (Showcase Portfolio feature) — the wide banner
-    # image shown at the top of a studio's public profile. Same
-    # convention as avatar_url: stores the full public URL, built via
-    # build_media_url() at upload time. Nullable/unset for clients.
-    cover_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-
-    country: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    state: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    bio: Mapped[str | None] = mapped_column(String(500), nullable=True)
-
-    # Complete Profile step — photographer-only Studio business details.
-    # Comma-separated tags from the fixed set in the Flutter app
-    # (kStudioSpecializations: Wedding, Portrait, Event, Product).
-    specializations: Mapped[str | None] = mapped_column(String(255), nullable=True)
-
-    # Studio profile fields (Task 3) — photographer ("Studio") role only,
-    # always nullable/unset for client accounts. List-type fields follow
-    # the same convention as `specializations` above: stored as a
-    # comma-separated string, exposed to the API as a list.
-    year_established: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    team_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    service_areas: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    studio_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    experience_years: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    languages: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    equipment_highlights: Mapped[str | None] = mapped_column(Text, nullable=True)
-    pricing_min: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    pricing_max: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    package_details: Mapped[str | None] = mapped_column(Text, nullable=True)
-    availability_days: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    instagram_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    facebook_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    youtube_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    pinterest_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    website: Mapped[str | None] = mapped_column(String(500), nullable=True)
-
-    # Client optional profile fields (Task 4) — client role only, always
-    # nullable/unset for photographer accounts. `preferred_photo_types`
-    # follows the same comma-separated-string convention as
-    # `specializations`/`service_areas` above.
-    profile_photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
-    preferred_photo_types: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    preferred_city: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    budget_min: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    budget_max: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-
-    agreed_to_terms: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
-    # Soft delete (Task 10 — Delete Account). `is_deleted` is checked by
-    # `get_current_user` (app/api/deps.py) so any access token issued
-    # before deletion is rejected on its very next use — there's no
-    # separate token/session store in this app, so this flag doubles as
-    # the revocation mechanism. `deleted_at` records when. The row is
-    # never physically removed (keeps FK history from other tables
-    # intact); the email is anonymized at delete time instead (see
-    # DELETE /users/me) so the address is freed up for the person to
-    # register a brand new account with it.
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    # Email verification (item 21 — Verification Pending screen / Resend
-    # Email on both verification screens). A fresh token is generated on
-    # register and again on every "Resend Email" tap; POST /auth/verify-email
-    # consumes it and flips is_email_verified.
-    email_verification_token: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    email_verification_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    # Forgot/Reset Password flow (Task 11). Mirrors the email-verification
-    # token pattern exactly: a fresh token is generated on every
-    # POST /auth/forgot-password call and consumed by POST /auth/reset-password,
-    # which also enforces the same TTL check as verify_email.
-    reset_password_token: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    reset_password_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    # Onboarding permission prompts (items 15-17 — Camera / Photo Library /
-    # Push Notification screens). Dummy-only: no real OS permission is ever
-    # checked, this just records which button the user tapped so the rest
-    # of the app can read a stable "did they say yes" flag later.
-    camera_permission_granted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    photo_library_permission_granted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    push_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    
-    # Firebase Cloud Messaging token for live push notifications
-    fcm_token: Mapped[str | None] = mapped_column(String(500), nullable=True)
-
-    # Privacy & Security screen — "Download Permissions" toggle. Whether
-    # this user allows their galleries/media to be downloaded. Defaults
-    # to True (opt-out rather than opt-in) since download was always
-    # available before this setting existed.
-    allow_downloads: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
-    # Privacy & Security screen — "Account Privacy" toggle. Used by both
-    # studios and clients to control their profile visibility. (The
-    # matching "Search Engine Indexing" / "Visibility Preferences" field
-    # that used to sit alongside this was removed from the app — the
-    # `search_engine_indexing` DB column is left in place unused rather
-    # than dropped here, since removing a column needs its own migration.)
-    private_profile: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
-    # App Settings screen — "App Language" picker. Distinct from
-    # `languages` above (the studio's spoken-language tags shown on its
-    # public profile) — this is the user's own UI language preference.
-    app_language: Mapped[str] = mapped_column(String(30), default="English", nullable=False)
-
-    # Subscription / billing fields — added via SQL migration (not yet in
-    # alembic), matching the columns already present in the database.
-    # plan_status: "active" | "inactive" | "expired"  (DB: varchar, NOT NULL)
-    # plan_expiry: when the current plan ends  (DB: timestamp)
-    # trial_used: whether the free trial has been consumed  (DB: bool)
-    # plan_started_at: when the current plan was activated  (DB: timestamptz)
-    #
-    # plan_status is NOT NULL at the database level even though it was
-    # previously typed as nullable here — that mismatch let new-user
-    # INSERTs (signup, Google/Apple sign-in) fail with a NotNullViolation
-    # since nothing set this column. default="inactive" covers any other
-    # code path that constructs a User() without setting it explicitly.
-    current_plan: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    plan_status: Mapped[str] = mapped_column(String(20), nullable=False, default="inactive", server_default="inactive")
-    plan_expiry: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    trial_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    plan_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    # Expiry-reminder tracking — records the days-remaining threshold the
-    # last reminder was sent for on the CURRENT plan cycle (e.g. 30, 7, 1),
-    # so send_plan_reminders.py never re-sends the same threshold twice.
-    # Reset to NULL by activatePlan() (pricing.php) every time a plan is
-    # (re)activated, so a fresh cycle always starts with no reminders sent.
-    # Already exists in the DB (added the same ad-hoc way as the other
-    # plan_* columns above) — this just makes it visible to SQLAlchemy.
-    last_reminder_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead

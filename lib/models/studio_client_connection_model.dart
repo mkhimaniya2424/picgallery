@@ -147,7 +147,7 @@ class StudioClientConnection {
       // rather than fabricated, and callers that need the full picture
       // should still hit the client's own profile endpoint.
       clientData: ClientData(
-        id: viewerIsStudio ? (clientJson!['id'] as String) : (studioJson!['id'] as String),
+        id: viewerIsStudio ? (clientJson['id'] as String) : (studioJson!['id'] as String),
         name: viewerIsStudio
             ? (clientJson!['full_name'] as String? ?? '')
             : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String? ?? ''),

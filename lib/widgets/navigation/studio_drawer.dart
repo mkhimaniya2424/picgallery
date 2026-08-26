@@ -5,8 +5,10 @@ import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/admin_dashboard_providers.dart';
+import '../../providers/app_info_provider.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/drawer_provider.dart';
+import '../../providers/face_search_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'drawer_header.dart';
 
@@ -102,11 +104,16 @@ class StudioDrawer extends ConsumerWidget {
     }
   }
 
-  void _showAbout(BuildContext context) {
+  void _showAbout(BuildContext context, WidgetRef ref) {
+    final version = ref.read(appVersionLabelProvider).when(
+          data: (value) => value,
+          loading: () => '',
+          error: (_, __) => '',
+        );
     showAboutDialog(
       context: context,
       applicationName: AppStrings.appName,
-      applicationVersion: AppStrings.appVersion,
+      applicationVersion: version,
       applicationIcon: Container(
         width: 44,
         height: 44,
@@ -221,6 +228,20 @@ class StudioDrawer extends ConsumerWidget {
                   selected: selectedId == 'uploads',
                   onTap: () => _handleTap(context, ref, 'uploads', _DrawerAction.route, routeName: AppRoutes.uploadQueue),
                 ),
+                _StudioDrawerTile(
+                  icon: Icons.face_retouching_natural_rounded,
+                  label: 'Face Search',
+                  selected: selectedId == 'face_search',
+                  onTap: () {
+                    ref.read(selectedDrawerItemProvider.notifier).select('face_search');
+                    Navigator.of(context).pop();
+                    // Scopes the search to the studio's own library —
+                    // same POST /faces/search endpoint, mirrors the
+                    // AppBar action on AlbumsListScreen.
+                    ref.read(faceSearchProvider.notifier).useMyLibrary();
+                    Navigator.of(context).pushNamed(AppRoutes.faceSearchLanding);
+                  },
+                ),
 
                 _buildSectionHeader(context, 'RELATIONSHIPS'),
                 _StudioDrawerTile(
@@ -272,8 +293,13 @@ class StudioDrawer extends ConsumerWidget {
                     settings.copyWith(themeMode: value ? 'Dark' : 'Light'),
                   );
             },
-            onAboutTap: () => _showAbout(context),
+            onAboutTap: () => _showAbout(context, ref),
             onLogoutTap: () => _confirmLogout(context),
+            versionLabel: ref.watch(appVersionLabelProvider).when(
+                  data: (value) => value,
+                  loading: () => '',
+                  error: (_, __) => '',
+                ),
           ),
         ],
       ),
@@ -511,12 +537,14 @@ class _BottomSection extends StatelessWidget {
     required this.onToggleDark,
     required this.onAboutTap,
     required this.onLogoutTap,
+    required this.versionLabel,
   });
 
   final bool isDark;
   final ValueChanged<bool> onToggleDark;
   final VoidCallback onAboutTap;
   final VoidCallback onLogoutTap;
+  final String versionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -574,7 +602,7 @@ class _BottomSection extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              AppStrings.appVersion,
+              versionLabel,
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 11,

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../l10n/app_localizations.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/studio_client_connection_model.dart';
+import '../../providers/app_info_provider.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -130,7 +130,15 @@ class ClientDrawer extends ConsumerWidget {
           InkWell(
             onTap: () {
               Navigator.of(context).pop(); // Close drawer
-              Navigator.of(context).pushNamed(AppRoutes.profile);
+              // AppRoutes.profile ('/profile') has no matching case in
+              // AppRoutes.onGenerateRoute — it falls through to the
+              // `default:` branch, which just pops (or, if there's
+              // nothing to pop to, redirects to the Studio's adminHome).
+              // Either way this silently did nothing for a client. The
+              // real Profile screen only exists as tab index 3 inside
+              // MainNavScreen — same destination the "Settings" item
+              // below already reaches correctly.
+              onNavigateToTab(3);
             },
             child: Container(
               width: double.infinity,
@@ -356,66 +364,34 @@ class ClientDrawer extends ConsumerWidget {
           Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
           _BottomSection(
             isDark: settings.themeMode == 'Dark',
-            language: settings.language,
             onToggleDark: (value) {
               ref.read(settingsProvider.notifier).updateSettings(
                     settings.copyWith(themeMode: value ? 'Dark' : 'Light'),
                   );
             },
-            onLanguageTap: () => _pickLanguage(context, ref, settings.language),
-            onAboutTap: () => _showAbout(context),
+            onAboutTap: () => _showAbout(context, ref),
             onLogoutTap: () => _confirmLogout(context),
+            versionLabel: ref.watch(appVersionLabelProvider).when(
+                  data: (value) => value,
+                  loading: () => '',
+                  error: (_, __) => '',
+                ),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _pickLanguage(
-      BuildContext context, WidgetRef ref, String current) async {
-    const languages = ['English', 'Hindi', 'Spanish'];
-    final l10n = AppLocalizations.of(context)!;
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(l10n.selectLanguage,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-            ),
-            for (final lang in languages)
-              ListTile(
-                title: Text(lang),
-                trailing: lang == current
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                    : null,
-                onTap: () => Navigator.of(ctx).pop(lang),
-              ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-        ),
-      ),
-    );
-
-    if (picked != null && picked != current) {
-      final settings = ref.read(settingsProvider);
-      await ref
-          .read(settingsProvider.notifier)
-          .updateSettings(settings.copyWith(language: picked));
-    }
-  }
-
-  void _showAbout(BuildContext context) {
+  void _showAbout(BuildContext context, WidgetRef ref) {
+    final version = ref.read(appVersionLabelProvider).when(
+          data: (value) => value,
+          loading: () => '',
+          error: (_, __) => '',
+        );
     showAboutDialog(
       context: context,
       applicationName: AppStrings.appName,
-      applicationVersion: AppStrings.appVersion,
+      applicationVersion: version,
       applicationIcon: Container(
         width: 44,
         height: 44,
@@ -431,24 +407,22 @@ class ClientDrawer extends ConsumerWidget {
   }
 }
 
-/// Dark-mode toggle, language selector, version, and Logout — pinned to
+/// Dark-mode toggle, version, and Logout — pinned to
 /// the bottom of the drawer, below the scrollable menu.
 class _BottomSection extends StatelessWidget {
   const _BottomSection({
     required this.isDark,
-    required this.language,
     required this.onToggleDark,
-    required this.onLanguageTap,
     required this.onAboutTap,
     required this.onLogoutTap,
+    required this.versionLabel,
   });
 
   final bool isDark;
-  final String language;
   final ValueChanged<bool> onToggleDark;
-  final VoidCallback onLanguageTap;
   final VoidCallback onAboutTap;
   final VoidCallback onLogoutTap;
+  final String versionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -482,36 +456,6 @@ class _BottomSection extends StatelessWidget {
                 ),
               ],
             ),
-            // Language selector.
-            InkWell(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              onTap: onLanguageTap,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    const Icon(Icons.language_rounded,
-                        size: 20, color: AppColors.primary),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(AppLocalizations.of(context)!.language,
-                          style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: onSurface)),
-                    ),
-                    Text(language,
-                        style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary)),
-                    const SizedBox(width: 4),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 18, color: onSurfaceVariant),
-                  ],
-                ),
-              ),
-            ),
             // About App.
             InkWell(
               borderRadius: BorderRadius.circular(AppRadius.md),
@@ -538,7 +482,7 @@ class _BottomSection extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              AppStrings.appVersion,
+              versionLabel,
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 11,

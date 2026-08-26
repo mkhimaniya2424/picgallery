@@ -11,14 +11,13 @@ import '../../widgets/common/empty_state_card.dart';
 
 /// Step 2 — Upload flow UI for Face Search.
 ///
-/// Frontend-only:
-/// - No backend calls
-/// - No face recognition logic
-/// - Buttons open local image picking / camera only
+/// Picks/captures a selfie locally, then hands it to
+/// [FaceSearchScanProgressScreen] which runs the real match via
+/// [faceSearchProvider].
 ///
 /// Navigation:
 /// - Landing -> Upload
-/// - Continue -> Scan Progress (placeholder route; implemented in next step)
+/// - Continue -> Scan Progress -> Results
 class FaceSearchUploadScreen extends StatefulWidget {
   const FaceSearchUploadScreen({super.key});
 
@@ -209,42 +208,6 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
           label: const Text('Remove'),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: AppColors.border),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.autorenew_rounded,
-                    size: 18, color: AppColors.secondary),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  'After processing, we’ll show matching results from your shared gallery. (Processing logic will be added later.)',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.subtitle,
-                    height: 1.45,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ],

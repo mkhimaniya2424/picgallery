@@ -181,8 +181,10 @@ def _invite_existing_client(
     db.commit()
     db.refresh(connection)
 
-    # Push notification to client's device
-    if client.fcm_token:
+    # Push notification to client's device — gated on the client's
+    # Notification Settings "Push Notifications" toggle
+    # (`push_notifications_enabled`), not just whether a token exists.
+    if client.fcm_token and client.push_notifications_enabled:
         send_push_notification(
             token=client.fcm_token,
             title="New Connection Invitation",
@@ -338,8 +340,9 @@ def accept_connection(
         db.add(notif)
         db.commit()
         db.refresh(connection)
-        # Send live push to client's device
-        if client and client.fcm_token:
+        # Send live push to client's device — gated on the client's
+        # push_notifications_enabled toggle.
+        if client and client.fcm_token and client.push_notifications_enabled:
             send_push_notification(
                 token=client.fcm_token,
                 title="Connection Accepted! 🎉",
@@ -358,8 +361,9 @@ def accept_connection(
         db.add(notif)
         db.commit()
         db.refresh(connection)
-        # Send live push to studio's device
-        if studio and studio.fcm_token:
+        # Send live push to studio's device — gated on the studio's
+        # push_notifications_enabled toggle.
+        if studio and studio.fcm_token and studio.push_notifications_enabled:
             send_push_notification(
                 token=studio.fcm_token,
                 title="New Client Connected! 🎉",

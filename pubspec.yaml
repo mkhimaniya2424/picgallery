@@ -64,6 +64,10 @@ dependencies:
   permission_handler: ^11.3.1
   firebase_core: ^4.13.0
   firebase_messaging: ^16.5.0
+  # Reads the real installed app version + build number from the
+  # platform at runtime (used by providers/app_info_provider.dart so
+  # About screens/drawers never show a stale hardcoded version string).
+  package_info_plus: ^8.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

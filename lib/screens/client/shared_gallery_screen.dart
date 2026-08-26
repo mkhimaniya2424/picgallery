@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/routes/app_routes.dart';
 import '../../models/media_model.dart';
 import '../../models/share_link_model.dart';
+import '../../providers/face_search_provider.dart';
 import '../../providers/share_link_provider.dart';
 import '../media/image_viewer_screen.dart';
 import '../media/video_player_screen.dart';
@@ -418,7 +419,26 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               label: Text('Download ${_selectedIds.length} items'),
               backgroundColor: AppColors.primary,
             )
-          : null,
+          : (albumMedia.isNotEmpty
+              ? FloatingActionButton.extended(
+                  heroTag: 'shared_gallery_face_search_fab',
+                  onPressed: () {
+                    // Scopes the search to this one shared album via the
+                    // token (+ whatever password already unlocked it, so
+                    // the password-gated `/public/share-links/{token}/face-search`
+                    // call doesn't re-prompt a guest who already got past
+                    // the passcode gate above).
+                    ref.read(faceSearchProvider.notifier).useSharedGallery(
+                          token: widget.token,
+                          password: controller.password,
+                        );
+                    Navigator.of(context).pushNamed(AppRoutes.faceSearchLanding);
+                  },
+                  icon: const Icon(Icons.face_retouching_natural_rounded),
+                  label: const Text('Find My Photos'),
+                  backgroundColor: AppColors.primary,
+                )
+              : null),
     );
   }
 

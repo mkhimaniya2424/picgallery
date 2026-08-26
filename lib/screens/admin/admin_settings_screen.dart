@@ -10,6 +10,8 @@ import '../../models/settings_model.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/studio_provider.dart';
+import '../../providers/user_providers.dart';
+import '../../widgets/common/app_toast.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'edit_studio_profile_screen.dart';
 
@@ -22,6 +24,32 @@ class AdminSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
+  // True while a PATCH /users/me for private_profile is in flight — keeps
+  // the toggle disabled so a second tap can't race the first. Same
+  // server-persisted pattern as the client-side Privacy & Security
+  // screen's "Download Permissions"/"Account Privacy" toggles.
+  bool _savingPrivateProfile = false;
+
+  /// Persists the "Account Privacy" toggle server-side
+  /// (`User.private_profile`, PATCH /users/me) and pushes the returned
+  /// user straight into [authProvider]. Previously this only wrote to
+  /// [settingsProvider]/Hive (device-local) even though the backend has
+  /// had a real `private_profile` column since the privacy-fields
+  /// migration — so the toggle looked like it worked but never actually
+  /// changed anything the backend or other users could see.
+  Future<void> _handlePrivateProfileChanged(bool value) async {
+    setState(() => _savingPrivateProfile = true);
+    try {
+      final updated = await ref.read(userRepositoryProvider).updateProfile(privateProfile: value);
+      ref.read(authProvider.notifier).setUser(updated);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppToast.show(context, e.message, isError: true);
+    } finally {
+      if (mounted) setState(() => _savingPrivateProfile = false);
+    }
+  }
+
   void _editGeneralInfo(SettingsModel settings) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -191,6 +219,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final user = ref.watch(authProvider).valueOrNull;
+    final privateProfile = user?.privateProfile ?? false;
     final studioSubtitle = [
       user?.studioName ?? settings.studioName,
       user?.fullName ?? settings.photographerName,
@@ -276,12 +305,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
             _SettingsToggleRow(
               icon: Icons.visibility_off_outlined,
               title: 'Private Studio Profile',
-              value: settings.privateProfile,
-              onChanged: (val) async {
-                await ref
-                    .read(settingsProvider.notifier)
-                    .updateSettings(settings.copyWith(privateProfile: val));
-              },
+              value: privateProfile,
+              disabled: _savingPrivateProfile,
+              onChanged: _handlePrivateProfileChanged,
             ),
             _SettingsRow(
               icon: Icons.verified_user_outlined,
@@ -453,12 +479,14 @@ class _SettingsToggleRow extends StatelessWidget {
   final String title;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final bool disabled;
 
   const _SettingsToggleRow({
     required this.icon,
     required this.title,
     required this.value,
     required this.onChanged,
+    this.disabled = false,
   });
 
   @override
@@ -482,7 +510,7 @@ class _SettingsToggleRow extends StatelessWidget {
           ),
           Switch.adaptive(
             value: value,
-            onChanged: onChanged,
+            onChanged: disabled ? null : onChanged,
             activeThumbColor: AppColors.primary,
             activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
           ),
@@ -533,22 +561,66 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
               fontWeight: FontWeight.bold)),
       content: Form(
         key: _formKey,
-        child: TextFormField(
-          controller: _pinCtrl,
-          keyboardType: TextInputType.number,
-          obscureText: true,
-          maxLength: 4,
-          decoration: const InputDecoration(
-              labelText: '4-Digit PIN', hintText: '••••'),
-          validator: (v) {
-            if (v == null || v.trim().length != 4) {
-              return 'PIN must be 4 digits';
-            }
-            if (int.tryParse(v) == null) {
-              return 'PIN must contain numbers only';
-            }
-            return null;
-          },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The field below always starts blank — the previously-saved
+            // PIN is never read back/displayed here — so without this
+            // line there's no visual cue that a PIN already exists until
+            // the user taps in and sees the '••••' hint.
+            if (widget.settings.securityPinEnabled) ...[
+              Text(
+                'A PIN is already set. Enter a new 4-digit PIN below to change it.',
+                style: TextStyle(
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            TextFormField(
+              controller: _pinCtrl,
+              keyboardType: TextInputType.number,
+              obscureText: true,
+              maxLength: 4,
+              // Explicitly opt out of platform autofill — Android/iOS
+              // treat any obscured numeric field as a password field and
+              // will overlay a saved-credential suggestion (rendered as
+              // dots) on top of it. That overlay isn't real input (the
+              // counter stays 0/4 until something is actually typed) and
+              // isn't the app's stored PIN, but it has no business
+              // appearing on this field at all.
+              autofillHints: const <String>[],
+              enableSuggestions: false,
+              autocorrect: false,
+              // The default maxLength counter wasn't refreshing live as
+              // digits were entered (stuck at 0/4 while the field itself
+              // updated fine), so drive it explicitly off the controller
+              // instead of relying on the framework's own listener.
+              onChanged: (_) => setState(() {}),
+              buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                return Text(
+                  '${_pinCtrl.text.length}/$maxLength',
+                  style: TextStyle(
+                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                    fontSize: 12,
+                  ),
+                );
+              },
+              decoration: const InputDecoration(
+                  labelText: '4-Digit PIN', hintText: '••••'),
+              validator: (v) {
+                if (v == null || v.trim().length != 4) {
+                  return 'PIN must be 4 digits';
+                }
+                if (int.tryParse(v) == null) {
+                  return 'PIN must contain numbers only';
+                }
+                return null;
+              },
+            ),
+          ],
         ),
       ),
       actions: [

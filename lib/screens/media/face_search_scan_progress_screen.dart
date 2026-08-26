@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:io';
-
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,21 +20,10 @@ class FaceSearchScanProgressScreen extends ConsumerStatefulWidget {
 }
 
 class _FaceSearchScanProgressScreenState
-    extends ConsumerState<FaceSearchScanProgressScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _scanController;
+    extends ConsumerState<FaceSearchScanProgressScreen> {
   bool _cancelled = false;
   bool _navigated = false;
   bool _searchStarted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _scanController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
-  }
 
   @override
   void didChangeDependencies() {
@@ -58,12 +45,6 @@ class _FaceSearchScanProgressScreenState
     }
   }
 
-  @override
-  void dispose() {
-    _scanController.dispose();
-    super.dispose();
-  }
-
   void _navigateToResultsOnce() {
     if (_navigated) return;
     _navigated = true;
@@ -73,7 +54,6 @@ class _FaceSearchScanProgressScreenState
   void _cancel() {
     if (_cancelled) return;
     setState(() => _cancelled = true);
-    _scanController.stop();
     Navigator.of(context).pushNamedAndRemoveUntil(
       AppRoutes.faceSearchLanding,
       (r) => r.isFirst,
@@ -174,40 +154,18 @@ class _FaceSearchScanProgressScreenState
   }
 
   Widget _buildAnimatedScannerIcon() {
-    return SizedBox(
-      width: 64,
-      height: 64,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(18),
-              border:
-                  Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
-            ),
-            child: AnimatedBuilder(
-              animation: _scanController,
-              builder: (_, __) {
-                return const Stack(
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.auto_awesome_rounded,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: const Icon(
+        Icons.auto_awesome_rounded,
+        color: AppColors.primary,
+        size: 22,
       ),
     );
   }
