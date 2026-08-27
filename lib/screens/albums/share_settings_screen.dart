@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,14 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
   void dispose() {
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _generateRandomPasscode() {
+    final rand = Random.secure();
+    final passcode = (100000 + rand.nextInt(900000)).toString();
+    setState(() {
+      _passwordController.text = passcode;
+    });
   }
 
   /// Primes the form from the loaded link, once. Unlike the old
@@ -193,22 +202,38 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                               if (!_isPublic) ...[
                                 _buildSectionHeader(context, 'Security Settings'),
                                 const SizedBox(height: AppSpacing.sm),
-                                CustomTextField(
-                                  label: hasActiveLink && activeLink.hasPassword
-                                      ? 'New Password (leave blank to keep current)'
-                                      : 'Access Password',
-                                  icon: Icons.lock_outline_rounded,
-                                  controller: _passwordController,
-                                  obscureText: true,
-                                  validator: (v) {
-                                    if (hasActiveLink && activeLink.hasPassword && (v == null || v.isEmpty)) {
-                                      return null;
-                                    }
-                                    if (v == null || v.trim().length < 4) {
-                                      return 'Password must be at least 4 characters';
-                                    }
-                                    return null;
-                                  },
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: CustomTextField(
+                                        label: hasActiveLink && activeLink.hasPassword
+                                            ? 'New Passcode (leave blank to keep current)'
+                                            : 'Passcode',
+                                        icon: Icons.lock_outline_rounded,
+                                        controller: _passwordController,
+                                        obscureText: false,
+                                        validator: (v) {
+                                          if (hasActiveLink && activeLink.hasPassword && (v == null || v.isEmpty)) {
+                                            return null;
+                                          }
+                                          if (v == null || v.trim().length < 4) {
+                                            return 'Passcode must be at least 4 characters';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: OutlinedButton.icon(
+                                        onPressed: _generateRandomPasscode,
+                                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                                        label: const Text('Regenerate'),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
                               ],
@@ -296,7 +321,14 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
-              if (val != null) setState(() => _isPublic = val);
+              if (val != null) {
+                setState(() {
+                  _isPublic = val;
+                  if (!_isPublic && _passwordController.text.isEmpty) {
+                    _generateRandomPasscode();
+                  }
+                });
+              }
             },
           ),
         ],
@@ -389,6 +421,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
   }
 
   Widget _buildActiveLinkCard(GalleryShareLink link) {
+    final primaryUrl = link.primaryShareUrl;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -403,7 +436,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             children: [
               Expanded(
                 child: Text(
-                  link.qrDeepLink,
+                  primaryUrl,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -417,9 +450,9 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                 icon: const Icon(Icons.copy_rounded, color: AppColors.primary),
                 tooltip: 'Copy Link',
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: link.qrDeepLink));
+                  Clipboard.setData(ClipboardData(text: primaryUrl));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Share Link copied to clipboard.')),
+                    const SnackBar(content: Text('HTTPS Share Link copied to clipboard.')),
                   );
                 },
               ),
@@ -427,7 +460,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                 icon: const Icon(Icons.share_rounded, color: AppColors.primary),
                 tooltip: 'Share',
                 onPressed: () {
-                  Share.share(link.qrDeepLink, subject: 'Check out this shared gallery!');
+                  Share.share(primaryUrl, subject: 'Check out this shared gallery!');
                 },
               ),
             ],
@@ -440,7 +473,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                   onPressed: () {
                     Navigator.of(context).pushNamed(
                       AppRoutes.sharedGallery,
-                      arguments: link.token,
+                      arguments: SharedGalleryArgs(token: link.token, isPreview: true),
                     );
                   },
                   icon: const Icon(Icons.remove_red_eye_outlined),
@@ -512,12 +545,10 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: QrImageView(
-                  // Encodes the in-app deep link (resolved by
-                  // DeepLinkService's `case 'shared':`), not the plain
-                  // https:// share_url — that has no route registered
-                  // to intercept it and would just open a dead browser
-                  // tab.
-                  data: link.qrDeepLink,
+                  // Encodes the HTTPS universal link: works in camera scanner apps,
+                  // opens native App directly via App Links / Universal Links, or
+                  // falls back to browser Web Client Gallery when app is not installed.
+                  data: link.primaryShareUrl,
                   version: QrVersions.auto,
                   size: 110.0,
                 ),

@@ -2,12 +2,16 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import api_router
 from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
+
+_STATIC_DIR = Path(__file__).parent / "static"
+_SHARE_LANDING_PAGE = _STATIC_DIR / "shared-link-landing.html"
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,3 +38,27 @@ if settings.STORAGE_BACKEND == "local":
 @app.get("/health", tags=["health"])
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Share link landing page — what a WhatsApp/etc. tap on a share link
+# (SHARE_LINK_BASE_URL + SHARE_LINK_PATH_PREFIX + "/" + token, see
+# core/storage.build_share_url) actually opens in a browser.
+#
+# Serving it from this API means no separate website/hosting is needed:
+# point SHARE_LINK_BASE_URL at wherever this service is reachable
+# (e.g. https://api.picgallery.in) and every share link will hit this
+# route. The page itself (app/static/shared-link-landing.html) reads the
+# token from the URL client-side and:
+#   - tries to hand off to the installed app (Android intent:// URL,
+#     which also carries its own Play Store fallback baked in),
+#   - if that doesn't happen within ~1.5s, calls
+#     /api/v1/public/share-links/{token}/status and either shows a
+#     preview (public + active), a "get the app to unlock it" prompt
+#     (password-protected), or an expired/revoked message.
+#
+# Registered directly (not via StaticFiles) so the path has no file
+# extension and matches SHARE_LINK_PATH_PREFIX exactly.
+@app.get("/shared/{token}", include_in_schema=False)
+def shared_link_landing(token: str) -> FileResponse:
+    return FileResponse(_SHARE_LANDING_PAGE, media_type="text/html")

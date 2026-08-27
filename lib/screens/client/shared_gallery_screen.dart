@@ -37,8 +37,13 @@ const _gridDownloadService = DownloadServiceImpl();
 /// don't own).
 class SharedGalleryScreen extends ConsumerStatefulWidget {
   final String token;
+  final bool isPreview;
 
-  const SharedGalleryScreen({super.key, required this.token});
+  const SharedGalleryScreen({
+    super.key,
+    required this.token,
+    this.isPreview = false,
+  });
 
   @override
   ConsumerState<SharedGalleryScreen> createState() => _SharedGalleryScreenState();
@@ -145,6 +150,31 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
     }
   }
 
+  Widget _buildPreviewBanner() {
+    if (!widget.isPreview) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      color: Colors.amber.shade800,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.remove_red_eye_rounded, color: Colors.white, size: 16),
+          SizedBox(width: 8),
+          Text(
+            'PREVIEW MODE — Client Gallery View',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // -------------------------------------------------------------
   // PRIVATE GALLERY ACCESS SCREEN (Passcode Gate)
   // -------------------------------------------------------------
@@ -161,72 +191,79 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: GlassCard(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                borderRadius: AppRadius.lg,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.lock_person_rounded, color: AppColors.primary, size: 20),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Password Protected',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
+        child: Column(
+          children: [
+            _buildPreviewBanner(),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      borderRadius: AppRadius.lg,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.lock_person_rounded, color: AppColors.primary, size: 20),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Password Protected',
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                      ),
                                 ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'This gallery contains private content. Enter the passcode to continue.',
-                        style: TextStyle(fontSize: 12, color: AppColors.subtitle, height: 1.4),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      const Text(
-                        'Passcode',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.text),
-                      ),
-                      const SizedBox(height: 6),
-                      CustomTextField(
-                        label: 'Enter Passcode',
-                        icon: Icons.key_rounded,
-                        controller: _passwordController,
-                        obscureText: _obscurePasscode,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Enter passcode';
-                          return null;
-                        },
-                      ),
-                      if (controller.status == PublicGalleryStatus.wrongPassword) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        const Text(
-                          'Incorrect passcode. Please try again.',
-                          style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'This gallery contains private content. Enter the passcode to continue.',
+                              style: TextStyle(fontSize: 12, color: AppColors.subtitle, height: 1.4),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            const Text(
+                              'Passcode',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.text),
+                            ),
+                            const SizedBox(height: 6),
+                            CustomTextField(
+                              label: 'Enter Passcode',
+                              icon: Icons.key_rounded,
+                              controller: _passwordController,
+                              obscureText: _obscurePasscode,
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Enter passcode';
+                                return null;
+                              },
+                            ),
+                            if (controller.status == PublicGalleryStatus.wrongPassword) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              const Text(
+                                'Incorrect passcode. Please try again.',
+                                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ],
+                            const SizedBox(height: AppSpacing.lg),
+                            GradientButton(
+                              label: 'Unlock & View Gallery',
+                              onPressed: _submitPasscode,
+                            ),
+                          ],
                         ),
-                      ],
-                      const SizedBox(height: AppSpacing.lg),
-                      GradientButton(
-                        label: 'Unlock & View Gallery',
-                        onPressed: _submitPasscode,
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -291,6 +328,10 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (widget.isPreview) ...[
+                    _buildPreviewBanner(),
+                    const SizedBox(height: 12),
+                  ],
                   Row(
                     children: [
                       Container(

@@ -90,6 +90,13 @@ class PhotoEditorArgs {
   const PhotoEditorArgs({required this.media});
 }
 
+/// Arguments for [AppRoutes.sharedGallery].
+class SharedGalleryArgs {
+  final String token;
+  final bool isPreview;
+  const SharedGalleryArgs({required this.token, this.isPreview = false});
+}
+
 /// Arguments for [AppRoutes.pinUnlock] — see splash_screen.dart, the only
 /// place this route is pushed from. [destinationRoute] is whichever route
 /// splash would have gone to directly had the PIN gate not been enabled
@@ -233,6 +240,15 @@ class AppRoutes {
   static const String helpSupport = '/legal/help-support';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    final routeName = settings.name ?? '';
+    final uri = Uri.tryParse(routeName);
+    if (uri != null && uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'shared') {
+      final token = uri.pathSegments[1];
+      if (token != 'gallery') {
+        return _fade(SharedGalleryScreen(token: token));
+      }
+    }
+
     switch (settings.name) {
       case splash:
         return _fade(const SplashScreen());
@@ -420,11 +436,11 @@ class AppRoutes {
       case albumShareSettings:
         return _slide(ShareSettingsScreen(albumId: settings.arguments as String));
       case sharedGallery:
-        // Takes the share link's opaque `token` now, not an internal
-        // `linkId` — a guest opening a `picgallery://shared/{token}`
-        // deep link (or "Preview Client View") never has, or should
-        // have, the internal id, only the token.
-        final token = settings.arguments as String? ?? '';
+        final rawArgs = settings.arguments;
+        if (rawArgs is SharedGalleryArgs) {
+          return _fade(SharedGalleryScreen(token: rawArgs.token, isPreview: rawArgs.isPreview));
+        }
+        final token = rawArgs as String? ?? '';
         return _fade(SharedGalleryScreen(token: token));
       case adminClientDetails:
         return _slide(ClientDetailsScreen(clientId: settings.arguments as String? ?? ''));

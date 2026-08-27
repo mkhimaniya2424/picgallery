@@ -47,19 +47,24 @@ class GalleryShareLink {
     required this.updatedAt,
   });
 
-  /// The deep link this share's QR code should encode. Handled by
-  /// `DeepLinkService`'s `case 'shared':`, which opens `SharedGalleryScreen`
-  /// directly in-app — unlike [shareUrl] (an `https://` link), which
-  /// currently has no route registered to intercept it and would just
-  /// open a browser tab with nothing behind it.
+  /// Primary HTTPS share URL for universal sharing (opens App if installed, Web Gallery if not).
+  String get primaryShareUrl => shareUrl.isNotEmpty ? shareUrl : 'https://picgallery.in/shared/$token';
+
+  /// Legacy custom scheme deep link for backward compatibility.
   String get qrDeepLink => 'picgallery://shared/$token';
 
   factory GalleryShareLink.fromApiJson(Map<String, dynamic> json) {
+    final tokenVal = json['token'] as String;
+    final rawUrl = json['share_url'] as String?;
+    final shareUrlVal = (rawUrl != null && rawUrl.isNotEmpty && !rawUrl.contains('localhost'))
+        ? rawUrl
+        : 'https://picgallery.in/shared/$tokenVal';
+
     return GalleryShareLink(
       id: json['id'] as String,
       albumId: json['album_id'] as String,
-      token: json['token'] as String,
-      shareUrl: json['share_url'] as String? ?? '',
+      token: tokenVal,
+      shareUrl: shareUrlVal,
       hasPassword: json['has_password'] as bool? ?? false,
       expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at'] as String) : null,
       allowDownload: json['allow_download'] as bool? ?? true,
