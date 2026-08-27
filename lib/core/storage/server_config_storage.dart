@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Persists a dev-editable override for the backend host (IP or hostname)
@@ -25,56 +24,22 @@ class ServerConfigStorage {
     encryptedSharedPreferences: true,
   );
 
-  static const IOSOptions _iosOptions = IOSOptions(
-    accessibility: KeychainAccessibility.first_unlock,
-  );
-
   final FlutterSecureStorage _storage;
 
   ServerConfigStorage({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: _androidOptions,
-              iOptions: _iosOptions,
-            );
+      : _storage = storage ?? const FlutterSecureStorage(aOptions: _androidOptions);
 
   /// Just the host/IP, e.g. `172.20.10.4` — port and `/api/v1` are
   /// added back on by whoever builds the full base URL.
   Future<void> saveHost(String host) async {
-    try {
-      await _storage.write(
-        key: _hostKey,
-        value: host,
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
-    } catch (e) {
-      debugPrint('ServerConfigStorage: failed to save host: $e');
-    }
+    await _storage.write(key: _hostKey, value: host, aOptions: _androidOptions);
   }
 
   Future<String?> readHost() async {
-    try {
-      return await _storage.read(
-        key: _hostKey,
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
-    } catch (e) {
-      debugPrint('ServerConfigStorage: failed to read host: $e');
-      return null;
-    }
+    return _storage.read(key: _hostKey, aOptions: _androidOptions);
   }
 
   Future<void> clearHost() async {
-    try {
-      await _storage.delete(
-        key: _hostKey,
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
-    } catch (e) {
-      debugPrint('ServerConfigStorage: failed to clear host: $e');
-    }
+    await _storage.delete(key: _hostKey, aOptions: _androidOptions);
   }
 }

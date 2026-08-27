@@ -148,7 +148,7 @@ def verify_apple_identity_token(identity_token: str) -> SocialIdentity:
             identity_token,
             jwk,
             algorithms=[jwk.get("alg", "RS256")],
-            audience=str(settings.APPLE_CLIENT_IDS[0],) ,
+            audience=str(settings.APPLE_CLIENT_IDS[0],),
             issuer=APPLE_ISSUER,
             options={"verify_at_hash": False},
         )

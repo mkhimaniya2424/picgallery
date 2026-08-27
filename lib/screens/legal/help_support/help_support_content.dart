@@ -1,8 +1,11 @@
+
+
 import '../../legal/common/expandable_faq_section.dart';
 
-/// Structured Help & Support content — model classes for the real,
-/// backend-driven `GET /legal/help-support` response (see
-/// `helpSupportProvider` / `LegalRepository.fetchHelpSupport`).
+/// Local, structured Help & Support content.
+///
+/// This is intentionally UI-independent so it can later be swapped with a
+/// backend-driven repository with minimal changes.
 class HelpSupportContent {
   final List<FaqSectionData> faqSections;
   final SupportContact contact;
@@ -101,3 +104,71 @@ enum SupportActionType {
     }
   }
 }
+
+const helpSupportContentLocal = HelpSupportContent(
+  lastUpdated: '2026-07-01',
+  faqSections: [
+    FaqSectionData(
+      title: 'Getting Started',
+      items: [
+        FaqItem(
+          question: 'How do I create a profile?',
+          answer:
+              'Open Profile and complete your account details. If you’re a studio owner, add your studio information too.',
+        ),
+        FaqItem(
+          question: 'Where can I find my collections?',
+          answer:
+              'Go to Collections from your Profile menu. You can create and manage collections from there.',
+        ),
+      ],
+    ),
+    FaqSectionData(
+      title: 'Account & Security',
+      items: [
+        FaqItem(
+          question: 'How do privacy settings work?',
+          answer:
+              'Use Privacy & Security in your Profile to adjust what information is shown and how your activity is handled.',
+        ),
+        FaqItem(
+          question: 'I forgot my password',
+          answer:
+              'Use the “Forgot Password” option on the login screen to reset using your email.',
+        ),
+      ],
+    ),
+    FaqSectionData(
+      title: 'Troubleshooting',
+      items: [
+        FaqItem(
+          question: 'App is slow or stuck',
+          answer:
+              'Try restarting the app. If the issue continues, contact support and include your device model and app version.',
+        ),
+      ],
+    ),
+  ],
+  contact: SupportContact(
+    title: 'Contact Support',
+    email: 'picgallery448@gmail.com',
+    phone: '+91 9662220012',
+    actions: [
+      SupportAction(
+        label: 'Email us',
+        payload: 'picgallery448@gmail.com',
+        type: SupportActionType.email,
+      ),
+      SupportAction(
+        label: 'Call support',
+        payload: '+919662220012',
+        type: SupportActionType.phone,
+      ),
+      SupportAction(
+        label: 'Copy email',
+        payload: 'picgallery448@gmail.com',
+        type: SupportActionType.copy,
+      ),
+    ],
+  ),
+);
