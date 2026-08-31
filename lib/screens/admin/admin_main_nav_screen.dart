@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/user.dart';
+import '../../providers/auth_providers.dart';
 import '../../upload/upload_job_model.dart';
 import '../../upload/upload_queue_provider.dart';
 import '../../widgets/common/screen_backdrop.dart';
@@ -39,6 +41,20 @@ class _AdminMainNavScreenState extends ConsumerState<AdminMainNavScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authUser = ref.watch(authProvider).valueOrNull;
+    if (authUser != null && authUser.role == AppUserRole.client) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        }
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
     return Scaffold(
       body: ScreenBackdrop(
         child: SafeArea(

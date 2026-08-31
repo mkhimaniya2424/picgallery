@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_constants.dart';
+import '../../core/routes/app_routes.dart';
+import '../../core/theme/app_theme.dart';
+import '../../models/user.dart';
+import '../../providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
 
 import '../../widgets/common/custom_app_bar.dart';
@@ -11,23 +17,14 @@ import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../../widgets/navigation/client_drawer.dart';
 
-/// The single post-auth Scaffold, shared by every bottom-nav destination
-/// (Home, Gallery, Alerts, Profile) so the bottom nav bar is identical,
-/// persistent chrome instead of each tab building its own — only the
-/// body swaps, via an [IndexedStack] that keeps every tab's scroll
-/// position and state alive when switching back and forth.
-///
-/// Gallery and Home render their own chrome (Home has a full-bleed
-/// gradient hero header baked into its body); Alerts and Profile share
-/// the app's normal light [CustomAppBar].
-class MainNavScreen extends StatefulWidget {
+class MainNavScreen extends ConsumerStatefulWidget {
   const MainNavScreen({super.key});
 
   @override
-  State<MainNavScreen> createState() => MainNavScreenState();
+  ConsumerState<MainNavScreen> createState() => MainNavScreenState();
 }
 
-class MainNavScreenState extends State<MainNavScreen> {
+class MainNavScreenState extends ConsumerState<MainNavScreen> {
   int _navIndex = 0;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -70,6 +67,20 @@ class MainNavScreenState extends State<MainNavScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authUser = ref.watch(authProvider).valueOrNull;
+    if (authUser != null && authUser.role == AppUserRole.photographer) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.adminHome);
+        }
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
     return Scaffold(
       key: scaffoldKey,
       

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/auth/auth_manager.dart';
 import '../core/network/api_client.dart';
-import '../core/storage/secure_storage.dart'; // ← ADDED: defines SecureStorage — verify path
+import '../core/storage/secure_storage.dart';
 import '../core/storage/token_storage.dart';
-import '../core/auth/auth_manager.dart'; // ← ADDED: defines AuthManager — verify path
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
 import '../services/push_notification_service.dart';

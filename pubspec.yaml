@@ -1,7 +1,7 @@
 name: picgallery
 description: "PicGallery ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Premium Photo & Video Management Platform"
 publish_to: 'none'
-version: 1.0.0+14
+version: 1.0.0+15
 environment:
   sdk: '>=3.4.0 <4.0.0'
 dependencies:

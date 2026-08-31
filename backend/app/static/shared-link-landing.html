@@ -103,6 +103,7 @@
   var statusText = document.getElementById('statusText');
 
   function showPlainMessage(title, sub, message, showInstallBtn) {
+    fallbackRendered = true;
     heroTitle.textContent = title;
     heroSub.textContent = sub || '';
     var html = '<div class="status" style="padding:24px 4px;">' + message + '</div>';
@@ -129,9 +130,29 @@
   // needs to run in that case.
   var appHandoffAttempted = false;
   var appLikelyOpened = false;
+  // True once we've actually painted something into #card (a real
+  // preview, an install prompt, or an error message) — as opposed to
+  // just deciding not to paint yet because the app might be taking
+  // over. Guards the retry below from clobbering real content.
+  var fallbackRendered = false;
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) appLikelyOpened = true;
+    if (document.hidden) {
+      appLikelyOpened = true;
+      return;
+    }
+    // We're back on this tab. If we previously assumed the app took
+    // over (tab went hidden) but never actually rendered anything —
+    // e.g. the OS just flashed an app-chooser / permission dialog, or
+    // the handoff silently failed and control bounced right back —
+    // `appLikelyOpened` would otherwise stay stuck `true` forever and
+    // `renderFallback` would keep bailing out on every future call,
+    // leaving the page permanently blank on a second visit. Reset it
+    // and retry instead.
+    if (appLikelyOpened && !fallbackRendered) {
+      appLikelyOpened = false;
+      renderFallback();
+    }
   });
 
   function attemptAppHandoff() {
@@ -216,6 +237,7 @@
 
   function renderGalleryPreview(data) {
     if (appLikelyOpened || document.hidden) return;
+    fallbackRendered = true;
 
     var album = data.album || {};
     var mediaList = data.media || [];
