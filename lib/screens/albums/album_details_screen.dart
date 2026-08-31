@@ -230,6 +230,34 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: [
                     AlbumDetailsHeader(album: album),
+                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(
+                            AppRoutes.albumShareSettings,
+                            arguments: album.id,
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: const BorderSide(color: AppColors.primary, width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                          ),
+                        ),
+                        icon: const Icon(Icons.settings_rounded, size: 20, color: AppColors.primary),
+                        label: const Text(
+                          'Gallery Settings',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     if (folder != null || album.description != null)
                       Builder(builder: (context) {

@@ -60,31 +60,8 @@ def get_asset_links():
 @app.get("/shared/{share_id}", include_in_schema=False)
 @app.get("/gallery/{share_id}", include_in_schema=False)
 def shared_web_fallback(share_id: str):
-    """Web fallback for shared gallery links when opened in a browser without app installed.
-
-    Redirects to the app via a custom-scheme/intent handoff, and only falls
-    back to the Play Store link if that handoff genuinely didn't work.
-
-    This used to fire `setTimeout(..., 1500)` unconditionally, sending the
-    browser tab to the Play Store 1.5s after *every* load regardless of
-    whether the app actually opened. The first time someone tapped a share
-    link that redirect was harmless — the app took over and nobody was
-    looking at the tab when it fired in the background. But the tab itself
-    kept running that timer and always ended up parked on the Play Store
-    page. The next time the *same* link was opened (some browsers/in-app
-    browsers, e.g. WhatsApp's, reuse the existing tab for a link they
-    already have open instead of loading a fresh page), the visitor landed
-    back on that already-redirected Play Store tab instead of a fresh
-    attempt to open the gallery — which looked like the link had simply
-    stopped working.
-
-    Fixed by only redirecting to the store once we can tell the app
-    handoff didn't stick (via the Page Visibility API), and by re-checking
-    on each visit rather than a blind one-shot timer.
-    """
+    """Web fallback for shared gallery links when opened in a browser without app installed."""
     from fastapi.responses import HTMLResponse
-
-    safe_share_id = share_id.replace("\\", "\\\\").replace('"', '\\"')
 
     html_content = f"""<!DOCTYPE html>
 <html>
@@ -104,71 +81,18 @@ def shared_web_fallback(share_id: str):
 <body>
   <div class="card">
     <h1>PicGallery</h1>
-    <p id="status-text">Opening shared gallery in app...</p>
-    <a id="download-btn" class="btn" style="display:none" href="https://play.google.com/store/apps/details?id=com.mk.picgallery">Get PicGallery on Play Store</a>
+    <p>Opening shared gallery in app...</p>
+    <a id="download-btn" class="btn" href="https://play.google.com/store/apps/details?id=com.mk.picgallery">Get PicGallery on Play Store</a>
   </div>
   <script>
-    (function () {{
-      var shareId = "{safe_share_id}";
-      var ua = navigator.userAgent || "";
-      var isAndroid = /Android/i.test(ua);
-      var isIOS = /iPhone|iPad|iPod/i.test(ua);
-      var playStoreUrl = "https://play.google.com/store/apps/details?id=com.mk.picgallery";
-      var statusText = document.getElementById("status-text");
-      var downloadBtn = document.getElementById("download-btn");
-
-      var appLikelyOpened = false;
-      var fallbackShown = false;
-
-      function showFallback() {{
-        if (appLikelyOpened || document.hidden || fallbackShown) return;
-        fallbackShown = true;
-        statusText.textContent = "Don't have the app yet?";
-        downloadBtn.style.display = "inline-block";
-      }}
-
-      // Only treat the store link as a real fallback destination for
-      // platforms it actually makes sense on — never auto-navigate an
-      // iOS/desktop visitor to an Android Play Store page.
-      function maybeAutoRedirectToStore() {{
-        if (isAndroid) window.location.href = playStoreUrl;
-      }}
-
-      document.addEventListener("visibilitychange", function () {{
-        if (document.hidden) {{
-          appLikelyOpened = true;
-          return;
-        }}
-        // Back on this tab. If we assumed the app took over but never
-        // actually showed the fallback, the handoff likely didn't stick
-        // (app not installed, or the OS just flashed a chooser dialog) —
-        // retry instead of leaving the page stuck showing nothing.
-        if (appLikelyOpened && !fallbackShown) {{
-          appLikelyOpened = false;
-          showFallback();
-        }}
-      }});
-
-      function attemptAppHandoff() {{
-        if (isAndroid) {{
-          window.location.href =
-            "intent://shared/" + encodeURIComponent(shareId) +
-            "#Intent;scheme=https;package=com.mk.picgallery;S.browser_fallback_url=" +
-            encodeURIComponent(playStoreUrl) + ";end";
-        }} else if (isIOS) {{
-          window.location.href = "picgallery://shared/" + encodeURIComponent(shareId);
-        }}
-      }}
-
-      attemptAppHandoff();
-
-      // Give the OS a moment to switch to the app before deciding it
-      // didn't work — re-checked on every visit (see visibilitychange
-      // above), not just once, so revisiting this same tab always gets a
-      // fresh attempt instead of a page frozen on a stale timeout result.
-      setTimeout(showFallback, 1500);
-    }})();
+    const appUrl = "picgallery://shared/{share_id}";
+    const playStoreUrl = "https://play.google.com/store/apps/details?id=com.mk.picgallery";
+    window.location.href = appUrl;
+    setTimeout(function() {{
+      window.location.href = playStoreUrl;
+    }}, 1500);
   </script>
 </body>
 </html>"""
     return HTMLResponse(content=html_content)
+
