@@ -89,7 +89,7 @@ class StudioProfileRepository {
       await _apiClient.delete('/studios/me/portfolio/$imageId');
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw NotFoundException('This portfolio image no longer exists.');
+        throw const NotFoundException('This portfolio image no longer exists.');
       }
       rethrow;
     }
@@ -116,7 +116,7 @@ class StudioProfileRepository {
       return StudioBackupResult.fromApiJson(json as Map<String, dynamic>);
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw NotFoundException('No backup has been made for this studio yet.');
+        throw const NotFoundException('No backup has been made for this studio yet.');
       }
       rethrow;
     }

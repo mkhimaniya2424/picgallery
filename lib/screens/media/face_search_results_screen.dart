@@ -73,9 +73,9 @@ class FaceSearchResultsScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: const Center(
+    return const Padding(
+      padding: EdgeInsets.all(AppSpacing.xl),
+      child: Center(
         child: EmptyStateCard(
           icon: Icons.search_off_rounded,
           message: 'No matching photos found.\nTry a different selfie or adjust your search.',

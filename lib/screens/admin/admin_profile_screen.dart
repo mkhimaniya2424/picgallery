@@ -7,6 +7,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/settings_provider.dart';
 import '../../widgets/cards/glass_card.dart';
 
 /// Studio owner profile tab — account summary + settings menu + Log Out.
@@ -116,7 +117,7 @@ class AdminProfileScreen extends ConsumerWidget {
                 }),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
             GlassCard(
               borderRadius: AppRadius.lg,
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -126,10 +127,84 @@ class AdminProfileScreen extends ConsumerWidget {
                 iconColor: AppColors.error,
                 labelColor: AppColors.error,
                 showDivider: false,
-                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRoutes.roleSelection, (route) => false),
+                onTap: () async {
+                  await ref.read(authProvider.notifier).logout();
+                  final currentSettings = ref.read(settingsProvider);
+                  await ref.read(settingsProvider.notifier).updateSettings(
+                        currentSettings.copyWith(
+                          photographerName: '',
+                          email: '',
+                          clientId: '',
+                        ),
+                      );
+                  if (context.mounted) {
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.roleSelection, (route) => false);
+                  }
+                },
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+            // ── Danger Zone ─────────────────────────────────────────
+            GlassCard(
+              fillColor: AppColors.error.withValues(alpha: 0.05),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+              borderRadius: AppRadius.lg,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: _MenuRow(
+                icon: Icons.delete_forever_rounded,
+                label: 'Delete Account',
+                iconColor: AppColors.error,
+                labelColor: AppColors.error,
+                showDivider: false,
+                onTap: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    barrierColor: Colors.black.withValues(alpha: 0.45),
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: AppColors.surface,
+                      surfaceTintColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.lg)),
+                      icon: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.delete_forever_rounded,
+                            color: AppColors.error, size: 28),
+                      ),
+                      title: const Text('Delete Account?',
+                          textAlign: TextAlign.center),
+                      content: const Text(
+                        'This will permanently delete your studio account and all associated data. This cannot be undone.',
+                        textAlign: TextAlign.center,
+                      ),
+                      actionsAlignment: MainAxisAlignment.center,
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: const Text('Continue',
+                              style: TextStyle(
+                                  color: AppColors.error,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    Navigator.of(context).pushNamed(AppRoutes.deleteAccount);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
           ],
         ),
         ),

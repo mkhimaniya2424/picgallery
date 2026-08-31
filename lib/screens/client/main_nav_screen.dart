@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/screen_backdrop.dart';
 import '../../widgets/navigation/custom_bottom_nav.dart';

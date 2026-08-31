@@ -37,6 +37,7 @@ class ShareLinkRepository {
 
   Future<GalleryShareLink> createLink({
     required String albumId,
+    String? clientId,
     String? password,
     DateTime? expiresAt,
     bool allowDownload = true,
@@ -44,6 +45,7 @@ class ShareLinkRepository {
   }) async {
     final body = {
       'album_id': albumId,
+      if (clientId != null && clientId.isNotEmpty) 'client_id': clientId,
       if (password != null && password.isNotEmpty) 'password': password,
       if (expiresAt != null) 'expires_at': expiresAt.toUtc().toIso8601String(),
       'allow_download': allowDownload,
@@ -62,6 +64,8 @@ class ShareLinkRepository {
   /// prefilling anyway, since it only ever stores the bcrypt hash).
   Future<GalleryShareLink> updateLink({
     required String id,
+    String? clientId,
+    bool clearClient = false,
     String? password,
     bool clearPassword = false,
     DateTime? expiresAt,
@@ -71,6 +75,8 @@ class ShareLinkRepository {
     bool? isRevoked,
   }) async {
     final body = {
+      if (clientId != null && clientId.isNotEmpty) 'client_id': clientId,
+      if (clearClient) 'clear_client': true,
       if (password != null && password.isNotEmpty) 'password': password,
       if (clearPassword) 'clear_password': true,
       if (expiresAt != null) 'expires_at': expiresAt.toUtc().toIso8601String(),
@@ -88,11 +94,11 @@ class ShareLinkRepository {
   }
 
   // ---------------------------------------------------------------------
-  // Public / guest side (no auth) — used by SharedGalleryScreen
+  // Public / guest side (optional auth) — used by SharedGalleryScreen
   // ---------------------------------------------------------------------
 
   Future<ShareLinkStatus> fetchStatus(String token) async {
-    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: false);
+    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: true);
     return ShareLinkStatus.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -104,7 +110,7 @@ class ShareLinkRepository {
     final query = (password != null && password.isNotEmpty)
         ? '?password=${Uri.encodeQueryComponent(password)}'
         : '';
-    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: false);
+    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: true);
     return PublicGalleryData.fromApiJson(json as Map<String, dynamic>);
   }
 

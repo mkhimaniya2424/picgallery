@@ -53,11 +53,23 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="picgallery" />
             </intent-filter>
-            <!-- https://picgallery.app/shared/... App Links for Universal Share Links. -->
+            <!-- https://api.picgallery.in/shared/... App Links for Universal Share Links -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="api.picgallery.in"
+                    android:pathPrefix="/shared" />
+                <data
+                    android:scheme="http"
+                    android:host="api.picgallery.in"
+                    android:pathPrefix="/shared" />
+                <data
+                    android:scheme="https"
+                    android:host="picgallery.in"
+                    android:pathPrefix="/shared" />
                 <data
                     android:scheme="https"
                     android:host="picgallery.app"

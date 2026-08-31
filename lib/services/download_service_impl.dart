@@ -5,8 +5,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:file_saver/file_saver.dart';
 import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'download_service.dart';
 import 'media_picker_service.dart' show MediaContentType;
@@ -50,6 +50,7 @@ class DownloadServiceImpl implements DownloadService {
 
     final file = File(filePath);
     final bytes = await file.readAsBytes();
+    if (!context.mounted) return false;
     final name = file.uri.pathSegments.last;
 
     return _saveBytes(
@@ -71,34 +72,88 @@ class DownloadServiceImpl implements DownloadService {
     required String fileName,
     required String ext,
   }) async {
-    // file_saver will show a save dialog where supported.
-    final result = await FileSaver.instance.saveFile(
-      name: fileName,
-      bytes: bytes,
-      // Some platforms also use ext.
-      ext: ext,
-      // file_saver expects a MimeType; leaving it unspecified can fail type checks
-      // on newer SDKs, so we pass null only if the API allows it.
-      // Here we omit mimeType parameter entirely to keep compatibility.
-    );
+    if (!context.mounted) return false;
 
-    // file_saver (^0.2.14) returns a non-nullable String (the saved
-    // path/identifier). An empty result is treated as "nothing saved".
-    if (result.isEmpty) {
+    try {
+      if (!_hasNativeGallery) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Saving files is currently supported on Android and iOS.',
+              ),
+            ),
+          );
+        }
+        return false;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final safeName = fileName.trim().isEmpty
+          ? 'picgallery_download.$ext'
+          : fileName;
+
+      final file = File('${tempDir.path}/$safeName');
+      await file.writeAsBytes(bytes, flush: true);
+
+      final mimeType = MediaContentType.forFileName(safeName);
+      final isVideo = mimeType.startsWith('video/');
+
+      var hasAccess = await Gal.hasAccess(toAlbum: isVideo);
+
+      if (!hasAccess) {
+        hasAccess = await Gal.requestAccess(toAlbum: isVideo);
+      }
+
+      if (!hasAccess) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gallery permission was denied.'),
+            ),
+          );
+        }
+        return false;
+      }
+
+      if (isVideo) {
+        await Gal.putVideo(file.path);
+      } else {
+        await Gal.putImage(file.path);
+      }
+
+      try {
+        await file.delete();
+      } catch (_) {
+        // Temporary cleanup failure should not make a successful save fail.
+      }
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Download cancelled.')),
+          const SnackBar(content: Text('Saved successfully.')),
+        );
+      }
+
+      return true;
+    } on GalException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to save: ${e.type.message}',
+            ),
+          ),
+        );
+      }
+      return false;
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e')),
         );
       }
       return false;
     }
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saved successfully.')),
-      );
-    }
-    return true;
   }
 
   /// Shared Download History step for every "the file is now saved
@@ -530,19 +585,39 @@ class DownloadServiceImpl implements DownloadService {
       final fileName = sourceFile.uri.pathSegments.last;
       final baseName = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
 
-      final result = await FileSaver.instance.saveFile(
-        name: 'edited_$baseName',
-        bytes: renderedBytes,
-        ext: 'png',
+      final tempDir = await getTemporaryDirectory();
+      final editedFile = File(
+        '${tempDir.path}/edited_$baseName.png',
       );
 
-      if (result.isEmpty) {
+      await editedFile.writeAsBytes(
+        renderedBytes,
+        flush: true,
+      );
+
+      var hasAccess = await Gal.hasAccess(toAlbum: false);
+
+      if (!hasAccess) {
+        hasAccess = await Gal.requestAccess(toAlbum: false);
+      }
+
+      if (!hasAccess) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Download cancelled.')),
+            const SnackBar(
+              content: Text('Gallery permission was denied.'),
+            ),
           );
         }
         return false;
+      }
+
+      await Gal.putImage(editedFile.path);
+
+      try {
+        await editedFile.delete();
+      } catch (_) {
+        // Temporary cleanup failure should not affect successful save.
       }
 
       if (context.mounted) {

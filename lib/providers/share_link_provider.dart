@@ -59,6 +59,8 @@ class ShareLinkController extends ChangeNotifier {
   }
 
   Future<GalleryShareLink> createOrUpdate({
+    String? clientId,
+    bool clearClient = false,
     String? password,
     bool clearPassword = false,
     DateTime? expiresAt,
@@ -71,6 +73,7 @@ class ShareLinkController extends ChangeNotifier {
     if (current == null || current.isRevoked) {
       result = await _repo.createLink(
         albumId: albumId,
+        clientId: clientId,
         password: password,
         expiresAt: expiresAt,
         allowDownload: allowDownload,
@@ -79,6 +82,8 @@ class ShareLinkController extends ChangeNotifier {
     } else {
       result = await _repo.updateLink(
         id: current.id,
+        clientId: clientId,
+        clearClient: clearClient,
         password: password,
         clearPassword: clearPassword,
         expiresAt: expiresAt,
@@ -118,8 +123,10 @@ enum PublicGalleryStatus {
   needsPassword,
   wrongPassword,
   notFound,
+  albumDeleted,
   revoked,
   expired,
+  unauthorized,
   downloadsDisabled,
   error,
   loaded,
@@ -168,11 +175,13 @@ class PublicGalleryController extends ChangeNotifier {
   /// Runs once on creation: checks whether the link needs a passcode
   /// before ever fetching (and counting a view for) the full gallery.
   Future<void> checkStatus() async {
+    debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController checking status for token/shareId: $token');
     _status = PublicGalleryStatus.loading;
     notifyListeners();
 
     try {
       final status = await _repo.fetchStatus(token);
+      debugPrint('[API_LOOKUP_DEBUG] Status response - requiresPassword: ${status.requiresPassword}, isActive: ${status.isActive}');
       if (!status.isActive) {
         // The status endpoint doesn't distinguish revoked vs. expired
         // (both just collapse to `is_active: false`) — fetching once
@@ -193,6 +202,7 @@ class PublicGalleryController extends ChangeNotifier {
   }
 
   Future<void> unlock({String? password}) async {
+    debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController unlocking token: $token (hasPassword: ${password != null})');
     _status = PublicGalleryStatus.loading;
     notifyListeners();
 
@@ -200,6 +210,7 @@ class PublicGalleryController extends ChangeNotifier {
       _data = await _repo.fetchPublicGallery(token: token, password: password);
       _status = PublicGalleryStatus.loaded;
       _password = password;
+      debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController successfully loaded album: ${_data?.album.name}');
     } catch (e) {
       _handleError(e, isPasswordAttempt: password != null && password.isNotEmpty);
     }
@@ -207,10 +218,19 @@ class PublicGalleryController extends ChangeNotifier {
   }
 
   void _handleError(Object error, {bool isPasswordAttempt = false}) {
+    debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController error for token $token: $error');
     if (error is ApiException) {
       switch (error.statusCode) {
         case 404:
-          _status = PublicGalleryStatus.notFound;
+          if (error.message.toLowerCase().contains('no longer available') ||
+              error.message.toLowerCase().contains('album')) {
+            _status = PublicGalleryStatus.albumDeleted;
+          } else {
+            _status = PublicGalleryStatus.notFound;
+          }
+          break;
+        case 403:
+          _status = PublicGalleryStatus.unauthorized;
           break;
         case 401:
           _status = isPasswordAttempt ? PublicGalleryStatus.wrongPassword : PublicGalleryStatus.needsPassword;

@@ -1,4 +1,4 @@
-﻿import enum
+import enum
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
@@ -157,7 +157,11 @@ class User(Base):
     camera_permission_granted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     photo_library_permission_granted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     push_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    
+
+    # Notification Settings screen — "Email Notifications" toggle. Added via
+    # migration z1a2b3c4d5e6; must be listed here so SQLAlchemy maps the column.
+    email_notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default="true")
+
     # Firebase Cloud Messaging token for live push notifications
     fcm_token: Mapped[str | None] = mapped_column(String(500), nullable=True)
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
@@ -321,11 +322,23 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
           // 5. SYSTEM BACKUP & DETAILS
           _buildSectionHeader('System Utilities'),
           _buildSettingsCard([
-            _SettingsRow(
-              icon: Icons.backup_rounded,
-              title: 'Cloud Backup Now',
-              subtitle: 'Save config preferences to Hive cloud',
-              onTap: _triggerBackup,
+            Consumer(
+              builder: (context, ref, child) {
+                final latestBackupAsync = ref.watch(latestBackupProvider);
+                final subtitle = latestBackupAsync.when(
+                  data: (date) => date != null
+                      ? 'Last backed up: ${DateFormat('MMM d, yyyy h:mm a').format(date.toLocal())}'
+                      : 'Never backed up',
+                  loading: () => 'Checking backup status...',
+                  error: (_, __) => 'Failed to check backup status',
+                );
+                return _SettingsRow(
+                  icon: Icons.backup_rounded,
+                  title: 'Backup Now',
+                  subtitle: subtitle,
+                  onTap: _triggerBackup,
+                );
+              },
             ),
             _SettingsRow(
               icon: Icons.restore_rounded,
@@ -492,29 +505,33 @@ class _SettingsToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textOnDark : AppColors.text),
+    return InkWell(
+      onTap: disabled ? null : () => onChanged(!value),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.primary),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textOnDark : AppColors.text),
+              ),
             ),
-          ),
-          Switch.adaptive(
-            value: value,
-            onChanged: disabled ? null : onChanged,
-            activeThumbColor: AppColors.primary,
-            activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
-          ),
-        ],
+            Switch.adaptive(
+              value: value,
+              onChanged: disabled ? null : onChanged,
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -726,6 +743,7 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
     try {
       await ref.read(studioProfileRepositoryProvider).createBackup(settings.toJson());
       if (!mounted) return;
+      ref.invalidate(latestBackupProvider);
       setState(() => _status = _BackupStatus.success);
     } on ApiException catch (e) {
       if (!mounted) return;

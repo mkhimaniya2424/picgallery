@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/utils/media_format_utils.dart';
 import '../../models/media_model.dart';
 import '../../providers/auth_providers.dart' show apiClientProvider;

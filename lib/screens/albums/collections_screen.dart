@@ -398,10 +398,10 @@ class _CollectionsContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: AppSpacing.lg),
-                Padding(
+                const Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  child: const Text(
+                      EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: Text(
                     'Featured collections',
                     style: TextStyle(
                       color: AppColors.text,
@@ -437,10 +437,10 @@ class _CollectionsContent extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 if (filtered.isNotEmpty) ...[
-                  Padding(
+                  const Padding(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                    child: const Text(
+                        EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: Text(
                       'All collections',
                       style: TextStyle(
                         color: AppColors.text,

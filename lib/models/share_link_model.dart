@@ -11,6 +11,7 @@ class GalleryShareLink {
   final String albumId;
   final String token;
   final String shareUrl;
+  final String? clientId;
   final bool hasPassword;
   final DateTime? expiresAt;
   final bool allowDownload;
@@ -32,6 +33,7 @@ class GalleryShareLink {
     required this.albumId,
     required this.token,
     required this.shareUrl,
+    this.clientId,
     required this.hasPassword,
     this.expiresAt,
     required this.allowDownload,
@@ -48,7 +50,9 @@ class GalleryShareLink {
   });
 
   /// Primary HTTPS share URL for universal sharing (opens App if installed, Web Gallery if not).
-  String get primaryShareUrl => shareUrl.isNotEmpty ? shareUrl : 'https://picgallery.in/shared/$token';
+  String get primaryShareUrl => (shareUrl.isNotEmpty && !shareUrl.contains('localhost'))
+      ? shareUrl
+      : 'https://api.picgallery.in/shared/$token';
 
   /// Legacy custom scheme deep link for backward compatibility.
   String get qrDeepLink => 'picgallery://shared/$token';
@@ -58,13 +62,14 @@ class GalleryShareLink {
     final rawUrl = json['share_url'] as String?;
     final shareUrlVal = (rawUrl != null && rawUrl.isNotEmpty && !rawUrl.contains('localhost'))
         ? rawUrl
-        : 'https://picgallery.in/shared/$tokenVal';
+        : 'https://api.picgallery.in/shared/$tokenVal';
 
     return GalleryShareLink(
       id: json['id'] as String,
       albumId: json['album_id'] as String,
       token: tokenVal,
       shareUrl: shareUrlVal,
+      clientId: json['client_id'] as String?,
       hasPassword: json['has_password'] as bool? ?? false,
       expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at'] as String) : null,
       allowDownload: json['allow_download'] as bool? ?? true,
@@ -96,6 +101,7 @@ class GalleryShareLink {
       'album_id': albumId,
       'token': token,
       'share_url': shareUrl,
+      'client_id': clientId,
       'has_password': hasPassword,
       'expires_at': expiresAt?.toIso8601String(),
       'allow_download': allowDownload,
@@ -119,13 +125,19 @@ class GalleryShareLink {
 class ShareLinkStatus {
   final bool requiresPassword;
   final bool isActive;
+  final String? clientId;
 
-  const ShareLinkStatus({required this.requiresPassword, required this.isActive});
+  const ShareLinkStatus({
+    required this.requiresPassword,
+    required this.isActive,
+    this.clientId,
+  });
 
   factory ShareLinkStatus.fromApiJson(Map<String, dynamic> json) {
     return ShareLinkStatus(
       requiresPassword: json['requires_password'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? false,
+      clientId: json['client_id'] as String?,
     );
   }
 }

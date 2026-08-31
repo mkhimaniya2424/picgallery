@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -29,7 +29,7 @@ import '../../widgets/inputs/custom_text_field.dart';
 /// account.
 ///
 /// Standalone screen only, per the same convention [EditProfileScreen]
-/// (Task 7) established — nothing navigates here yet; `ProfileScreen`'s
+/// (Task 7) established â€” nothing navigates here yet; `ProfileScreen`'s
 /// menu is still the dummy placeholder described there.
 class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
@@ -51,8 +51,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     super.dispose();
   }
 
-  Future<void> _handleDeletePressed() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _handleDeletePressed(bool isLocal) async {
+    if (isLocal && !_formKey.currentState!.validate()) return;
     if (!_acknowledged) {
       await AppPopup.show(
         context,
@@ -68,7 +68,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
     setState(() => _isDeleting = true);
     try {
-      await ref.read(userRepositoryProvider).deleteAccount(password: _passwordController.text);
+      await ref.read(userRepositoryProvider).deleteAccount(
+        password: isLocal ? _passwordController.text : null,
+      );
       await ref.read(authProvider.notifier).logout();
 
       if (!mounted) return;
@@ -148,6 +150,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authProvider).valueOrNull;
+    final isLocal = user?.authProvider == 'local';
+
     return Scaffold(
       appBar: const CustomAppBar(title: 'Delete Account'),
       body: ScreenBackdrop(
@@ -186,21 +191,23 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xl),
-                      Text('Confirm Your Password', style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'For your security, enter your password to continue.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      CustomTextField(
-                        label: 'Password',
-                        icon: Icons.lock_outline_rounded,
-                        obscureText: true,
-                        controller: _passwordController,
-                        validator: (v) => (v == null || v.isEmpty) ? 'Enter your password to continue' : null,
-                      ),
+                      if (isLocal) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        Text('Confirm Your Password', style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'For your security, enter your password to continue.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        CustomTextField(
+                          label: 'Password',
+                          icon: Icons.lock_outline_rounded,
+                          obscureText: true,
+                          controller: _passwordController,
+                          validator: (v) => (v == null || v.isEmpty) ? 'Enter your password to continue' : null,
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                       InkWell(
                         onTap: () => setState(() => _acknowledged = !_acknowledged),
@@ -237,7 +244,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                         icon: Icons.delete_forever_rounded,
                         isLoading: _isDeleting,
                         gradient: LinearGradient(colors: [AppColors.error.withValues(alpha: 0.85), AppColors.error]),
-                        onPressed: _isDeleting ? null : _handleDeletePressed,
+                        onPressed: _isDeleting ? null : () => _handleDeletePressed(isLocal),
                       ),
                     ],
                   ),
@@ -250,3 +257,4 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     );
   }
 }
+

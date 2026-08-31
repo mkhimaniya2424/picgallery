@@ -115,7 +115,17 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
 
   @override
   Future<FolderState> build() async {
-    final initial = const FolderState(
+    final userId = ref.watch(authProvider.select((a) => a.valueOrNull?.id));
+
+    // Flush old data completely on account switch to prevent it from bleeding
+    // through Riverpod's loading state.
+    ref.listen(authProvider.select((a) => a.valueOrNull?.id), (previous, next) {
+      if (previous != null && previous != next) {
+        ref.invalidateSelf();
+      }
+    });
+
+    const initial = FolderState(
       isLoading: true,
       lastError: null,
       searchQuery: '',
@@ -123,6 +133,10 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
       filterOption: FolderFilterOption.all,
       allFolders: [],
     );
+
+    if (userId == null) {
+      return initial.copyWith(isLoading: false);
+    }
 
     state = const AsyncValue.loading();
 

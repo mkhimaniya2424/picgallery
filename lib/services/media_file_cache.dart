@@ -9,7 +9,7 @@ import '../models/media_model.dart';
 ///
 /// Web has no filesystem to cache into, so instead of a path we hand
 /// back the raw bytes plus a filename the caller can pass straight to
-/// `XFile.fromData` (share) or `file_saver` (download).
+/// `XFile.fromData` (share) or `gal` (download).
 class MediaBytesResult {
   const MediaBytesResult({required this.bytes, required this.fileName});
 

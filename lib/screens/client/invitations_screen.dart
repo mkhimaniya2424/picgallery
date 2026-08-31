@@ -58,7 +58,7 @@ class InvitationsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             if (pendingInvites.isEmpty)
-              _EmptyState(
+              const _EmptyState(
                 icon: Icons.mail_outline_rounded,
                 message: 'No pending studio invitations',
                 subtitle:

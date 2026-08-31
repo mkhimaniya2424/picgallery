@@ -10,6 +10,7 @@ import '../../models/settings_model.dart';
 import '../../models/user.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/deep_link_service.dart';
 import '../../storage/onboarding_local_store.dart';
 import '../../widgets/common/screen_backdrop.dart';
 
@@ -139,6 +140,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!isGateScreen) {
       navigator.pushReplacementNamed(destination.route, arguments: destination.arguments);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        DeepLinkService.instance.onSplashComplete();
+      });
       return;
     }
 
@@ -147,6 +151,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     navigator.pushReplacementNamed(AppRoutes.roleSelection);
     navigator.pushNamed(AppRoutes.login, arguments: legacyRole);
     navigator.pushNamed(destination.route, arguments: destination.arguments);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      DeepLinkService.instance.onSplashComplete();
+    });
   }
 
   /// Same priority order as `LoginScreen._navigateAfterAuth`: a restored

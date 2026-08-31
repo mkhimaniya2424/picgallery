@@ -108,7 +108,7 @@ class StorageUsageCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 child: Container(
                   height: 10,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: AppColors.heroGradient,
                   ),
                 ),

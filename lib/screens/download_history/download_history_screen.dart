@@ -12,7 +12,6 @@ import '../../models/download_history_model.dart';
 import '../../models/media_model.dart' as media_model;
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/delete_confirmation_dialog.dart';
-import '../../widgets/common/snackbar_helper.dart';
 import '../../widgets/common/anchored_dropdown_field.dart';
 import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/media/media_thumb.dart';
@@ -428,7 +427,7 @@ class _NetworkThumb extends StatelessWidget {
 class _Placeholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Icon(
         Icons.image_not_supported_rounded,
         color: AppColors.subtitle,
@@ -538,16 +537,16 @@ class _SortRow extends StatelessWidget {
                   EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               border: OutlineInputBorder(),
             ),
-            items: [
-              const DropdownMenuItem(
+            items: const [
+              DropdownMenuItem(
                 value: DownloadHistorySort.recent,
                 child: Text('Recent'),
               ),
-              const DropdownMenuItem(
+              DropdownMenuItem(
                 value: DownloadHistorySort.name,
                 child: Text('Name'),
               ),
-              const DropdownMenuItem(
+              DropdownMenuItem(
                 value: DownloadHistorySort.size,
                 child: Text('Size'),
               ),

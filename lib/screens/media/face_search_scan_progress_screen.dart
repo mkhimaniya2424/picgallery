@@ -136,7 +136,7 @@ class _FaceSearchScanProgressScreenState
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   'Matching your selfie against shared albums…',
                   style: TextStyle(
                     fontSize: 12.5,

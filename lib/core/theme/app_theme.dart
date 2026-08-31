@@ -196,7 +196,7 @@ class AppTheme {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         labelStyle:
-            TextStyle(color: AppColors.subtitleOnDark, fontSize: 14),
+            const TextStyle(color: AppColors.subtitleOnDark, fontSize: 14),
         hintStyle:
             TextStyle(color: AppColors.subtitleOnDark.withValues(alpha: 0.6)),
         prefixIconColor: AppColors.primary,

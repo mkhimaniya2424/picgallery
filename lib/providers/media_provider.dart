@@ -8,7 +8,7 @@ import '../repositories/api_media_repository.dart';
 import '../repositories/caching_media_repository.dart';
 import '../storage/media_ui_filters_local_store.dart';
 import 'album_provider.dart';
-import 'auth_providers.dart' show apiClientProvider, AuthState, authStateProvider;
+import 'auth_providers.dart' show apiClientProvider, AuthState, authStateProvider, authProvider;
 
 enum MediaDateFilterOption {
   all,
@@ -76,6 +76,8 @@ class MediaListController extends ChangeNotifier {
   MediaType? get type => _type;
 
   String? _likedByClientId;
+  bool _unfiledOnly = false;
+  bool get unfiledOnly => _unfiledOnly;
   String? get likedByClientId => _likedByClientId;
 
   final List<MediaModel> _allMedia = [];
@@ -181,6 +183,10 @@ class MediaListController extends ChangeNotifier {
       list = list.where((m) => m.folderId == _folderId);
     }
 
+    if (_unfiledOnly) {
+      list = list.where((m) => m.albumId == null);
+    }
+
     if (_type != null) {
       list = list.where((m) => m.type == _type);
     }
@@ -277,8 +283,15 @@ class MediaListController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFolder(String? folderId) {
-    _folderId = folderId;
+  void setFolder(String? f) {
+    if (_folderId == f) return;
+    _folderId = f;
+    notifyListeners();
+  }
+
+  void setUnfiledOnly(bool val) {
+    if (_unfiledOnly == val) return;
+    _unfiledOnly = val;
     notifyListeners();
   }
 
@@ -706,13 +719,15 @@ final mediaRepositoryProvider = Provider<MediaRepository>((ref) {
   return repo;
 });
 
-/// Global media controller.
-///
-/// UI screens will set type/album/folder/search/sort/filter before rendering.
 final mediaProvider = ChangeNotifierProvider<MediaListController>((ref) {
+  final userId = ref.watch(authProvider.select((a) => a.valueOrNull?.id));
   final repo = ref.watch(mediaRepositoryProvider);
   final controller = MediaListController(repository: repo, ref: ref);
-  // Deferred to a microtask — see albumProvider for why.
-  Future.microtask(controller.load);
+  
+  if (userId != null) {
+    Future.microtask(controller.load);
+  }
+  
   return controller;
 });
+

@@ -185,6 +185,10 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
     }
 
     if (_error != null && _mediaList.isEmpty) {
+      final isNotFound = _error!.contains('404') || _error!.toLowerCase().contains('not found');
+      final message = isNotFound
+          ? 'This shared gallery is no longer available.'
+          : 'Unable to load gallery photos. Check your connection and try again.';
       return SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Container(
@@ -194,7 +198,7 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              InlineErrorBanner(message: _error!),
+              InlineErrorBanner(message: message),
               const SizedBox(height: AppSpacing.md),
               ElevatedButton.icon(
                 onPressed: _loadMedia,

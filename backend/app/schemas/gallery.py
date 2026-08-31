@@ -354,6 +354,7 @@ class MediaRead(BaseModel):
 
 class ShareLinkCreate(BaseModel):
     album_id: uuid.UUID
+    client_id: uuid.UUID | None = None
     # Plain-text passcode from the studio, e.g. "1234" — hashed with
     # the same bcrypt helpers as user passwords before it ever touches
     # the DB (see core/security.py). Omit/None means the link is public.
@@ -364,6 +365,8 @@ class ShareLinkCreate(BaseModel):
 
 
 class ShareLinkUpdate(BaseModel):
+    client_id: uuid.UUID | None = None
+    clear_client: bool = False
     password: str | None = Field(default=None, min_length=4, max_length=100)
     clear_password: bool = False
     expires_at: datetime | None = None
@@ -384,6 +387,7 @@ class ShareLinkRead(BaseModel):
     album_id: uuid.UUID
     token: str
     share_url: str
+    client_id: uuid.UUID | None = None
     has_password: bool
     expires_at: datetime | None
     allow_download: bool
@@ -411,6 +415,7 @@ class ShareLinkRead(BaseModel):
             album_id=link.album_id,
             token=link.token,
             share_url=build_share_url(link.token),
+            client_id=link.client_id,
             has_password=link.password_hash is not None,
             expires_at=link.expires_at,
             allow_download=link.allow_download,
@@ -471,6 +476,7 @@ class ShareLinkStatusRead(BaseModel):
 
     requires_password: bool
     is_active: bool
+    client_id: uuid.UUID | None = None
 
 
 # ---------------------------------------------------------------------------

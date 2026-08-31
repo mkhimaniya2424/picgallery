@@ -44,20 +44,31 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     if (_scanned) return;
     for (final barcode in capture.barcodes) {
       final String? code = barcode.rawValue;
-      if (code != null && code.startsWith('picgallery://')) {
-        _handleCandidateLink(code);
+      if (code != null && code.trim().isNotEmpty) {
+        _handleCandidateLink(code.trim());
         break;
       }
     }
   }
 
   /// Shared by the live scanner, "scan from gallery", and manual entry.
-  /// Only latches [_scanned]/stops the camera once [uri] is confirmed
-  /// parseable — an unparseable code shows a snackbar and leaves the
-  /// scanner running so the person can just try again.
+  /// Handles canonical HTTPS links (e.g. `https://api.picgallery.in/shared/<shareId>`),
+  /// custom scheme URIs (`picgallery://shared/<shareId>`), and bare token strings.
   void _handleCandidateLink(String raw) {
     if (_scanned) return;
-    final uri = Uri.tryParse(raw);
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return;
+
+    Uri? uri = Uri.tryParse(trimmed);
+    
+    // If input is not a scheme-qualified URL, treat it as a bare share token.
+    if (uri == null ||
+        (!trimmed.startsWith('http://') &&
+            !trimmed.startsWith('https://') &&
+            !trimmed.startsWith('picgallery://'))) {
+      uri = Uri.tryParse('https://api.picgallery.in/shared/$trimmed');
+    }
+
     if (uri == null) {
       if (mounted) {
         SnackBarHelper.showError(context, 'Invalid QR code — please try again');
@@ -75,10 +86,8 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     Future.delayed(const Duration(milliseconds: 450), () {
       if (!mounted) return;
       Navigator.pop(context);
-      // Any further failure (unrecognized host, missing token/studioId)
-      // is now reported by DeepLinkService itself via a snackbar on
-      // whatever screen we just popped back to, instead of vanishing.
-      DeepLinkService.instance.handleLink(uri);
+      debugPrint('[QR_DEBUG] Scanned QR raw: $raw => Uri: $uri');
+      DeepLinkService.instance.handleLink(uri!);
     });
   }
 
@@ -88,9 +97,9 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     final found = await _controller.analyzeImage(file.path);
     // analyzeImage() feeds any detected barcode through the same
     // onDetect stream _onDetect is already listening to, so a
-    // recognized picgallery:// code is handled from there. This only
+    // recognized picgallery code is handled from there. This only
     // needs to cover the "nothing found" case.
-    if (found != true && mounted && !_scanned) {
+    if (found == null && mounted && !_scanned) {
       SnackBarHelper.showError(context, 'No QR code found in that image');
     }
   }
@@ -132,11 +141,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     final trimmed = submitted?.trim();
     if (trimmed == null || trimmed.isEmpty || !mounted) return;
 
-    // Someone texted just the token rather than the full link/QR image
-    // — treat a bare value as a share token, same as scanning the QR
-    // the token was generated alongside.
-    final candidate = trimmed.startsWith('picgallery://') ? trimmed : 'picgallery://shared/$trimmed';
-    _handleCandidateLink(candidate);
+    _handleCandidateLink(trimmed);
   }
 
   @override

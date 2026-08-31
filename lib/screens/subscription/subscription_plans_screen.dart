@@ -951,7 +951,7 @@ class _CurrentPlanStatusCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             const Divider(color: AppColors.darkBorder),
             const SizedBox(height: AppSpacing.md),
-            Text(
+            const Text(
               'Included Benefits:',
               style: TextStyle(
                 fontSize: 12,
@@ -1029,7 +1029,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
       child: SafeArea(
@@ -1075,7 +1075,7 @@ class _ConfirmationBottomSheet extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
+            const Text(
               "You'll be redirected to picgallery.in to complete your subscription.",
               textAlign: TextAlign.center,
               style: TextStyle(

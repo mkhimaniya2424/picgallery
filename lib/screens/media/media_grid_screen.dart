@@ -144,6 +144,7 @@ class MediaGridScreen extends ConsumerStatefulWidget {
   final String? albumId;
   final String? folderId;
   final bool favoritesOnly;
+  final bool unfiledOnly;
 
   /// Optional hard type filter. When set to [MediaType.video] this is the
   /// Video Grid; [MediaType.photo] is the Photo Grid; `null` shows both,
@@ -157,6 +158,7 @@ class MediaGridScreen extends ConsumerStatefulWidget {
     this.albumId,
     this.folderId,
     this.favoritesOnly = false,
+    this.unfiledOnly = false,
     this.type,
     this.likedByClientId,
     this.showBack = true,
@@ -278,6 +280,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         : MediaFilterOption.all);
     c.setType(widget.type);
     c.setLikedByClientId(widget.likedByClientId);
+    c.setUnfiledOnly(widget.unfiledOnly);
     _resetPagination();
   }
 
@@ -2151,9 +2154,14 @@ class MediaSearchArgs {
   final String? initialAlbumId;
   final String? initialFolderId;
   final bool favoritesOnly;
+  final bool unfiledOnly;
 
-  const MediaSearchArgs(
-      {this.initialAlbumId, this.initialFolderId, this.favoritesOnly = false});
+  const MediaSearchArgs({
+    this.initialAlbumId,
+    this.initialFolderId,
+    this.favoritesOnly = false,
+    this.unfiledOnly = false,
+  });
 }
 
 class _TimelineHeaderDelegate extends SliverPersistentHeaderDelegate {

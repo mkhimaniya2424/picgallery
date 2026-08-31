@@ -6,6 +6,7 @@ import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/admin_dashboard_data.dart';
 import '../../providers/admin_dashboard_providers.dart';
+import '../media/media_grid_screen.dart' show MediaSearchArgs;
 import '../../upload/upload_queue_provider.dart';
 import '../../widgets/admin/activity_timeline_tile.dart';
 import '../../widgets/admin/analytics_chart_card.dart';
@@ -348,10 +349,29 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
         physics: const BouncingScrollPhysics(),
         itemCount: uploads.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (context, i) => SizedBox(
-          width: 140,
-          child: RecentUploadCard(data: uploads[i]),
-        ),
+        itemBuilder: (context, i) {
+          final upload = uploads[i];
+          return SizedBox(
+            width: 140,
+            child: InkWell(
+              onTap: () {
+                if (upload.albumId == null) {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.media,
+                    arguments: const MediaSearchArgs(unfiledOnly: true),
+                  );
+                } else {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.adminAlbumDetails,
+                    arguments: upload.albumId,
+                  );
+                }
+              },
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: RecentUploadCard(data: upload),
+            ),
+          );
+        },
       ),
     );
   }

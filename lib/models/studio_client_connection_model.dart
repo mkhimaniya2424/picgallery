@@ -149,12 +149,12 @@ class StudioClientConnection {
       clientData: ClientData(
         id: viewerIsStudio ? (clientJson['id'] as String) : (studioJson!['id'] as String),
         name: viewerIsStudio
-            ? (clientJson!['full_name'] as String? ?? '')
+            ? (clientJson['full_name'] as String? ?? '')
             : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String? ?? ''),
         initials: _initialsFrom(viewerIsStudio
-            ? (clientJson!['full_name'] as String?)
+            ? (clientJson['full_name'] as String?)
             : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String?)),
-        gradient: _gradientFor(viewerIsStudio ? (clientJson!['id'] as String) : (studioJson!['id'] as String)),
+        gradient: _gradientFor(viewerIsStudio ? (clientJson['id'] as String) : (studioJson!['id'] as String)),
         bookingStatus: '',
         galleryStatus: GalleryStatus.notStarted,
         outstanding: '',

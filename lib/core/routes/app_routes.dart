@@ -389,6 +389,7 @@ class AppRoutes {
           albumId: args?.initialAlbumId,
           folderId: args?.initialFolderId,
           favoritesOnly: args?.favoritesOnly ?? false,
+          unfiledOnly: args?.unfiledOnly ?? false,
         ));
       case mediaFavorites:
         return _slide(const MediaFavoritesScreen());

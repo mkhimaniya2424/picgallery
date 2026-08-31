@@ -3,7 +3,6 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
 
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -22,18 +21,18 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.mk.picgallery"
 
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
 
-    ndkVersion = flutter.ndkVersion
+    // Pinned (rather than flutter.ndkVersion) so it doesn't silently
+    // drift with whatever NDK a given Flutter SDK happens to bundle.
+    // r27+ is required for 16 KB memory page size support — see
+    // Play Console's "Errors, warnings and messages" step.
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -66,6 +65,17 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
         }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+}
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 

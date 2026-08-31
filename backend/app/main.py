@@ -2,16 +2,12 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import api_router
 from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
-
-_STATIC_DIR = Path(__file__).parent / "static"
-_SHARE_LANDING_PAGE = _STATIC_DIR / "shared-link-landing.html"
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,25 +36,62 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-# ---------------------------------------------------------------------------
-# Share link landing page — what a WhatsApp/etc. tap on a share link
-# (SHARE_LINK_BASE_URL + SHARE_LINK_PATH_PREFIX + "/" + token, see
-# core/storage.build_share_url) actually opens in a browser.
-#
-# Serving it from this API means no separate website/hosting is needed:
-# point SHARE_LINK_BASE_URL at wherever this service is reachable
-# (e.g. https://api.picgallery.in) and every share link will hit this
-# route. The page itself (app/static/shared-link-landing.html) reads the
-# token from the URL client-side and:
-#   - tries to hand off to the installed app (Android intent:// URL,
-#     which also carries its own Play Store fallback baked in),
-#   - if that doesn't happen within ~1.5s, calls
-#     /api/v1/public/share-links/{token}/status and either shows a
-#     preview (public + active), a "get the app to unlock it" prompt
-#     (password-protected), or an expired/revoked message.
-#
-# Registered directly (not via StaticFiles) so the path has no file
-# extension and matches SHARE_LINK_PATH_PREFIX exactly.
-@app.get("/shared/{token}", include_in_schema=False)
-def shared_link_landing(token: str) -> FileResponse:
-    return FileResponse(_SHARE_LANDING_PAGE, media_type="text/html")
+@app.get("/.well-known/assetlinks.json", include_in_schema=False)
+def get_asset_links():
+    """Serves the Android Digital Asset Links file for Android App Link verification."""
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        content=[
+            {
+                "relation": ["delegate_permission/common.handle_all_urls"],
+                "target": {
+                    "namespace": "android_app",
+                    "package_name": "com.mk.picgallery",
+                    "sha256_cert_fingerprints": [
+                        "B6:C8:1E:76:C4:04:9E:19:4D:7C:1D:88:D7:30:E0:D1:F5:3A:DA:BB:A7:12:FA:BC:3B:21:CB:CF:E2:59:72:7B"
+                    ],
+                },
+            }
+        ]
+    )
+
+
+@app.get("/shared/{share_id}", include_in_schema=False)
+def shared_web_fallback(share_id: str):
+    """Web fallback for shared gallery links when opened in a browser without app installed."""
+    from fastapi.responses import HTMLResponse
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PicGallery - Shared Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0f172a; color: #f8fafc; text-align: center; }}
+    .card {{ background: #1e293b; padding: 2.5rem 2rem; border-radius: 1rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
+    h1 {{ font-size: 1.5rem; margin-bottom: 0.5rem; color: #fff; }}
+    p {{ font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem; line-height: 1.5; }}
+    .btn {{ display: inline-block; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; text-decoration: none; padding: 0.8rem 1.6rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; }}
+    .btn:hover {{ opacity: 0.9; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>PicGallery</h1>
+    <p>Opening shared gallery in app...</p>
+    <a id="download-btn" class="btn" href="https://play.google.com/store/apps/details?id=com.mk.picgallery">Get PicGallery on Play Store</a>
+  </div>
+  <script>
+    const appUrl = "picgallery://shared/{share_id}";
+    const playStoreUrl = "https://play.google.com/store/apps/details?id=com.mk.picgallery";
+    window.location.href = appUrl;
+    setTimeout(function() {{
+      window.location.href = playStoreUrl;
+    }}, 1500);
+  </script>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content)
+

@@ -50,6 +50,7 @@ class QuickActionData {
 class AlbumUploadData {
   final String id;
   final String albumName;
+  final String? albumId;
   final String uploadedAgo;
   final int mediaCount;
   final IconData icon;
@@ -67,6 +68,7 @@ class AlbumUploadData {
   const AlbumUploadData({
     required this.id,
     required this.albumName,
+    this.albumId,
     required this.uploadedAgo,
     required this.mediaCount,
     required this.icon,
@@ -79,6 +81,7 @@ class AlbumUploadData {
   Map<String, dynamic> toJson() => {
         'id': id,
         'albumName': albumName,
+        'albumId': albumId,
         'mediaCount': mediaCount,
         'iconCodePoint': icon.codePoint,
         'gradient': gradient.map((c) => c.toARGB32()).toList(),
@@ -90,9 +93,11 @@ class AlbumUploadData {
   factory AlbumUploadData.fromJson(Map<String, dynamic> json) => AlbumUploadData(
         id: json['id'] as String,
         albumName: json['albumName'] as String,
+        albumId: json['albumId'] as String?,
         uploadedAgo: relativeTime(DateTime.tryParse(json['uploadedAt'] as String? ?? '') ?? DateTime.now()),
         mediaCount: json['mediaCount'] as int,
-        icon: IconData(json['iconCodePoint'] as int, fontFamily: 'MaterialIcons'),
+        // ignore: non_constant_identifier_names
+        icon: (json['isVideo'] as bool? ?? false) ? Icons.movie_creation_rounded : Icons.photo_camera_rounded,
         gradient: (json['gradient'] as List).map((v) => Color(v as int)).toList(),
         isVideo: json['isVideo'] as bool? ?? false,
         uploadedAt: DateTime.tryParse(json['uploadedAt'] as String? ?? '') ?? DateTime.now(),

@@ -152,9 +152,9 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
     }
 
     if (album == null) {
-      return Scaffold(
-        appBar: const CustomAppBar(title: 'Album', showBack: true),
-        body: const Center(
+      return const Scaffold(
+        appBar: CustomAppBar(title: 'Album', showBack: true),
+        body: Center(
             child: EmptyStateCard(
           icon: Icons.search_off_rounded,
           message: 'This album no longer exists.',

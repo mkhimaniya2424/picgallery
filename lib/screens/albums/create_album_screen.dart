@@ -144,7 +144,7 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
                                   ),
                                   const SizedBox(height: AppSpacing.md),
                                   DropdownButtonFormField<String?>(
-                                    value: _selectedFolderId,
+                                    initialValue: _selectedFolderId,
                                     decoration: const InputDecoration(
                                       labelText: 'Folder (optional)',
                                       prefixIcon: Icon(Icons.folder_outlined, size: 20),

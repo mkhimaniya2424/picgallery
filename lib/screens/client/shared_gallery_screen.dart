@@ -117,6 +117,16 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
           ),
         );
 
+      case PublicGalleryStatus.albumDeleted:
+        return const Scaffold(
+          appBar: CustomAppBar(title: 'Shared Gallery', showBack: true),
+          body: Center(
+            child: EmptyStateCard(
+              icon: Icons.folder_off_rounded,
+              message: 'This album has been deleted by the photographer.',
+            ),
+          ),
+        );
       case PublicGalleryStatus.expired:
         return const Scaffold(
           appBar: CustomAppBar(title: 'Shared Gallery', showBack: true),
@@ -128,6 +138,16 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
           ),
         );
 
+      case PublicGalleryStatus.unauthorized:
+        return const Scaffold(
+          appBar: CustomAppBar(title: 'Private Gallery', showBack: true),
+          body: Center(
+            child: EmptyStateCard(
+              icon: Icons.gavel_rounded,
+              message: 'You are not authorized to access this private gallery.',
+            ),
+          ),
+        );
       case PublicGalleryStatus.error:
         return Scaffold(
           appBar: const CustomAppBar(title: 'Shared Gallery', showBack: true),

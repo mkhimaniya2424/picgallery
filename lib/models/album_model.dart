@@ -155,7 +155,7 @@ class AlbumModel {
         'name': name,
         if (description != null) 'description': description,
         if (folderId != null) 'folder_id': folderId,
-        'gradient_argb': gradient.map((c) => c.value).toList(),
+        'gradient_argb': gradient.map((c) => c.toARGB32()).toList(),
       };
 
   /// Body for `PATCH /albums/{id}` (`AlbumUpdate`). Every field is
@@ -170,7 +170,7 @@ class AlbumModel {
         'clear_folder': clearFolder,
         'is_favorite': isFavorite,
         'display_order': displayOrder,
-        'gradient_argb': gradient.map((c) => c.value).toList(),
+        'gradient_argb': gradient.map((c) => c.toARGB32()).toList(),
       };
 
   /// Deserializes from a plain JSON map (Hive-local store format).
@@ -207,7 +207,7 @@ class AlbumModel {
         'displayOrder': displayOrder,
         'isFavorite': isFavorite,
         'folderId': folderId,
-        'gradientArgb': gradient.map((c) => c.value).toList(),
+        'gradientArgb': gradient.map((c) => c.toARGB32()).toList(),
       };
 
   AlbumModel copyWith({

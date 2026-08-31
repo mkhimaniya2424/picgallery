@@ -65,7 +65,7 @@ class ExpandableFaqSection extends StatelessWidget {
         ),
         ...section.items.map((item) {
           return _FaqTile(item: item);
-        }).toList(),
+        }),
       ],
     );
   }

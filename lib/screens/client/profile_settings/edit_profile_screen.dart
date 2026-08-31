@@ -77,8 +77,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     icon: Icons.person_outline_rounded,
                     controller: _nameController,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return 'Name is required';
+                      }
                       return null;
                     },
                   ),
@@ -89,8 +90,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return 'Email is required';
+                      }
                       if (!v.contains('@')) return 'Enter a valid email';
                       return null;
                     },
@@ -115,7 +117,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                           );
 
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       Navigator.of(context).pop();
                     },
                     label: const Text('Save Changes'),

@@ -9,12 +9,9 @@
 /// Usage: Treat these as repository-level convenience wrappers that coordinate
 /// with [DownloadService] — the service handles the actual file save/gallery I/O,
 /// while repository methods here handle permission pre-checks and logging framing.
-
-import 'package:flutter/material.dart';
+library;
 
 import '../core/network/api_client.dart';
-import '../models/media_model.dart';
-import '../services/download_service.dart';
 import '../services/permission_service.dart';
 import 'client_gallery_repository.dart';
 

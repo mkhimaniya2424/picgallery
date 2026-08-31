@@ -65,7 +65,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
     final hasImage = _pickedFile != null;
 
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: 'Face Search Upload',
         showBack: true,
       ),
@@ -102,7 +102,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
 
   Widget _buildPreviewSection(bool hasImage) {
     if (!hasImage) {
-      return EmptyStateCard(
+      return const EmptyStateCard(
         icon: Icons.add_a_photo_outlined,
         message: 'Upload a selfie photo to start searching.',
       );
@@ -175,7 +175,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
             icon: const Icon(Icons.camera_alt_rounded),
             label: const Text('Capture from Camera'),
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.border),
+              side: const BorderSide(color: AppColors.border),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -198,7 +198,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
           icon: const Icon(Icons.swap_horiz_rounded),
           label: const Text('Replace image'),
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: AppColors.border),
+            side: const BorderSide(color: AppColors.border),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -207,7 +207,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
           icon: const Icon(Icons.delete_outline_rounded),
           label: const Text('Remove'),
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: AppColors.border),
+            side: const BorderSide(color: AppColors.border),
           ),
         ),
       ],

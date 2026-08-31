@@ -50,7 +50,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
                       ),
                       child: Text(
                         l10n.selected,
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                             fontSize: 12.5),

@@ -147,6 +147,9 @@ class ShareLink(Base):
         UUID(as_uuid=True), ForeignKey("albums.id", ondelete="CASCADE"), nullable=False, index=True
     )
     token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    client_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     allow_download: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

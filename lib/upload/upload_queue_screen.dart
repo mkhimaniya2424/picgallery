@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/album_provider.dart';
 import '../providers/folder_provider.dart';
+import 'picked_file_info.dart';
 import 'upload_job_model.dart';
 import 'upload_queue_provider.dart';
 import 'upload_queue_state.dart';
@@ -156,7 +157,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   // STEP 0: SELECT & PREVIEW FILES
   Widget _buildSelectionStep(BuildContext context, UploadQueueState state, UploadQueueController notifier) {
     final files = state.tempPickedFiles;
-    final totalSize = files.fold<int>(0, (sum, f) => sum + f.size);
+    final totalSize = files.fold<int>(0, (sum, f) => sum + f.sizeBytes);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
@@ -172,7 +173,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.08),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -202,22 +203,31 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
                           onPressed: () async {
-                            final result = await FilePicker.platform.pickFiles(
-                              allowMultiple: true,
+                            final rawFiles = await FilePicker.pickFiles(
                               type: FileType.custom,
                               allowedExtensions: const [
                                 'jpg', 'jpeg', 'png', 'webp', 'heic',
                                 'mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'
                               ],
-                              // Web has no filesystem — `path` isn't just
-                              // null there, *accessing the getter itself
-                              // throws*. Bytes have to be requested
-                              // eagerly so the preview grid below has
-                              // something safe to read from.
-                              withData: kIsWeb,
                             );
-                            if (result != null && result.files.isNotEmpty) {
-                              notifier.updatePickedFiles(result.files);
+                            if (rawFiles.isNotEmpty) {
+                              // Eagerly read size + bytes (web) so state
+                              // holds a plain PickedFileInfo, not a live
+                              // PlatformFile with async-only accessors.
+                              final picked = <PickedFileInfo>[];
+                              for (final f in rawFiles) {
+                                final size = await f.length();
+                                final bytes = kIsWeb ? await f.readAsBytes() : null;
+                                final ext = f.extension;
+                                picked.add(PickedFileInfo(
+                                  name: f.name,
+                                  sizeBytes: size,
+                                  path: f.path,
+                                  bytes: bytes,
+                                  extension: ext,
+                                ));
+                              }
+                              notifier.updatePickedFiles(picked);
                             }
                           },
                           icon: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white),
@@ -274,7 +284,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                                 decoration: BoxDecoration(
                                   color: isDark ? AppColors.darkSurface : Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.black.withOpacity(0.06)),
+                                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.2)),
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: Center(
@@ -303,7 +313,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                                             Icon(
                                               Icons.play_circle_outline_rounded,
                                               size: 32,
-                                              color: Colors.black.withOpacity(0.35),
+                                              color: Colors.black.withValues(alpha: 0.2),
                                             ),
                                             const SizedBox(height: 4),
                                             Padding(
@@ -402,7 +412,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String?>(
-                    value: state.selectedAlbumId,
+                    initialValue: state.selectedAlbumId,
                     decoration: const InputDecoration(labelText: 'Select Album'),
                     items: [
                       const DropdownMenuItem<String?>(value: null, child: Text('No Album')),
@@ -424,7 +434,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String?>(
-                    value: state.selectedFolderId,
+                    initialValue: state.selectedFolderId,
                     decoration: const InputDecoration(labelText: 'Select Folder'),
                     items: [
                       const DropdownMenuItem<String?>(value: null, child: Text('No Folder')),
@@ -564,7 +574,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             color: isDark ? AppColors.darkSurface : Colors.white,
             border: Border(bottom: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey.shade100)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 4, offset: const Offset(0, 2))
+              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2))
             ],
           ),
           child: Column(
@@ -679,7 +689,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50.withOpacity(0.5),
+                    color: isDark ? Colors.blue.shade900.withValues(alpha: 0.2) : Colors.blue.shade50.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: isDark ? Colors.blue.shade800 : Colors.blue.shade100),
                   ),
@@ -763,13 +773,13 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
               height: 90,
               decoration: BoxDecoration(
                 color: failedCount > 0 
-                    ? Colors.orange.withOpacity(0.08) 
-                    : AppColors.success.withOpacity(0.08),
+                    ? Colors.orange.withValues(alpha: 0.2) 
+                    : AppColors.success.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: failedCount > 0 
-                      ? Colors.orange.withOpacity(0.3) 
-                      : AppColors.success.withOpacity(0.3),
+                      ? Colors.orange.withValues(alpha: 0.2) 
+                      : AppColors.success.withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
@@ -814,7 +824,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.darkSurface : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.black.withOpacity(0.04)),
+                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.2)),
                 ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -836,7 +846,7 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                         ),
                     ],
                   ),
-                    Container(width: 1, height: 34, color: isDark ? AppColors.darkBorder : Colors.black.withOpacity(0.08)),
+                    Container(width: 1, height: 34, color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.2)),
                   Column(
                     children: [
                         Text(

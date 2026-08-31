@@ -191,7 +191,7 @@ class ApiStudioRepository implements StudioDirectoryRepository {
       await _apiClient.delete('/studios/$studioId/favorite');
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw NotFoundException('This studio isn\'t in your favorites.');
+        throw const NotFoundException('This studio isn\'t in your favorites.');
       }
       rethrow;
     }
@@ -229,7 +229,7 @@ class ApiStudioRepository implements StudioDirectoryRepository {
       await _apiClient.delete('/studios/$studioId/connect');
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw NotFoundException('No pending request to this studio.');
+        throw const NotFoundException('No pending request to this studio.');
       }
       rethrow;
     }

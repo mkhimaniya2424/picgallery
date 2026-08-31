@@ -124,8 +124,11 @@ class _ContactBlock extends StatelessWidget {
     switch (action.type) {
       case SupportActionType.email:
         final uri = Uri(scheme: 'mailto', path: action.payload);
-        final launched =
-            await canLaunchUrl(uri) && await launchUrl(uri);
+        bool launched = false;
+        try {
+          launched = await launchUrl(uri);
+        } catch (_) {}
+        
         if (!launched && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No email app is available on this device.')),
@@ -134,8 +137,11 @@ class _ContactBlock extends StatelessWidget {
         break;
       case SupportActionType.phone:
         final uri = Uri(scheme: 'tel', path: action.payload);
-        final launched =
-            await canLaunchUrl(uri) && await launchUrl(uri);
+        bool launched = false;
+        try {
+          launched = await launchUrl(uri);
+        } catch (_) {}
+        
         if (!launched && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No phone app is available on this device.')),

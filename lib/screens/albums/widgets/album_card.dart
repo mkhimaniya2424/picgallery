@@ -31,30 +31,30 @@ class AlbumCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _mediaState = ref.watch(mediaProvider);
-    final _albumMedia = _mediaState.allMedia
+    final mediaState = ref.watch(mediaProvider);
+    final albumMedia = mediaState.allMedia
         .where((m) => !m.isDeleted)
         .where((m) => m.albumId == album.id)
         .toList(growable: false);
 
     final photoCount =
-        _albumMedia.where((m) => m.type == MediaType.photo).length;
+        albumMedia.where((m) => m.type == MediaType.photo).length;
     final videoCount =
-        _albumMedia.where((m) => m.type == MediaType.video).length;
+        albumMedia.where((m) => m.type == MediaType.video).length;
     final folderCount =
-        _albumMedia.map((m) => m.folderId).whereType<String>().toSet().length;
+        albumMedia.map((m) => m.folderId).whereType<String>().toSet().length;
 
     // Real cover photo for this album, preferring a photo over a video
     // thumbnail so the card shows something crisp; falls back to the
     // gradient placeholder only when the album truly has no media yet.
     MediaModel? cover;
-    for (final m in _albumMedia) {
+    for (final m in albumMedia) {
       if (m.type == MediaType.photo) {
         cover = m;
         break;
       }
     }
-    cover ??= _albumMedia.isNotEmpty ? _albumMedia.first : null;
+    cover ??= albumMedia.isNotEmpty ? albumMedia.first : null;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

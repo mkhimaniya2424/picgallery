@@ -34,11 +34,10 @@ class AnchoredDropdownField<T> extends FormField<T> {
     this.decoration,
     this.hint,
     this.maxMenuHeight = 280,
-    FormFieldValidator<T>? validator,
+    super.validator,
     AutovalidateMode? autovalidateMode,
   }) : super(
           initialValue: value,
-          validator: validator,
           autovalidateMode: autovalidateMode ?? AutovalidateMode.disabled,
           builder: (field) {
             final state = field as _AnchoredDropdownFieldState<T>;

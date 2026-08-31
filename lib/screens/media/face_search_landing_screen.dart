@@ -104,10 +104,10 @@ class FaceSearchLandingScreen extends StatelessWidget {
                 size: 18, color: AppColors.primary),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'What happens next?',
                   style: TextStyle(
@@ -149,7 +149,7 @@ class FaceSearchLandingScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md)),
-              side: BorderSide(color: AppColors.border),
+              side: const BorderSide(color: AppColors.border),
             ),
           ),
         ),

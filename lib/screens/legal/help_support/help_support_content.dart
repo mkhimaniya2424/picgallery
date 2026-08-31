@@ -109,42 +109,42 @@ const helpSupportContentLocal = HelpSupportContent(
   lastUpdated: '2026-07-01',
   faqSections: [
     FaqSectionData(
-      title: 'Getting Started',
+      title: 'Uploading & Managing Media',
       items: [
         FaqItem(
-          question: 'How do I create a profile?',
+          question: 'How do I upload photos to a gallery?',
           answer:
-              'Open Profile and complete your account details. If you’re a studio owner, add your studio information too.',
+              'Go to the Upload Queue screen by tapping the upload icon, select your files, choose a destination album, and click Start Upload.',
         ),
         FaqItem(
-          question: 'Where can I find my collections?',
+          question: 'Can I upload files using Wi-Fi only?',
           answer:
-              'Go to Collections from your Profile menu. You can create and manage collections from there.',
+              'Yes! When uploading, you can toggle "Upload using WiFi only" to save your cellular data. The app will automatically pause uploads if you lose Wi-Fi.',
         ),
       ],
     ),
     FaqSectionData(
-      title: 'Account & Security',
+      title: 'Sharing with Clients',
       items: [
         FaqItem(
-          question: 'How do privacy settings work?',
+          question: 'How do clients access their photos?',
           answer:
-              'Use Privacy & Security in your Profile to adjust what information is shown and how your activity is handled.',
+              'Open an album, tap the Share icon, and generate a secure link and PIN. Your clients can use this PIN to log in and view their specific gallery.',
         ),
         FaqItem(
-          question: 'I forgot my password',
+          question: 'Can clients download the photos?',
           answer:
-              'Use the “Forgot Password” option on the login screen to reset using your email.',
+              'Yes, clients can browse their shared gallery and download original quality photos using the secure PIN you provide them.',
         ),
       ],
     ),
     FaqSectionData(
-      title: 'Troubleshooting',
+      title: 'AI Face Search',
       items: [
         FaqItem(
-          question: 'App is slow or stuck',
+          question: 'How does Face Search work?',
           answer:
-              'Try restarting the app. If the issue continues, contact support and include your device model and app version.',
+              'Our AI automatically groups photos by face. You can tag a face with a client’s name to instantly find all their photos across your entire studio.',
         ),
       ],
     ),

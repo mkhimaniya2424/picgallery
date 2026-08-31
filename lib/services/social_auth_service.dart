@@ -23,19 +23,26 @@ class SocialAuthResult {
 /// ever deals with our own backend's HTTP shape, not two unrelated
 /// native SDKs.
 class SocialAuthService {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: const ['email', 'profile'],
+  bool _googleInitialized = false;
+
+  Future<void> _ensureGoogleInitialized() async {
+    if (_googleInitialized) return;
     // serverClientId is REQUIRED on Android for google_sign_in to populate
     // the idToken. Must be the Web OAuth client ID (type 3) from
     // google-services.json — NOT the Android client ID. The backend
     // verifies this token's `aud` claim against GOOGLE_CLIENT_IDS in .env.
-    serverClientId: '198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com',
-  );
+    await GoogleSignIn.instance.initialize(
+      serverClientId: '198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com',
+    );
+    _googleInitialized = true;
+  }
 
   /// Opens the native Google account picker. Throws [SocialAuthCancelled]
   /// if the user dismisses it, or a plain [Exception] if Google signed
   /// them in but (unusually) didn't hand back an ID token.
   Future<SocialAuthResult> signInWithGoogle() async {
+    await _ensureGoogleInitialized();
+
     // Without this, the plugin silently re-uses whichever Google
     // account was picked last time (no account picker shown at all)
     // any time a cached session still exists — e.g. signing up for a
@@ -43,17 +50,26 @@ class SocialAuthService {
     // Google account, or simply wanting to switch accounts, without
     // having logged out first. Forcing a sign-out first guarantees
     // the native picker always appears.
-    await _googleSignIn.signOut();
-    final GoogleSignInAccount? account = await _googleSignIn.signIn();
-    if (account == null) throw SocialAuthCancelled();
+    await GoogleSignIn.instance.signOut();
 
-    final GoogleSignInAuthentication auth = await account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null) {
-      throw Exception("Google didn't return a sign-in token. Please try again.");
+    try {
+      final GoogleSignInAccount account = await GoogleSignIn.instance.authenticate(
+        scopeHint: const ['email', 'profile'],
+      );
+
+      final GoogleSignInAuthentication auth = account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) {
+        throw Exception("Google didn't return a sign-in token. Please try again.");
+      }
+
+      return SocialAuthResult(provider: 'google', idToken: idToken, fullName: account.displayName);
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled || e.code == GoogleSignInExceptionCode.interrupted) {
+        throw SocialAuthCancelled();
+      }
+      rethrow;
     }
-
-    return SocialAuthResult(provider: 'google', idToken: idToken, fullName: account.displayName);
   }
 
   /// Opens the native "Sign in with Apple" sheet. Throws
@@ -95,6 +111,7 @@ class SocialAuthService {
   /// again next time (rather than silently re-using the last account).
   /// Call this alongside [AuthRepository.logout].
   Future<void> signOutGoogle() async {
-    await _googleSignIn.signOut();
+    if (!_googleInitialized) return;
+    await GoogleSignIn.instance.signOut();
   }
 }

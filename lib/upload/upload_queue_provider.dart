@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,6 +11,7 @@ import '../services/media_picker_service.dart' show MediaContentType;
 import '../storage/upload_queue_local_store.dart';
 
 import 'upload_job_model.dart';
+import 'picked_file_info.dart';
 import 'upload_media_prep.dart';
 import 'upload_network_gate.dart';
 import 'upload_queue_state.dart';
@@ -167,7 +167,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     state = AsyncValue.data(current.copyWith(wizardStep: step));
   }
 
-  void updatePickedFiles(List<PlatformFile> files) {
+  void updatePickedFiles(List<PickedFileInfo> files) {
     final current = state.value;
     if (current == null) return;
     state = AsyncValue.data(current.copyWith(tempPickedFiles: files));
@@ -259,7 +259,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         webBytes: kIsWeb ? f.bytes : null,
         albumId: current.selectedAlbumId,
         folderId: current.selectedFolderId,
-        totalBytes: f.size > 0 ? f.size : 1024 * 1024 * 5, // Default to 5MB
+        totalBytes: f.sizeBytes > 0 ? f.sizeBytes : 1024 * 1024 * 5, // Default to 5MB
         uploadedBytes: 0,
         createdAt: DateTime.now(),
         status: UploadJobStatus.queued,
@@ -287,7 +287,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     final current = state.value;
     if (current == null) return;
     if (current.jobs.every(
-        (j) => j.isDone || j.status == UploadJobStatus.paused)) return;
+        (j) => j.isDone || j.status == UploadJobStatus.paused)) {
+      return;
+    }
 
     state = AsyncValue.data(
       current.copyWith(isProcessing: true, clearMessage: true),

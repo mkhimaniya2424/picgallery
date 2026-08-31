@@ -1,4 +1,4 @@
-import 'package:file_picker/file_picker.dart';
+import 'picked_file_info.dart';
 import 'upload_job_model.dart';
 
 /// Represents the complete state of the upload queue and the wizard flow.
@@ -12,7 +12,7 @@ class UploadQueueState {
   // Wizard Flow state
   /// 0 = Selection, 1 = Options, 2 = Progress, 3 = Complete
   final int wizardStep;
-  final List<PlatformFile> tempPickedFiles;
+  final List<PickedFileInfo> tempPickedFiles;
 
   // Selected options for the current batch
   final String? selectedAlbumId;
@@ -101,7 +101,7 @@ class UploadQueueState {
     String? message,
     bool clearMessage = false,
     int? wizardStep,
-    List<PlatformFile>? tempPickedFiles,
+    List<PickedFileInfo>? tempPickedFiles,
     String? selectedAlbumId,
     bool clearAlbum = false,
     String? selectedFolderId,

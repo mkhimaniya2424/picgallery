@@ -30,6 +30,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
   bool _initialized = false;
   bool _isPublic = true;
+  String? _selectedClientId;
   bool _hasExpiry = false;
   DateTime? _expiryDate;
   bool _allowDownload = true;
@@ -50,18 +51,14 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     });
   }
 
-  /// Primes the form from the loaded link, once. Unlike the old
-  /// local-only version, this never prefills [_passwordController] —
-  /// the backend only ever stores a bcrypt hash, so there is no
-  /// plaintext to prefill with. A blank password field on an
-  /// already-protected link means "keep the existing password", not
-  /// "there is no password"; [_hasExistingPassword] tracks that.
+  /// Primes the form from the loaded link, once.
   void _initFields(GalleryShareLink? link) {
     if (_initialized) return;
     _initialized = true;
 
     if (link != null && !link.isRevoked) {
       _isPublic = !link.hasPassword;
+      _selectedClientId = link.clientId;
       _hasExpiry = link.expiresAt != null;
       _expiryDate = link.expiresAt;
       _allowDownload = link.allowDownload;
@@ -85,23 +82,53 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     }
   }
 
+  /// Returns true when [widget.albumId] is a real server-side UUID (e.g.
+  /// `3fa85f64-5717-4562-b3fc-2c963f66afa6`) rather than a local placeholder
+  /// the old in-memory / Hive-only implementation stamped on new albums
+  /// (e.g. `al-<microseconds>`). Only backend-synced albums can have share
+  /// links — the server-side `POST /share-links` will always 404 for a
+  /// placeholder id because no matching row exists in the database.
+  bool get _isBackendSynced {
+    // UUIDs are exactly 36 chars: 8-4-4-4-12 hex digits + 4 hyphens.
+    final id = widget.albumId;
+    if (id.length != 36) return false;
+    // Quick regex check — avoids depending on a UUID package.
+    return RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false)
+        .hasMatch(id);
+  }
+
   Future<void> _saveSettings(GalleryShareLink? existingLink) async {
     final hasExistingPassword = existingLink != null && !existingLink.isRevoked && existingLink.hasPassword;
 
     if (!_isPublic && !hasExistingPassword && !_formKey.currentState!.validate()) {
       return;
     }
-    // Still run the validator for a non-empty edit even when a password
-    // already exists, so a stray 1-3 character typo doesn't silently
-    // get sent — but an empty field is fine there (means "keep it").
     if (!_isPublic && hasExistingPassword && _passwordController.text.isNotEmpty) {
       if (!_formKey.currentState!.validate()) return;
     }
 
     setState(() => _isSaving = true);
     try {
+      if (!_isBackendSynced) {
+        // This album was created while the app was running in offline /
+        // demo mode and never synced to the server. Share links require a
+        // real backend album. Ask the user to re-create the album.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This album was created in offline mode and cannot be shared yet. '
+              'Please delete it and recreate it while connected to sync it to the server.',
+            ),
+            duration: Duration(seconds: 5),
+          ),
+        );
+        return;
+      }
+
       final controller = ref.read(shareLinkControllerProvider(widget.albumId).notifier);
       await controller.createOrUpdate(
+        clientId: _isPublic ? null : _selectedClientId,
+        clearClient: _isPublic || _selectedClientId == null,
         password: _isPublic
             ? null
             : (_passwordController.text.isEmpty ? null : _passwordController.text),
@@ -195,6 +222,30 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (!_isBackendSynced) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(AppRadius.md),
+                                    border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.cloud_off_rounded, color: Colors.orange, size: 20),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      const Expanded(
+                                        child: Text(
+                                          'This album was created offline and hasn\'t been synced to the server. '
+                                          'Delete it and recreate it while connected to enable sharing.',
+                                          style: TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.w500),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
                               _buildSectionHeader(context, 'Gallery Type'),
                               const SizedBox(height: AppSpacing.sm),
                               _buildGalleryTypeSelector(),
@@ -244,7 +295,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                               GradientButton(
                                 label: hasActiveLink ? 'Update Settings' : 'Generate Share Link',
                                 isLoading: _isSaving,
-                                onPressed: _isSaving ? null : () => _saveSettings(activeLink),
+                                onPressed: (_isSaving || !_isBackendSynced) ? null : () => _saveSettings(activeLink),
                               ),
                               if (hasActiveLink) ...[
                                 const SizedBox(height: AppSpacing.xxl),
@@ -356,7 +407,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
               'Link will automatically expire after the date.',
               style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
             ),
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (val) {
               setState(() {
                 _hasExpiry = val;
@@ -398,7 +449,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
               'Clients can download high-res original photos.',
               style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
             ),
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (val) => setState(() => _allowDownload = val),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
@@ -412,7 +463,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
               'Display a soft "picgallery" brand watermarking over photos.',
               style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
             ),
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (val) => setState(() => _showWatermark = val),
           ),
         ],
@@ -422,6 +473,10 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
   Widget _buildActiveLinkCard(GalleryShareLink link) {
     final primaryUrl = link.primaryShareUrl;
+    debugPrint('[SHARE_DEBUG] Original shareId (token): ${link.token}');
+    debugPrint('[SHARE_DEBUG] Generated share URL: $primaryUrl');
+    debugPrint('[SHARE_DEBUG] QR encoded URL: $primaryUrl');
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../core/network/api_client.dart';
-import '../core/utils/app_exceptions.dart';
 import '../models/admin_dashboard_data.dart';
 import '../models/album_model.dart';
 import '../repositories/notifications_repository.dart';

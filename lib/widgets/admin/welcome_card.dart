@@ -108,7 +108,7 @@ class WelcomeCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.auto_awesome_rounded,
+                        const Icon(Icons.auto_awesome_rounded,
                             size: 13, color: AppColors.gold),
                         const SizedBox(width: 6),
                         Text('STUDIO IS THRIVING',

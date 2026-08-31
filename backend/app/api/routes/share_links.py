@@ -1,3 +1,4 @@
+import logging
 import secrets
 import uuid
 from datetime import datetime, timezone
@@ -6,7 +7,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_studio_user
+from app.api.deps import get_current_studio_user, get_optional_current_user
 from app.core.download_log import record_download_event
 from app.core.face_index import extract_query_faces, resolve_query_face, search_faces
 from app.core.security import hash_password, verify_password
@@ -82,6 +83,7 @@ def create_share_link(
         owner_id=current_user.id,
         album_id=payload.album_id,
         token=_generate_unique_token(db),
+        client_id=payload.client_id,
         password_hash=hash_password(payload.password) if payload.password else None,
         expires_at=payload.expires_at,
         allow_download=payload.allow_download,
@@ -130,7 +132,12 @@ def update_share_link(
     db: Session = Depends(get_db),
 ) -> ShareLinkRead:
     link = _get_owned_link(db, link_id, current_user.id)
-    updates = payload.model_dump(exclude_unset=True, exclude={"clear_password", "clear_expiry"})
+    updates = payload.model_dump(exclude_unset=True, exclude={"clear_password", "clear_expiry", "clear_client"})
+
+    if payload.clear_client:
+        link.client_id = None
+    elif "client_id" in updates and updates["client_id"] is not None:
+        link.client_id = updates["client_id"]
 
     if payload.clear_password:
         link.password_hash = None
@@ -167,14 +174,20 @@ def delete_share_link(
 
 
 # ---------------------------------------------------------------------------
-# Public viewing (no auth) — used by the client-side "Shared Gallery" screen
+# Public viewing (optional auth) — used by the client-side "Shared Gallery" screen
 # ---------------------------------------------------------------------------
 
 
+logger = logging.getLogger(__name__)
+
+
 def _get_link_by_token_or_404(db: Session, token: str) -> ShareLink:
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Share lookup request: shareId (token)='{token}'")
     link = db.execute(select(ShareLink).where(ShareLink.token == token)).scalar_one_or_none()
     if link is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Share link not found")
+        logger.warning(f"[SHARE_LOOKUP_DEBUG] Share record NOT found for token='{token}'")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This shared link does not exist.")
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Share record found: id='{link.id}', albumId='{link.album_id}', is_revoked={link.is_revoked}")
     return link
 
 
@@ -184,48 +197,88 @@ def _assert_link_reachable(link: ShareLink) -> None:
     photographer pulled the link" apart from "bad link" in the UI.
     """
     if link.is_revoked:
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail="This share link has been revoked.")
+        logger.warning(f"[SHARE_LOOKUP_DEBUG] Share link '{link.token}' has been revoked.")
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="This shared link has been revoked.")
     if _is_expired(link):
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail="This share link has expired.")
+        logger.warning(f"[SHARE_LOOKUP_DEBUG] Share link '{link.token}' has expired.")
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="This shared link has expired.")
+
+
+def _assert_client_authorized(link: ShareLink, user: User | None) -> None:
+    """If a share link has a specific client_id assigned, enforce that
+    only that client (or the owner) can access it.
+    """
+    if link.client_id is None:
+        return
+    if user is None or (user.id != link.client_id and user.id != link.owner_id):
+        logger.warning(
+            f"[SHARE_LOOKUP_DEBUG] Unauthorized client '{user.id if user else None}' attempted access to private share '{link.token}' (authorized client_id: '{link.client_id}')"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to access this private gallery.",
+        )
+
+
+def _assert_album_exists(db: Session, link: ShareLink) -> Album:
+    """Verifies that the album linked to this share record actually exists in the DB.
+    Returns the Album object or raises 404 if deleted.
+    """
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Album lookup request for albumId='{link.album_id}' (from share token='{link.token}')")
+    album = db.get(Album, link.album_id)
+    if album is None:
+        logger.error(f"[SHARE_LOOKUP_DEBUG] Linked albumId='{link.album_id}' NOT found in database for share token='{link.token}'")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This shared gallery is no longer available.",
+        )
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Album found: name='{album.name}', owner_id='{album.owner_id}'")
+    return album
 
 
 def _assert_password_ok(link: ShareLink, password: str | None) -> None:
     if link.password_hash is None:
         return
     if not password or not verify_password(password, link.password_hash):
+        logger.warning(f"[SHARE_LOOKUP_DEBUG] Incorrect passcode attempt for share link '{link.token}'")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password.")
 
 
 @public_router.get("/{token}/status", response_model=ShareLinkStatusRead)
 def get_share_link_status(
     token: str,
+    user: User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ) -> ShareLinkStatusRead:
-    """Lets the client render the passcode gate (or an expired/revoked
+    """Lets the client render the passcode gate (or an expired/revoked/unauthorized
     message) without submitting a password and without counting a view.
     """
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Public status check for token='{token}'")
     link = _get_link_by_token_or_404(db, token)
+    _assert_link_reachable(link)
+    _assert_client_authorized(link, user)
+    _assert_album_exists(db, link)
     active = not link.is_revoked and not _is_expired(link)
-    return ShareLinkStatusRead(requires_password=link.password_hash is not None, is_active=active)
+    return ShareLinkStatusRead(requires_password=link.password_hash is not None, is_active=active, client_id=link.client_id)
 
 
 @public_router.get("/{token}", response_model=PublicShareLinkRead)
 def view_shared_gallery(
     token: str,
     password: str | None = Query(default=None),
+    user: User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ) -> PublicShareLinkRead:
-    """Fetches the shared album + its media. Requires the correct
-    `password` query param if the link is protected. Each successful
-    call counts as one view for analytics.
+    """Fetches the shared album + its media. Requires authorized client check
+    and the correct `password` query param if the link is protected. Each
+    successful call counts as one view for analytics.
     """
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Public view gallery request for token='{token}'")
     link = _get_link_by_token_or_404(db, token)
     _assert_link_reachable(link)
+    _assert_client_authorized(link, user)
     _assert_password_ok(link, password)
-
-    album = db.get(Album, link.album_id)
-    if album is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The shared album no longer exists.")
+    album = _assert_album_exists(db, link)
 
     media = db.execute(
         select(Media)
@@ -236,6 +289,8 @@ def view_shared_gallery(
     link.views_count += 1
     link.last_viewed_at = datetime.now(timezone.utc)
     db.commit()
+
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Public view gallery success for token='{token}' -> albumId='{album.id}', media count={len(media)}")
 
     return PublicShareLinkRead(
         token=link.token,

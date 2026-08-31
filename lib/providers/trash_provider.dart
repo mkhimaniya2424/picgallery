@@ -4,7 +4,7 @@ import '../models/media_model.dart';
 import '../repositories/media_repository.dart';
 import 'media_provider.dart';
 
-final trashProvider = StateNotifierProvider<TrashNotifier, List<MediaModel>>((ref) {
+final trashProvider = StateNotifierProvider.autoDispose<TrashNotifier, List<MediaModel>>((ref) {
   final repo = ref.watch(mediaRepositoryProvider);
   return TrashNotifier(repo, ref);
 });

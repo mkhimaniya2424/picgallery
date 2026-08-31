@@ -4,6 +4,7 @@
 /// - This model is intentionally generic (works for photos + videos).
 /// - UI rendering (thumbnails, resolution labels, durations) is handled
 ///   by widgets/screens in later phases.
+library;
 import 'edit_recipe.dart';
 
 enum MediaType {

@@ -17,6 +17,7 @@ import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/common/loading_widget.dart';
 
 import 'widgets/album_card.dart';
+import '../media/media_grid_screen.dart' show MediaSearchArgs;
 
 class AlbumsListScreen extends ConsumerStatefulWidget {
   const AlbumsListScreen({super.key});
@@ -215,7 +216,7 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                             children: [
                               Expanded(
                                 child: DropdownButtonFormField<AlbumSortOption>(
-                                  initialValue: albumState.sortOption,
+                                  value: albumState.sortOption,
                                   items: const [
                                     DropdownMenuItem(
                                         value: AlbumSortOption.recent,
@@ -255,11 +256,18 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                                 child: folderState.isLoading
                                     ? const SizedBox.shrink()
                                     : DropdownButtonFormField<String?>(
-                                        initialValue: albumState.folderId,
+                                        // key forces a rebuild when the folder
+                                        // list loads so the value stays in sync.
+                                        key: ValueKey('folder_filter_${folderState.folders.length}'),
+                                        value: albumState.folderId,
                                         items: [
                                           const DropdownMenuItem<String?>(
                                             value: null,
                                             child: Text('All folders'),
+                                          ),
+                                          const DropdownMenuItem<String?>(
+                                            value: kUnfiledFolderSentinel,
+                                            child: Text('Unfiled (no folder)'),
                                           ),
                                           ...folderState.folders.map(
                                               (f) => DropdownMenuItem<String?>(
@@ -307,14 +315,97 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                         ),
                       ),
                     )
-                  else if (albumState.filteredAlbums.isEmpty)
+                  else if (albumState.filteredAlbums.isEmpty && albumState.folderId != null)
                     const Center(
                       child: EmptyStateCard(
                         icon: Icons.photo_library_outlined,
-                        message: 'No albums found. Try adjusting filters/search.',
+                        message: 'No albums found in this folder.',
                       ),
                     )
-                  else if (albumState.isGrid)
+                  else ...[
+                    // ── Unfiled Uploads shortcut ──────────────────────
+                    // Photos that were uploaded without picking an album
+                    // live outside any album and are invisible in this
+                    // list. Surface them as a tappable banner so studios
+                    // can find them without needing the dashboard.
+                    if (albumState.folderId == null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).pushNamed(
+                            AppRoutes.media,
+                            arguments: const MediaSearchArgs(unfiledOnly: true),
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                              vertical: AppSpacing.md,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppColors.primary.withValues(alpha: 0.15), AppColors.secondary.withValues(alpha: 0.10)],
+                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.35),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.photo_library_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: const [
+                                      Text(
+                                        'Unfiled Uploads',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                          color: AppColors.text,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Photos uploaded without an album',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.subtitle,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: AppColors.subtitle,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                    if (albumState.filteredAlbums.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: AppSpacing.xxl),
+                        child: Center(
+                          child: EmptyStateCard(
+                            icon: Icons.photo_library_outlined,
+                            message: 'No albums found. Try adjusting filters/search.',
+                          ),
+                        ),
+                      )
+                    else if (albumState.isGrid)
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -375,6 +466,7 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                         );
                       },
                     ),
+                  ],
                 ],
               ),
             ),

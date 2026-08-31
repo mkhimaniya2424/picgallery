@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../models/media_model.dart';
 import '../../providers/auth_providers.dart' show apiClientProvider;
 import '../../services/download_service.dart';
 import '../../services/download_service_impl.dart';
 import '../../services/media_file_cache.dart';
 import '../../services/permission_service.dart';
-import '../../widgets/common/app_toast.dart';
 import '../../screens/client/client_media_detail_screen.dart';
 
 /// Client-facing media grid tile with download and view options.

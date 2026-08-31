@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/studio_model.dart';
 import '../repositories/studio_profile_repository.dart';
 import '../repositories/studio_repository.dart';
+import '../core/utils/app_exceptions.dart';
 import 'auth_providers.dart';
 
 final studioRepositoryProvider = Provider<StudioDirectoryRepository>((ref) {
@@ -267,4 +268,17 @@ class StudioNotifier extends ChangeNotifier {
 
 final studioProvider = ChangeNotifierProvider<StudioNotifier>((ref) {
   return StudioNotifier(ref.watch(studioRepositoryProvider));
+});
+
+/// Fetches the timestamp of the studio's most recent settings backup
+/// (`GET /studios/me/backup`). Returns `null` if the studio has never
+/// made a backup (which throws a [NotFoundException]). Used by the
+/// App Settings screen to show "Last backed up: ...".
+final latestBackupProvider = FutureProvider.autoDispose<DateTime?>((ref) async {
+  try {
+    final backup = await ref.watch(studioProfileRepositoryProvider).getLatestBackup();
+    return backup.createdAt;
+  } on NotFoundException {
+    return null;
+  }
 });

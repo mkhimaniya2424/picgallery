@@ -518,7 +518,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                         child: Text(
                           'Liked by: ${likes.map((l) => l.userFullName).join(', ')}',
-                          style: TextStyle(color: AppColors.subtitle, fontSize: 12),
+                          style: const TextStyle(color: AppColors.subtitle, fontSize: 12),
                         ),
                       ),
                     const Divider(height: 24),

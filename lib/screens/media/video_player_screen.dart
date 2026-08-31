@@ -570,13 +570,13 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
-                                        color: Colors.black12.withOpacity(0.04),
+                                        color: Colors.black12.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         AppStrings.appName,
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.24),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           fontSize: 28,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 2.5,

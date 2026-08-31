@@ -109,7 +109,7 @@ class _MediaCopyMoveFlowScreenState
 
       // After creating, set destination to the new folder so the user can
       // batch move/copy into it immediately.
-      final created = await ref.read(folderProvider).folders.lastWhere(
+      final created = ref.read(folderProvider).folders.lastWhere(
             (f) => f.name == name,
             orElse: () => ref.read(folderProvider).folders.last,
           );

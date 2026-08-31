@@ -31,30 +31,61 @@ class DeepLinkService {
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _sub;
   GlobalKey<NavigatorState>? _navigatorKey;
+  Uri? _pendingInitialUri;
+  bool _isSplashActive = true;
+
+  /// Returns whether a deep link is waiting to be processed
+  /// after splash screen navigation completes.
+  bool get hasPendingInitialLink => _pendingInitialUri != null;
 
   /// Call once from main.dart, after `runApp` — [navigatorKey] must be the
   /// same key passed to MaterialApp so we can navigate/show snackbars
   /// without needing a BuildContext from inside a widget.
   Future<void> init(GlobalKey<NavigatorState> navigatorKey) async {
     _navigatorKey = navigatorKey;
+    _isSplashActive = true;
+    _pendingInitialUri = null;
+
     // App was fully closed and opened directly via the link (cold start).
-    // Splash/onboarding/auth may still be deciding the very first screen,
-    // so wait briefly for the navigator to actually exist before acting —
-    // otherwise a cold-start link would be silently dropped.
+    // Store as pending link so SplashScreen can process it on top of the
+    // initial root route once startup initialization finishes.
     try {
       final initial = await _appLinks.getInitialLink();
       if (initial != null) {
-        for (var i = 0; i < 25 && navigatorKey.currentContext == null; i++) {
-          await Future.delayed(const Duration(milliseconds: 200));
-        }
-        handleLink(initial);
+        debugPrint('[DEEP_LINK_DEBUG] Cold start initial deep link stored as pending: $initial');
+        _pendingInitialUri = initial;
       }
     } catch (_) {
       // No initial link, or platform channel not ready yet — ignore.
     }
 
-    // App was already running (backgrounded) when the link arrived.
-    _sub = _appLinks.uriLinkStream.listen((uri) => handleLink(uri));
+    // App was already running (backgrounded) or launched via link.
+    // If splash is still active, defer handling until splash completes so
+    // SplashScreen's pushReplacementNamed doesn't destroy the shared gallery route.
+    _sub?.cancel();
+    _sub = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint('[DEEP_LINK_DEBUG] uriLinkStream received: $uri (splashActive=$_isSplashActive)');
+      if (_isSplashActive) {
+        _pendingInitialUri = uri;
+      } else {
+        handleLink(uri);
+      }
+    });
+  }
+
+  /// Called by SplashScreen once root navigation completes. Executes the
+  /// pending deep link on top of the root route so the shared gallery (or
+  /// passcode gate) is presented immediately as the active screen, with the
+  /// home/dashboard safely below it in the back stack.
+  void onSplashComplete() {
+    debugPrint('[DEEP_LINK_DEBUG] onSplashComplete called (pendingUri: $_pendingInitialUri)');
+    _isSplashActive = false;
+    final uri = _pendingInitialUri;
+    _pendingInitialUri = null;
+    if (uri != null) {
+      debugPrint('[DEEP_LINK_DEBUG] Processing pending deep link after splash: $uri');
+      handleLink(uri);
+    }
   }
 
   void dispose() => _sub?.cancel();
@@ -82,10 +113,12 @@ class DeepLinkService {
   /// currently on top, the same way [_handlePaymentFailed] already
   /// does.
   void handleLink(Uri uri, {void Function(String message)? onFailure}) {
+    debugPrint('[DEEP_LINK_DEBUG] Incoming deep link URI: $uri');
     final navKey = _navigatorKey;
     if (navKey == null) return;
 
     final parsed = _action(uri);
+    debugPrint('[DEEP_LINK_DEBUG] Parsed action: ${parsed?.action}, id: ${parsed?.id}');
     if (parsed == null) return; // Not a picgallery link at all — ignore.
 
     switch (parsed.action) {
@@ -112,7 +145,8 @@ class DeepLinkService {
   /// Normalizes both supported link shapes into a single
   /// (action, id-or-token) pair:
   ///  - `picgallery://{action}/{id}`               (custom scheme)
-  ///  - `https://picgallery.in/{action}/{id}`       (App Links)
+  ///  - `https://api.picgallery.in/{action}/{id}`   (App Links)
+  ///  - `https://picgallery.in/{action}/{id}`
   ///  - `https://www.picgallery.in/{action}/{id}`
   /// Returns null for anything else (a foreign scheme/host slipping
   /// through), so [handleLink] can bail out silently rather than
@@ -122,15 +156,19 @@ class DeepLinkService {
       final id = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
       return _ParsedAction(uri.host, id);
     }
-    if (uri.scheme == 'https' &&
-        (uri.host == 'picgallery.app' ||
-            uri.host == 'www.picgallery.app' ||
-            uri.host == 'picgallery.in' ||
-            uri.host == 'www.picgallery.in')) {
-      final segments = uri.pathSegments;
-      if (segments.isEmpty) return null;
-      final id = segments.length > 1 ? segments[1] : null;
-      return _ParsedAction(segments.first, id);
+    if (uri.scheme == 'https' || uri.scheme == 'http') {
+      final host = uri.host.toLowerCase();
+      if (host == 'api.picgallery.in' ||
+          host == 'picgallery.in' ||
+          host == 'www.picgallery.in' ||
+          host == 'picgallery.app' ||
+          host == 'www.picgallery.app') {
+        final segments = uri.pathSegments;
+        if (segments.isEmpty) return null;
+        final action = segments.first;
+        final id = segments.length > 1 ? segments[1] : null;
+        return _ParsedAction(action, id);
+      }
     }
     return null;
   }
@@ -154,7 +192,7 @@ class DeepLinkService {
     }
   }
 
-  /// `picgallery://studio/{studioId}` or `https://picgallery.in/studio/{studioId}`
+  /// `picgallery://studio/{studioId}` or `https://api.picgallery.in/studio/{studioId}`
   /// — generated by the Dashboard's "Show My QR" quick action
   /// (`QuickActionHandler._showQrDialog`). [studioId] is a real
   /// `AppUser.id`, so this just opens the same `StudioProfileScreen`
@@ -175,7 +213,7 @@ class DeepLinkService {
     navigator.pushNamed(AppRoutes.studioProfile, arguments: studioId);
   }
 
-  /// `picgallery://shared/{token}` or `https://picgallery.in/shared/{token}`
+  /// `picgallery://shared/{token}` or `https://api.picgallery.in/shared/{token}`
   /// — generated by `ShareSettingsScreen`'s QR code and share sheet.
   /// [token] is the share link's opaque token (`ShareLinkRead.token`);
   /// opens `SharedGalleryScreen`, which resolves it against the real
@@ -186,13 +224,15 @@ class DeepLinkService {
     GlobalKey<NavigatorState> navigatorKey,
     void Function(String message)? onFailure,
   ) {
-    if (token == null || token.isEmpty) {
+    final cleanToken = token?.trim();
+    debugPrint('[DEEP_LINK_DEBUG] Extracted shareId (token): $cleanToken');
+    if (cleanToken == null || cleanToken.isEmpty) {
       _reportFailure(navigatorKey, onFailure, "That share link isn't valid.");
       return;
     }
     final navigator = navigatorKey.currentState;
     if (navigator == null) return;
-    navigator.pushNamed(AppRoutes.sharedGallery, arguments: token);
+    navigator.pushNamed(AppRoutes.sharedGallery, arguments: cleanToken);
   }
 
   /// The token was already consumed server-side by `verify_email_link`

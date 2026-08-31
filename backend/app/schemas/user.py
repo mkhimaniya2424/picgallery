@@ -236,12 +236,13 @@ class MessageResponse(BaseModel):
 
 
 class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     id: uuid.UUID
     full_name: str
     email: EmailStr
     role: UserRole
+    auth_provider: AuthProvider
     studio_name: str | None
     studio_address: str | None
     business_type: str | None
@@ -257,6 +258,7 @@ class UserRead(BaseModel):
     camera_permission_granted: bool
     photo_library_permission_granted: bool
     push_notifications_enabled: bool
+    email_notifications_enabled: bool = True
     fcm_token: str | None = None
     allow_downloads: bool
     private_profile: bool

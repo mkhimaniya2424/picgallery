@@ -1,7 +1,4 @@
-import 'dart:io' show File;
-
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 
 import '../models/media_model.dart';
@@ -132,20 +129,24 @@ class MediaPickerService {
     bool allowMultiple = true,
     List<String>? allowedExtensions,
   }) async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: allowMultiple,
-      type: allowedExtensions == null ? FileType.media : FileType.custom,
-      allowedExtensions: allowedExtensions,
-      // Web has no filesystem to lazily re-read from later, so bytes
-      // must be captured now. Mobile/desktop skip this and read from
-      // `path` on demand in `_bytesOfPlatformFile`, avoiding holding
-      // large videos in memory any longer than necessary.
-      withData: kIsWeb,
-    );
-    if (result == null) return [];
+    final type = allowedExtensions == null ? FileType.media : FileType.custom;
+    final List<PlatformFile> result;
+    if (allowMultiple) {
+      result = await FilePicker.pickFiles(
+        type: type,
+        allowedExtensions: allowedExtensions,
+      );
+    } else {
+      final f = await FilePicker.pickFile(
+        type: type,
+        allowedExtensions: allowedExtensions,
+      );
+      result = f != null ? [f] : [];
+    }
+    if (result.isEmpty) return [];
 
     final out = <PickedMediaFile>[];
-    for (final f in result.files) {
+    for (final f in result) {
       final bytes = await _bytesOfPlatformFile(f);
       if (bytes == null) continue; // e.g. no path and no bytes — skip silently
       out.add(PickedMediaFile(
@@ -158,9 +159,12 @@ class MediaPickerService {
   }
 
   Future<List<int>?> _bytesOfPlatformFile(PlatformFile f) async {
-    if (f.bytes != null) return f.bytes;
-    if (!kIsWeb && f.path != null) return File(f.path!).readAsBytes();
-    return null;
+    // file_picker ^12: readAsBytes() works on all platforms.
+    try {
+      return await f.readAsBytes();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<PickedMediaFile> _fromXFile(XFile file) async {

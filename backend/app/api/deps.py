@@ -10,6 +10,26 @@ from app.db.session import get_db
 from app.models.user import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+
+def get_optional_current_user(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db),
+) -> User | None:
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        user_id: str | None = payload.get("sub")
+        if user_id is None:
+            return None
+        user = db.get(User, user_id)
+        if user is None or user.is_deleted:
+            return None
+        return user
+    except Exception:
+        return None
 
 
 def get_current_user(

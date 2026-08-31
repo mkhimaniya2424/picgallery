@@ -26,6 +26,13 @@ enum AlbumFilterOption {
 ///
 /// Note: this intentionally mirrors the public fields/methods exposed by the
 /// old `AlbumListController` so screens need minimal changes.
+/// Sentinel value used as a `folderId` filter to mean "show only albums
+/// that are NOT in any folder" (i.e. unfiled albums). It's a plain
+/// String constant — not null — so the nullable `copyWith` machinery
+/// doesn't swallow it. The filter dropdown in [AlbumsListScreen] passes
+/// this value when the user picks the "Unfiled" option.
+const String kUnfiledFolderSentinel = '__unfiled__';
+
 @immutable
 class AlbumState {
   const AlbumState({
@@ -70,9 +77,13 @@ class AlbumState {
     }
 
     if (folderId != null) {
-      // Real Album → Folder link (set on create / moved via moveToFolder),
-      // no longer a position-based approximation.
-      list = list.where((a) => a.folderId == folderId);
+      if (folderId == kUnfiledFolderSentinel) {
+        // Show only albums that are not filed into any folder.
+        list = list.where((a) => a.folderId == null);
+      } else {
+        // Show only albums in the selected folder.
+        list = list.where((a) => a.folderId == folderId);
+      }
     }
 
     final out = list.toList();
@@ -115,6 +126,9 @@ class AlbumState {
     AlbumSortOption? sortOption,
     AlbumFilterOption? filterOption,
     String? folderId,
+    // Set to true to explicitly clear folderId to null ("All folders").
+    // Needed because `folderId: null` is ambiguous in nullable copyWith.
+    bool clearFolderFilter = false,
     bool? isGrid,
     List<AlbumModel>? allAlbums,
     bool clearLastError = false,
@@ -125,7 +139,7 @@ class AlbumState {
       searchQuery: searchQuery ?? this.searchQuery,
       sortOption: sortOption ?? this.sortOption,
       filterOption: filterOption ?? this.filterOption,
-      folderId: folderId ?? this.folderId,
+      folderId: clearFolderFilter ? null : (folderId ?? this.folderId),
       isGrid: isGrid ?? this.isGrid,
       allAlbums: allAlbums ?? this.allAlbums,
     );
@@ -138,8 +152,19 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
 
   @override
   Future<AlbumState> build() async {
+    final userId = ref.watch(authProvider.select((a) => a.valueOrNull?.id));
+
+    // When the user switches accounts, flush all old data completely
+    // instead of letting Riverpod's AsyncLoading retain the old studio's
+    // albums while the new fetch is inflight.
+    ref.listen(authProvider.select((a) => a.valueOrNull?.id), (previous, next) {
+      if (previous != null && previous != next) {
+        ref.invalidateSelf();
+      }
+    });
+
     // Keep initial defaults synchronous so screens can build.
-    final initial = AlbumState(
+    const initial = AlbumState(
       isLoading: true,
       lastError: null,
       searchQuery: '',
@@ -147,11 +172,14 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
       filterOption: AlbumFilterOption.all,
       folderId: null,
       isGrid: true,
-      allAlbums: const [],
+      allAlbums: [],
     );
 
-    state = const AsyncValue.loading();
+    if (userId == null) {
+      return initial.copyWith(isLoading: false);
+    }
 
+    state = const AsyncValue.loading();
 
     try {
       final albums = await _repo.fetchAlbums();
@@ -182,7 +210,7 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
   }
 
   AlbumState _empty() {
-    return AlbumState(
+    return const AlbumState(
       isLoading: false,
       lastError: null,
       searchQuery: '',
@@ -190,7 +218,7 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
       filterOption: AlbumFilterOption.all,
       folderId: null,
       isGrid: true,
-      allAlbums: const [],
+      allAlbums: [],
     );
   }
 
@@ -211,7 +239,13 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
   }
 
   void setFolder(String? folderId) {
-    state = AsyncValue.data(state.value!.copyWith(folderId: folderId));
+    if (folderId == null) {
+      // Explicitly clear the filter — pass clearFolderFilter so the
+      // copyWith null-ambiguity is bypassed and folderId becomes null.
+      state = AsyncValue.data(state.value!.copyWith(clearFolderFilter: true));
+    } else {
+      state = AsyncValue.data(state.value!.copyWith(folderId: folderId));
+    }
   }
 
   void toggleGridList() {

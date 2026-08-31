@@ -32,9 +32,8 @@ from app.models.gallery import ShareLink
 def _public_share_link_album_ids_for_connected_studios(
     db: Session, *, client_id: uuid.UUID
 ) -> list[uuid.UUID]:
-    """Album ids reachable via a public (no-password, active, non-expired)
-    share link from any studio the client has an accepted connection with.
-    These are treated identically to an explicit AlbumClientShare row.
+    """Album ids reachable via an active share link from any studio
+    the client has an accepted connection with.
     """
     # Studios this client is connected to.
     connected_studio_ids = list(
@@ -54,7 +53,6 @@ def _public_share_link_album_ids_for_connected_studios(
         select(ShareLink.album_id).where(
             ShareLink.owner_id.in_(connected_studio_ids),
             ShareLink.is_revoked.is_(False),
-            ShareLink.password_hash.is_(None),
             # expires_at IS NULL means never-expires; otherwise must be in the future.
             and_(
                 ShareLink.expires_at.is_(None)
@@ -90,7 +88,6 @@ def _public_share_link_album_ids_for_studio(
         select(ShareLink.album_id).where(
             ShareLink.owner_id == studio_id,
             ShareLink.is_revoked.is_(False),
-            ShareLink.password_hash.is_(None),
             and_(
                 ShareLink.expires_at.is_(None)
                 | (ShareLink.expires_at > now)  # type: ignore[operator]
@@ -103,9 +100,11 @@ def _public_share_link_album_ids_for_studio(
 
 def is_shared_with(db: Session, *, album_id: uuid.UUID, client_id: uuid.UUID) -> bool:
     """True if `album_id` currently has an active (non-revoked) explicit
-    share with `client_id`, OR is accessible via a public share link from
-    a studio the client is connected to.
+    share with `client_id` (via AlbumClientShare or direct ShareLink.client_id),
+    OR is accessible via a share link from a studio the client is connected to.
     """
+    now = datetime.now(timezone.utc)
+
     # 1. Explicit per-album share row.
     stmt = select(AlbumClientShare.id).where(
         AlbumClientShare.album_id == album_id,
@@ -115,7 +114,22 @@ def is_shared_with(db: Session, *, album_id: uuid.UUID, client_id: uuid.UUID) ->
     if db.execute(stmt).first() is not None:
         return True
 
-    # 2. Public share link implicit access.
+    # 2. Direct ShareLink assigned to client_id.
+    direct_link = db.execute(
+        select(ShareLink.id).where(
+            ShareLink.album_id == album_id,
+            ShareLink.client_id == client_id,
+            ShareLink.is_revoked.is_(False),
+            and_(
+                ShareLink.expires_at.is_(None)
+                | (ShareLink.expires_at > now)  # type: ignore[operator]
+            ),
+        )
+    ).first()
+    if direct_link is not None:
+        return True
+
+    # 3. Share link implicit access via connected studio.
     from app.models.gallery import Album  # local import to avoid circular
 
     album = db.get(Album, album_id)
@@ -130,14 +144,12 @@ def is_shared_with(db: Session, *, album_id: uuid.UUID, client_id: uuid.UUID) ->
 
 def active_shares_for_client(db: Session, *, client_id: uuid.UUID) -> list[uuid.UUID]:
     """Every `album_id` currently accessible to `client_id`, across all
-    studios — union of explicit AlbumClientShare rows and public share link
-    albums from connected studios.
-
-    Callers that need it scoped to one studio filter the result (or query
-    `AlbumClientShare` / `ShareLink` directly with an added `studio_id`
-    predicate) rather than this helper taking on a second signature.
+    studios — union of explicit AlbumClientShare rows, direct ShareLink rows,
+    and share link albums from connected studios.
     """
-    # Explicit shares.
+    now = datetime.now(timezone.utc)
+
+    # 1. Explicit shares in AlbumClientShare.
     explicit = set(
         db.execute(
             select(AlbumClientShare.album_id).where(
@@ -147,9 +159,23 @@ def active_shares_for_client(db: Session, *, client_id: uuid.UUID) -> list[uuid.
         ).scalars().all()
     )
 
-    # Public share link implicit access via connected studios.
+    # 2. Direct ShareLink assigned to client_id.
+    direct = set(
+        db.execute(
+            select(ShareLink.album_id).where(
+                ShareLink.client_id == client_id,
+                ShareLink.is_revoked.is_(False),
+                and_(
+                    ShareLink.expires_at.is_(None)
+                    | (ShareLink.expires_at > now)  # type: ignore[operator]
+                ),
+            )
+        ).scalars().all()
+    )
+
+    # 3. Share link implicit access via connected studios.
     implicit = set(
         _public_share_link_album_ids_for_connected_studios(db, client_id=client_id)
     )
 
-    return list(explicit | implicit)
+    return list(explicit | direct | implicit)

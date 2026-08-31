@@ -8,11 +8,14 @@ import '../../core/theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../providers/auth_providers.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/buttons/social_button.dart';
 import '../../widgets/common/auth_container.dart';
 import '../../widgets/common/anchored_dropdown_field.dart';
+import '../../widgets/common/app_popup.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/screen_backdrop.dart';
 import '../../widgets/inputs/custom_text_field.dart';
+import '../../services/social_auth_service.dart';
 
 /// Three-step registration: (1) identity, (2) password, (3) role-specific
 /// details + terms. Photographers see Studio fields on step 3; Clients
@@ -30,6 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _pageController = PageController();
   int _step = 0;
   bool _isSubmitting = false;
+  String? _socialLoadingProvider;
 
   // Step 1
   final _nameController = TextEditingController();
@@ -133,6 +137,65 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // call the backend.)
     Navigator.of(context).pushNamed(AppRoutes.verificationPending,
         arguments: {'email': _emailController.text.trim(), 'role': widget.role});
+  }
+
+  Future<void> _handleSocialSignIn(String provider) async {
+    if (_isSubmitting || _socialLoadingProvider != null) return;
+    if (!mounted) return;
+
+    setState(() {
+      _socialLoadingProvider = provider;
+    });
+
+    try {
+      final service = ref.read(socialAuthServiceProvider);
+      final result = provider == 'google' ? await service.signInWithGoogle() : await service.signInWithApple();
+
+      await ref.read(authProvider.notifier).socialLogin(
+            provider: result.provider,
+            idToken: result.idToken,
+            role: widget.role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
+            fullName: result.fullName,
+          );
+    } on SocialAuthCancelled {
+      if (!mounted) return;
+      setState(() => _socialLoadingProvider = null);
+      return;
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _socialLoadingProvider = null);
+      await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _socialLoadingProvider = null);
+      await AppPopup.show(
+        context,
+        title: 'Sign-in Failed',
+        message: 'Something went wrong. Please try again.',
+        isError: true,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _socialLoadingProvider = null);
+
+    final user = ref.read(authProvider).valueOrNull;
+    if (user == null) return;
+
+    // Social accounts are auto-verified, so skip verification_pending.
+    // Go straight to completeProfile if needed, else Home.
+    final legacyRole = user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final navigator = Navigator.of(context);
+
+    if (!user.hasCompletedProfile) {
+      navigator.pushNamed(AppRoutes.completeProfile, arguments: legacyRole);
+      return;
+    }
+
+    final destination = legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
+    navigator.pushNamedAndRemoveUntil(destination, (route) => false);
   }
 
   void _back() {
@@ -240,6 +303,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             controller: _emailController,
             validator: (v) =>
                 (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Row(
+            children: [
+              const Expanded(child: Divider(color: AppColors.border)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text('or create account with', style: Theme.of(context).textTheme.bodyMedium),
+              ),
+              const Expanded(child: Divider(color: AppColors.border)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: SocialButton(
+                  icon: Icons.g_mobiledata_rounded,
+                  label: 'Google',
+                  isLoading: _socialLoadingProvider == 'google',
+                  onTap: () => _handleSocialSignIn('google'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: SocialButton(
+                  icon: Icons.apple_rounded,
+                  label: 'Apple',
+                  isLoading: _socialLoadingProvider == 'apple',
+                  onTap: () => _handleSocialSignIn('apple'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

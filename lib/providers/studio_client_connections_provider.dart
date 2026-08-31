@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/studio_client_connection_model.dart';
@@ -22,6 +21,10 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
 
   @override
   Future<List<StudioClientConnection>> build() async {
+    final userId = ref.watch(authProvider.select((a) => a.valueOrNull?.id));
+    if (userId == null) {
+      return [];
+    }
     return await _repo.fetchConnections();
   }
 

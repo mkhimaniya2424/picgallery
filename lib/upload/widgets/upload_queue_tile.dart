@@ -66,11 +66,11 @@ class UploadQueueTile extends StatelessWidget {
 
     final statusBg = switch (job.status) {
       UploadJobStatus.queued => AppColors.subtitle.withValues(alpha: 0.08),
-      UploadJobStatus.uploading => AppColors.primary.withOpacity(0.08),
-      UploadJobStatus.paused => Colors.orange.withOpacity(0.08),
-      UploadJobStatus.completed => AppColors.success.withOpacity(0.08),
-      UploadJobStatus.failed => AppColors.error.withOpacity(0.08),
-      UploadJobStatus.canceled => Colors.grey.withOpacity(0.08),
+      UploadJobStatus.uploading => AppColors.primary.withValues(alpha: 0.2),
+      UploadJobStatus.paused => Colors.orange.withValues(alpha: 0.2),
+      UploadJobStatus.completed => AppColors.success.withValues(alpha: 0.2),
+      UploadJobStatus.failed => AppColors.error.withValues(alpha: 0.2),
+      UploadJobStatus.canceled => Colors.grey.withValues(alpha: 0.2),
     };
 
     final progress = job.status == UploadJobStatus.uploading
@@ -89,12 +89,12 @@ class UploadQueueTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,7 +108,7 @@ class UploadQueueTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: statusBg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withOpacity(0.12)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                 ),
                 child: Icon(
                   _isVideo
@@ -149,9 +149,9 @@ class UploadQueueTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.08),
+                  color: statusColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withOpacity(0.2)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   job.status.name.toUpperCase(),
@@ -206,7 +206,7 @@ class UploadQueueTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.red.shade50.withOpacity(0.6),
+                color: Colors.red.shade50.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red.shade100),
               ),

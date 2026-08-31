@@ -1,7 +1,7 @@
 /// Mirrors the backend's `UserRole` enum (`app/models/user.py`). Named
 /// `AppUserRole` (rather than `UserRole`) to avoid clashing with the
 /// dummy-navigation `UserRole` enum already declared in
-/// `core/routes/app_routes.dart` — files that need both can import each
+/// `core/routes/app_routes.dart` â€” files that need both can import each
 /// without a name collision.
 enum AppUserRole {
   photographer,
@@ -22,7 +22,7 @@ enum AppUserRole {
 ///
 /// The backend is supposed to send these with an explicit UTC offset, but
 /// `plan_expiry`'s underlying DB column is `timestamp` (no timezone) rather
-/// than `timestamptz` — see the comment above `plan_expiry` in
+/// than `timestamptz` â€” see the comment above `plan_expiry` in
 /// `app/models/user.py`. Postgres silently drops the offset on write, so the
 /// value can come back as a bare string like "2026-08-24T10:13:00" with no
 /// "Z"/offset suffix. `DateTime.parse` treats a string like that as *local*
@@ -57,6 +57,7 @@ class AppUser {
   final String id;
   final String fullName;
   final String email;
+  final String authProvider;
 
   final AppUserRole role;
   final String? studioName;
@@ -76,21 +77,21 @@ class AppUser {
   final bool pushNotificationsEnabled;
   final bool emailNotificationsEnabled;
 
-  /// Privacy & Security screen — "Download Permissions" toggle. Whether
+  /// Privacy & Security screen â€” "Download Permissions" toggle. Whether
   /// this user allows their galleries/media to be downloaded.
   final bool allowDownloads;
 
-  /// Privacy & Security screen — "Account Privacy" toggle. Controls
+  /// Privacy & Security screen â€” "Account Privacy" toggle. Controls
   /// profile visibility for both studios and clients (`private_profile`
   /// on the backend).
   final bool privateProfile;
 
-  /// App Settings screen — "App Language" picker (e.g. "English",
+  /// App Settings screen â€” "App Language" picker (e.g. "English",
   /// "Hindi", "Spanish"). Shared by both roles.
   final String appLanguage;
   final DateTime createdAt;
 
-  // Studio profile fields (Task 3 backend / Task 8-9 Flutter) — populated
+  // Studio profile fields (Task 3 backend / Task 8-9 Flutter) â€” populated
   // only for photographer ("Studio") accounts, always null for clients.
   final int? yearEstablished;
   final int? teamSize;
@@ -109,11 +110,11 @@ class AppUser {
   final String? pinterestUrl;
   final String? website;
 
-  // Client optional profile fields (Task 4 backend / Task 8 Flutter) —
+  // Client optional profile fields (Task 4 backend / Task 8 Flutter) â€”
   // populated only for client accounts, always null for photographers.
   // Gender, Date of Birth, Preferred City, and Budget Min/Max were
   // dropped from the app (edit screen no longer collects them; they
-  // were never surfaced anywhere else) — only Preferred Photo Types
+  // were never surfaced anywhere else) â€” only Preferred Photo Types
   // remains, since studios see it via `ClientSummary` on Connections.
   final String? profilePhotoUrl;
   final List<String>? preferredPhotoTypes;
@@ -124,13 +125,13 @@ class AppUser {
   final DateTime? planStartedAt;
   final DateTime? planExpiry;
   /// Whether the user has ever activated the free trial (set to true by the
-  /// backend the moment the trial is granted — stays true even after it
+  /// backend the moment the trial is granted â€” stays true even after it
   /// expires so the user cannot re-claim it).
   final bool trialUsed;
 
 
 
-  /// Whether [CompleteProfileScreen] has actually been filled in — used
+  /// Whether [CompleteProfileScreen] has actually been filled in â€” used
   /// by `login_screen.dart` and `splash_screen.dart` to decide whether
   /// to route there before Home/Admin Home. Every role must have set a
   /// bio; photographers must additionally have set a studio name, since
@@ -146,6 +147,7 @@ class AppUser {
     required this.id,
     required this.fullName,
     required this.email,
+    required this.authProvider,
     required this.role,
     this.studioName,
     this.studioAddress,
@@ -197,6 +199,7 @@ class AppUser {
       id: json['id'] as String,
       fullName: json['full_name'] as String,
       email: json['email'] as String,
+      authProvider: json['auth_provider'] as String? ?? 'local',
       role: AppUserRole.fromJson(json['role'] as String),
       studioName: json['studio_name'] as String?,
       studioAddress: json['studio_address'] as String?,
@@ -252,6 +255,7 @@ class AppUser {
       'id': id,
       'full_name': fullName,
       'email': email,
+      'auth_provider': authProvider,
       'role': role.toJson(),
       'studio_name': studioName,
       'studio_address': studioAddress,
@@ -303,6 +307,7 @@ class AppUser {
     String? id,
     String? fullName,
     String? email,
+    String? authProvider,
     AppUserRole? role,
     String? studioName,
     String? studioAddress,
@@ -352,6 +357,7 @@ class AppUser {
       id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
+      authProvider: authProvider ?? this.authProvider,
       role: role ?? this.role,
       studioName: studioName ?? this.studioName,
       studioAddress: studioAddress ?? this.studioAddress,
@@ -401,7 +407,7 @@ class AppUser {
   }
 }
 
-/// Mirrors the backend's `Token` schema — the response body of
+/// Mirrors the backend's `Token` schema â€” the response body of
 /// `POST /auth/register` and `POST /auth/login`.
 class AuthToken {
   final String accessToken;

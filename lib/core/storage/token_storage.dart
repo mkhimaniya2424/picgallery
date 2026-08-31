@@ -5,37 +5,28 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// callers (e.g. [AuthRepository] or an auth provider) decide when to
 /// save/read/clear it.
 ///
-/// Uses `encryptedSharedPreferences: true` on Android — without it, the
-/// plugin's first-ever write generates an RSA key pair directly in the
-/// hardware Keystore, which on many devices is slow enough to freeze the
-/// UI thread for 10-30+ seconds (a known flutter_secure_storage issue,
-/// showing up as an Android "app isn't responding" dialog right after
-/// login). EncryptedSharedPreferences uses AES via Jetpack Security
-/// instead, which doesn't have this hang.
+/// flutter_secure_storage ^11 uses EncryptedSharedPreferences on Android
+/// by default (no opt-in option needed anymore), eliminating the RSA
+/// Keystore first-write delay that older versions could trigger.
 class TokenStorage {
   static const String _tokenKey = 'auth_access_token';
   static const String _rememberMeKey = 'auth_remember_me';
 
-  static const AndroidOptions _androidOptions = AndroidOptions(
-    encryptedSharedPreferences: true,
-  );
-
   final FlutterSecureStorage _storage;
 
   TokenStorage({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            const FlutterSecureStorage(aOptions: _androidOptions);
+      : _storage = storage ?? const FlutterSecureStorage();
 
   Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token, aOptions: _androidOptions);
+    await _storage.write(key: _tokenKey, value: token);
   }
 
   Future<String?> readToken() async {
-    return _storage.read(key: _tokenKey, aOptions: _androidOptions);
+    return _storage.read(key: _tokenKey);
   }
 
   Future<void> clearToken() async {
-    await _storage.delete(key: _tokenKey, aOptions: _androidOptions);
+    await _storage.delete(key: _tokenKey);
   }
 
   /// Persists the "Remember me" checkbox choice itself (separate from the
@@ -48,17 +39,16 @@ class TokenStorage {
     await _storage.write(
       key: _rememberMeKey,
       value: rememberMe.toString(),
-      aOptions: _androidOptions,
     );
   }
 
   /// Defaults to `false` (not remembered) if nothing has been saved yet.
   Future<bool> readRememberMe() async {
-    final value = await _storage.read(key: _rememberMeKey, aOptions: _androidOptions);
+    final value = await _storage.read(key: _rememberMeKey);
     return value == 'true';
   }
 
   Future<void> clearRememberMe() async {
-    await _storage.delete(key: _rememberMeKey, aOptions: _androidOptions);
+    await _storage.delete(key: _rememberMeKey);
   }
 }
