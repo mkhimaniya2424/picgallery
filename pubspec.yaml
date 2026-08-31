@@ -23,6 +23,7 @@ dependencies:
   # /login, PUT /auth/complete-profile, /auth/permissions,
   # POST /auth/verify-email, /send-verification-email).
   http: ^1.2.2
+  dio: ^5.7.0
   # Stores the JWT access token between app launches so authenticated
   # endpoints don't need to re-login every session.
   flutter_secure_storage: ^11.0.0
@@ -39,7 +40,7 @@ dependencies:
   # services/social_auth_service.dart and posted to the backend's
   # POST /auth/social-login (see repositories/auth_repository.dart).
   google_sign_in: ^7.2.0
-  sign_in_with_apple: ^8.2.0
+  sign_in_with_apple: ^6.1.0
   # Added for the designer's new local-only feature set: albums, folders,
   # media grid/trash, upload queue, photo editor, and sharing.
   video_player: ^2.9.2
@@ -55,7 +56,7 @@ dependencies:
   mobile_scanner: ^7.4.0
   csc_picker_plus: ^0.0.3
   # Date formatting for chat screens
-  intl: ^0.20.3
+  intl: ^0.20.2
   # SHA-256 password hashing (core/utils/password_hasher.dart)
   crypto: ^3.0.6
   gal: ^2.3.1

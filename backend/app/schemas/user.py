@@ -339,5 +339,31 @@ class UserRead(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str | None = None
+    access: str | None = None
+    refresh: str | None = None
     token_type: str = "bearer"
     user: UserRead
+
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str | None = None
+    refresh: str | None = None
+
+    @model_validator(mode="after")
+    def validate_refresh_token(self) -> "TokenRefreshRequest":
+        if not self.refresh_token and not self.refresh:
+            raise ValueError("Refresh token is required")
+        return self
+
+    @property
+    def token_str(self) -> str:
+        return self.refresh_token or self.refresh or ""
+
+
+class TokenRefreshResponse(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    access: str | None = None
+    refresh: str | None = None
+    token_type: str = "bearer"

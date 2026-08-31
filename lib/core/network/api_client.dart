@@ -1,15 +1,13 @@
 import 'dart:convert';
-
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 
+import '../auth/auth_manager.dart';
+import '../storage/secure_storage.dart';
+import 'auth_interceptor.dart';
+
 /// Thrown whenever the backend responds with a non-2xx status code.
-///
-/// [statusCode] is the raw HTTP status code and [message] is the human
-/// readable error extracted from FastAPI's `HTTPException` payload
-/// (the `detail` field), falling back to the raw response body when the
-/// payload isn't in the shape we expect (e.g. a 500 with an HTML body,
-/// or a 422 validation error whose `detail` is a list of field errors).
 class ApiException implements Exception {
   final int statusCode;
   final String message;
@@ -20,33 +18,56 @@ class ApiException implements Exception {
   String toString() => 'ApiException($statusCode): $message';
 }
 
-/// Thin wrapper around [http] for talking to the picgallery FastAPI
-/// backend. Handles base-URL selection per-platform, JSON encoding /
-/// decoding, attaching the bearer token when one is available, and
-/// turning non-2xx responses into a typed [ApiException].
+/// Central API Client powered by [Dio] and [AuthInterceptor] for talking to the
+/// PicGallery FastAPI backend. Automatically attaches JWT tokens, handles base URLs,
+/// performs automatic 401 token refresh retries, and converts errors into [ApiException].
 class ApiClient {
-  /// Mutable (not `final`) so [updateBaseUrl] can repoint every future
-  /// request at a new host live, without recreating this instance or
-  /// restarting the app (e.g. for a dev build pointing at a different
-  /// backend).
   String baseUrl;
-  final http.Client _client;
+  final Dio _dio;
+  final AuthManager? _authManager;
+  final SecureStorage? _secureStorage;
 
-  /// The current access token, if the user is logged in. Set this after
-  /// login/register (and clear it on logout) so subsequent requests are
-  /// authenticated automatically.
-  String? authToken;
+  String? _inMemoryToken;
 
-  ApiClient({String? baseUrl, http.Client? client, this.authToken})
-      : baseUrl = baseUrl ?? _defaultBaseUrl(),
-        _client = client ?? http.Client();
+  String? get authToken => _authManager?.accessToken ?? _inMemoryToken;
+  set authToken(String? token) {
+    _inMemoryToken = token;
+    if (_authManager != null && token != null) {
+      _authManager!.setTokens(accessToken: token, refreshToken: _authManager!.refreshToken);
+    }
+  }
 
-  /// Builds a full base URL from either just a host/IP (e.g.
-  /// `192.168.1.34`, kept on the default `http://…:8000/api/v1` shape) or
-  /// an already-complete URL (e.g. a Cloudflare Tunnel/ngrok URL like
-  /// `https://my-tunnel.trycloudflare.com`, which is typically already on
-  /// port 443 with its own scheme and shouldn't have `:8000` forced onto
-  /// it). Used by [_defaultBaseUrl]'s `API_HOST` override.
+  ApiClient({
+    String? baseUrl,
+    http.Client? client,
+    String? authToken,
+    AuthManager? authManager,
+    SecureStorage? secureStorage,
+  })  : baseUrl = baseUrl ?? _defaultBaseUrl(),
+        _authManager = authManager,
+        _secureStorage = secureStorage,
+        _inMemoryToken = authToken,
+        _dio = Dio(BaseOptions(
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+          sendTimeout: const Duration(seconds: 15),
+        )) {
+    if (authToken != null && authManager != null) {
+      authManager.setTokens(accessToken: authToken, refreshToken: null);
+    }
+
+    final mgr = _authManager ?? AuthManager(secureStorage: _secureStorage);
+    final storage = _secureStorage ?? SecureStorage();
+
+    _dio.interceptors.add(
+      AuthInterceptor(
+        authManager: mgr,
+        secureStorage: storage,
+        getBaseUrl: () => this.baseUrl,
+      ),
+    );
+  }
+
   static String baseUrlForHost(String host) {
     final trimmed = host.trim();
     if (trimmed.contains('://')) {
@@ -59,21 +80,9 @@ class ApiClient {
     return 'http://$trimmed:8000/api/v1';
   }
 
-  /// Repoints this client at a new host immediately — no app restart or
-  /// provider rebuild required, since every request reads `baseUrl` at
-  /// call time via [_uri].
   void updateBaseUrl(String newBaseUrl) => baseUrl = newBaseUrl;
 
-  /// `10.0.2.2` is how the Android emulator reaches the host machine's
-  /// `localhost`; everything else (iOS simulator, web, desktop) can use
-  /// `localhost` directly.
   static String _defaultBaseUrl() {
-    // Web (Chrome debugging) and desktop run on the SAME machine as the
-    // backend, so they can always reach it at localhost — no IP needed,
-    // ever, regardless of which network the PC is on. This is the one
-    // case that genuinely never needs updating. `kIsWeb` is checked
-    // first (and short-circuits) because `defaultTargetPlatform` alone
-    // can't distinguish "web" from the OS it happens to be running in.
     if (kIsWeb ||
         defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
@@ -81,159 +90,125 @@ class ApiClient {
       return baseUrlForHost('localhost');
     }
 
-    // A REAL phone (or emulator) is a separate device from the backend.
-    // The backend now has a permanent public URL (Cloudflare Tunnel), so
-    // that's the real default every build ships with — no manual setup,
-    // no LAN IP, no gear-icon configuration needed.
-    //
-    // `--dart-define=API_HOST=<host-or-full-url>` still lets a dev build
-    // point at a different backend (e.g. a local machine while testing)
-    // without touching this file.
     const envHost = String.fromEnvironment('API_HOST');
     if (envHost.isNotEmpty) return baseUrlForHost(envHost);
 
     return baseUrlForHost('https://api.picgallery.in');
   }
 
-  Map<String, String> _headers({bool withAuth = true}) {
-    final headers = <String, String>{'Content-Type': 'application/json'};
-    if (withAuth && authToken != null) {
-      headers['Authorization'] = 'Bearer $authToken';
+  String _url(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
     }
-    return headers;
+    final cleanPath = path.startsWith('/') ? path : '/$path';
+    return '$baseUrl$cleanPath';
   }
 
-  Uri _uri(String path) => Uri.parse('$baseUrl$path');
-
-  /// No request should hang forever — if the backend (or the phone's
-  /// network path to it) is unreachable, this turns that into a clean
-  /// [ApiException] after 15s instead of leaving callers' `_isLoading`
-  /// spinners stuck on an unresolved Future indefinitely (e.g. Forgot
-  /// Password's "Send Reset Link" button hanging with no error at all).
-  static const Duration _timeout = Duration(seconds: 15);
-
   Future<dynamic> get(String path, {bool withAuth = true}) async {
-    final response = await _guarded(() => _client
-        .get(_uri(path), headers: _headers(withAuth: withAuth))
-        .timeout(_timeout, onTimeout: _throwTimeout));
-    return _handleResponse(response);
+    return _guarded(() => _dio.get(
+          _url(path),
+          options: Options(extra: {'withAuth': withAuth}),
+        ));
   }
 
   Future<dynamic> post(String path, {Object? body, bool withAuth = true}) async {
-    final response = await _guarded(() => _client
-        .post(
-          _uri(path),
-          headers: _headers(withAuth: withAuth),
-          body: body == null ? null : jsonEncode(body),
-        )
-        .timeout(_timeout, onTimeout: _throwTimeout));
-    return _handleResponse(response);
+    return _guarded(() => _dio.post(
+          _url(path),
+          data: body,
+          options: Options(
+            extra: {'withAuth': withAuth},
+            headers: {'Content-Type': 'application/json'},
+          ),
+        ));
   }
 
   Future<dynamic> put(String path, {Object? body, bool withAuth = true}) async {
-    final response = await _guarded(() => _client
-        .put(
-          _uri(path),
-          headers: _headers(withAuth: withAuth),
-          body: body == null ? null : jsonEncode(body),
-        )
-        .timeout(_timeout, onTimeout: _throwTimeout));
-    return _handleResponse(response);
+    return _guarded(() => _dio.put(
+          _url(path),
+          data: body,
+          options: Options(
+            extra: {'withAuth': withAuth},
+            headers: {'Content-Type': 'application/json'},
+          ),
+        ));
   }
 
-  /// Used by PATCH /users/me (partial profile update, Task 5/7) — the
-  /// only PATCH endpoint the backend exposes so far.
   Future<dynamic> patch(String path, {Object? body, bool withAuth = true}) async {
-    final response = await _guarded(() => _client
-        .patch(
-          _uri(path),
-          headers: _headers(withAuth: withAuth),
-          body: body == null ? null : jsonEncode(body),
-        )
-        .timeout(_timeout, onTimeout: _throwTimeout));
-    return _handleResponse(response);
+    return _guarded(() => _dio.patch(
+          _url(path),
+          data: body,
+          options: Options(
+            extra: {'withAuth': withAuth},
+            headers: {'Content-Type': 'application/json'},
+          ),
+        ));
   }
 
-  /// Used by DELETE /users/me (Task 10 — Delete Account). `body` carries
-  /// the password confirmation; `http.Client.delete` supports a body the
-  /// same way post/put/patch do, it's just rarely used.
   Future<dynamic> delete(String path, {Object? body, bool withAuth = true}) async {
-    final response = await _guarded(() => _client
-        .delete(
-          _uri(path),
-          headers: _headers(withAuth: withAuth),
-          body: body == null ? null : jsonEncode(body),
-        )
-        .timeout(_timeout, onTimeout: _throwTimeout));
-    return _handleResponse(response);
+    return _guarded(() => _dio.delete(
+          _url(path),
+          data: body,
+          options: Options(
+            extra: {'withAuth': withAuth},
+            headers: {'Content-Type': 'application/json'},
+          ),
+        ));
   }
 
-  /// Every request goes through here so that ANY failure — timeout,
-  /// connection refused, DNS lookup failure, TLS error, etc. — comes
-  /// out the other side as an [ApiException]. Without this, a raw
-  /// [SocketException] (e.g. the backend simply isn't running) would
-  /// propagate past callers' `on ApiException catch (e)` blocks
-  /// entirely, leaving their `_isLoading` flag stuck at `true` forever
-  /// with no error shown — the exact "stuck spinner" symptom.
-  Future<http.Response> _guarded(Future<http.Response> Function() send) async {
+  Future<dynamic> _guarded(Future<Response> Function() send) async {
     try {
-      return await send();
-    } on ApiException {
-      rethrow;
-    } catch (_) {
+      final response = await send();
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return _handleResponse(e.response!);
+      }
       throw const ApiException(
         0,
         "Couldn't reach the server. Check your connection and that the backend is running, then try again.",
       );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(
+        0,
+        e.toString(),
+      );
     }
   }
 
-  Never _throwTimeout() {
-    throw const ApiException(
-      0,
-      "Couldn't reach the server. Check your connection and that the backend is running, then try again.",
-    );
-  }
-
-  dynamic _handleResponse(http.Response response) {
-    final statusCode = response.statusCode;
-
-    dynamic decoded;
-    if (response.body.isNotEmpty) {
-      try {
-        decoded = jsonDecode(response.body);
-      } catch (_) {
-        decoded = null;
-      }
-    }
+  dynamic _handleResponse(Response response) {
+    final statusCode = response.statusCode ?? 0;
+    final data = response.data;
 
     if (statusCode >= 200 && statusCode < 300) {
-      return decoded;
+      return data;
     }
 
-    throw ApiException(statusCode, _extractMessage(decoded, response.body));
+    throw ApiException(statusCode, _extractMessage(data, response.statusMessage ?? ''));
   }
 
-  /// FastAPI's `HTTPException(detail: str)` produces `{"detail": "..."}`.
-  /// Pydantic validation errors (422) instead produce
-  /// `{"detail": [{"loc": [...], "msg": "...", "type": "..."}]}`, so we
-  /// join those into a readable string. Anything else falls back to the
-  /// raw body.
   String _extractMessage(dynamic decoded, String rawBody) {
-    if (decoded is Map<String, dynamic> && decoded.containsKey('detail')) {
-      final detail = decoded['detail'];
-      if (detail is String) {
-        return detail;
+    if (decoded is Map<String, dynamic>) {
+      if (decoded.containsKey('detail')) {
+        final detail = decoded['detail'];
+        if (detail is String) return detail;
+        if (detail is Map && detail.containsKey('message')) {
+          return detail['message'].toString();
+        }
+        if (detail is List) {
+          return detail
+              .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
+              .join(', ');
+        }
+        return detail.toString();
       }
-      if (detail is List) {
-        return detail
-            .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
-            .join(', ');
+      if (decoded.containsKey('message')) {
+        return decoded['message'].toString();
       }
-      return detail.toString();
     }
     return rawBody.isNotEmpty ? rawBody : 'Unknown error';
   }
 
-  void dispose() => _client.close();
+  void dispose() => _dio.close();
 }

@@ -129,6 +129,7 @@ class DeepLinkService {
         _handleStudio(parsed.id, navKey, onFailure);
         break;
       case 'shared':
+      case 'gallery':
         _handleShared(parsed.id, navKey, onFailure);
         break;
       case 'payment-success':
@@ -147,6 +148,7 @@ class DeepLinkService {
   ///  - `picgallery://{action}/{id}`               (custom scheme)
   ///  - `https://api.picgallery.in/{action}/{id}`   (App Links)
   ///  - `https://picgallery.in/{action}/{id}`
+  ///  - `https://picgallery.com/gallery/{id}`
   ///  - `https://www.picgallery.in/{action}/{id}`
   /// Returns null for anything else (a foreign scheme/host slipping
   /// through), so [handleLink] can bail out silently rather than
@@ -161,6 +163,8 @@ class DeepLinkService {
       if (host == 'api.picgallery.in' ||
           host == 'picgallery.in' ||
           host == 'www.picgallery.in' ||
+          host == 'picgallery.com' ||
+          host == 'www.picgallery.com' ||
           host == 'picgallery.app' ||
           host == 'www.picgallery.app') {
         final segments = uri.pathSegments;

@@ -23,11 +23,8 @@ class Settings(BaseSettings):
     # Auth
     SECRET_KEY: str = "change-this-secret-key-in-production"
     ALGORITHM: str = "HS256"
-    # No refresh-token flow exists yet, so the access token itself is the
-    # only thing standing between "stays logged in" and "logged out". Set
-    # long (1 year) so a session only ever ends when the user explicitly
-    # taps Logout (or unchecks "Remember me" at login) — not on a timer.
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 365  # 1 year
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # Short-lived access token (15 minutes)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7     # Long-lived refresh token (7 days)
 
     # CORS
     CORS_ORIGINS: list[str] = ["*"]

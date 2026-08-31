@@ -20,9 +20,32 @@ def create_access_token(subject: str, expires_delta: timedelta | None = None) ->
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    to_encode = {"sub": subject, "exp": expire}
+    to_encode = {"sub": subject, "exp": expire, "type": "access"}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
-def decode_access_token(token: str) -> dict:
+def create_refresh_token(subject: str, expires_delta: timedelta | None = None) -> str:
+    expire = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+    to_encode = {"sub": subject, "exp": expire, "type": "refresh"}
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+
+def decode_access_token(token: str) -> dict:
+    payload = decode_token(token)
+    token_type = payload.get("type")
+    if token_type and token_type != "access":
+        raise ValueError("Invalid token type")
+    return payload
+
+
+def decode_refresh_token(token: str) -> dict:
+    payload = decode_token(token)
+    if payload.get("type") != "refresh":
+        raise ValueError("Invalid token type")
+    return payload

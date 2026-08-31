@@ -11,7 +11,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.email import send_verification_email as deliver_verification_email
 from app.core.email import send_password_reset_email as deliver_password_reset_email
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
+    hash_password,
+    verify_password,
+)
 from app.core.social_auth import (
     SocialIdentity,
     verify_apple_identity_token,
@@ -29,6 +35,8 @@ from app.schemas.user import (
     ResetPasswordRequest,
     SocialLoginRequest,
     Token,
+    TokenRefreshRequest,
+    TokenRefreshResponse,
     UserCompleteProfile,
     UserLogin,
     UserRead,
@@ -170,11 +178,62 @@ def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Sessi
     # registration never waits on (or fails because of) mail delivery.
     background_tasks.add_task(deliver_verification_email, to_email=user.email, token=verification_token)
 
-    token = create_access_token(subject=str(user.id))
-    return Token(access_token=token, user=UserRead.model_validate(user))
+def _make_token_response(user: User) -> Token:
+    access_token = create_access_token(subject=str(user.id))
+    refresh_token = create_refresh_token(subject=str(user.id))
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        access=access_token,
+        refresh=refresh_token,
+        token_type="bearer",
+        user=UserRead.model_validate(user),
+    )
+
+
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
+def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)) -> Token:
+    existing = (
+        db.query(User)
+        .filter(User.email == payload.email, User.role == payload.role, User.is_deleted == False)  # noqa: E712
+        .first()
+    )
+    if existing:
+        role_label = "Studio" if payload.role == UserRole.photographer else "Client"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A {role_label} account already exists for this email",
+        )
+
+    verification_token = _generate_verification_token()
+    user = User(
+        full_name=payload.full_name,
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
+        role=payload.role,
+        studio_name=payload.studio_name,
+        studio_address=payload.studio_address,
+        business_type=payload.business_type,
+        agreed_to_terms=payload.agreed_to_terms,
+        email_verification_token=verification_token,
+        email_verification_sent_at=datetime.now(timezone.utc),
+        plan_status="inactive",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    if user.role == UserRole.client:
+        _consume_email_invitations(db, user)
+        db.commit()
+
+    background_tasks.add_task(deliver_verification_email, to_email=user.email, token=verification_token)
+
+    return _make_token_response(user)
 
 
 @router.post("/login", response_model=Token)
+@router.post("/login/", response_model=Token, include_in_schema=False)
 def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
     query = db.query(User).filter(User.email == payload.email, User.is_deleted == False)  # noqa: E712
     if payload.role is not None:
@@ -188,8 +247,6 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
         )
 
     if len(candidates) > 1:
-        # Same email, no role specified, and it's registered under BOTH
-        # roles — can't safely guess which account's password to check.
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This email is used by both a Client and a Studio account. Please choose which one you're signing in as.",
@@ -197,9 +254,6 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
 
     user = candidates[0]
     if user.hashed_password is None:
-        # Account was created via Google/Apple sign-in and has no
-        # password set — verify_password() would otherwise crash
-        # passlib with a None hash and surface as a 500.
         provider_label = user.auth_provider.value.capitalize() if user.auth_provider else "Google or Apple"
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -211,30 +265,11 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
             detail="Incorrect email or password",
         )
 
-    token = create_access_token(subject=str(user.id))
-    return Token(access_token=token, user=UserRead.model_validate(user))
+    return _make_token_response(user)
 
 
 @router.post("/social-login", response_model=Token)
 def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> Token:
-    """Sign in with Google / Sign in with Apple, unified into one
-    endpoint. Same Role Selection flow as email registration: `role` is
-    required up front (mirrors `register()`'s required `role` field
-    rather than `login()`'s optional one, since there's no password to
-    fall back on for disambiguation), and find-or-create is scoped to
-    (email, role) — the same `uq_users_email_role` constraint the
-    email/password flow already relies on.
-
-    First sign-in creates the account (auto-verified — the provider
-    already proved the email is real, so there's no email-verification
-    step to send here, unlike register()). Returning sign-ins are
-    recognized by (provider_user_id, auth_provider, role) — role is
-    part of the lookup (not just email/provider) so the same Google/
-    Apple account can hold a separate Client and Studio row, matching
-    how email/password accounts work (`uq_users_email_role`). Falls
-    back to (email, role) for the very first call on a given role,
-    before provider_user_id is stored for that row.
-    """
     identity: SocialIdentity = (
         verify_google_id_token(payload.id_token)
         if payload.provider == AuthProvider.google
@@ -259,12 +294,6 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
     )
 
     if user is None:
-        # Not seen this provider account before — fall back to
-        # (email, role), same lookup register()/login() use, in case
-        # this is the very first social sign-in for an email that
-        # already has a row under this role. Deleted rows are excluded
-        # here too so a deleted account can never be silently
-        # resurrected by signing in again with the same email/provider.
         user = (
             db.query(User)
             .filter(User.email == identity.email, User.role == payload.role, User.is_deleted == False)  # noqa: E712
@@ -282,15 +311,10 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
             provider_user_id=identity.provider_user_id,
             agreed_to_terms=True,
             is_email_verified=True,
-            # See matching comment in the email/password signup path above:
-            # the DB requires a non-null plan_status on every new user row.
             plan_status="inactive",
         )
         db.add(user)
     else:
-        # Existing row (created via email/password, or via the other
-        # provider) signing in with Google/Apple for the first time —
-        # link this provider account to it rather than rejecting it.
         user.auth_provider = payload.provider
         user.provider_user_id = identity.provider_user_id
         if identity.email_verified:
@@ -307,8 +331,46 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
         )
     db.refresh(user)
 
-    token = create_access_token(subject=str(user.id))
-    return Token(access_token=token, user=UserRead.model_validate(user))
+    return _make_token_response(user)
+
+
+@router.post("/token/refresh", response_model=TokenRefreshResponse)
+@router.post("/token/refresh/", response_model=TokenRefreshResponse, include_in_schema=False)
+def refresh_token(payload: TokenRefreshRequest, db: Session = Depends(get_db)) -> TokenRefreshResponse:
+    token_str = payload.token_str
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        data = decode_refresh_token(token_str)
+        user_id = data.get("sub")
+        if not user_id:
+            raise credentials_exception
+    except Exception:
+        raise credentials_exception
+
+    user = db.get(User, user_id)
+    if user is None or user.is_deleted:
+        raise credentials_exception
+
+    new_access_token = create_access_token(subject=str(user.id))
+    new_refresh_token = create_refresh_token(subject=str(user.id))
+
+    return TokenRefreshResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        access=new_access_token,
+        refresh=new_refresh_token,
+        token_type="bearer",
+    )
+
+
+@router.post("/logout", response_model=MessageResponse)
+@router.post("/logout/", response_model=MessageResponse, include_in_schema=False)
+def logout_endpoint() -> MessageResponse:
+    return MessageResponse(message="Logged out successfully.")
 
 
 @router.get("/me", response_model=UserRead)

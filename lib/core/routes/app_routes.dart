@@ -242,10 +242,18 @@ class AppRoutes {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final routeName = settings.name ?? '';
     final uri = Uri.tryParse(routeName);
-    if (uri != null && uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'shared') {
-      final token = uri.pathSegments[1];
-      if (token != 'gallery') {
-        return _fade(SharedGalleryScreen(token: token));
+    if (uri != null && uri.pathSegments.isNotEmpty) {
+      final prefix = uri.pathSegments[0];
+      if ((prefix == 'shared' || prefix == 'gallery') && uri.pathSegments.length >= 2) {
+        final token = uri.pathSegments[1];
+        if (token != 'gallery') {
+          return _fade(SharedGalleryScreen(token: token));
+        }
+      } else if ((prefix == 'shared' || prefix == 'gallery') && uri.pathSegments.length == 1) {
+        final token = uri.pathSegments[0];
+        if (token != 'shared' && token != 'gallery') {
+          return _fade(SharedGalleryScreen(token: token));
+        }
       }
     }
 

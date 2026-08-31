@@ -1,54 +1,29 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'secure_storage.dart';
 
-/// Thin, testable wrapper around [FlutterSecureStorage] for persisting the
-/// JWT access token between app launches. Contains no business logic —
-/// callers (e.g. [AuthRepository] or an auth provider) decide when to
-/// save/read/clear it.
-///
-/// flutter_secure_storage ^11 uses EncryptedSharedPreferences on Android
-/// by default (no opt-in option needed anymore), eliminating the RSA
-/// Keystore first-write delay that older versions could trigger.
+/// Testable wrapper around [SecureStorage] for persisting JWT
+/// access and refresh tokens between app launches.
 class TokenStorage {
-  static const String _tokenKey = 'auth_access_token';
-  static const String _rememberMeKey = 'auth_remember_me';
+  final SecureStorage _secureStorage;
 
-  final FlutterSecureStorage _storage;
+  TokenStorage({SecureStorage? secureStorage})
+      : _secureStorage = secureStorage ?? SecureStorage();
 
-  TokenStorage({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+  Future<void> saveToken(String token) => _secureStorage.saveAccessToken(token);
 
-  Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
-  }
+  Future<String?> readToken() => _secureStorage.getAccessToken();
 
-  Future<String?> readToken() async {
-    return _storage.read(key: _tokenKey);
-  }
+  Future<void> saveRefreshToken(String token) => _secureStorage.saveRefreshToken(token);
 
-  Future<void> clearToken() async {
-    await _storage.delete(key: _tokenKey);
-  }
+  Future<String?> readRefreshToken() => _secureStorage.getRefreshToken();
 
-  /// Persists the "Remember me" checkbox choice itself (separate from the
-  /// token). This lets the app tell, later, whether the current/last
-  /// session was meant to be session-only — e.g. to pre-check/uncheck the
-  /// box again, or for any future logic that needs to distinguish "never
-  /// opted in to being remembered" from "opted in but the stored token is
-  /// simply missing/expired".
-  Future<void> saveRememberMe(bool rememberMe) async {
-    await _storage.write(
-      key: _rememberMeKey,
-      value: rememberMe.toString(),
-    );
-  }
+  Future<void> saveTokens({required String accessToken, required String refreshToken}) =>
+      _secureStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
 
-  /// Defaults to `false` (not remembered) if nothing has been saved yet.
-  Future<bool> readRememberMe() async {
-    final value = await _storage.read(key: _rememberMeKey);
-    return value == 'true';
-  }
+  Future<void> clearToken() => _secureStorage.clearTokens();
 
-  Future<void> clearRememberMe() async {
-    await _storage.delete(key: _rememberMeKey);
-  }
+  Future<void> saveRememberMe(bool rememberMe) => _secureStorage.saveRememberMe(rememberMe);
+
+  Future<bool> readRememberMe() => _secureStorage.readRememberMe();
+
+  Future<void> clearRememberMe() => _secureStorage.clearRememberMe();
 }

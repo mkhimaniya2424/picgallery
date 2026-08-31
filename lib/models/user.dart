@@ -407,22 +407,24 @@ class AppUser {
   }
 }
 
-/// Mirrors the backend's `Token` schema â€” the response body of
-/// `POST /auth/register` and `POST /auth/login`.
+/// Mirrors the backend's `Token` schema — response body of auth endpoints
 class AuthToken {
   final String accessToken;
+  final String? refreshToken;
   final String tokenType;
   final AppUser user;
 
   const AuthToken({
     required this.accessToken,
+    this.refreshToken,
     required this.tokenType,
     required this.user,
   });
 
   factory AuthToken.fromJson(Map<String, dynamic> json) {
     return AuthToken(
-      accessToken: json['access_token'] as String,
+      accessToken: (json['access_token'] ?? json['access']) as String,
+      refreshToken: (json['refresh_token'] ?? json['refresh']) as String?,
       tokenType: json['token_type'] as String? ?? 'bearer',
       user: AppUser.fromJson(json['user'] as Map<String, dynamic>),
     );
@@ -431,6 +433,7 @@ class AuthToken {
   Map<String, dynamic> toJson() {
     return {
       'access_token': accessToken,
+      if (refreshToken != null) 'refresh_token': refreshToken,
       'token_type': tokenType,
       'user': user.toJson(),
     };

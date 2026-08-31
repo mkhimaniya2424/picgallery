@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from pydantic import BaseModel
+
 from app.api.deps import get_current_studio_user, get_optional_current_user
 from app.core.download_log import record_download_event
 from app.core.face_index import extract_query_faces, resolve_query_face, search_faces
@@ -192,22 +194,21 @@ def _get_link_by_token_or_404(db: Session, token: str) -> ShareLink:
 
 
 def _assert_link_reachable(link: ShareLink) -> None:
-    """Revoked/expired links are treated as gone (410), distinctly from
-    a token that never existed (404) — lets the client tell "this
-    photographer pulled the link" apart from "bad link" in the UI.
-    """
     if link.is_revoked:
         logger.warning(f"[SHARE_LOOKUP_DEBUG] Share link '{link.token}' has been revoked.")
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail="This shared link has been revoked.")
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={"code": "GALLERY_REVOKED", "message": "This gallery link has been revoked."},
+        )
     if _is_expired(link):
         logger.warning(f"[SHARE_LOOKUP_DEBUG] Share link '{link.token}' has expired.")
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail="This shared link has expired.")
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={"code": "GALLERY_EXPIRED", "message": "This gallery link has expired."},
+        )
 
 
 def _assert_client_authorized(link: ShareLink, user: User | None) -> None:
-    """If a share link has a specific client_id assigned, enforce that
-    only that client (or the owner) can access it.
-    """
     if link.client_id is None:
         return
     if user is None or (user.id != link.client_id and user.id != link.owner_id):
@@ -216,21 +217,18 @@ def _assert_client_authorized(link: ShareLink, user: User | None) -> None:
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not authorized to access this private gallery.",
+            detail={"code": "UNAUTHORIZED_CLIENT", "message": "You are not authorized to access this private gallery."},
         )
 
 
 def _assert_album_exists(db: Session, link: ShareLink) -> Album:
-    """Verifies that the album linked to this share record actually exists in the DB.
-    Returns the Album object or raises 404 if deleted.
-    """
     logger.info(f"[SHARE_LOOKUP_DEBUG] Album lookup request for albumId='{link.album_id}' (from share token='{link.token}')")
     album = db.get(Album, link.album_id)
     if album is None:
         logger.error(f"[SHARE_LOOKUP_DEBUG] Linked albumId='{link.album_id}' NOT found in database for share token='{link.token}'")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="This shared gallery is no longer available.",
+            detail={"code": "GALLERY_NOT_FOUND", "message": "This shared gallery is no longer available."},
         )
     logger.info(f"[SHARE_LOOKUP_DEBUG] Album found: name='{album.name}', owner_id='{album.owner_id}'")
     return album
@@ -239,9 +237,18 @@ def _assert_album_exists(db: Session, link: ShareLink) -> Album:
 def _assert_password_ok(link: ShareLink, password: str | None) -> None:
     if link.password_hash is None:
         return
-    if not password or not verify_password(password, link.password_hash):
+    if not password:
+        logger.warning(f"[SHARE_LOOKUP_DEBUG] Password required for share link '{link.token}'")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "PASSWORD_REQUIRED", "message": "Password is required for this gallery."},
+        )
+    if not verify_password(password, link.password_hash):
         logger.warning(f"[SHARE_LOOKUP_DEBUG] Incorrect passcode attempt for share link '{link.token}'")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "INVALID_PASSWORD", "message": "Incorrect password."},
+        )
 
 
 @public_router.get("/{token}/status", response_model=ShareLinkStatusRead)
@@ -389,3 +396,72 @@ async def face_search_shared_gallery(
         searched_face_index=chosen_index,
         matches=[FaceMatchRead(media=MediaRead.from_model(m), similarity=round(s, 4)) for m, s in matches],
     )
+
+
+public_galleries_router = APIRouter(prefix="/public/galleries", tags=["public-galleries"])
+
+
+class GalleryAccessPayload(BaseModel):
+    password: str | None = None
+
+
+@public_galleries_router.get("/{token}", response_model=PublicShareLinkRead)
+@public_galleries_router.get("/{token}/", response_model=PublicShareLinkRead, include_in_schema=False)
+def get_public_gallery(
+    token: str,
+    password: str | None = Query(default=None),
+    user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> PublicShareLinkRead:
+    return view_shared_gallery(token=token, password=password, user=user, db=db)
+
+
+@public_galleries_router.post("/{token}/access")
+@public_galleries_router.post("/{token}/access/", include_in_schema=False)
+def access_public_gallery(
+    token: str,
+    payload: GalleryAccessPayload,
+    user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    link = _get_link_by_token_or_404(db, token)
+    _assert_link_reachable(link)
+    _assert_client_authorized(link, user)
+    _assert_password_ok(link, payload.password)
+    album = _assert_album_exists(db, link)
+
+    session_token = secrets.token_urlsafe(32)
+    return {
+        "success": True,
+        "token": token,
+        "session": session_token,
+        "gallery": {
+            "id": str(album.id),
+            "name": album.name,
+        },
+        "access": {
+            "password_required": link.password_hash is not None,
+            "allow_download": link.allow_download,
+            "watermark_enabled": link.show_watermark,
+        },
+    }
+
+
+@public_galleries_router.post("/{token}/download", response_model=MessageResponse)
+@public_galleries_router.post("/{token}/download/", response_model=MessageResponse, include_in_schema=False)
+def download_public_gallery(
+    token: str,
+    payload: PublicShareLinkUnlockRequest,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    return record_shared_download(token=token, payload=payload, db=db)
+
+
+@public_galleries_router.get("/{token}/status", response_model=ShareLinkStatusRead)
+@public_galleries_router.get("/{token}/status/", response_model=ShareLinkStatusRead, include_in_schema=False)
+def status_public_gallery(
+    token: str,
+    user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> ShareLinkStatusRead:
+    return get_share_link_status(token=token, user=user, db=db)

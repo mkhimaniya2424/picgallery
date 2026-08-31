@@ -1,27 +1,11 @@
-import logging
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import api_router
 from app.core.config import settings
-
-# Root logging config — without this, logger.exception(...) calls
-# scattered through the app (including the global handler below) have
-# no guaranteed destination: Python's logging module only falls back
-# to a bare "handler of last resort" on stderr, with no timestamps,
-# module name, or reliable capture under a process manager like NSSM.
-# This makes every log line explicit and consistently formatted,
-# wherever NSSM's stdout/stderr redirection is pointed.
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
-
-logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -32,27 +16,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Safety net for every route in the app. Without this, an
-    unhandled exception anywhere (a missing config value, a DB
-    constraint, a bug in a new endpoint, etc.) falls through to
-    Starlette's built-in default: a bare "Internal Server Error"
-    with the real cause visible nowhere — not in the app, not in any
-    log, since nothing was logging it. This catches it, logs the full
-    traceback (so the actual cause shows up in the server's log
-    output instead of vanishing), and returns the same
-    `{"detail": "..."}` shape every other error already uses, so the
-    Flutter app's `ApiException` parsing keeps working unchanged.
-    """
-    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Something went wrong on our end. Please try again."},
-    )
-
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
@@ -95,6 +58,7 @@ def get_asset_links():
 
 
 @app.get("/shared/{share_id}", include_in_schema=False)
+@app.get("/gallery/{share_id}", include_in_schema=False)
 def shared_web_fallback(share_id: str):
     """Web fallback for shared gallery links when opened in a browser without app installed."""
     from fastapi.responses import HTMLResponse
@@ -131,3 +95,4 @@ def shared_web_fallback(share_id: str):
 </body>
 </html>"""
     return HTMLResponse(content=html_content)
+

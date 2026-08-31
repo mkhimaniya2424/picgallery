@@ -33,11 +33,22 @@ class AuthRepository {
   ///   the rest of this process's lifetime — nothing is written to disk,
   ///   and any token persisted by a *previous*, remembered session is
   ///   actively cleared so it doesn't linger and auto-login next launch.
-  Future<void> _persistToken(String token, {bool rememberMe = true}) async {
-    _apiClient.authToken = token;
+  Future<void> _persistToken(
+    String accessToken, {
+    String? refreshToken,
+    bool rememberMe = true,
+  }) async {
+    _apiClient.authToken = accessToken;
     await _tokenStorage.saveRememberMe(rememberMe);
     if (rememberMe) {
-      await _tokenStorage.saveToken(token);
+      if (refreshToken != null) {
+        await _tokenStorage.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
+      } else {
+        await _tokenStorage.saveToken(accessToken);
+      }
     } else {
       await _tokenStorage.clearToken();
     }
@@ -87,20 +98,10 @@ class AuthRepository {
       },
     );
     final token = AuthToken.fromJson(json as Map<String, dynamic>);
-    await _persistToken(token.accessToken);
+    await _persistToken(token.accessToken, refreshToken: token.refreshToken);
     return token;
   }
 
-  /// POST /auth/login. [role], if known (e.g. picked on Role Selection
-  /// just before this screen), disambiguates when the same email is
-  /// registered under both a client and a photographer account —
-  /// otherwise the backend has no way to know which one's password to
-  /// check and returns a 400 asking the app to specify one.
-  ///
-  /// [rememberMe] mirrors the "Remember me" checkbox on [LoginScreen]:
-  /// when `false`, the resulting token is kept in memory only (see
-  /// [_persistToken]) so a fully-killed-and-relaunched app comes back up
-  /// logged out instead of auto-restoring this session.
   Future<AuthToken> login(
     String email,
     String password, {
@@ -117,18 +118,14 @@ class AuthRepository {
       },
     );
     final token = AuthToken.fromJson(json as Map<String, dynamic>);
-    await _persistToken(token.accessToken, rememberMe: rememberMe);
+    await _persistToken(
+      token.accessToken,
+      refreshToken: token.refreshToken,
+      rememberMe: rememberMe,
+    );
     return token;
   }
 
-  /// POST /auth/social-login — Sign in with Google / Sign in with Apple.
-  /// [role] is required, same as [register] (not optional like [login]):
-  /// there's no password to fall back on for disambiguation, so the app
-  /// must always know which role it's signing in as before calling this
-  /// — i.e. Role Selection must have already happened, exactly like the
-  /// email flow. [fullName] is only meaningful on first sign-up (Apple
-  /// only ever hands the name back on the very first authorization) and
-  /// is ignored by the backend on subsequent calls.
   Future<AuthToken> socialLogin({
     required String provider,
     required String idToken,
@@ -146,7 +143,7 @@ class AuthRepository {
       },
     );
     final token = AuthToken.fromJson(json as Map<String, dynamic>);
-    await _persistToken(token.accessToken);
+    await _persistToken(token.accessToken, refreshToken: token.refreshToken);
     return token;
   }
 
@@ -257,6 +254,11 @@ class AuthRepository {
   /// storage. Purely local — there's no backend logout endpoint (JWTs
   /// are stateless), so this is all that's needed to log the user out.
   Future<void> logout() async {
+    try {
+      await _apiClient.post('/auth/logout');
+    } catch (_) {
+      // Best-effort backend call
+    }
     _apiClient.authToken = null;
     await _tokenStorage.clearToken();
     await _tokenStorage.clearRememberMe();

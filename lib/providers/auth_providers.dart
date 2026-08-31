@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
+import '../core/storage/secure_storage.dart'; // ← ADDED: defines SecureStorage — verify path
 import '../core/storage/token_storage.dart';
+import '../core/auth/auth_manager.dart'; // ← ADDED: defines AuthManager — verify path
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
 import '../services/push_notification_service.dart';
@@ -10,17 +12,27 @@ import '../services/social_auth_service.dart';
 /// Swap this single line to change how the app talks to the backend
 /// (different base URL, mock client for tests, etc.) — nothing else
 /// needs to change since everything below only depends on [ApiClient].
+final secureStorageProvider = Provider<SecureStorage>((ref) => SecureStorage());
+
+final authManagerProvider = ChangeNotifierProvider<AuthManager>((ref) {
+  final manager = AuthManager(secureStorage: ref.watch(secureStorageProvider));
+  manager.initSession();
+  return manager;
+});
+
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final client = ApiClient();
+  final client = ApiClient(
+    authManager: ref.watch(authManagerProvider),
+    secureStorage: ref.watch(secureStorageProvider),
+  );
   ref.onDispose(client.dispose);
   return client;
 });
 
-final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
+final tokenStorageProvider = Provider<TokenStorage>((ref) {
+  return TokenStorage(secureStorage: ref.watch(secureStorageProvider));
+});
 
-/// Wraps the native Google/Apple sign-in SDKs — see [SocialAuthService].
-/// A single instance is shared so [GoogleSignIn]'s own cached session
-/// state (silent sign-in, sign-out) behaves consistently app-wide.
 final socialAuthServiceProvider = Provider<SocialAuthService>((ref) => SocialAuthService());
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -67,6 +79,12 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   /// logged-out (`null`) rather than surfacing an error on launch.
   @override
   Future<AppUser?> build() async {
+    ref.listen<AuthManager>(authManagerProvider, (previous, next) {
+      if (next.isSessionExpired) {
+        state = const AsyncData<AppUser?>(null);
+      }
+    });
+
     final token = await _repo.restoreSession();
     if (token == null) return null;
 

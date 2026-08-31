@@ -98,7 +98,7 @@ class ShareLinkRepository {
   // ---------------------------------------------------------------------
 
   Future<ShareLinkStatus> fetchStatus(String token) async {
-    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: true);
+    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: false);
     return ShareLinkStatus.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -110,7 +110,7 @@ class ShareLinkRepository {
     final query = (password != null && password.isNotEmpty)
         ? '?password=${Uri.encodeQueryComponent(password)}'
         : '';
-    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: true);
+    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: false);
     return PublicGalleryData.fromApiJson(json as Map<String, dynamic>);
   }
 
