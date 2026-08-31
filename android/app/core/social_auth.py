@@ -18,6 +18,7 @@ from dataclasses import dataclass
 
 import requests
 from fastapi import HTTPException, status
+from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 from jose import jwt as jose_jwt
@@ -89,7 +90,8 @@ def verify_google_id_token(id_token_str: str) -> SocialIdentity:
         claims = google_id_token.verify_oauth2_token(
             id_token_str, google_requests.Request(), audience=None
         )
-    except ValueError as exc:
+    except (ValueError, GoogleAuthError) as exc:
+        logger.error("Google sign-in token verification failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Google sign-in token",
