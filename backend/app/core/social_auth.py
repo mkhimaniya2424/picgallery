@@ -18,7 +18,6 @@ from dataclasses import dataclass
 
 import requests
 from fastapi import HTTPException, status
-from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 from jose import jwt as jose_jwt
@@ -90,11 +89,25 @@ def verify_google_id_token(id_token_str: str) -> SocialIdentity:
         claims = google_id_token.verify_oauth2_token(
             id_token_str, google_requests.Request(), audience=None
         )
-    except (ValueError, GoogleAuthError) as exc:
-        logger.error("Google sign-in token verification failed: %s", exc)
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired Google sign-in token",
+        ) from exc
+    except Exception as exc:
+        # verify_oauth2_token fetches Google's public certs over the
+        # network on every call — anything from a DNS failure to the
+        # server having no outbound internet access lands here (NOT a
+        # ValueError, so it isn't caught above). Previously this
+        # propagated unhandled and surfaced to the app as a bare
+        # "Internal Server Error" with no way to tell what actually
+        # went wrong. Logging the real exception here means the next
+        # occurrence shows up in the server logs with a real
+        # traceback instead of vanishing.
+        logger.exception("Google sign-in verification failed unexpectedly")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Couldn't verify Google sign-in right now. Check the server's outbound network access and try again.",
         ) from exc
 
     token_aud = claims.get("aud")

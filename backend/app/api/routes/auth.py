@@ -1,9 +1,11 @@
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -36,6 +38,8 @@ from app.schemas.user import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+logger = logging.getLogger(__name__)
 
 # How long a (dummy) verification token stays valid before Resend Email
 # is needed again.
@@ -292,7 +296,15 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
         if identity.email_verified:
             user.is_email_verified = True
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        logger.exception("social_login: DB integrity error creating/updating user")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Couldn't complete sign-in — an account conflict occurred. Please try again.",
+        )
     db.refresh(user)
 
     token = create_access_token(subject=str(user.id))
