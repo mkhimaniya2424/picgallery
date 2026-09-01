@@ -242,17 +242,48 @@ class AppRoutes {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final routeName = settings.name ?? '';
     final uri = Uri.tryParse(routeName);
-    if (uri != null && uri.pathSegments.isNotEmpty) {
-      final prefix = uri.pathSegments[0];
-      if ((prefix == 'shared' || prefix == 'gallery') && uri.pathSegments.length >= 2) {
-        final token = uri.pathSegments[1];
-        if (token != 'gallery') {
-          return _fade(SharedGalleryScreen(token: token));
+
+    if (uri != null) {
+      // 1. Custom scheme deep links: picgallery://shared/{token}, picgallery://gallery/{token}, picgallery://{token}
+      if (uri.scheme == 'picgallery') {
+        final host = uri.host.toLowerCase();
+        final tokenFromPath = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+        String? token;
+
+        if (host == 'shared' || host == 'gallery') {
+          token = tokenFromPath;
+        } else if (host.isNotEmpty && host != 'admin' && host != 'login' && host != 'role-selection') {
+          token = host;
         }
-      } else if ((prefix == 'shared' || prefix == 'gallery') && uri.pathSegments.length == 1) {
-        final token = uri.pathSegments[0];
-        if (token != 'shared' && token != 'gallery') {
-          return _fade(SharedGalleryScreen(token: token));
+
+        if (token != null && token.isNotEmpty && token != 'gallery' && token != 'shared') {
+          return _fade(SharedGalleryScreen(token: token.trim()));
+        }
+      }
+
+      // 2. HTTPS / HTTP App links or path routes: /gallery/{token}, /shared/{token}, https://domain/gallery/{token}
+      if (uri.pathSegments.isNotEmpty) {
+        final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+        if (segments.isNotEmpty) {
+          final prefix = segments.first.toLowerCase();
+
+          if (prefix == 'shared' || prefix == 'gallery') {
+            String? token;
+            if (segments.length >= 3 &&
+                (segments[1].toLowerCase() == 'gallery' || segments[1].toLowerCase() == 'shared')) {
+              token = segments[2].trim();
+            } else if (segments.length >= 2 &&
+                segments[1].toLowerCase() != 'gallery' &&
+                segments[1].toLowerCase() != 'shared') {
+              token = segments[1].trim();
+            } else {
+              token = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+            }
+
+            if (token != null && token.isNotEmpty && token != 'gallery' && token != 'shared') {
+              return _fade(SharedGalleryScreen(token: token));
+            }
+          }
         }
       }
     }
@@ -504,7 +535,7 @@ class AppRoutes {
                 if (nav.canPop()) {
                   nav.pop();
                 } else {
-                  nav.pushReplacementNamed(adminHome);
+                  nav.pushReplacementNamed(roleSelection);
                 }
               }
             });

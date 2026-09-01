@@ -36,16 +36,16 @@ Future<void> main() async {
     debugPrint('Firebase initialization failed (missing config?): $e');
   }
 
+  // Initialize DeepLinkService before runApp so initial cold-start deep links
+  // are captured before the splash screen timer evaluates navigation.
+  await DeepLinkService.instance.init(navigatorKey);
+
   runApp(
     ProviderScope(
       overrides: [apiClientProvider.overrideWithValue(apiClient)],
       child: const PicGallery(),
     ),
   );
-
-  // Start listening for picgallery://payment-success|payment-failed links
-  // from the subscription checkout website (see SubscriptionPlansScreen).
-  await DeepLinkService.instance.init(navigatorKey);
 }
 
 class PicGallery extends ConsumerWidget {

@@ -74,6 +74,16 @@ class StudioMediaUploadService {
     return StudioPortfolioImage.fromApiJson(decoded);
   }
 
+  /// Generic single-file multipart POST for any path that accepts a `file`
+  /// field and returns JSON — used by [UserRepository] for
+  /// `POST /users/me/avatar` so the upload logic isn't duplicated.
+  Future<Map<String, dynamic>> uploadAvatarForPath({
+    required String path,
+    required List<int> bytes,
+    required String fileName,
+    required String contentType,
+  }) => _upload(path: path, bytes: bytes, fileName: fileName, contentType: contentType);
+
   /// Shared multipart POST — same shape as [MediaUploadService.upload],
   /// minus the send-progress plumbing (these are small profile images,
   /// not gallery photos/videos, so a progress bar isn't worth the

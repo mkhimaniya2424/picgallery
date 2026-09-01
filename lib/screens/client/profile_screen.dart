@@ -2,15 +2,20 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../l10n/app_localizations.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/network/api_client.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/user_providers.dart';
+import '../../services/media_picker_service.dart' show MediaContentType;
 import '../../widgets/cards/glass_card.dart';
+import '../../widgets/common/snackbar_helper.dart';
 
 /// Profile tab body — account summary (name/email/avatar) is the real,
 /// logged-in [AppUser] from [authProvider] (populated from `GET
@@ -18,9 +23,14 @@ import '../../widgets/cards/glass_card.dart';
 /// local device-only settings — plus a menu of settings rows and a Log
 /// Out action that returns to Role Selection. Lives inside
 /// [MainNavScreen].
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // "Collections" and "Download History" removed: GET /collections and
   // GET /download-history are studio-only (get_current_studio_user) and
   // 403 for a client account — same reason they were already stripped
@@ -35,8 +45,66 @@ class ProfileScreen extends ConsumerWidget {
     (icon: Icons.help_outline_rounded, label: 'Help & Support'),
   ];
 
+  bool _isUploadingAvatar = false;
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    XFile? picked;
+    try {
+      picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+      return;
+    }
+    if (picked == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+
+    try {
+      final bytes = await picked.readAsBytes();
+      final contentType = picked.mimeType ?? MediaContentType.forFileName(picked.name);
+      
+      final newUrl = await ref.read(userRepositoryProvider).uploadAvatar(
+            bytes: bytes,
+            fileName: picked.name,
+            contentType: contentType,
+          );
+      
+      if (!mounted) return;
+
+      if (newUrl != null) {
+        final currentUser = ref.read(authProvider).valueOrNull;
+        if (currentUser != null) {
+          ref.read(authProvider.notifier).setUser(currentUser.copyWith(avatarUrl: newUrl));
+        }
+        SnackBarHelper.showSuccess(context, 'Profile picture updated successfully.');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading image: ${e is ApiException ? e.message : e}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingAvatar = false);
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(authProvider).valueOrNull;
     final l10n = AppLocalizations.of(context)!;
     final name = user?.fullName.trim() ?? '';
@@ -70,28 +138,64 @@ class ProfileScreen extends ConsumerWidget {
           Center(
             child: Column(
               children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.heroGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 26,
-                          offset: const Offset(0, 12)),
+                GestureDetector(
+                  onTap: _pickAndUploadAvatar,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.heroGradient,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 26,
+                                offset: const Offset(0, 12)),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: avatarUrl.isNotEmpty
+                            ? ClipOval(
+                                child: avatarUrl.startsWith('http')
+                                    ? Image.network(avatarUrl, fit: BoxFit.cover, width: 88, height: 88)
+                                    : Image.file(File(avatarUrl), fit: BoxFit.cover, width: 88, height: 88),
+                              )
+                            : const Icon(Icons.person_rounded,
+                                color: Colors.white, size: 40),
+                      ),
+                      if (_isUploadingAvatar)
+                        Positioned.fill(
+                          child: ClipOval(
+                            child: Container(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              child: const Center(
+                                child: SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          height: 28,
+                          width: 28,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.surface, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
+                        ),
+                      ),
                     ],
                   ),
-                  alignment: Alignment.center,
-                  child: avatarUrl.isNotEmpty
-                      ? ClipOval(
-                          child: avatarUrl.startsWith('http')
-                              ? Image.network(avatarUrl, fit: BoxFit.cover, width: 88, height: 88)
-                              : Image.file(File(avatarUrl), fit: BoxFit.cover, width: 88, height: 88),
-                        )
-                      : const Icon(Icons.person_rounded,
-                          color: Colors.white, size: 40),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(name.isEmpty ? 'Add your name' : name,

@@ -69,6 +69,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _splashTimer = Timer(AppDurations.splash, () async {
       if (!mounted) return;
 
+      // PRIORITY 1: Check if an incoming gallery deep link launched the app!
+      // If so, consume it directly to replace SplashScreen with SharedGalleryScreen.
+      // Studio Dashboard and Login routing are completely bypassed.
+      // onSplashComplete() MUST be called even on this early return so that
+      // _isSplashActive is reset to false — without it, any subsequent deep link
+      // received while SharedGalleryScreen is open would be silently queued in
+      // _pendingInitialUri rather than handled by handleLink().
+      final consumedDeepLink =
+          DeepLinkService.instance.consumeInitialGalleryLink(Navigator.of(context));
+      if (consumedDeepLink) {
+        DeepLinkService.instance.onSplashComplete();
+        return;
+      }
+
       // Backend-agnostic check: OnboardingLocalStore owns the only
       // persistence detail here (a Hive-backed flag today, but callers
       // never need to know that). Falls back to showing onboarding if
@@ -99,6 +113,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         restoredUser = null;
       }
       if (!mounted) return;
+
+      // PRIORITY 1 RE-CHECK: If a deep link arrived while auth restoration
+      // or onboarding check was running asynchronously, consume it now to
+      // replace SplashScreen directly with SharedGalleryScreen.
+      // Same onSplashComplete() call as above — both early-return paths must
+      // reset _isSplashActive so subsequent stream deep links are not dropped.
+      final consumedDeepLinkAfterAsync =
+          DeepLinkService.instance.consumeInitialGalleryLink(Navigator.of(context));
+      if (consumedDeepLinkAfterAsync) {
+        DeepLinkService.instance.onSplashComplete();
+        return;
+      }
 
       final destination = _resolveDestination(
         restoredUser,

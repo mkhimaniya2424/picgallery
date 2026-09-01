@@ -1,7 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+import uuid
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -11,6 +12,19 @@ from app.core.email import send_subscription_activated_email
 from app.db.session import get_db
 from app.models.user import AuthProvider, User, UserRole
 from app.schemas.user import ActivatePlanRequest, DeleteAccountRequest, MessageResponse, UserRead, UserUpdate
+from app.schemas.studio import AvatarUploadResponse
+from app.core.storage import save_upload, build_media_url
+
+_ALLOWED_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+
+
+def _validate_image_upload(upload: UploadFile) -> None:
+    if upload.content_type not in _ALLOWED_IMAGE_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please upload a JPEG, PNG, WEBP, or HEIC image.",
+        )
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -223,3 +237,18 @@ def delete_account(
     db.commit()
 
     return MessageResponse(message="Your account has been deleted.")
+
+@router.post("/me/avatar", response_model=AvatarUploadResponse)
+def upload_user_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AvatarUploadResponse:
+    """Uploads/replaces the user's profile picture/avatar."""
+    _validate_image_upload(file)
+
+    relative_path, _size = save_upload(owner_id=current_user.id, media_id=uuid.uuid4(), upload=file)
+    current_user.avatar_url = build_media_url(relative_path)
+    db.commit()
+
+    return AvatarUploadResponse(avatar_url=current_user.avatar_url, cover_image_url=current_user.cover_image_url)

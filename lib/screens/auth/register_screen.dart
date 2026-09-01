@@ -166,13 +166,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _socialLoadingProvider = null);
       await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
       return;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Social Login Error: $e\n$stack');
       if (!mounted) return;
       setState(() => _socialLoadingProvider = null);
       await AppPopup.show(
         context,
         title: 'Sign-in Failed',
-        message: 'Something went wrong. Please try again.',
+        message: 'Error: ${e.toString()}',
         isError: true,
       );
       return;

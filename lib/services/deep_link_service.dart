@@ -75,8 +75,7 @@ class DeepLinkService {
 
   /// Called by SplashScreen once root navigation completes. Executes the
   /// pending deep link on top of the root route so the shared gallery (or
-  /// passcode gate) is presented immediately as the active screen, with the
-  /// home/dashboard safely below it in the back stack.
+  /// passcode gate) is presented immediately as the active screen.
   void onSplashComplete() {
     debugPrint('[DEEP_LINK_DEBUG] onSplashComplete called (pendingUri: $_pendingInitialUri)');
     _isSplashActive = false;
@@ -86,6 +85,27 @@ class DeepLinkService {
       debugPrint('[DEEP_LINK_DEBUG] Processing pending deep link after splash: $uri');
       handleLink(uri);
     }
+  }
+
+  /// Called during cold-start splash resolution. If an incoming gallery/shared
+  /// link is waiting, consumes it immediately and replaces SplashScreen directly
+  /// with [AppRoutes.sharedGallery], bypassing Studio Dashboard & Login routing.
+  bool consumeInitialGalleryLink(NavigatorState navigator) {
+    final uri = _pendingInitialUri;
+    if (uri == null) return false;
+
+    final parsed = _action(uri);
+    if (parsed != null &&
+        (parsed.action == 'shared' || parsed.action == 'gallery') &&
+        parsed.id != null &&
+        parsed.id!.isNotEmpty) {
+      debugPrint('[DEEP_LINK_DEBUG] Consuming initial gallery deep link directly: ${parsed.id}');
+      _isSplashActive = false;
+      _pendingInitialUri = null;
+      navigator.pushReplacementNamed(AppRoutes.sharedGallery, arguments: parsed.id!.trim());
+      return true;
+    }
+    return false;
   }
 
   void dispose() => _sub?.cancel();
@@ -155,8 +175,20 @@ class DeepLinkService {
   /// showing an error for a link that was never ours.
   _ParsedAction? _action(Uri uri) {
     if (uri.scheme == 'picgallery') {
-      final id = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
-      return _ParsedAction(uri.host, id);
+      final host = uri.host.toLowerCase();
+      if (host == 'gallery' ||
+          host == 'shared' ||
+          host == 'studio' ||
+          host == 'email-verified' ||
+          host == 'payment-success' ||
+          host == 'payment-failed') {
+        final idFromPath = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+        final idFromQuery = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+        return _ParsedAction(host, idFromPath ?? idFromQuery);
+      }
+      if (host.isNotEmpty) {
+        return _ParsedAction('gallery', host);
+      }
     }
     if (uri.scheme == 'https' || uri.scheme == 'http') {
       final host = uri.host.toLowerCase();
@@ -167,11 +199,27 @@ class DeepLinkService {
           host == 'www.picgallery.com' ||
           host == 'picgallery.app' ||
           host == 'www.picgallery.app') {
-        final segments = uri.pathSegments;
-        if (segments.isEmpty) return null;
-        final action = segments.first;
-        final id = segments.length > 1 ? segments[1] : null;
-        return _ParsedAction(action, id);
+        final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+        if (segments.isEmpty) {
+          final queryToken = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+          if (queryToken != null && queryToken.isNotEmpty) {
+            return _ParsedAction('gallery', queryToken);
+          }
+          return null;
+        }
+        final action = segments.first.toLowerCase();
+        final idFromPath = segments.length > 1 ? segments[1] : null;
+        final idFromQuery = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+        final id = idFromPath ?? idFromQuery;
+        if (action == 'gallery' ||
+            action == 'shared' ||
+            action == 'studio' ||
+            action == 'email-verified' ||
+            action == 'payment-success' ||
+            action == 'payment-failed') {
+          return _ParsedAction(action, id);
+        }
+        return _ParsedAction('gallery', action);
       }
     }
     return null;

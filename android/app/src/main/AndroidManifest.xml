@@ -53,40 +53,35 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="picgallery" />
             </intent-filter>
-            <!-- https://api.picgallery.in/shared/... App Links for Universal Share Links -->
+            <!-- HTTPS App Links for Universal Gallery Links (picgallery.com, picgallery.in, picgallery.app) -->
+            <!-- NOTE: For Play Store builds, add the Google Play App Signing SHA-256 fingerprint to
+                 web/.well-known/assetlinks.json and backend/app/main.py:get_asset_links().
+                 Get it from: Play Console → Setup → App integrity → App signing → SHA-256 certificate fingerprint.
+                 Without the correct Play signing cert, autoVerify will fail for release builds and Android
+                 will open the link in a browser or chooser instead of the app. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="api.picgallery.in"
-                    android:pathPrefix="/shared" />
-                <data
-                    android:scheme="http"
-                    android:host="api.picgallery.in"
-                    android:pathPrefix="/shared" />
-                <data
-                    android:scheme="https"
-                    android:host="picgallery.in"
-                    android:pathPrefix="/shared" />
-                <data
-                    android:scheme="https"
-                    android:host="picgallery.app"
-                    android:pathPrefix="/shared" />
-                <data
-                    android:scheme="https"
-                    android:host="www.picgallery.app"
-                    android:pathPrefix="/shared" />
-            </intent-filter>
-            <!-- https://picgallery.in/... App Links -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="picgallery.in" />
+                <data android:scheme="https" android:host="picgallery.com" android:pathPrefix="/gallery" />
+                <data android:scheme="https" android:host="www.picgallery.com" android:pathPrefix="/gallery" />
+                <data android:scheme="https" android:host="picgallery.com" android:pathPrefix="/shared" />
+                <data android:scheme="https" android:host="www.picgallery.com" android:pathPrefix="/shared" />
+                <data android:scheme="https" android:host="picgallery.in" android:pathPrefix="/gallery" />
+                <data android:scheme="https" android:host="www.picgallery.in" android:pathPrefix="/gallery" />
+                <data android:scheme="https" android:host="picgallery.in" android:pathPrefix="/shared" />
+                <data android:scheme="https" android:host="www.picgallery.in" android:pathPrefix="/shared" />
+                <data android:scheme="https" android:host="api.picgallery.in" android:pathPrefix="/shared" />
+                <data android:scheme="https" android:host="api.picgallery.in" android:pathPrefix="/gallery" />
+                <!-- picgallery.app — accepted by DeepLinkService._action() but previously missing here -->
+                <data android:scheme="https" android:host="picgallery.app" android:pathPrefix="/gallery" />
+                <data android:scheme="https" android:host="www.picgallery.app" android:pathPrefix="/gallery" />
+                <data android:scheme="https" android:host="picgallery.app" android:pathPrefix="/shared" />
+                <data android:scheme="https" android:host="www.picgallery.app" android:pathPrefix="/shared" />
+                <data android:scheme="http" android:host="picgallery.com" android:pathPrefix="/gallery" />
+                <data android:scheme="http" android:host="picgallery.in" android:pathPrefix="/gallery" />
+                <data android:scheme="http" android:host="api.picgallery.in" android:pathPrefix="/gallery" />
+                <data android:scheme="http" android:host="api.picgallery.in" android:pathPrefix="/shared" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

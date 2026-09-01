@@ -1,5 +1,6 @@
 import '../core/network/api_client.dart';
 import '../models/user.dart';
+import '../services/studio_media_upload_service.dart';
 
 /// Wires the `/users/*` FastAPI endpoints (`app/api/routes/users.py`) up
 /// to [ApiClient]. Kept separate from [AuthRepository], which covers the
@@ -7,8 +8,11 @@ import '../models/user.dart';
 /// convention as [LocationRepository].
 class UserRepository {
   final ApiClient _apiClient;
+  late final StudioMediaUploadService _uploadService;
 
-  UserRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+  UserRepository({required ApiClient apiClient})
+      : _apiClient = apiClient,
+        _uploadService = StudioMediaUploadService(apiClient: apiClient);
 
   /// PATCH /users/me — partial profile update (Task 5). The backend only
   /// changes fields actually present in the request body
@@ -137,5 +141,24 @@ class UserRepository {
     final body = <String, dynamic>{'plan': plan};
     final json = await _apiClient.post('/users/me/plan', body: body);
     return AppUser.fromJson(json as Map<String, dynamic>);
+  }
+
+  /// POST /users/me/avatar — uploads/replaces the user's profile picture.
+  /// Reuses [StudioMediaUploadService] since the multipart upload pattern
+  /// is identical — only the endpoint path differs.
+  Future<String?> uploadAvatar({
+    required List<int> bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    // StudioMediaUploadService._upload calls '${baseUrl}$path' so pass
+    // the path without the /api/v1 prefix (baseUrl already contains it).
+    final decoded = await _uploadService.uploadAvatarForPath(
+      path: '/users/me/avatar',
+      bytes: bytes,
+      fileName: fileName,
+      contentType: contentType,
+    );
+    return decoded['avatar_url'] as String?;
   }
 }

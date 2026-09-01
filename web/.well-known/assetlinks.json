@@ -5,7 +5,9 @@
       "namespace": "android_app",
       "package_name": "com.mk.picgallery",
       "sha256_cert_fingerprints": [
-        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C"
+        "B6:C8:1E:76:C4:04:9E:19:4D:7C:1D:88:D7:30:E0:D1:F5:3A:DA:BB:A7:12:FA:BC:3B:21:CB:CF:E2:59:72:7B",
+        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C",
+        "E7:A9:B2:91:6F:F9:70:70:DA:55:6E:81:61:90:72:7E:19:AF:CE:13:3B:A0:8F:72:55:77:89:C4:2F:2A:78:52"
       ]
     }
   }

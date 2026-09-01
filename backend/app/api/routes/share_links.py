@@ -213,7 +213,7 @@ def _assert_client_authorized(link: ShareLink, user: User | None) -> None:
         return
     if user is None or (user.id != link.client_id and user.id != link.owner_id):
         logger.warning(
-            f"[SHARE_LOOKUP_DEBUG] Unauthorized client '{user.id if user else None}' attempted access to private share '{link.token}' (authorized client_id: '{link.client_id}')"
+            f"[SHARE_LOOKUP_DEBUG] Unauthorized client '{user.id if user else None}' attempted access to private share '{link.token}' (authorized client_id: '{link.client_id}', owner: '{link.owner_id}')"
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

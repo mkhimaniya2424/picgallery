@@ -111,7 +111,7 @@ class Settings(BaseSettings):
     # worked on that one Wi-Fi network and silently broke for every
     # other device/network). See `Settings.share_link_base_url` below.
     SHARE_LINK_BASE_URL: str | None = None
-    SHARE_LINK_PATH_PREFIX: str = "/shared"
+    SHARE_LINK_PATH_PREFIX: str = "/gallery"
 
     # Base URL the backend itself is reachable at, used to build the
     # clickable verification link in the email (the Flutter app has no

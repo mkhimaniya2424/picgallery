@@ -31,8 +31,17 @@ class SocialAuthService {
     // the idToken. Must be the Web OAuth client ID (type 3) from
     // google-services.json — NOT the Android client ID. The backend
     // verifies this token's `aud` claim against GOOGLE_CLIENT_IDS in .env.
+    //
+    // IMPORTANT: This must match the Web client (type 3) that is actually
+    // present in google-services.json ("auto created by Google Service").
+    // Using a different Web client ID (e.g. the manually-created backend
+    // server client) breaks production builds — Google Sign-In on Android
+    // internally resolves the serverClientId from google-services.json, and
+    // any mismatch causes a silent auth failure / no idToken returned.
+    //
+    // Auto-created Web client from google-services.json: tbcuoe1ub5c40k3chro4pu9hemstd28h
     await GoogleSignIn.instance.initialize(
-      serverClientId: '198690480208-ubgq186vdo50uf336g6pp9t6213tdndf.apps.googleusercontent.com',
+      serverClientId: '198690480208-tbcuoe1ub5c40k3chro4pu9hemstd28h.apps.googleusercontent.com',
     );
     _googleInitialized = true;
   }
