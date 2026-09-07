@@ -152,7 +152,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
           );
     } on SocialAuthCancelled {
       if (!mounted) return;
-      setState(() => _socialLoadingProvider = null);
+      // Not always a genuine cancel: Android's Credential Manager can
+      // throw this same exception right after a successful account
+      // pick (flutter/flutter#171761). A blocking popup would be too
+      // noisy for real cancels, so use the existing inline banner
+      // instead — visible, but easy to ignore if the user really did
+      // just back out.
+      setState(() {
+        _socialLoadingProvider = null;
+        _errorMessage = "Sign-in didn't go through — please try again.";
+      });
       return;
     } on ApiException catch (e) {
       if (!mounted) return;

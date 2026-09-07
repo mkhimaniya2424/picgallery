@@ -49,17 +49,23 @@ class SocialAuthService {
   /// Opens the native Google account picker. Throws [SocialAuthCancelled]
   /// if the user dismisses it, or a plain [Exception] if Google signed
   /// them in but (unusually) didn't hand back an ID token.
-  Future<SocialAuthResult> signInWithGoogle() async {
+  ///
+  /// [forceAccountPicker] clears the cached Credential Manager session
+  /// first so the native picker is guaranteed to show (e.g. switching
+  /// accounts) instead of silently re-using the last one. Defaults to
+  /// false: on Android, calling `signOut()` immediately before
+  /// `authenticate()` on every attempt was found to be the main trigger
+  /// for Credential Manager spuriously throwing
+  /// `GoogleSignInExceptionCode.canceled` ("activity is cancelled by
+  /// the user") right after the user *successfully* picked an account —
+  /// see https://github.com/flutter/flutter/issues/171761. Only pass
+  /// true from an explicit "use a different account" action.
+  Future<SocialAuthResult> signInWithGoogle({bool forceAccountPicker = false}) async {
     await _ensureGoogleInitialized();
 
-    // Without this, the plugin silently re-uses whichever Google
-    // account was picked last time (no account picker shown at all)
-    // any time a cached session still exists — e.g. signing up for a
-    // second (dual client + photographer) account with a different
-    // Google account, or simply wanting to switch accounts, without
-    // having logged out first. Forcing a sign-out first guarantees
-    // the native picker always appears.
-    await GoogleSignIn.instance.signOut();
+    if (forceAccountPicker) {
+      await GoogleSignIn.instance.signOut();
+    }
 
     try {
       final GoogleSignInAccount account = await GoogleSignIn.instance.authenticate(
