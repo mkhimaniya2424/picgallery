@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     # whichever appear as the `aud` claim on the identity token Apple
     # issues. Same reasoning as GOOGLE_CLIENT_IDS: list every one used.
     APPLE_CLIENT_IDS: list[str] = []
+    APPLE_CLIENT_IDS: list[str] = ["in.picgallery.app"]
 
     # Email (SMTP) — used to actually deliver the verification link and
     # password-reset link. Leave SMTP_HOST empty to disable real sending
