@@ -52,7 +52,7 @@ class GalleryShareLink {
   /// Primary HTTPS share URL for universal sharing (opens App if installed, Web Gallery if not).
   String get primaryShareUrl => (shareUrl.isNotEmpty && !shareUrl.contains('localhost'))
       ? shareUrl
-      : 'https://picgallery.in/gallery/$token';
+      : 'https://api.picgallery.in/gallery/$token';
 
   /// Legacy custom scheme deep link for backward compatibility.
   String get qrDeepLink => 'picgallery://shared/$token';
@@ -62,7 +62,7 @@ class GalleryShareLink {
     final rawUrl = json['share_url'] as String?;
     final shareUrlVal = (rawUrl != null && rawUrl.isNotEmpty && !rawUrl.contains('localhost'))
         ? rawUrl
-        : 'https://picgallery.in/gallery/$tokenVal';
+        : 'https://api.picgallery.in/gallery/$tokenVal';
 
     return GalleryShareLink(
       id: json['id'] as String,
