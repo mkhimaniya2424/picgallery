@@ -159,13 +159,19 @@ def verify_apple_identity_token(identity_token: str) -> SocialIdentity:
         kid = header["kid"]
         jwk = _get_apple_jwk(kid)
 
+        # python-jose's `audience` kwarg only accepts a single expected
+        # value, but a single app can legitimately present more than one
+        # Apple client ID (Services ID for web/Android, Bundle ID for
+        # native iOS) — same situation as Google above. So skip jose's
+        # built-in aud check here and verify the audience ourselves
+        # against the full allow-list, the same way verify_google_id_token
+        # does, instead of only ever matching APPLE_CLIENT_IDS[0].
         claims = jose_jwt.decode(
             identity_token,
             jwk,
             algorithms=[jwk.get("alg", "RS256")],
-            audience=str(settings.APPLE_CLIENT_IDS[0],),
             issuer=APPLE_ISSUER,
-            options={"verify_at_hash": False},
+            options={"verify_at_hash": False, "verify_aud": False},
         )
     except JOSEError as exc:
         logger.exception("APPLE TOKEN VERIFICATION FAILED")
@@ -173,6 +179,21 @@ def verify_apple_identity_token(identity_token: str) -> SocialIdentity:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Apple token verification failed: {type(exc).__name__}: {exc}",
         ) from exc
+
+    token_aud = claims.get("aud")
+    token_aud_set = set(token_aud) if isinstance(token_aud, list) else ({token_aud} if token_aud else set())
+    allowed_set = set(settings.APPLE_CLIENT_IDS)
+
+    logger.warning(
+        "Apple sign-in aud check: token_aud=%r allowed=%r match=%r",
+        token_aud, settings.APPLE_CLIENT_IDS, bool(token_aud_set & allowed_set),
+    )
+
+    if not (token_aud_set & allowed_set):
+        detail = "Apple sign-in token was not issued for this app"
+        if settings.ENVIRONMENT != "production":
+            detail += f" (token aud={token_aud!r}, allowed={settings.APPLE_CLIENT_IDS!r})"
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
 
     if claims.get("exp", 0) < time.time():
         raise HTTPException(
