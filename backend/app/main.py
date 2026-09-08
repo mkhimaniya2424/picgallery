@@ -262,9 +262,10 @@ def shared_web_fallback(share_id: str):
       mediaList.forEach(m => {{
         const item = document.createElement("div");
         item.className = "grid-item";
-        const imgUrl = m.file_path.startsWith("http") ? m.file_path : "/media/" + m.file_path;
+        // 'file_url' is already the full path returned by the backend schema
+        const imgUrl = m.thumbnail_url || m.file_url;
         item.innerHTML = `<img src="${{imgUrl}}" alt="${{m.file_name}}" loading="lazy" />`;
-        item.onclick = () => openLightbox(imgUrl);
+        item.onclick = () => openLightbox(m.file_url);
         grid.appendChild(item);
       }});
     }}

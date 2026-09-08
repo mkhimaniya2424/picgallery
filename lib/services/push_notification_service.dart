@@ -191,10 +191,22 @@ class PushNotificationService {
     }
     if (user == null) return;
 
-    if (user.role == AppUserRole.photographer) {
-      navigator.pushNamed(AppRoutes.notifications);
+    final type = data['type'] as String?;
+
+    if (user.role == AppUserRole.client) {
+      // Client Routing
+      if (type == 'new_connection_invitation') {
+        navigator.pushNamed(AppRoutes.clientInvitations);
+      } else if (type == 'connection_accepted') {
+        navigator.pushNamed(AppRoutes.sharedStudios);
+      } else {
+        // Fallback to home/alerts tab
+        navigator.pushNamed(AppRoutes.home);
+      }
     } else {
-      navigator.pushNamed(AppRoutes.home);
+      // Studio Routing
+      // Studios have a dedicated Notifications center where all alerts live
+      navigator.pushNamed(AppRoutes.notifications);
     }
   }
 
