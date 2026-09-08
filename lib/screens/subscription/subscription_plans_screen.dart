@@ -57,7 +57,32 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
         plan: plan,
         onConfirm: () async {
           Navigator.of(context).pop(); // close sheet
-          await _redirectToSubscriptionWebsite();
+          
+          if (plan.planType == SubscriptionPlan.trial) {
+            try {
+              // Show a loading indicator if needed, but the provider handles state
+              await ref.read(authProvider.notifier).activatePlan('trial');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Free Trial Activated successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to activate trial: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          } else {
+            await _redirectToSubscriptionWebsite();
+          }
         },
       ),
     );
