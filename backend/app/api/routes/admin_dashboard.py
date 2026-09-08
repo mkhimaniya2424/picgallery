@@ -171,6 +171,8 @@ def get_client_stats(
     return ClientStatsListRead(items=items)
 
 
+
+
 @router.get("/analytics")
 def get_analytics(
     current_user: User = Depends(get_current_studio_user),
@@ -178,3 +180,15 @@ def get_analytics(
     """Placeholder for the analytics carousel endpoint."""
     return {}
 
+
+@router.post("/trigger-auto-delete")
+def trigger_auto_delete(
+    current_user: User = Depends(get_current_studio_user),
+) -> dict:
+    """Manually triggers one sweep of the auto-delete scheduler immediately.
+    Useful for testing — normally the scheduler runs automatically every hour.
+    Only accessible to authenticated studio users.
+    """
+    from app.core.auto_delete import run_auto_delete
+    deleted = run_auto_delete()
+    return {"deleted_count": deleted, "message": f"Auto-delete sweep complete. {deleted} item(s) permanently deleted."}

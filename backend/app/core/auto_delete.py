@@ -1,4 +1,4 @@
-﻿"""Auto-delete scheduler — permanently removes Media rows (and their
+"""Auto-delete scheduler — permanently removes Media rows (and their
 stored files) that are older than ``settings.MEDIA_RETENTION_HOURS``.
 
 Designed to be called from a long-running asyncio background task
@@ -49,11 +49,15 @@ def run_auto_delete() -> int:
     if not settings.AUTO_DELETE_ENABLED:
         return 0
 
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.MEDIA_RETENTION_HOURS)
+    # Use timezone-aware cutoff for comparison.
+    # Also prepare a naive UTC version for drivers that return naive datetimes.
+    cutoff_aware = datetime.now(timezone.utc) - timedelta(hours=settings.MEDIA_RETENTION_HOURS)
+    cutoff_naive = cutoff_aware.replace(tzinfo=None)  # naive UTC fallback
+
     logger.info(
         "[AUTO_DELETE] Starting sweep. Retention: %d h -- deleting media created before %s",
         settings.MEDIA_RETENTION_HOURS,
-        cutoff.isoformat(),
+        cutoff_aware.isoformat(),
     )
 
     deleted_count = 0
@@ -62,11 +66,13 @@ def run_auto_delete() -> int:
     db = SessionLocal()
     try:
         # Fetch all media (active and trashed) older than the cutoff.
-        # We load them all upfront and iterate outside the query so the
-        # session is not held open across individual file-system deletes.
+        # Use the naive UTC cutoff — Supabase/psycopg may return naive
+        # datetimes even for TIMESTAMPTZ columns, and mixing aware vs naive
+        # in SQLAlchemy's WHERE clause raises a comparison error silently.
         old_media = db.execute(
-            select(Media).where(Media.created_at <= cutoff)
+            select(Media).where(Media.created_at <= cutoff_naive)
         ).scalars().all()
+
 
         logger.info("[AUTO_DELETE] Found %d item(s) past retention cutoff.", len(old_media))
 
