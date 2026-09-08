@@ -5,10 +5,10 @@ import '../storage/secure_storage.dart';
 /// Dio [QueuedInterceptor] implementing automatic 401 access token refresh.
 ///
 /// Features:
-/// - Automatically attaches `Authorization: Bearer ACCESS_TOKEN` to Studio requests.
+/// - Automatically attaches `Authorization: Bearer ACCESS_TOKEN` to requests where withAuth is true.
 /// - Queues concurrent 401 requests so only ONE token refresh request is sent.
 /// - On 401, calls `POST /auth/token/refresh`, updates stored tokens, and retries all queued requests.
-/// - Excludes auth endpoints (/login, /register, /token/refresh, /social-login) and public client gallery endpoints.
+/// - Excludes auth endpoints (/login, /register, /token/refresh, /social-login) and public client gallery endpoints from 401 retry.
 /// - Triggers session expiration on permanent refresh failure.
 class AuthInterceptor extends QueuedInterceptor {
   final AuthManager authManager;
@@ -29,9 +29,14 @@ class AuthInterceptor extends QueuedInterceptor {
     RequestInterceptorHandler handler,
   ) async {
     final withAuth = options.extra['withAuth'] ?? true;
-    final isPublicClient = options.path.contains('/public/');
 
-    if (withAuth && !isPublicClient) {
+    // Attach the Bearer token only when withAuth is true AND a token exists.
+    // Previously this also checked `!isPublicClient`, which caused /public/
+    // endpoints to never receive auth even when the caller explicitly set
+    // withAuth: true — breaking owner/client access on client-restricted
+    // share links (the backend's get_optional_current_user returns None,
+    // so _assert_client_authorized raised 403 for the gallery's own owner).
+    if (withAuth) {
       final token = authManager.accessToken ?? await secureStorage.getAccessToken();
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';

@@ -98,7 +98,12 @@ class ShareLinkRepository {
   // ---------------------------------------------------------------------
 
   Future<ShareLinkStatus> fetchStatus(String token) async {
-    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: false);
+    // withAuth: true — sends the Bearer token when the user is logged in.
+    // The backend's get_optional_current_user handles missing tokens gracefully
+    // (returns None), so anonymous guests are unaffected. Logged-in studio
+    // owners and assigned clients need this token to pass _assert_client_authorized
+    // on links that have a client_id set — without it, they receive a 403.
+    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: true);
     return ShareLinkStatus.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -110,7 +115,8 @@ class ShareLinkRepository {
     final query = (password != null && password.isNotEmpty)
         ? '?password=${Uri.encodeQueryComponent(password)}'
         : '';
-    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: false);
+    // withAuth: true — same reason as fetchStatus above.
+    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: true);
     return PublicGalleryData.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -129,6 +135,6 @@ class ShareLinkRepository {
       if (mediaId != null) 'media_id': mediaId,
       if (downloaderLabel != null) 'downloader_label': downloaderLabel,
     };
-    await _apiClient.post('/public/share-links/$token/download', body: body, withAuth: false);
+    await _apiClient.post('/public/share-links/$token/download', body: body, withAuth: true);
   }
 }
