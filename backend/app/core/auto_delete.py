@@ -30,23 +30,31 @@ from app.models.gallery import Media
 
 logger = logging.getLogger(__name__)
 
-# For testing, we run the sweep every 60 seconds.
-# (Change back to 3600 for production)
-_CHECK_INTERVAL_SECONDS = 60
+# How long the scheduler sleeps between runs. One hour is a reasonable
+# resolution -- the retention window is measured in hours, so this means
+# a file will be deleted within at most one hour after its window closes.
+_CHECK_INTERVAL_SECONDS = 3600  # 1 hour
 
 
 def run_auto_delete() -> int:
-    """Runs one sweep of the auto-delete job synchronously."""
+    """Runs one sweep of the auto-delete job synchronously.
+
+    Opens its own DB session (safe to call from a background thread or
+    an asyncio task via ``asyncio.to_thread``), finds every Media row
+    older than the retention cutoff, deletes its files, and removes the
+    DB row.
+
+    Returns the number of items permanently deleted this run.
+    """
     if not settings.AUTO_DELETE_ENABLED:
         return 0
 
-    # ---------------------------------------------------------
-    # TEMPORARY TEST: hardcoded to 5 minutes as requested
-    # ---------------------------------------------------------
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+    # Use timezone-aware cutoff for comparison.
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.MEDIA_RETENTION_HOURS)
     
     logger.info(
-        "[AUTO_DELETE] Starting sweep. Retention: 5 minutes (TEST MODE) -- deleting media created before %s",
+        "[AUTO_DELETE] Starting sweep. Retention: %d h -- deleting media created before %s",
+        settings.MEDIA_RETENTION_HOURS,
         cutoff.isoformat(),
     )
 
