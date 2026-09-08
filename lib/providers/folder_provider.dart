@@ -514,13 +514,68 @@ class FolderFacade {
   void setSortOption(FolderSortOption value) => _notifier.setSortOption(value);
   void setFilterOption(FolderFilterOption value) => _notifier.setFilterOption(value);
 
-  FolderModel? folderById(String id) => _notifier.folderById(id);
-  List<FolderModel> childrenOf(String? parentId) => _notifier.childrenOf(parentId);
+  // -----------------------------------------------------------------------
+  // Query methods — implemented directly on _state so they always use the
+  // stable snapshotted data and never go through _notifier.state.value
+  // (which is null during AsyncValue.loading, causing folders to flash as
+  // "not found" and subfolder lists to go empty on every reload).
+  // -----------------------------------------------------------------------
 
-  List<FolderModel> ancestorsOf(String folderId) => _notifier.ancestorsOf(folderId);
-  List<FolderModel> breadcrumbFor(String folderId) => _notifier.breadcrumbFor(folderId);
-  List<FolderModel> descendantsOf(String folderId) => _notifier.descendantsOf(folderId);
-  int aggregateAlbumCount(String folderId) => _notifier.aggregateAlbumCount(folderId);
+  FolderModel? folderById(String id) {
+    for (final f in _state.allFolders) {
+      if (f.id == id) return f;
+    }
+    return null;
+  }
+
+  List<FolderModel> childrenOf(String? parentId) {
+    return _state.allFolders.where((f) => f.parentId == parentId).toList();
+  }
+
+  List<FolderModel> ancestorsOf(String folderId) {
+    final chain = <FolderModel>[];
+    final seen = <String>{};
+    var current = folderById(folderId);
+    if (current == null) return chain;
+
+    while (current!.parentId != null) {
+      final parent = folderById(current.parentId!);
+      if (parent == null || !seen.add(parent.id)) break;
+      chain.insert(0, parent);
+      current = parent;
+    }
+    return chain;
+  }
+
+  List<FolderModel> breadcrumbFor(String folderId) {
+    final self = folderById(folderId);
+    if (self == null) return const [];
+    return [...ancestorsOf(folderId), self];
+  }
+
+  List<FolderModel> descendantsOf(String folderId) {
+    final result = <FolderModel>[];
+    final queue = [folderId];
+    while (queue.isNotEmpty) {
+      final id = queue.removeAt(0);
+      final children = childrenOf(id);
+      for (final c in children) {
+        result.add(c);
+        queue.add(c.id);
+      }
+    }
+    return result;
+  }
+
+  int aggregateAlbumCount(String folderId) {
+    final folder = folderById(folderId);
+    if (folder == null) return 0;
+    var total = folder.albumCount;
+    for (final d in descendantsOf(folderId)) {
+      total += d.albumCount;
+    }
+    return total;
+  }
 
   Future<FolderModel> createFolder({
     required String name,
@@ -543,12 +598,15 @@ class FolderFacade {
 /// to expose `folders`, `filteredFolders`, `isLoading`, etc., and they call
 /// `ref.read(folderProvider).createFolder(...)`.
 final folderProvider = Provider<FolderFacade>((ref) {
-  final state = ref.watch(folderAsyncProvider);
+  final asyncState = ref.watch(folderAsyncProvider);
   final notifier = ref.read(folderAsyncProvider.notifier);
 
-  final value = state.maybeWhen(
+  // Preserve the last known data during loading/error so screens don't
+  // flash "Folder not found" or show an empty subfolder list while a
+  // background refresh is in progress.
+  final value = asyncState.maybeWhen(
     data: (s) => s,
-    orElse: () => const FolderState(
+    orElse: () => notifier.state.valueOrNull ?? const FolderState(
       isLoading: true,
       lastError: null,
       searchQuery: '',

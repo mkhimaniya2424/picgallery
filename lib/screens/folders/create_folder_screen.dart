@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../models/folder_model.dart';
 import '../../providers/folder_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
@@ -30,6 +31,15 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
   void initState() {
     super.initState();
     _parentId = widget.parentId;
+    // Eagerly trigger a folder load so the parent picker is populated
+    // even when this screen is the first in the session to watch folderProvider.
+    Future.microtask(() {
+      if (!mounted) return;
+      final state = ref.read(folderProvider);
+      if (state.folders.isEmpty && !state.isLoading) {
+        state.load();
+      }
+    });
   }
 
   @override
@@ -62,13 +72,20 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
   @override
   Widget build(BuildContext context) {
     final folderState = ref.watch(folderProvider);
-    final folderController = ref.read(folderProvider);
+    final allFolders = folderState.folders;
+    final isLoadingFolders = folderState.isLoading && allFolders.isEmpty;
 
     String folderPath(FolderModel f) {
-      final ancestors = folderController.ancestorsOf(f.id);
+      final ancestors = folderState.ancestorsOf(f.id);
       if (ancestors.isEmpty) return f.name;
       return '${ancestors.map((a) => a.name).join(' / ')} / ${f.name}';
     }
+
+    // Build the dropdown items. Guard: value must exist in items, so only
+    // include _parentId as initial value when its folder is already loaded.
+    final parentExists =
+        _parentId == null || allFolders.any((f) => f.id == _parentId);
+    final effectiveParentId = parentExists ? _parentId : null;
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Create Folder', showBack: true),
@@ -95,25 +112,59 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
                           TextField(
                             controller: _nameController,
                             decoration: const InputDecoration(labelText: 'Folder name'),
+                            textInputAction: TextInputAction.next,
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          DropdownButtonFormField<String?>(
-                            initialValue: _parentId,
-                            decoration: const InputDecoration(labelText: 'Parent folder (optional)'),
-                            items: [
-                              const DropdownMenuItem<String?>(
-                                value: null,
-                                child: Text('No parent — root level'),
+
+                          // Parent folder picker — shows a loading indicator
+                          // while folders are still being fetched so the user
+                          // knows to wait instead of seeing an empty dropdown.
+                          if (isLoadingFolders)
+                            InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Parent folder (optional)',
                               ),
-                              ...folderState.folders.map(
-                                (FolderModel f) => DropdownMenuItem<String?>(
-                                  value: f.id,
-                                  child: Text(folderPath(f)),
+                              child: Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(
+                                    'Loading folders…',
+                                    style: TextStyle(
+                                      color: AppColors.subtitle,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            DropdownButtonFormField<String?>(
+                              value: effectiveParentId,
+                              decoration: const InputDecoration(
+                                labelText: 'Parent folder (optional)',
+                              ),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('No parent — root level'),
                                 ),
-                              ),
-                            ],
-                            onChanged: (v) => setState(() => _parentId = v),
-                          ),
+                                ...allFolders.map(
+                                  (FolderModel f) => DropdownMenuItem<String?>(
+                                    value: f.id,
+                                    child: Text(
+                                      folderPath(f),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (v) => setState(() => _parentId = v),
+                            ),
                           const Spacer(),
                           const SizedBox(height: AppSpacing.lg),
                           GradientButton(label: 'Create Folder', onPressed: _submit),
