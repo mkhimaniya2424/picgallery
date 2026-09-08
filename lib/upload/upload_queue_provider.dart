@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/network/api_client.dart';
 import '../repositories/media_repository.dart';
 import '../providers/auth_providers.dart';
+import '../providers/album_provider.dart';
 import '../providers/media_provider.dart';
 import '../services/media_picker_service.dart' show MediaContentType;
 import '../storage/upload_queue_local_store.dart';
@@ -157,6 +158,15 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       await controller.load();
     } catch (_) {
       // ignore if provider not fully setup in test
+    }
+    // Also refresh albumProvider so that photoCount / folderCount shown in
+    // the Album Details header ("X photos • Y folders") reflect the newly
+    // uploaded media immediately — without this the counts stay 0 until
+    // the user manually navigates away and back.
+    try {
+      await ref.read(albumProvider).load();
+    } catch (_) {
+      // albumProvider not ready (e.g. isolated tests) — safe to ignore.
     }
   }
 
