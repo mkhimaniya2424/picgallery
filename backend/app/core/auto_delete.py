@@ -49,15 +49,14 @@ def run_auto_delete() -> int:
     if not settings.AUTO_DELETE_ENABLED:
         return 0
 
-    # Use timezone-aware cutoff for comparison.
-    # Also prepare a naive UTC version for drivers that return naive datetimes.
-    cutoff_aware = datetime.now(timezone.utc) - timedelta(hours=settings.MEDIA_RETENTION_HOURS)
-    cutoff_naive = cutoff_aware.replace(tzinfo=None)  # naive UTC fallback
-
+    # ---------------------------------------------------------
+    # TEMPORARY TEST: hardcoded to 5 minutes as requested
+    # ---------------------------------------------------------
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+    
     logger.info(
-        "[AUTO_DELETE] Starting sweep. Retention: %d h -- deleting media created before %s",
-        settings.MEDIA_RETENTION_HOURS,
-        cutoff_aware.isoformat(),
+        "[AUTO_DELETE] Starting sweep. Retention: 5 minutes (TEST MODE) -- deleting media created before %s",
+        cutoff.isoformat(),
     )
 
     deleted_count = 0
@@ -66,11 +65,8 @@ def run_auto_delete() -> int:
     db = SessionLocal()
     try:
         # Fetch all media (active and trashed) older than the cutoff.
-        # Use the naive UTC cutoff — Supabase/psycopg may return naive
-        # datetimes even for TIMESTAMPTZ columns, and mixing aware vs naive
-        # in SQLAlchemy's WHERE clause raises a comparison error silently.
         old_media = db.execute(
-            select(Media).where(Media.created_at <= cutoff_naive)
+            select(Media).where(Media.created_at <= cutoff)
         ).scalars().all()
 
 
