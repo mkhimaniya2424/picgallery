@@ -515,7 +515,12 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                 icon: const Icon(Icons.share_rounded, color: AppColors.primary),
                 tooltip: 'Share',
                 onPressed: () {
-                  Share.share(primaryUrl, subject: 'Check out this shared gallery!');
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: primaryUrl,
+                      subject: 'Check out this shared gallery!',
+                    ),
+                  );
                 },
               ),
             ],

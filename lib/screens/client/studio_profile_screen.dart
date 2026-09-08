@@ -120,7 +120,9 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                     // Create a shareable URL or deep link for the studio
                     // For now, share a descriptive text with a placeholder link
                     final shareText = 'Check out ${studio.name} on PicGallery!\n\nhttps://picgallery.app/studio/${studio.id}';
-                    Share.share(shareText);
+                    SharePlus.instance.share(
+                      ShareParams(text: shareText),
+                    );
                   },
                 ),
               ],
