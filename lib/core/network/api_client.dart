@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
 import 'package:http/http.dart' as http;
 
 import '../auth/auth_manager.dart';
@@ -117,6 +117,7 @@ class ApiClient {
   }
 
   Future<dynamic> post(String path, {Object? body, bool withAuth = true}) async {
+    debugPrint('[ApiClient] POST ${_url(path)} | body: $body');
     return _guarded(() => _dio.post(
           _url(path),
           data: body,
@@ -163,18 +164,23 @@ class ApiClient {
   Future<dynamic> _guarded(Future<Response> Function() send) async {
     try {
       final response = await send();
+      debugPrint('[ApiClient] ✅ HTTP ${response.statusCode} | body: ${response.data}');
       return _handleResponse(response);
     } on DioException catch (e) {
+      debugPrint('[ApiClient] ❌ DioException type: ${e.type} | message: ${e.message}');
       if (e.response != null) {
+        debugPrint('[ApiClient] ❌ DioException has response: status=${e.response!.statusCode} body=${e.response!.data}');
         return _handleResponse(e.response!);
       }
+      debugPrint('[ApiClient] ❌ No response — network/timeout failure');
       throw const ApiException(
         0,
         "Couldn't reach the server. Check your connection and that the backend is running, then try again.",
       );
     } on ApiException {
       rethrow;
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[ApiClient] ❌ Unexpected error in _guarded: $e\n$stack');
       throw ApiException(
         0,
         e.toString(),
@@ -190,13 +196,17 @@ class ApiClient {
       return data;
     }
 
-    throw ApiException(statusCode, _extractMessage(data, response.statusMessage ?? ''));
+    final extracted = _extractMessage(data, response.statusMessage ?? '');
+    debugPrint('[ApiClient] ❌ _handleResponse: status=$statusCode | extracted="$extracted" | raw=$data');
+    throw ApiException(statusCode, extracted);
   }
 
   String _extractMessage(dynamic decoded, String rawBody) {
+    debugPrint('[ApiClient] _extractMessage: decoded=$decoded | rawBody=$rawBody');
     if (decoded is Map<String, dynamic>) {
       if (decoded.containsKey('detail')) {
         final detail = decoded['detail'];
+        debugPrint('[ApiClient] _extractMessage: found detail=$detail (type: ${detail.runtimeType})');
         if (detail is String) return detail;
         if (detail is Map && detail.containsKey('message')) {
           return detail['message'].toString();
@@ -209,9 +219,11 @@ class ApiClient {
         return detail.toString();
       }
       if (decoded.containsKey('message')) {
+        debugPrint('[ApiClient] _extractMessage: found message key');
         return decoded['message'].toString();
       }
     }
+    debugPrint('[ApiClient] _extractMessage: no recognized key — falling back to rawBody');
     return rawBody.isNotEmpty ? rawBody : 'Unknown error';
   }
 
