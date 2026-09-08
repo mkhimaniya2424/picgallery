@@ -203,16 +203,17 @@ class ChatScreen extends ConsumerWidget {
   }
 
   String _formatTime(DateTime time) {
+    final local = time.toLocal();
     final now = DateTime.now();
-    final diff = now.difference(time);
+    final diff = now.difference(local);
     if (diff.inDays == 0) {
-      return DateFormat('h:mm a').format(time);
+      return DateFormat('h:mm a').format(local);
     } else if (diff.inDays == 1) {
       return 'Yesterday';
     } else if (diff.inDays < 7) {
-      return DateFormat('EEEE').format(time);
+      return DateFormat('EEEE').format(local);
     } else {
-      return DateFormat('dd/MM/yyyy').format(time);
+      return DateFormat('dd/MM/yyyy').format(local);
     }
   }
 }

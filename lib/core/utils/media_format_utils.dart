@@ -33,15 +33,20 @@ class MediaFormatUtils {
   }
 
   /// e.g. `Jul 10, 2026 • 3:45 PM`.
+  ///
+  /// Always converts [dt] to the device's local timezone first — the
+  /// backend stores and returns all timestamps in UTC, so without
+  /// `.toLocal()` a photo taken at 10:08 AM IST would display as 4:38 AM.
   static String formatDate(DateTime dt) {
+    final local = dt.toLocal();
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
-    final hour12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final period = dt.hour >= 12 ? 'PM' : 'AM';
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year} • $hour12:$minute $period';
+    final hour12 = local.hour % 12 == 0 ? 12 : local.hour % 12;
+    final period = local.hour >= 12 ? 'PM' : 'AM';
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${months[local.month - 1]} ${local.day}, ${local.year} • $hour12:$minute $period';
   }
 
   /// e.g. `3840 × 2160`. Returns `Unknown` when dimensions aren't set.

@@ -168,7 +168,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   }
 
   Widget _buildMessageBubble(ChatMessageModel msg, bool isMe) {
-    final timeStr = DateFormat('h:mm a').format(msg.sentAt);
+    final timeStr = DateFormat('h:mm a').format(msg.sentAt.toLocal());
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

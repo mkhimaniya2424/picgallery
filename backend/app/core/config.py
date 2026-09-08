@@ -141,6 +141,21 @@ class Settings(BaseSettings):
     # photos tend to be small (large group shots).
     FACE_DETECTION_SIZE: int = 640
 
+    # --- Auto-Delete Scheduler ---
+    # When AUTO_DELETE_ENABLED is True, a background task running hourly
+    # will permanently delete every Media row (and its files) whose
+    # `created_at` is older than MEDIA_RETENTION_HOURS hours.
+    #
+    # For testing:    MEDIA_RETENTION_HOURS=1   (deletes after 1 hour)
+    # For production: MEDIA_RETENTION_HOURS=8760 (deletes after 1 year)
+    #
+    # Set AUTO_DELETE_ENABLED=false to disable the scheduler entirely
+    # without touching the retention setting (useful for maintenance /
+    # bulk-import windows where you don't want freshly-uploaded files
+    # swept up immediately).
+    AUTO_DELETE_ENABLED: bool = True
+    MEDIA_RETENTION_HOURS: int = 8760  # 8760 h = 365 days = 1 year
+
     @property
     def app_public_url(self) -> str:
         """[APP_PUBLIC_URL], but raises a clear, actionable error instead

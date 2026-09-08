@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -5,9 +7,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import api_router
+from app.core.auto_delete import auto_delete_loop
 from app.core.config import settings
 
-app = FastAPI(title=settings.PROJECT_NAME)
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan — starts the auto-delete background scheduler on
+    server boot and cancels it cleanly on shutdown."""
+    task = asyncio.create_task(auto_delete_loop(), name="auto_delete_scheduler")
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

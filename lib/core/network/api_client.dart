@@ -83,15 +83,20 @@ class ApiClient {
   void updateBaseUrl(String newBaseUrl) => baseUrl = newBaseUrl;
 
   static String _defaultBaseUrl() {
+    // Check --dart-define=API_HOST first, for all platforms including web.
+    // This is how CI/CD (Codemagic) injects the production URL.
+    const envHost = String.fromEnvironment('API_HOST');
+    if (envHost.isNotEmpty) return baseUrlForHost(envHost);
+
+    // On desktop/web without a dart-define, fall back to localhost for
+    // local development only. Mobile (Android/iOS) without a dart-define
+    // defaults to the production URL.
     if (kIsWeb ||
         defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.linux) {
       return baseUrlForHost('localhost');
     }
-
-    const envHost = String.fromEnvironment('API_HOST');
-    if (envHost.isNotEmpty) return baseUrlForHost(envHost);
 
     return baseUrlForHost('https://api.picgallery.in');
   }
