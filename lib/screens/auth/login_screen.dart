@@ -124,6 +124,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   /// Selection runs first in "pick and return" mode; social sign-in
   /// always needs a role up front since there's no password afterward
   /// to disambiguate a same-email/both-roles account.
+  /// Internal helper that actually performs the social sign-in call after
+  /// role is confirmed. Returns true if sign-in succeeded, false if the
+  /// user genuinely cancelled, and rethrows on any other error so the
+  /// outer handler can show an appropriate message.
+  Future<bool> _attemptSocialSignIn(String provider, UserRole role) async {
+    final service = ref.read(socialAuthServiceProvider);
+    final result = provider == 'google'
+        ? await service.signInWithGoogle()
+        : await service.signInWithApple();
+
+    await ref.read(authProvider.notifier).socialLogin(
+          provider: result.provider,
+          idToken: result.idToken,
+          role: role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
+          fullName: result.fullName,
+        );
+    return true;
+  }
+
   Future<void> _handleSocialSignIn(String provider) async {
     if (_isLoading) return;
     UserRole? role = widget.role;
@@ -141,28 +160,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     });
 
     try {
-      final service = ref.read(socialAuthServiceProvider);
-      final result = provider == 'google' ? await service.signInWithGoogle() : await service.signInWithApple();
-
-      await ref.read(authProvider.notifier).socialLogin(
-            provider: result.provider,
-            idToken: result.idToken,
-            role: role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
-            fullName: result.fullName,
-          );
+      await _attemptSocialSignIn(provider, role);
     } on SocialAuthCancelled {
+      // Android's Credential Manager can fire a false "canceled" exception
+      // right after the user successfully picks an account
+      // (flutter/flutter#171761). Silently retry once after a short delay
+      // to give the OS time to settle before treating it as a real cancel.
+      debugPrint('[SocialAuth] SocialAuthCancelled on first attempt — retrying once...');
+      await Future<void>.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
-      // Not always a genuine cancel: Android's Credential Manager can
-      // throw this same exception right after a successful account
-      // pick (flutter/flutter#171761). A blocking popup would be too
-      // noisy for real cancels, so use the existing inline banner
-      // instead — visible, but easy to ignore if the user really did
-      // just back out.
-      setState(() {
-        _socialLoadingProvider = null;
-        _errorMessage = "Sign-in didn't go through — please try again.";
-      });
-      return;
+
+      try {
+        await _attemptSocialSignIn(provider, role);
+      } on SocialAuthCancelled {
+        // Genuine cancel on the retry — show the inline banner.
+        if (!mounted) return;
+        setState(() {
+          _socialLoadingProvider = null;
+          _errorMessage = "Sign-in didn't go through — please try again.";
+        });
+        return;
+      } on ApiException catch (e) {
+        if (!mounted) return;
+        setState(() => _socialLoadingProvider = null);
+        await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
+        return;
+      } catch (e, stack) {
+        debugPrint('Social Login Retry Error: $e\n$stack');
+        if (!mounted) return;
+        setState(() => _socialLoadingProvider = null);
+        await AppPopup.show(
+          context,
+          title: 'Sign-in Failed',
+          message: 'Something went wrong. Please try again.',
+          isError: true,
+        );
+        return;
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _socialLoadingProvider = null);
@@ -175,7 +209,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       await AppPopup.show(
         context,
         title: 'Sign-in Failed',
-        message: 'Error: ${e.toString()}',
+        message: 'Something went wrong. Please try again.',
         isError: true,
       );
       return;
