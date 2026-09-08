@@ -140,7 +140,7 @@ def shared_web_fallback(share_id: str):
       <div class="brand-icon">📷</div>
       <span>PicGallery</span>
     </a>
-    <a id="open-app-btn" href="https://api.picgallery.in/gallery/{share_id}" class="btn-app">Open in PicGallery App</a>
+    <a id="open-app-btn" href="picgallery://gallery/{share_id}" class="btn-app">Open in PicGallery App</a>
   </header>
 
   <main class="main-container">
