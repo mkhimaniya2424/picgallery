@@ -144,7 +144,8 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
                             )
                           else
                             DropdownButtonFormField<String?>(
-                              value: effectiveParentId,
+                              key: ValueKey(effectiveParentId),
+                              initialValue: effectiveParentId,
                               decoration: const InputDecoration(
                                 labelText: 'Parent folder (optional)',
                               ),

@@ -138,7 +138,10 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
       return initial.copyWith(isLoading: false);
     }
 
-    state = const AsyncValue.loading();
+    // Preserve previous folder data during the async loading phase so
+    // screens never flash "Folder not found" or an empty parent picker
+    // while a fresh fetch is in progress.
+    state = AsyncValue<FolderState>.loading().copyWithPrevious(state);
 
     try {
       final folders = await _repo.fetchFolders();
@@ -152,23 +155,27 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
       return initial.copyWith(
         isLoading: false,
         lastError: e.toString(),
-        allFolders: const [],
+        allFolders: state.valueOrNull?.allFolders ?? const [],
       );
     }
   }
 
   Future<void> load() async {
-    state = const AsyncValue.loading();
+    // Snapshot current state BEFORE overwriting so we can fall back to it
+    // if the fetch fails, and so folderProvider can serve stale-while-
+    // revalidate data via copyWithPrevious below.
+    final previous = state;
+    state = AsyncValue<FolderState>.loading().copyWithPrevious(previous);
 
     try {
       final folders = await _repo.fetchFolders();
-      final current = state.valueOrNull ?? _empty();
+      final current = previous.valueOrNull ?? _empty();
       final next = current.copyWith(isLoading: false, allFolders: folders);
 
       _syncCountsWithAlbumProvider(next);
       state = AsyncValue.data(next);
     } catch (e) {
-      final current = state.valueOrNull ?? _empty();
+      final current = previous.valueOrNull ?? _empty();
       state = AsyncValue.data(
         current.copyWith(isLoading: false, lastError: e.toString()),
       );
@@ -601,20 +608,18 @@ final folderProvider = Provider<FolderFacade>((ref) {
   final asyncState = ref.watch(folderAsyncProvider);
   final notifier = ref.read(folderAsyncProvider.notifier);
 
-  // Preserve the last known data during loading/error so screens don't
-  // flash "Folder not found" or show an empty subfolder list while a
-  // background refresh is in progress.
-  final value = asyncState.maybeWhen(
-    data: (s) => s,
-    orElse: () => notifier.state.valueOrNull ?? const FolderState(
-      isLoading: true,
-      lastError: null,
-      searchQuery: '',
-      sortOption: FolderSortOption.name,
-      filterOption: FolderFilterOption.all,
-      allFolders: [],
-    ),
-  );
+  // asyncState.valueOrNull now returns the PREVIOUS state during loading
+  // because build() / load() both call copyWithPrevious — so screens always
+  // get a non-empty folder list while a background refresh runs.
+  final value = asyncState.valueOrNull ??
+      const FolderState(
+        isLoading: true,
+        lastError: null,
+        searchQuery: '',
+        sortOption: FolderSortOption.name,
+        filterOption: FolderFilterOption.all,
+        allFolders: [],
+      );
 
   return FolderFacade(notifier, value);
 });

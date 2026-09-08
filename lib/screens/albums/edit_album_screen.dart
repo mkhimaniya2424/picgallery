@@ -41,6 +41,19 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
   bool _isDeleting = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Eagerly load folders so the folder-assignment picker is populated
+    // even when this screen is opened before the Folders screen has been
+    // visited (i.e. folderProvider hasn't fetched yet).
+    Future.microtask(() {
+      if (!mounted) return;
+      final fs = ref.read(folderProvider);
+      if (fs.folders.isEmpty && !fs.isLoading) fs.load();
+    });
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _descController.dispose();
@@ -196,26 +209,53 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
                               maxLines: 3,
                             ),
                             const SizedBox(height: AppSpacing.md),
-                            folderState.isLoading
-                                ? const SizedBox.shrink()
-                                : DropdownButtonFormField<String?>(
-                                    initialValue: _selectedFolderId,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Folder',
-                                      prefixIcon: Icon(Icons.folder_outlined, size: 20),
+                            if (folderState.isLoading && folderState.folders.isEmpty)
+                              InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Folder',
+                                  prefixIcon: Icon(Icons.folder_outlined, size: 20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 16, height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     ),
-                                    items: [
-                                      const DropdownMenuItem<String?>(
-                                          value: null, child: Text('No folder')),
-                                      ...folderState.folders.map(
-                                        (FolderModel f) => DropdownMenuItem<String?>(
-                                          value: f.id,
-                                          child: Text(f.name),
-                                        ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Text(
+                                      'Loading folders…',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.subtitle,
                                       ),
-                                    ],
-                                    onChanged: (v) => setState(() => _selectedFolderId = v),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              DropdownButtonFormField<String?>(
+                                key: ValueKey(_selectedFolderId),
+                                initialValue: _selectedFolderId,
+                                decoration: const InputDecoration(
+                                  labelText: 'Folder (tap to assign)',
+                                  prefixIcon: Icon(Icons.folder_outlined, size: 20),
+                                  helperText: 'Move this album into a folder',
+                                ),
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                      value: null, child: Text('No folder — unassigned')),
+                                  ...folderState.folders.map(
+                                    (FolderModel f) => DropdownMenuItem<String?>(
+                                      value: f.id,
+                                      child: Text(
+                                        f.name,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                   ),
+                                ],
+                                onChanged: (v) => setState(() => _selectedFolderId = v),
+                              ),
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               '${album.photoCount} photos • ${album.folderCount} folders — updated ${_relativeTime(album.updatedAt)}',

@@ -58,20 +58,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
             pinned: true,
-            
+            toolbarHeight: 56,
             elevation: 0,
-            scrolledUnderElevation: 0,
+            scrolledUnderElevation: 1,
+            backgroundColor: isDark ? const Color(0xFF0F0F1A) : AppColors.background,
             surfaceTintColor: Colors.transparent,
+            forceElevated: innerBoxIsScrolled,
             leading: IconButton(
               icon: Icon(Icons.arrow_back_ios_new_rounded,
                   color: onSurfaceColor, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
-              'Studio Reports & Analytics',
+              'Reports & Analytics',
               style: TextStyle(
                   color: onSurfaceColor,
-                  fontSize: 17,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.1),
             ),
@@ -81,11 +83,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               labelColor: AppColors.primary,
               unselectedLabelColor: subtitleColor,
               indicatorColor: AppColors.primary,
-              indicatorWeight: 3,
+              indicatorWeight: 2.5,
+              isScrollable: false,
+              tabAlignment: TabAlignment.fill,
               labelStyle:
-                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
               unselectedLabelStyle:
-                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
               tabs: const [
                 Tab(text: 'Overview'),
                 Tab(text: 'Views'),

@@ -25,12 +25,28 @@ import '../media/media_grid_screen.dart';
 /// depth), the media filed directly in this folder, and the albums
 /// filed under it. The "Add Media" FAB uploads straight into this
 /// folder (no album required) and only ever appears on this screen.
-class FolderDetailsScreen extends ConsumerWidget {
+class FolderDetailsScreen extends ConsumerStatefulWidget {
   final String folderId;
 
   const FolderDetailsScreen({super.key, required this.folderId});
 
-  Future<void> _addMedia(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<FolderDetailsScreen> createState() => _FolderDetailsScreenState();
+}
+
+class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Reload folders on entry so subfolders created elsewhere are visible.
+    Future.microtask(() {
+      if (mounted) ref.read(folderProvider).load();
+    });
+  }
+
+  String get folderId => widget.folderId;
+
+  Future<void> _addMedia(BuildContext context) async {
     final notifier = ref.read(uploadQueueProvider.notifier);
     await notifier.resetWizard();
     notifier.updateOptions(folderId: folderId, clearAlbum: true);
@@ -39,22 +55,27 @@ class FolderDetailsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final folderState = ref.watch(folderProvider);
-    final folderController = ref.read(folderProvider);
     final folder = folderState.folderById(folderId);
 
+    // During the initial load, show a spinner rather than "Folder not found"
+    // so the screen doesn't flash an error before data arrives.
     if (folder == null) {
-      return const Scaffold(
-        appBar: CustomAppBar(title: 'Folder', showBack: true),
-        body: Center(child: Text('Folder not found')),
+      return Scaffold(
+        appBar: const CustomAppBar(title: 'Folder', showBack: true),
+        body: Center(
+          child: folderState.isLoading
+              ? const CircularProgressIndicator()
+              : const Text('Folder not found'),
+        ),
       );
     }
 
     final parent = folder.parentId == null
         ? null
         : folderState.folderById(folder.parentId!);
-    final ancestors = folderController.ancestorsOf(folderId);
+    final ancestors = folderState.ancestorsOf(folderId);
     final subfolders = folderState.childrenOf(folder.id);
 
     // Same real Album -> Folder link Albums List's "Filter folder" uses
@@ -88,7 +109,7 @@ class FolderDetailsScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'folder_details_add_media_fab',
-        onPressed: () => _addMedia(context, ref),
+        onPressed: () => _addMedia(context),
         icon: const Icon(Icons.add_photo_alternate_rounded),
         label: const Text('Add Media'),
       ),
