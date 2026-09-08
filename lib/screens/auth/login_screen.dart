@@ -81,6 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
             rememberMe: _rememberMe,
           );
     } on ApiException catch (e) {
+      debugPrint('[Login] ApiException — status: ${e.statusCode}, message: ${e.message}');
       if (!mounted) return;
       setState(() => _isLoading = false);
       if (e.statusCode == 401 || e.statusCode == 400) {
@@ -88,22 +89,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         // both a Client and a Studio account and widget.role wasn't
         // enough to disambiguate (e.g. Login reached without a
         // preselected role) — same inline-banner treatment either way.
-        setState(() => _errorMessage = e.message);
+        setState(() => _errorMessage = _friendlyLoginError(e));
         _shakeController.forward(from: 0);
         return;
       }
       await AppPopup.show(context, title: 'Something Went Wrong', message: e.message, isError: true);
       return;
-    } catch (_) {
+    } catch (e, stack) {
       // Anything that isn't an ApiException (e.g. a response-parsing
       // error) must still clear _isLoading — otherwise the Sign In
       // button spins forever with no error shown at all.
+      debugPrint('[Login] Unexpected error: $e\n$stack');
       if (!mounted) return;
       setState(() => _isLoading = false);
       await AppPopup.show(
         context,
         title: 'Something Went Wrong',
-        message: 'Something went wrong. Please try again.',
+        message: 'An unexpected error occurred: ${e.toString()}',
         isError: true,
       );
       return;
@@ -118,12 +120,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     _navigateAfterAuth(user);
   }
 
-  /// Google/Apple button handler, shared by both. If [widget.role]
-  /// wasn't already picked (only possible on this screen — reached
-  /// without a role via Forgot Password's success flows), Role
-  /// Selection runs first in "pick and return" mode; social sign-in
-  /// always needs a role up front since there's no password afterward
-  /// to disambiguate a same-email/both-roles account.
+  /// Maps a backend [ApiException] from the login endpoint into a clear,
+  /// user-friendly message shown in the inline error banner.
+  ///
+  /// The backend sends the reason in [ApiException.message] (FastAPI
+  /// `detail` field). We match against known backend strings first; if
+  /// nothing matches, we fall back to the raw backend message so nothing
+  /// is hidden from the user.
+  String _friendlyLoginError(ApiException e) {
+    final code = e.statusCode;
+    final msg = e.message.toLowerCase();
+
+    debugPrint('[Login] Mapping error — status: $code, raw: ${e.message}');
+
+    // ── Backend-reported credential errors (401 / 400) ──────────────────
+    if (msg.contains('not found') || msg.contains('no account') || msg.contains('does not exist')) {
+      return 'No account found with this email.';
+    }
+    if (msg.contains('incorrect password') || msg.contains('wrong password') || msg.contains('invalid password')) {
+      return 'Incorrect password.';
+    }
+    if (msg.contains('invalid credential') || msg.contains('invalid email or password')) {
+      return 'Invalid email or password.';
+    }
+    if (msg.contains('invalid email') || msg.contains('not a valid email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (msg.contains('disabled') || msg.contains('suspended') || msg.contains('banned')) {
+      return 'This account has been disabled. Please contact support.';
+    }
+    if (msg.contains('too many') || msg.contains('rate limit') || msg.contains('throttl')) {
+      return 'Too many login attempts. Please try again later.';
+    }
+    if (msg.contains('network') || msg.contains('connection') || msg.contains('timeout')) {
+      return 'Network error. Please check your internet connection.';
+    }
+    if (msg.contains('not allowed') || msg.contains('not enabled')) {
+      return 'Email/password sign-in is not enabled. Please use a different method.';
+    }
+
+    // ── Unknown / unrecognised backend error ─────────────────────────────
+    // Show the raw message so the user and developer can see exactly
+    // what the backend returned — never hide it behind a generic string.
+    return e.message.isNotEmpty
+        ? e.message
+        : 'Login failed (error ${e.statusCode}). Please try again.';
+  }
+
   /// Internal helper that actually performs the social sign-in call after
   /// role is confirmed. Returns true if sign-in succeeded, false if the
   /// user genuinely cancelled, and rethrows on any other error so the
