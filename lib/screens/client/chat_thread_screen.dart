@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/chat_message_model.dart';
