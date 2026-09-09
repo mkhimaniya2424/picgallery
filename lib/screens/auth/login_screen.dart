@@ -204,42 +204,154 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
     try {
       await _attemptSocialSignIn(provider, role);
-    } on SocialAuthCancelled {
-      // Android's Credential Manager can fire a false "canceled" exception
-      // right after the user successfully picks an account
-      // (flutter/flutter#171761). Silently retry once after a short delay
-      // to give the OS time to settle before treating it as a real cancel.
-      debugPrint('[SocialAuth] SocialAuthCancelled on first attempt — retrying once...');
-      await Future<void>.delayed(const Duration(milliseconds: 600));
+    } on SocialAuthReauthNeeded catch (e) {
+      // [16] Account reauth failed — the service already called disconnect()
+      // to clear stale tokens. Retry once: Credential Manager will now show
+      // a fresh consent/picker flow without the stale token blocking it.
+      debugPrint('[SocialAuth] SocialAuthReauthNeeded: ${e.message} — retrying with fresh session...');
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
-
       try {
         await _attemptSocialSignIn(provider, role);
+      } on SocialAuthReauthNeeded catch (e2) {
+        if (!mounted) return;
+        setState(() => _socialLoadingProvider = null);
+        await AppPopup.show(
+          context,
+          title: 'Sign-in Failed',
+          message: 'Google account authentication failed. Please go to your phone\'s Google account settings and sign in again.\n\nDetail: ${e2.message}',
+          isError: true,
+        );
+        return;
       } on SocialAuthCancelled {
-        // Genuine cancel on the retry — show the inline banner.
         if (!mounted) return;
         setState(() {
           _socialLoadingProvider = null;
-          _errorMessage = "Sign-in didn't go through — please try again.";
+          _errorMessage = "Sign-in cancelled. Please try again.";
         });
         return;
+      } on ApiException catch (apiErr) {
+        if (!mounted) return;
+        setState(() => _socialLoadingProvider = null);
+        await AppPopup.show(context, title: 'Sign-in Failed', message: apiErr.message, isError: true);
+        return;
+      } catch (retryErr, retryStack) {
+        debugPrint('[SocialAuth] Reauth retry error: $retryErr\n$retryStack');
+        if (!mounted) return;
+        setState(() => _socialLoadingProvider = null);
+        await AppPopup.show(
+          context,
+          title: 'Sign-in Failed (Debug)',
+          message: '[${retryErr.runtimeType}] $retryErr',
+          isError: true,
+        );
+        return;
+      }
+    } on SocialAuthCancelled {
+      // Android's Credential Manager fires a false "canceled" exception right
+      // after the user picks an account (flutter/flutter#171761).
+      // DO NOT call authenticate() again — that would show the picker a 2nd time.
+      // Instead, try signInSilently() to retrieve the account the user already
+      // selected, with zero UI.
+      debugPrint('[SocialAuth] SocialAuthCancelled — attempting silent recovery (no UI)...');
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+
+      try {
+        final service = ref.read(socialAuthServiceProvider);
+
+        // For Google: silently recover the already-picked account.
+        // For Apple: no silent equivalent — treat as genuine cancel.
+        if (provider == 'google') {
+          final silentResult = await service.signInWithGoogleSilent();
+          debugPrint('[SocialAuth] Silent recovery result: ${silentResult == null ? "null (genuine cancel)" : "got token ✅"}');
+
+          if (silentResult == null) {
+            // Silent recovery returned null.
+            //
+            // On release builds (Play App Signing), the credential may not
+            // have been cached before the false-cancel fired — especially on
+            // first install. Retry authenticate() once more rather than
+            // immediately showing an error.
+            //
+            // If the retry also fails we show the error; if it succeeds the
+            // code below returns early after navigating.
+            final debugDetail = service.lastSilentError;
+            debugPrint('[SocialAuth] silent=null (lastSilentError: $debugDetail) — retrying authenticate() once...');
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            if (!mounted) return;
+
+            try {
+              await _attemptSocialSignIn(provider, role);
+            } on SocialAuthCancelled {
+              // Still cancelling after retry — genuine cancel.
+              if (!mounted) return;
+              setState(() {
+                _socialLoadingProvider = null;
+                _errorMessage = "Sign-in cancelled. Please try again.";
+              });
+              return;
+            } on ApiException catch (retryApiErr) {
+              if (!mounted) return;
+              setState(() => _socialLoadingProvider = null);
+              await AppPopup.show(context, title: 'Sign-in Failed', message: retryApiErr.message, isError: true);
+              return;
+            } catch (retryErr, retryStack) {
+              debugPrint('[SocialAuth] Retry error: $retryErr\n$retryStack');
+              if (!mounted) return;
+              setState(() => _socialLoadingProvider = null);
+              await AppPopup.show(
+                context,
+                title: 'Sign-in Failed (Debug)',
+                message: '[${retryErr.runtimeType}] $retryErr',
+                isError: true,
+              );
+              return;
+            }
+
+            // Retry succeeded — socialLogin() already called by _attemptSocialSignIn.
+            if (!mounted) return;
+            setState(() => _socialLoadingProvider = null);
+            final retryUser = ref.read(authProvider).valueOrNull;
+            if (retryUser != null) _navigateAfterAuth(retryUser);
+            return;
+          }
+
+          // Silent sign-in succeeded — proceed with the recovered token.
+          await ref.read(authProvider.notifier).socialLogin(
+                provider: silentResult.provider,
+                idToken: silentResult.idToken,
+                role: role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
+                fullName: silentResult.fullName,
+              );
+        } else {
+          // Apple — no silent fallback, treat as genuine cancel.
+          if (!mounted) return;
+          setState(() {
+            _socialLoadingProvider = null;
+            _errorMessage = "Sign-in didn't go through — please try again.";
+          });
+          return;
+        }
       } on ApiException catch (e) {
         if (!mounted) return;
         setState(() => _socialLoadingProvider = null);
         await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
         return;
       } catch (e, stack) {
-        debugPrint('Social Login Retry Error: $e\n$stack');
+        debugPrint('[SocialAuth] Silent recovery error: $e\n$stack');
         if (!mounted) return;
         setState(() => _socialLoadingProvider = null);
         await AppPopup.show(
           context,
-          title: 'Sign-in Failed',
-          message: 'Something went wrong. Please try again.',
+          title: 'Sign-in Failed (Debug)',
+          // Show the REAL error so you can diagnose without USB:
+          message: '[${e.runtimeType}] $e',
           isError: true,
         );
         return;
       }
+
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _socialLoadingProvider = null);
@@ -251,8 +363,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       setState(() => _socialLoadingProvider = null);
       await AppPopup.show(
         context,
-        title: 'Sign-in Failed',
-        message: 'Something went wrong. Please try again.',
+        title: 'Sign-in Failed (Debug)',
+        // Show the REAL error so you can diagnose without USB:
+        message: '[${e.runtimeType}] $e',
         isError: true,
       );
       return;
