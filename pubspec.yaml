@@ -39,7 +39,7 @@ dependencies:
   # Sign in with Google / Sign in with Apple, wired up in
   # services/social_auth_service.dart and posted to the backend's
   # POST /auth/social-login (see repositories/auth_repository.dart).
-  google_sign_in: ^7.2.0
+  google_sign_in: ^6.2.1
   sign_in_with_apple: ^6.1.0
   # Added for the designer's new local-only feature set: albums, folders,
   # media grid/trash, upload queue, photo editor, and sharing.
