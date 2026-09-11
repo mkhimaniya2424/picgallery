@@ -248,7 +248,7 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                                         context, allDisplay, 'Share collection');
                                     if (chosen == null || !context.mounted) return;
                                     final c = allDisplay.firstWhere((x) => x.id == chosen);
-                                    SharePlus.instance.share(
+                                    Share.share(
                                       'Check out my photo collection: ${c.title}\nhttps://picgallery.studio/collections/$chosen'
                                     );
                                   },
