@@ -36,13 +36,13 @@ class _SuperAdminSubscriptionsScreenState
     };
 
     return Scaffold(
-      
       appBar: AppBar(
-        
         elevation: 0,
         title: const Text('Subscriptions',
             style: TextStyle(
-                color: AppColors.text, fontWeight: FontWeight.w700, fontSize: 18)),
+                color: AppColors.text,
+                fontWeight: FontWeight.w700,
+                fontSize: 18)),
       ),
       body: Column(
         children: [
@@ -115,7 +115,9 @@ class _FilterChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: selected ? color.withValues(alpha: 0.12) : AppColors.surfaceElevated,
+            color: selected
+                ? color.withValues(alpha: 0.12)
+                : AppColors.surfaceElevated,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             border: Border.all(color: selected ? color : AppColors.border),
           ),
@@ -177,7 +179,8 @@ class _SubscriptionTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: studio.subscriptionStatus.color.withValues(alpha: 0.12),
+                  color:
+                      studio.subscriptionStatus.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(studio.subscriptionStatus.label,

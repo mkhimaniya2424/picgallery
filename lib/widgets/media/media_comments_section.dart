@@ -87,8 +87,6 @@ class _MediaCommentsSectionState extends State<MediaCommentsSection> {
   List<MediaComment> get _roots =>
       widget.comments.where((c) => c.parentId == null).toList();
 
-
-
   String _relativeTimestamp(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);

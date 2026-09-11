@@ -92,7 +92,6 @@ class DashboardStatsDto {
   final int totalGalleryViews;
   final int totalGalleryDownloads;
 
-
   const DashboardStatsDto({
     required this.photoCount,
     required this.videoCount,
@@ -106,7 +105,8 @@ class DashboardStatsDto {
     this.totalGalleryDownloads = 0,
   });
 
-  factory DashboardStatsDto.fromApiJson(Map<String, dynamic> json) => DashboardStatsDto(
+  factory DashboardStatsDto.fromApiJson(Map<String, dynamic> json) =>
+      DashboardStatsDto(
         photoCount: json['photo_count'] as int? ?? 0,
         videoCount: json['video_count'] as int? ?? 0,
         totalMediaCount: json['total_media_count'] as int? ?? 0,
@@ -141,15 +141,12 @@ class DashboardStatsDto {
     }
     // Seed pseudo-randomness off value so the shape is stable across rebuilds.
     final seed = v.toInt();
-    final bumps = [0.70, 0.74, 0.80, 0.76, 0.85, 0.91, 1.00]
-        .asMap()
-        .entries
-        .map((e) {
-          // Small jitter: ±4 % modulated by seed so each card looks different.
-          final jitter = ((seed * (e.key + 3)) % 9 - 4) * 0.01;
-          return (e.value + jitter).clamp(0.60, 1.00) * v;
-        })
-        .toList();
+    final bumps =
+        [0.70, 0.74, 0.80, 0.76, 0.85, 0.91, 1.00].asMap().entries.map((e) {
+      // Small jitter: ±4 % modulated by seed so each card looks different.
+      final jitter = ((seed * (e.key + 3)) % 9 - 4) * 0.01;
+      return (e.value + jitter).clamp(0.60, 1.00) * v;
+    }).toList();
     // Force the last point to the exact current value (no jitter on the tip).
     bumps[6] = v;
     return bumps;
@@ -159,8 +156,6 @@ class DashboardStatsDto {
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
     return '$n';
   }
-
-
 
   List<StatCardData> toStatCards() {
     return [
@@ -198,7 +193,9 @@ class DashboardStatsDto {
         gradient: const [Color(0xFFF59E0B), Color(0xFFEC4899)],
         sparkline: _sparklineFor(pendingClientRequests),
         delta: '',
-        trend: pendingClientRequests == 0 ? TrendDirection.up : TrendDirection.down,
+        trend: pendingClientRequests == 0
+            ? TrendDirection.up
+            : TrendDirection.down,
       ),
       StatCardData(
         // Was hard-coded to "X.X GB" regardless of scale, so a studio
@@ -309,7 +306,8 @@ class DashboardClientDto {
       // empty list (it has no color opinion at that layer) — fill in a
       // stable one here, same deterministic-by-id approach as
       // `DashboardUploadsDto`'s album rows.
-      gradient: base.gradient.isNotEmpty ? base.gradient : _gradientFor(base.id),
+      gradient:
+          base.gradient.isNotEmpty ? base.gradient : _gradientFor(base.id),
       bookingStatus: _connectionStatusLabel(),
       galleryStatus: base.galleryStatus,
       outstanding: base.outstanding,
@@ -345,8 +343,11 @@ class DashboardUploadsDto {
 
   const DashboardUploadsDto(this.media);
 
-  factory DashboardUploadsDto.fromApiJson(List<dynamic> json) => DashboardUploadsDto(
-        json.map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>)).toList(),
+  factory DashboardUploadsDto.fromApiJson(List<dynamic> json) =>
+      DashboardUploadsDto(
+        json
+            .map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
   /// Only used when [albumId] doesn't resolve to a real album — either
@@ -408,7 +409,9 @@ class DashboardUploadsDto {
             _placeholderAlbumName(albumId),
         uploadedAgo: relativeTime(latest),
         mediaCount: items.length,
-        icon: allVideo ? Icons.movie_creation_rounded : Icons.photo_camera_rounded,
+        icon: allVideo
+            ? Icons.movie_creation_rounded
+            : Icons.photo_camera_rounded,
         gradient: _gradientFor(key),
         // A group can be mixed photos+videos; AlbumUploadData.isVideo is
         // a single flag, so a group only reads as "video" when every
@@ -476,12 +479,14 @@ class DashboardNotificationDto {
     }
   }
 
-  factory DashboardNotificationDto.fromApiJson(Map<String, dynamic> json) => DashboardNotificationDto(
+  factory DashboardNotificationDto.fromApiJson(Map<String, dynamic> json) =>
+      DashboardNotificationDto(
         id: json['id'] as String,
         type: _dashboardTypeFrom(json['type'] as String? ?? 'system'),
         title: json['title'] as String? ?? '',
         subtitle: json['subtitle'] as String? ?? '',
-        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+            DateTime.now(),
         isRead: json['is_read'] as bool? ?? false,
       );
 
@@ -530,12 +535,14 @@ class DashboardActivityDto {
     return ActivityType.report;
   }
 
-  factory DashboardActivityDto.fromApiJson(Map<String, dynamic> json) => DashboardActivityDto(
+  factory DashboardActivityDto.fromApiJson(Map<String, dynamic> json) =>
+      DashboardActivityDto(
         id: json['id'] as String,
         type: _activityTypeFrom(json['type'] as String? ?? ''),
         title: json['title'] as String? ?? '',
         subtitle: json['subtitle'] as String? ?? '',
-        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+            DateTime.now(),
       );
 
   ActivityEntry toActivityEntry() => ActivityEntry(
@@ -556,13 +563,16 @@ class DashboardActivityLogDto {
 
   const DashboardActivityLogDto(this.items);
 
-  factory DashboardActivityLogDto.fromApiJson(Map<String, dynamic> json) => DashboardActivityLogDto(
+  factory DashboardActivityLogDto.fromApiJson(Map<String, dynamic> json) =>
+      DashboardActivityLogDto(
         (json['items'] as List<dynamic>? ?? const [])
-            .map((e) => DashboardActivityDto.fromApiJson(e as Map<String, dynamic>))
+            .map((e) =>
+                DashboardActivityDto.fromApiJson(e as Map<String, dynamic>))
             .toList(growable: false),
       );
 
-  List<ActivityEntry> toActivityLog() => items.map((dto) => dto.toActivityEntry()).toList(growable: false);
+  List<ActivityEntry> toActivityLog() =>
+      items.map((dto) => dto.toActivityEntry()).toList(growable: false);
 }
 
 // ---------------------------------------------------------------------

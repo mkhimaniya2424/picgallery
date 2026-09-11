@@ -94,7 +94,9 @@ class UserRepository {
     if (studioType != null) body['studio_type'] = studioType;
     if (experienceYears != null) body['experience_years'] = experienceYears;
     if (languages != null) body['languages'] = languages;
-    if (equipmentHighlights != null) body['equipment_highlights'] = equipmentHighlights;
+    if (equipmentHighlights != null) {
+      body['equipment_highlights'] = equipmentHighlights;
+    }
     if (pricingMin != null) body['pricing_min'] = pricingMin;
     if (pricingMax != null) body['pricing_max'] = pricingMax;
     if (packageDetails != null) body['package_details'] = packageDetails;
@@ -106,7 +108,9 @@ class UserRepository {
     if (website != null) body['website'] = website;
 
     if (profilePhotoUrl != null) body['profile_photo_url'] = profilePhotoUrl;
-    if (preferredPhotoTypes != null) body['preferred_photo_types'] = preferredPhotoTypes;
+    if (preferredPhotoTypes != null) {
+      body['preferred_photo_types'] = preferredPhotoTypes;
+    }
     if (allowDownloads != null) body['allow_downloads'] = allowDownloads;
     if (privateProfile != null) body['private_profile'] = privateProfile;
     if (pushNotificationsEnabled != null) {
@@ -124,7 +128,7 @@ class UserRepository {
   /// DELETE /users/me (Task 10 — Delete Account). [password] confirms
   /// the request for local (email/password) accounts; the backend
   /// ignores it for Google/Apple accounts, which have no password to
-  /// check in the first place. Returns the backend's confirmation  
+  /// check in the first place. Returns the backend's confirmation
   /// message. Soft-deletes server-side — the caller (the Delete Account
   /// screen) is responsible for clearing the local session afterwards
   /// via `AuthNotifier.logout()`, same as any other sign-out.

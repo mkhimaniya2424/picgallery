@@ -15,7 +15,8 @@ import '../models/notification_alert.dart';
 class NotificationsRepository {
   final ApiClient _apiClient;
 
-  NotificationsRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+  NotificationsRepository({required ApiClient apiClient})
+      : _apiClient = apiClient;
 
   /// GET /notifications
   Future<List<NotificationAlert>> fetchAll() async {

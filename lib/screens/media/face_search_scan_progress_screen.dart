@@ -11,7 +11,7 @@ import '../../providers/face_search_provider.dart';
 
 class FaceSearchScanProgressScreen extends ConsumerStatefulWidget {
   final File file;
-  
+
   const FaceSearchScanProgressScreen({super.key, required this.file});
 
   @override
@@ -37,9 +37,11 @@ class _FaceSearchScanProgressScreenState
   }
 
   Future<void> _runSearch() async {
-    final success = await ref.read(faceSearchProvider.notifier).selectSelfieFile(widget.file);
+    final success = await ref
+        .read(faceSearchProvider.notifier)
+        .selectSelfieFile(widget.file);
     if (!mounted || _cancelled) return;
-    
+
     if (success) {
       _navigateToResultsOnce();
     }
@@ -74,33 +76,33 @@ class _FaceSearchScanProgressScreenState
           actions: [
             IconButton(
               tooltip: 'Cancel scan',
-              icon: const Icon(Icons.close_rounded),
+              icon: Icon(Icons.close_rounded),
               onPressed: _cancel,
             ),
           ],
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildScanCard(state),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
                 if (state.error != null)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       state.error!,
-                      style: const TextStyle(color: AppColors.error),
+                      style: TextStyle(color: AppColors.error),
                     ),
                   )
                 else
-                  const Center(child: CircularProgressIndicator()),
+                  Center(child: CircularProgressIndicator()),
                 const Spacer(),
               ],
             ),
@@ -112,7 +114,7 @@ class _FaceSearchScanProgressScreenState
 
   Widget _buildScanCard(FaceSearchState state) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -122,26 +124,30 @@ class _FaceSearchScanProgressScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAnimatedScannerIcon(),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   state.statusMessage,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
+                SizedBox(height: 6),
+                Text(
                   'Matching your selfie against shared albums…',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                     height: 1.45,
                   ),
                 ),
@@ -162,7 +168,7 @@ class _FaceSearchScanProgressScreenState
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.auto_awesome_rounded,
         color: AppColors.primary,
         size: 22,

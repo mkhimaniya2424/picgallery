@@ -102,7 +102,8 @@ class _CountUpTextState extends State<CountUpText>
             _from.number + (_to.number - _from.number) * _animation.value;
         final text =
             '${_to.prefix}${current.toStringAsFixed(_to.decimals)}${_to.suffix}';
-        return Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: widget.style);
+        return Text(text,
+            maxLines: 1, overflow: TextOverflow.ellipsis, style: widget.style);
       },
     );
   }

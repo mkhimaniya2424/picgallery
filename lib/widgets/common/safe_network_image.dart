@@ -48,7 +48,9 @@ class SafeNetworkImage extends StatelessWidget {
   /// call sites that already show their own progress indicator while the
   /// image loads (e.g. the Showcase Portfolio grid). Has no effect on the
   /// empty/null or error cases above — those always show [placeholderIcon].
-  final Widget Function(BuildContext context, Widget child, ImageChunkEvent? loadingProgress)? loadingBuilder;
+  final Widget Function(
+          BuildContext context, Widget child, ImageChunkEvent? loadingProgress)?
+      loadingBuilder;
 
   bool get _hasUrl => url != null && url!.trim().isNotEmpty;
 
@@ -76,7 +78,9 @@ class SafeNetworkImage extends StatelessWidget {
       loadingBuilder: loadingBuilder,
     );
 
-    return borderRadius == null ? image : ClipRRect(borderRadius: borderRadius!, child: image);
+    return borderRadius == null
+        ? image
+        : ClipRRect(borderRadius: borderRadius!, child: image);
   }
 }
 

@@ -194,14 +194,14 @@ class _MediaCopyMoveFlowScreenState
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Success'),
+          title: Text('Success'),
           content: Text(
             '${ids.length} item(s) ${widget.args.action == MediaBatchAction.move ? 'moved' : 'copied'} successfully.',
           ),
           actions: [
             FilledButton.tonal(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Done'),
+              child: Text('Done'),
             ),
           ],
         ),
@@ -256,9 +256,9 @@ class _MediaCopyMoveFlowScreenState
           children: [
             if (_errorMessage != null)
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -267,20 +267,22 @@ class _MediaCopyMoveFlowScreenState
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          color: AppColors.error),
-                      const SizedBox(width: AppSpacing.sm),
+                      Icon(Icons.error_outline_rounded, color: AppColors.error),
+                      SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: AppColors.text,
+                            color:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.textOnDark
+                                    : AppColors.text),
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded),
+                        icon: Icon(Icons.close_rounded),
                         onPressed: () => setState(() => _errorMessage = null),
                       ),
                     ],
@@ -289,20 +291,20 @@ class _MediaCopyMoveFlowScreenState
               ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 children: [
-                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(height: AppSpacing.sm),
                   Text(
                     'Destination',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                         ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
 
                   // Breadcrumb (for selected destination folder)
                   if (_destinationFolderId != null) ...[
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       'Breadcrumb',
                       style: Theme.of(context)
@@ -310,24 +312,26 @@ class _MediaCopyMoveFlowScreenState
                           .titleSmall
                           ?.copyWith(fontWeight: FontWeight.w900),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _BreadcrumbWidget(
                       folderId: _destinationFolderId!,
                       breadcrumb:
                           folderState.breadcrumbFor(_destinationFolderId!),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: AppSpacing.lg),
                   ],
 
                   // Album picker
-                  const Text(
+                  Text(
                     'Album',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.subtitle,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   if (albumState.allAlbums.isEmpty)
                     const EmptyStateCard(
                       icon: Icons.album_rounded,
@@ -348,37 +352,41 @@ class _MediaCopyMoveFlowScreenState
                       ],
                     ),
 
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
 
                   // Folder destination search
-                  const Text(
+                  Text(
                     'Destination folder',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.subtitle,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Search folders…',
-                      prefixIcon: const Icon(Icons.search_rounded),
+                      prefixIcon: Icon(Icons.search_rounded),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
                     ),
                     onChanged: (v) => setState(() => _folderSearchQuery = v),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
 
                   // Root option
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
-                    leading: const Icon(Icons.block_rounded,
-                        color: AppColors.subtitle),
-                    title: const Text('Root level (unfiled)'),
+                    leading: Icon(Icons.block_rounded,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : AppColors.subtitle)),
+                    title: Text('Root level (unfiled)'),
                     trailing: Radio<String?>(
                       value: null,
                       groupValue: _destinationFolderId,
@@ -398,7 +406,7 @@ class _MediaCopyMoveFlowScreenState
                     ...searchedFolders.map((f) => ListTile(
                           dense: true,
                           contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.folder_rounded,
+                          leading: Icon(Icons.folder_rounded,
                               color: AppColors.primary),
                           title: Text(f.name),
                           subtitle: Text(
@@ -414,17 +422,19 @@ class _MediaCopyMoveFlowScreenState
                           onTap: () => _setDestinationFolder(f.id),
                         )),
 
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
 
                   // Create folder
-                  const Text(
+                  Text(
                     'Create folder',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.subtitle,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(height: AppSpacing.sm),
 
                   Row(
                     children: [
@@ -439,43 +449,46 @@ class _MediaCopyMoveFlowScreenState
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
+                      SizedBox(width: AppSpacing.sm),
                       FilledButton.icon(
                         onPressed: (_isBusy || _isCreatingFolder)
                             ? null
                             : () => _createFolderUnderSelectedAlbum(context),
-                        icon: const Icon(Icons.create_new_folder_rounded),
+                        icon: Icon(Icons.create_new_folder_rounded),
                         label: _isCreatingFolder
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 16,
                                 height: 16,
                                 child:
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Text('Create'),
+                            : Text('Create'),
                       ),
                     ],
                   ),
 
                   if (destAlbumName != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.sm),
+                      padding: EdgeInsets.only(top: AppSpacing.sm),
                       child: Text(
                         'Destination album: $destAlbumName',
-                        style: const TextStyle(
-                          color: AppColors.subtitle,
+                        style: TextStyle(
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
                           fontWeight: FontWeight.w700,
                           fontSize: 12,
                         ),
                       ),
                     ),
 
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
 
                   // Batch move/copy button + progress
                   if (_isBusy) ...[
                     Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -483,11 +496,11 @@ class _MediaCopyMoveFlowScreenState
                       ),
                       child: Column(
                         children: [
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           LinearProgressIndicator(
                             value: _total == 0 ? null : _processed / _total,
                           ),
-                          const SizedBox(height: AppSpacing.sm),
+                          SizedBox(height: AppSpacing.sm),
                           Text(
                             'Processing ${_processed.toString()} / ${_total.toString()}…',
                             style: Theme.of(context)
@@ -500,7 +513,7 @@ class _MediaCopyMoveFlowScreenState
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     const LoadingWidget(message: 'Please wait…'),
                   ] else
                     SizedBox(
@@ -515,7 +528,7 @@ class _MediaCopyMoveFlowScreenState
                             : 'Copy ${widget.args.mediaIds.length} items'),
                       ),
                     ),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
@@ -538,7 +551,7 @@ class _BreadcrumbWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (breadcrumb.isEmpty) {
-      return const Text('Root level (unfiled)');
+      return Text('Root level (unfiled)');
     }
 
     return Wrap(
@@ -554,7 +567,7 @@ class _BreadcrumbWidget extends StatelessWidget {
             },
           ),
           if (i < breadcrumb.length - 1)
-            const Icon(Icons.chevron_right_rounded, size: 16),
+            Icon(Icons.chevron_right_rounded, size: 16),
         ],
       ],
     );

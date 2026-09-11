@@ -218,7 +218,9 @@ class MediaContentType {
   /// to be a best-effort guess, not a strict validator.
   static String forFileName(String fileName) {
     final dot = fileName.lastIndexOf('.');
-    if (dot < 0 || dot == fileName.length - 1) return 'application/octet-stream';
+    if (dot < 0 || dot == fileName.length - 1) {
+      return 'application/octet-stream';
+    }
     final ext = fileName.substring(dot + 1).toLowerCase();
     return _byExtension[ext] ?? 'application/octet-stream';
   }

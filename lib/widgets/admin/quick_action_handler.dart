@@ -47,6 +47,7 @@ class QuickActionHandler {
     required QuickActionData action,
     required void Function(String message, {Color? color}) toast,
     VoidCallback? onBeforeReport,
+
     /// Switches the enclosing [AdminMainNavScreen] to another bottom-nav
     /// tab (0=Dashboard, 1=Gallery, 2=Clients, 3=Profile) —
     /// same callback [StudioDashboardScreen] already threads down to
@@ -147,8 +148,6 @@ class QuickActionHandler {
     }
   }
 
-
-
   /// Encodes the studio's real `AppUser.id` — not the display name,
   /// which isn't a valid lookup key anywhere in the app — as a
   /// `picgallery://studio/{studioId}` deep link. `DeepLinkService`
@@ -170,14 +169,20 @@ class QuickActionHandler {
           backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
           title: Text(
             'Studio QR Code',
-            style: TextStyle(color: isDark ? AppColors.textOnDark : AppColors.text, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: isDark ? AppColors.textOnDark : AppColors.text,
+                fontWeight: FontWeight.bold),
           ),
           content: Text(
             "Couldn't generate a code — please sign in again and retry.",
-            style: TextStyle(color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, fontSize: 13.5),
+            style: TextStyle(
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                fontSize: 13.5),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close')),
           ],
         ),
       );

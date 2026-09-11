@@ -26,7 +26,8 @@ class ShareLinkRepository {
   // Studio-side (auth required)
   // ---------------------------------------------------------------------
 
-  Future<List<GalleryShareLink>> fetchLinks({String? albumId, bool activeOnly = false}) async {
+  Future<List<GalleryShareLink>> fetchLinks(
+      {String? albumId, bool activeOnly = false}) async {
     final query = <String>[];
     if (albumId != null) query.add('album_id=$albumId');
     if (activeOnly) query.add('active_only=true');
@@ -103,7 +104,8 @@ class ShareLinkRepository {
     // (returns None), so anonymous guests are unaffected. Logged-in studio
     // owners and assigned clients need this token to pass _assert_client_authorized
     // on links that have a client_id set — without it, they receive a 403.
-    final json = await _apiClient.get('/public/share-links/$token/status', withAuth: true);
+    final json = await _apiClient.get('/public/share-links/$token/status',
+        withAuth: true);
     return ShareLinkStatus.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -111,12 +113,14 @@ class ShareLinkRepository {
   /// one view server-side, so this should only be called once the
   /// passcode gate (if any) has actually been cleared — never
   /// speculatively, or every rebuild would inflate the view counter.
-  Future<PublicGalleryData> fetchPublicGallery({required String token, String? password}) async {
+  Future<PublicGalleryData> fetchPublicGallery(
+      {required String token, String? password}) async {
     final query = (password != null && password.isNotEmpty)
         ? '?password=${Uri.encodeQueryComponent(password)}'
         : '';
     // withAuth: true — same reason as fetchStatus above.
-    final json = await _apiClient.get('/public/share-links/$token$query', withAuth: true);
+    final json = await _apiClient.get('/public/share-links/$token$query',
+        withAuth: true);
     return PublicGalleryData.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -135,6 +139,7 @@ class ShareLinkRepository {
       if (mediaId != null) 'media_id': mediaId,
       if (downloaderLabel != null) 'downloader_label': downloaderLabel,
     };
-    await _apiClient.post('/public/share-links/$token/download', body: body, withAuth: true);
+    await _apiClient.post('/public/share-links/$token/download',
+        body: body, withAuth: true);
   }
 }

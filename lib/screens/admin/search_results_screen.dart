@@ -92,7 +92,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       SnackBar(
         content: Text('Opening "${item.title}"'),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.text,
+        backgroundColor: (Theme.of(context).brightness == Brightness.dark
+            ? AppColors.textOnDark
+            : AppColors.text),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
@@ -112,17 +114,17 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
             tooltip: _gridView ? 'List view' : 'Grid view',
             onPressed: () => setState(() => _gridView = !_gridView),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
         ],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
             child: Container(
               height: 46,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              padding: EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(16),
@@ -130,22 +132,32 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search_rounded,
-                      size: 20, color: AppColors.subtitle),
-                  const SizedBox(width: 8),
+                  Icon(Icons.search_rounded,
+                      size: 20,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle)),
+                  SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _controller,
                       onSubmitted: _submit,
                       textInputAction: TextInputAction.search,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.text),
-                      decoration: const InputDecoration(
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.textOnDark
+                                  : AppColors.text)),
+                      decoration: InputDecoration(
                         hintText: 'Refine your search…',
-                        hintStyle:
-                            TextStyle(fontSize: 13, color: AppColors.subtitle),
+                        hintStyle: TextStyle(
+                            fontSize: 13,
+                            color:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle)),
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
@@ -159,40 +171,46 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         _submit('');
                       },
                       borderRadius: BorderRadius.circular(100),
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.all(4),
                         child: Icon(Icons.close_rounded,
-                            size: 18, color: AppColors.subtitle),
+                            size: 18,
+                            color:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle)),
                       ),
                     ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           SearchFilterChips(selected: _filter, onSelected: _selectFilter),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           if (!_loading)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '${items.length} result${items.length == 1 ? '' : 's'}${_query.isNotEmpty ? ' for "$_query"' : ''}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.subtitle),
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle)),
                 ),
               ),
             ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.primary))
                 : items.isEmpty
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.all(AppSpacing.lg),
                         child: EmptyStateCard(
                           icon: Icons.search_off_rounded,
@@ -219,10 +237,10 @@ class _ResultsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
+      padding:
+          EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+      separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, i) =>
           SearchResultTile(data: items[i], onTap: () => onTap(items[i])),
     );
@@ -248,7 +266,7 @@ class _ResultsGrid extends StatelessWidget {
                 ? 3
                 : 2;
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
           itemCount: items.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -278,7 +296,7 @@ class _ResultGridTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -306,25 +324,29 @@ class _ResultGridTile extends StatelessWidget {
               ),
               child: Icon(data.type.icon, color: Colors.white, size: 24),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(data.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.text)),
-            const SizedBox(height: 2),
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text))),
+            SizedBox(height: 2),
             Text(data.subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.subtitle)),
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle))),
             const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: gradient.first.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.pill),

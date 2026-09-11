@@ -11,7 +11,9 @@ final searchRepositoryProvider = Provider<SearchRepository>((ref) {
 /// In-memory "Recent Searches" history for the current session — newest
 /// first, capped at 8, de-duplicated. Kept separate from the dashboard
 /// snapshot since it's UI/session state rather than studio data.
-final recentSearchesProvider = NotifierProvider<RecentSearchesNotifier, List<String>>(RecentSearchesNotifier.new);
+final recentSearchesProvider =
+    NotifierProvider<RecentSearchesNotifier, List<String>>(
+        RecentSearchesNotifier.new);
 
 class RecentSearchesNotifier extends Notifier<List<String>> {
   @override
@@ -20,7 +22,10 @@ class RecentSearchesNotifier extends Notifier<List<String>> {
   void add(String term) {
     final trimmed = term.trim();
     if (trimmed.isEmpty) return;
-    final next = [trimmed, ...state.where((t) => t.toLowerCase() != trimmed.toLowerCase())];
+    final next = [
+      trimmed,
+      ...state.where((t) => t.toLowerCase() != trimmed.toLowerCase())
+    ];
     state = next.take(8).toList();
   }
 

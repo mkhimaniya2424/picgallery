@@ -35,7 +35,8 @@ class AnalyticsChartCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+        border:
+            Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         boxShadow: [
           BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.06),
@@ -85,7 +86,8 @@ class AnalyticsChartCard extends StatelessWidget {
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                  color:
+                      isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           const SizedBox(height: AppSpacing.md),
           if (hasData)
             series.isBar
@@ -107,14 +109,18 @@ class AnalyticsChartCard extends StatelessWidget {
                   children: [
                     Icon(Icons.show_chart_rounded,
                         size: 26,
-                        color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                        color: isDark
+                            ? AppColors.subtitleOnDark
+                            : AppColors.subtitle),
                     const SizedBox(height: 8),
                     Text('Not enough data yet',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : AppColors.subtitle)),
                   ],
                 ),
               ),

@@ -21,7 +21,8 @@ class PushNotificationService {
   static final PushNotificationService instance = PushNotificationService._();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   /// Same key passed to [MaterialApp] in main.dart — lets a tapped
   /// notification navigate without needing a BuildContext from inside a
@@ -29,7 +30,8 @@ class PushNotificationService {
   /// picgallery://-scheme links.
   GlobalKey<NavigatorState>? _navigatorKey;
 
-  Future<void> init(ApiClient apiClient, GlobalKey<NavigatorState> navigatorKey) async {
+  Future<void> init(
+      ApiClient apiClient, GlobalKey<NavigatorState> navigatorKey) async {
     _navigatorKey = navigatorKey;
 
     // Request permission (especially required for iOS)
@@ -54,7 +56,8 @@ class PushNotificationService {
     // foreground banner (shown by _showForegroundNotification below)
     // deep-link the same way a background/terminated-state tap does —
     // previously nothing was registered, so foreground taps went nowhere.
-    const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const initializationSettingsIOS = DarwinInitializationSettings();
     const initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -78,11 +81,13 @@ class PushNotificationService {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'high_importance_channel', // id
       'High Importance Notifications', // name
-      description: 'This channel is used for important notifications.', // description
+      description:
+          'This channel is used for important notifications.', // description
       importance: Importance.max,
     );
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
     // Listen to token updates and sync with backend
@@ -102,7 +107,8 @@ class PushNotificationService {
       developer.log('Message data: ${message.data}');
 
       if (message.notification != null) {
-        developer.log('Message also contained a notification: ${message.notification}');
+        developer.log(
+            'Message also contained a notification: ${message.notification}');
         _showForegroundNotification(message, channel);
       }
     });
@@ -128,7 +134,8 @@ class PushNotificationService {
     }
   }
 
-  void _showForegroundNotification(RemoteMessage message, AndroidNotificationChannel channel) {
+  void _showForegroundNotification(
+      RemoteMessage message, AndroidNotificationChannel channel) {
     final notification = message.notification;
     final android = message.notification?.android;
 
@@ -185,7 +192,9 @@ class PushNotificationService {
 
     AppUser? user;
     try {
-      user = ProviderScope.containerOf(context, listen: false).read(authProvider).valueOrNull;
+      user = ProviderScope.containerOf(context, listen: false)
+          .read(authProvider)
+          .valueOrNull;
     } catch (e) {
       developer.log('Could not read auth state for notification tap: $e');
     }

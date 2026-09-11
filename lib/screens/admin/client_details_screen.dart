@@ -29,7 +29,8 @@ class ClientDetailsScreen extends ConsumerStatefulWidget {
   const ClientDetailsScreen({super.key, required this.clientId});
 
   @override
-  ConsumerState<ClientDetailsScreen> createState() => _ClientDetailsScreenState();
+  ConsumerState<ClientDetailsScreen> createState() =>
+      _ClientDetailsScreenState();
 }
 
 class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
@@ -43,19 +44,32 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              backgroundColor: AppColors.surface,
+              backgroundColor: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkSurface
+                  : AppColors.surface),
               surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: Text(
                 'Assign Galleries',
-                style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
               ),
               content: allAlbums.isEmpty
-                  ? const Padding(
+                  ? Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
                       child: Text(
                         'No albums available in the system.',
-                        style: TextStyle(color: AppColors.subtitle, fontSize: 14),
+                        style: TextStyle(
+                            color:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle),
+                            fontSize: 14),
                       ),
                     )
                   : SizedBox(
@@ -69,8 +83,22 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                           return CheckboxListTile(
                             activeColor: AppColors.primary,
                             checkColor: Colors.white,
-                            title: Text(album.name, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: Text('${album.photoCount} photos • ${album.videoCount} videos', style: const TextStyle(color: AppColors.subtitle, fontSize: 11)),
+                            title: Text(album.name,
+                                style: TextStyle(
+                                    color: (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.textOnDark
+                                        : AppColors.text),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600)),
+                            subtitle: Text(
+                                '${album.photoCount} photos • ${album.videoCount} videos',
+                                style: TextStyle(
+                                    color: (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle),
+                                    fontSize: 11)),
                             value: isSelected,
                             onChanged: (val) {
                               setStateDialog(() {
@@ -88,27 +116,39 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: AppColors.subtitle, fontWeight: FontWeight.w600)),
+                  child: Text('Cancel',
+                      style: TextStyle(
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
+                          fontWeight: FontWeight.w600)),
                 ),
                 ElevatedButton(
                   onPressed: () async {
                     final messenger = ScaffoldMessenger.of(context);
                     Navigator.pop(context);
-                    await ref.read(adminDashboardProvider.notifier).assignGalleriesToClient(
+                    await ref
+                        .read(adminDashboardProvider.notifier)
+                        .assignGalleriesToClient(
                           client.id,
                           selectedIds,
                         );
                     if (mounted) {
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('Galleries updated successfully')),
+                        const SnackBar(
+                            content: Text('Galleries updated successfully')),
                       );
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text('Save',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             );
@@ -117,7 +157,6 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -133,35 +172,49 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
         );
 
     return Scaffold(
-      
       appBar: AppBar(
-        
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.text, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textOnDark
+                  : AppColors.text),
+              size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Client Details',
-          style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 0.2),
+          style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textOnDark
+                  : AppColors.text),
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2),
         ),
         centerTitle: true,
         actions: [
           if (connection != null)
             IconButton(
-              icon: const Icon(Icons.person_remove_rounded, color: AppColors.error),
+              icon: Icon(Icons.person_remove_rounded, color: AppColors.error),
               tooltip: 'Remove Client',
               onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Remove Client?'),
-                    content: const Text('Are you sure you want to remove this connected client? They will lose access to any private albums you shared with them.'),
+                    title: Text('Remove Client?'),
+                    content: Text(
+                        'Are you sure you want to remove this connected client? They will lose access to any private albums you shared with them.'),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text('Cancel')),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Remove', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+                        child: Text('Remove',
+                            style: TextStyle(
+                                color: AppColors.error,
+                                fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -169,17 +222,22 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
 
                 if (confirm == true && context.mounted) {
                   try {
-                    await ref.read(connectionsProvider.notifier).disconnect(connection.id);
+                    await ref
+                        .read(connectionsProvider.notifier)
+                        .disconnect(connection.id);
                     if (context.mounted) {
                       Navigator.pop(context); // Go back to Clients list
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Client removed successfully.')),
+                        const SnackBar(
+                            content: Text('Client removed successfully.')),
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                        SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: AppColors.error),
                       );
                     }
                   }
@@ -189,8 +247,11 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
         ],
       ),
       body: dashboardAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (err, _) => Center(child: Text('Error loading details: $err', style: const TextStyle(color: AppColors.error))),
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (err, _) => Center(
+            child: Text('Error loading details: $err',
+                style: TextStyle(color: AppColors.error))),
         data: (snapshot) {
           // Primary lookup: from the dashboard snapshot's clients list.
           ClientData? client = snapshot.clients.cast<ClientData?>().firstWhere(
@@ -219,9 +280,8 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                 id: cd.id,
                 name: cd.name,
                 initials: cd.initials,
-                gradient: cd.gradient.isNotEmpty
-                    ? cd.gradient
-                    : _gradientFor(cd.id),
+                gradient:
+                    cd.gradient.isNotEmpty ? cd.gradient : _gradientFor(cd.id),
                 bookingStatus: 'Connected',
                 galleryStatus: cd.galleryStatus,
                 outstanding: cd.outstanding,
@@ -238,10 +298,14 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
           }
 
           if (client == null) {
-            return const Center(
+            return Center(
               child: Text(
                 'Client not found or was removed.',
-                style: TextStyle(color: AppColors.subtitle, fontSize: 15),
+                style: TextStyle(
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
+                    fontSize: 15),
               ),
             );
           }
@@ -250,23 +314,27 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
           final c = client;
 
           final allAlbums = ref.watch(albumProvider).allAlbums;
-          final assignedAlbums = allAlbums.where((album) => c.assignedGalleryIds.contains(album.id)).toList();
-
+          final assignedAlbums = allAlbums
+              .where((album) => c.assignedGalleryIds.contains(album.id))
+              .toList();
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header profile card
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkSurfaceRaised
+                        : AppColors.surfaceElevated),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: AppColors.border),
-                    boxShadow: AppShadows.soft(AppColors.primary, opacity: 0.05, blur: 20, y: 8),
+                    boxShadow: AppShadows.soft(AppColors.primary,
+                        opacity: 0.05, blur: 20, y: 8),
                   ),
                   child: Row(
                     children: [
@@ -284,30 +352,41 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           c.initials,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
                             fontSize: 22,
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               c.name,
-                              style: const TextStyle(
-                                color: AppColors.text,
+                              style: TextStyle(
+                                color: (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.textOnDark
+                                    : AppColors.text),
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
-                              c.email.isNotEmpty ? c.email : 'No email provided',
-                              style: const TextStyle(color: AppColors.subtitle, fontSize: 13, fontWeight: FontWeight.w500),
+                              c.email.isNotEmpty
+                                  ? c.email
+                                  : 'No email provided',
+                              style: TextStyle(
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.subtitleOnDark
+                                      : AppColors.subtitle),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -315,7 +394,7 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
 
                 // Stat boxes
                 Row(
@@ -328,7 +407,7 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                         gradient: const [Color(0xFF7C5CFF), Color(0xFFA855F7)],
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.md),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _StatCard(
                         icon: Icons.download_rounded,
@@ -339,14 +418,16 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
 
                 // Details list card
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkSurfaceRaised
+                        : AppColors.surfaceElevated),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.border),
                   ),
@@ -356,9 +437,9 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                         icon: Icons.payments_rounded,
                         label: 'Outstanding Payment',
                         value: c.outstanding,
-                        valueColor: c.isPaid ? AppColors.success : AppColors.error,
+                        valueColor:
+                            c.isPaid ? AppColors.success : AppColors.error,
                       ),
-
                       const Divider(color: AppColors.border, height: 24),
                       _DetailRow(
                         icon: Icons.access_time_filled_rounded,
@@ -371,7 +452,7 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                   ),
                 ),
 
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
                 // Client Selections action
                 GestureDetector(
                   onTap: () {
@@ -380,9 +461,21 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                       MaterialPageRoute(
                         builder: (_) => Scaffold(
                           appBar: AppBar(
-                            title: Text('Liked by ${c.name}', style: const TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w800)),
+                            title: Text('Liked by ${c.name}',
+                                style: TextStyle(
+                                    color: (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.textOnDark
+                                        : AppColors.text),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800)),
                             leading: IconButton(
-                              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.text, size: 20),
+                              icon: Icon(Icons.arrow_back_ios_new_rounded,
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text),
+                                  size: 20),
                               onPressed: () => Navigator.pop(context),
                             ),
                           ),
@@ -398,31 +491,36 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                   },
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.md),
+                    padding: EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.accent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: AppColors.accent,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
+                          child: Icon(Icons.favorite_rounded,
+                              color: Colors.white, size: 20),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        const Expanded(
+                        SizedBox(width: AppSpacing.md),
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'View Client Selections',
                                 style: TextStyle(
-                                  color: AppColors.text,
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text),
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -431,28 +529,37 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                               Text(
                                 'See all photos and videos this client has liked',
                                 style: TextStyle(
-                                  color: AppColors.subtitle,
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.subtitleOnDark
+                                      : AppColors.subtitle),
                                   fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+                        Icon(Icons.chevron_right_rounded,
+                            color:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle)),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
 
                 // Shared Galleries Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Assigned Galleries',
                       style: TextStyle(
-                        color: AppColors.text,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text),
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.1,
@@ -460,8 +567,9 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                     ),
                     TextButton.icon(
                       onPressed: () => _showAssignGalleriesDialog(c),
-                      icon: const Icon(Icons.add_link_rounded, size: 18, color: AppColors.primary),
-                      label: const Text(
+                      icon: Icon(Icons.add_link_rounded,
+                          size: 18, color: AppColors.primary),
+                      label: Text(
                         'Assign',
                         style: TextStyle(
                           color: AppColors.primary,
@@ -472,25 +580,34 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: AppSpacing.xs),
 
                 if (assignedAlbums.isEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                    padding: EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceElevated.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border, style: BorderStyle.none),
+                      border: Border.all(
+                          color: AppColors.border, style: BorderStyle.none),
                     ),
                     alignment: Alignment.center,
                     child: Column(
                       children: [
-                        Icon(Icons.link_off_rounded, color: AppColors.subtitle.withValues(alpha: 0.5), size: 40),
-                        const SizedBox(height: 12),
-                        const Text(
+                        Icon(Icons.link_off_rounded,
+                            color: AppColors.subtitle.withValues(alpha: 0.5),
+                            size: 40),
+                        SizedBox(height: 12),
+                        Text(
                           'No galleries assigned yet.',
-                          style: TextStyle(color: AppColors.subtitle, fontSize: 13, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -503,14 +620,18 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                     itemBuilder: (context, index) {
                       final album = assignedAlbums[index];
                       return Container(
-                        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        margin: EdgeInsets.only(bottom: AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceElevated,
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.darkSurfaceRaised
+                                  : AppColors.surfaceElevated),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: AppColors.border),
                         ),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md, vertical: 4),
                           leading: Container(
                             width: 44,
                             height: 44,
@@ -518,21 +639,35 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                               color: AppColors.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.photo_library_rounded, color: AppColors.primary, size: 20),
+                            child: Icon(Icons.photo_library_rounded,
+                                color: AppColors.primary, size: 20),
                           ),
                           title: Text(
                             album.name,
-                            style: const TextStyle(
-                              color: AppColors.text,
+                            style: TextStyle(
+                              color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.textOnDark
+                                  : AppColors.text),
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           subtitle: Text(
                             '${album.photoCount} photos • ${album.videoCount} videos',
-                            style: const TextStyle(color: AppColors.subtitle, fontSize: 11.5),
+                            style: TextStyle(
+                                color: (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle),
+                                fontSize: 11.5),
                           ),
-                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle, size: 20),
+                          trailing: Icon(Icons.chevron_right_rounded,
+                              color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
+                              size: 20),
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -544,28 +679,35 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                       );
                     },
                   ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
 
                 // Client Activity timeline
-                const Text(
+                Text(
                   'Client Activity',
                   style: TextStyle(
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.1,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
 
                 if (c.activityLog.isEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    padding: EdgeInsets.symmetric(vertical: 24),
                     alignment: Alignment.center,
-                    child: const Text(
+                    child: Text(
                       'No recent activity recorded.',
-                      style: TextStyle(color: AppColors.subtitle, fontSize: 13),
+                      style: TextStyle(
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
+                          fontSize: 13),
                     ),
                   )
                 else
@@ -576,15 +718,15 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                     itemBuilder: (context, index) {
                       final log = c.activityLog[index];
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        padding: EdgeInsets.only(bottom: AppSpacing.md),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              margin: const EdgeInsets.only(top: 4, right: 12),
+                              margin: EdgeInsets.only(top: 4, right: 12),
                               width: 8,
                               height: 8,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.primary,
                                 shape: BoxShape.circle,
                               ),
@@ -592,8 +734,11 @@ class _ClientDetailsScreenState extends ConsumerState<ClientDetailsScreen> {
                             Expanded(
                               child: Text(
                                 log,
-                                style: const TextStyle(
-                                  color: AppColors.text,
+                                style: TextStyle(
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text),
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -629,9 +774,11 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: (Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurfaceRaised
+            : AppColors.surfaceElevated),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
@@ -639,7 +786,7 @@ class _StatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: gradient,
@@ -650,21 +797,25 @@ class _StatCard extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.white, size: 16),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.text,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textOnDark
+                  : AppColors.text),
               fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.subtitle,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.subtitleOnDark
+                  : AppColors.subtitle),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -692,17 +843,23 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.subtitle, size: 18),
-        const SizedBox(width: 12),
+        Icon(icon,
+            color: (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.subtitleOnDark
+                : AppColors.subtitle),
+            size: 18),
+        SizedBox(width: 12),
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.subtitle,
+          style: TextStyle(
+            color: (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.subtitleOnDark
+                : AppColors.subtitle),
             fontSize: 13.5,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Text(
             value,
@@ -710,7 +867,10 @@ class _DetailRow extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: valueColor ?? AppColors.text,
+              color: valueColor ??
+                  (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text),
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
             ),

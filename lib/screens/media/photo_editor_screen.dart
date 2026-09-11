@@ -134,16 +134,16 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Revert to original?'),
-        content: const Text('This will discard all edits permanently.'),
+        title: Text('Revert to original?'),
+        content: Text('This will discard all edits permanently.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton.tonal(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Revert'),
+            child: Text('Revert'),
           ),
         ],
       ),
@@ -155,7 +155,8 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
     try {
       if (_isNetworkMedia) {
         if (widget.media.canRevert) {
-          final reverted = await ref.read(mediaProvider).revertMediaEdits(widget.media);
+          final reverted =
+              await ref.read(mediaProvider).revertMediaEdits(widget.media);
 
           // The backend swapped in a (possibly differently-named) file —
           // drop the stale cache entry and re-download the real original.
@@ -249,11 +250,11 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
     final action = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('Save options'),
+        title: Text('Save options'),
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop('save'),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
@@ -266,7 +267,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop('copy'),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
@@ -280,7 +281,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.of(ctx).pop('overwrite'),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
@@ -606,14 +607,17 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.image_not_supported_rounded,
-                  size: 64, color: AppColors.subtitle),
-              const SizedBox(height: 16),
-              const Text('Original image could not be loaded.'),
-              const SizedBox(height: 16),
+              Icon(Icons.image_not_supported_rounded,
+                  size: 64,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
+              SizedBox(height: 16),
+              Text('Original image could not be loaded.'),
+              SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Go Back'),
+                child: Text('Go Back'),
               ),
             ],
           ),
@@ -626,7 +630,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
     return Scaffold(
       backgroundColor: AppColors.ink,
       appBar: AppBar(
-        title: const Text('Edit Photo',
+        title: Text('Edit Photo',
             style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -636,10 +640,10 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
+          padding: EdgeInsets.only(left: 12),
           child: Center(
             child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              icon: Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white, size: 18),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -648,13 +652,13 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
         actions: [
           IconButton(
             tooltip: 'Undo',
-            icon: const Icon(Icons.undo_rounded),
+            icon: Icon(Icons.undo_rounded),
             onPressed: _undoStack.isNotEmpty ? _undo : null,
             color: Colors.white,
           ),
           IconButton(
             tooltip: 'Redo',
-            icon: const Icon(Icons.redo_rounded),
+            icon: Icon(Icons.redo_rounded),
             onPressed: _redoStack.isNotEmpty ? _redo : null,
             color: Colors.white,
           ),
@@ -671,7 +675,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                   onLongPressStart: (_) => setState(() => _showOriginal = true),
                   onLongPressEnd: (_) => setState(() => _showOriginal = false),
                   child: Container(
-                    margin: const EdgeInsets.all(AppSpacing.md),
+                    margin: EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: Colors.black,
                       borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -694,7 +698,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                               top: AppSpacing.md,
                               left: AppSpacing.md,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
+                                padding: EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.75),
@@ -702,7 +706,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                                       BorderRadius.circular(AppRadius.pill),
                                   border: Border.all(color: Colors.white30),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Showing Original',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -716,14 +720,14 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                             bottom: AppSpacing.md,
                             right: AppSpacing.md,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Colors.black45,
                                 borderRadius:
                                     BorderRadius.circular(AppRadius.sm),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
                                   Icon(Icons.touch_app_rounded,
                                       size: 14, color: Colors.white70),
@@ -750,7 +754,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(
+                    borderRadius: BorderRadius.vertical(
                         top: Radius.circular(AppRadius.lg)),
                     boxShadow: AppShadows.soft(Colors.black, opacity: 0.1),
                   ),
@@ -778,7 +782,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
           if (_savingImage)
             Container(
               color: Colors.black54,
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -798,19 +802,19 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       bottomNavigationBar: SafeArea(
         child: Container(
           color: Colors.white,
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
           child: Row(
             children: [
               Expanded(
                 child: FilledButton.icon(
                   onPressed: _savingImage ? null : _saveWorkflow,
-                  icon: const Icon(Icons.save_alt_rounded),
-                  label: const Text('Save Edits',
+                  icon: Icon(Icons.save_alt_rounded),
+                  label: Text('Save Edits',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
@@ -899,7 +903,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
         width: containerSize.width,
         height: containerSize.height,
         clipBehavior: Clip.hardEdge,
-        decoration: const BoxDecoration(color: Colors.black),
+        decoration: BoxDecoration(color: Colors.black),
         child: Transform(
           transform: Matrix4.identity()
             ..translate(renderDx, renderDy)
@@ -938,14 +942,14 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       case 5:
         return _buildInfoPanel();
       default:
-        return const SizedBox.shrink();
+        return SizedBox.shrink();
     }
   }
 
   Widget _buildCropPanel() {
     Widget ratioBtn(String label, double? ratio, IconData icon) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.symmetric(horizontal: 4),
         child: ActionChip(
           avatar: Icon(icon, size: 16),
           label: Text(label),
@@ -993,7 +997,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 4),
           child: Text(
             'Crop Bounds',
@@ -1003,18 +1007,22 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
-        const Padding(
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Text(
               'Drag corner handles to crop, or select preset aspect ratios below.',
-              style: TextStyle(fontSize: 12, color: AppColors.subtitle)),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle))),
         ),
         const Spacer(),
         SizedBox(
           height: 60,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             children: [
               ratioBtn('Free / Reset', null, Icons.crop_free_rounded),
               ratioBtn('Square (1:1)', 1.0, Icons.crop_din_rounded),
@@ -1023,7 +1031,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
       ],
     );
   }
@@ -1033,7 +1041,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
           child: Text(
             'Rotate Image',
@@ -1054,25 +1062,23 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                 if (next < 0) next += 360;
                 _updateRecipe(_recipe.copyWith(rotation: next));
               },
-              icon: const Icon(Icons.rotate_left_rounded),
-              label: const Text('90° Left'),
+              icon: Icon(Icons.rotate_left_rounded),
+              label: Text('90° Left'),
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
-            const SizedBox(width: AppSpacing.lg),
+            SizedBox(width: AppSpacing.lg),
             OutlinedButton.icon(
               onPressed: () {
                 _pushToUndo();
                 int next = (_recipe.rotation + 90) % 360;
                 _updateRecipe(_recipe.copyWith(rotation: next));
               },
-              icon: const Icon(Icons.rotate_right_rounded),
-              label: const Text('90° Right'),
+              icon: Icon(Icons.rotate_right_rounded),
+              label: Text('90° Right'),
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
           ],
@@ -1087,7 +1093,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
           child: Text(
             'Flip / Mirror',
@@ -1107,20 +1113,20 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                 _pushToUndo();
                 _updateRecipe(_recipe.copyWith(flipHorizontal: val));
               },
-              label: const Text('Flip Horizontal'),
-              avatar: const Icon(Icons.flip_rounded, size: 18),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              label: Text('Flip Horizontal'),
+              avatar: Icon(Icons.flip_rounded, size: 18),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
-            const SizedBox(width: AppSpacing.lg),
+            SizedBox(width: AppSpacing.lg),
             FilterChip(
               selected: _recipe.flipVertical,
               onSelected: (val) {
                 _pushToUndo();
                 _updateRecipe(_recipe.copyWith(flipVertical: val));
               },
-              label: const Text('Flip Vertical'),
-              avatar: const Icon(Icons.unfold_more_rounded, size: 18),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              label: Text('Flip Vertical'),
+              avatar: Icon(Icons.unfold_more_rounded, size: 18),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
           ],
         ),
@@ -1139,17 +1145,19 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       double max = 1.0,
     }) {
       return Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 2),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 2),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: AppColors.subtitle),
-            const SizedBox(width: 12),
+            Icon(icon,
+                size: 18,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle)),
+            SizedBox(width: 12),
             SizedBox(
               width: 90,
               child: Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12)),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             ),
             Expanded(
               child: Slider(
@@ -1166,8 +1174,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
               child: Text(
                 '${(value * 100).round()}%',
                 textAlign: TextAlign.right,
-                style:
-                    const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -1179,7 +1186,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 2),
           child: Text(
             'Adjustments',
@@ -1261,7 +1268,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
           _recipe.filter == name || (name == 'none' && _recipe.filter == null);
 
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
         child: GestureDetector(
           onTap: () {
             _pushToUndo();
@@ -1291,13 +1298,17 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                   child: Image.file(_getSourceFile(), fit: BoxFit.cover),
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColors.primary : AppColors.text,
+                  color: isSelected
+                      ? AppColors.primary
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text),
                 ),
               ),
             ],
@@ -1310,7 +1321,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 2),
           child: Text(
             'Filters',
@@ -1323,14 +1334,17 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
         const Spacer(),
         if (_recipe.filter != null)
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg, vertical: 4),
+            padding:
+                EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 4),
             child: Row(
               children: [
-                const Icon(Icons.blur_linear_rounded,
-                    size: 18, color: AppColors.subtitle),
-                const SizedBox(width: 12),
-                const SizedBox(
+                Icon(Icons.blur_linear_rounded,
+                    size: 18,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
+                SizedBox(width: 12),
+                SizedBox(
                   width: 90,
                   child: Text('Filter Strength',
                       style:
@@ -1353,8 +1367,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                   child: Text(
                     '${(_recipe.filterIntensity * 100).round()}%',
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -1364,7 +1377,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
           height: 105,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             itemCount: filtersList.length,
             itemBuilder: (context, i) {
               return filterBtn(
@@ -1383,7 +1396,7 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
         : File('${widget.media.filePath}.original').existsSync();
 
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1394,13 +1407,15 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
                 .titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Original Resolution: ${_sourceUiImage!.width} × ${_sourceUiImage!.height}',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.subtitle),
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle)),
           ),
           const Spacer(),
           if (hasBackup || _recipe.hasEdits)
@@ -1408,22 +1423,24 @@ class _PhotoEditorScreenState extends ConsumerState<PhotoEditorScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: _savingImage ? null : _revertToOriginal,
-                icon: const Icon(Icons.restore_rounded),
-                label: const Text('Revert to Original Photo'),
+                icon: Icon(Icons.restore_rounded),
+                label: Text('Revert to Original Photo'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.error,
                   side: const BorderSide(color: AppColors.error),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             )
           else
-            const Center(
+            Center(
               child: Text(
                 'No edits have been applied to revert.',
                 style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                     fontStyle: FontStyle.italic),
               ),
             ),
@@ -1458,7 +1475,7 @@ class _CropOverlayState extends State<_CropOverlay> {
   Widget build(BuildContext context) {
     final W = widget.size.width;
     final H = widget.size.height;
-    if (W <= 0 || H <= 0) return const SizedBox.shrink();
+    if (W <= 0 || H <= 0) return SizedBox.shrink();
 
     final rect = Rect.fromLTRB(
       widget.normalizedRect.left * W,
@@ -1536,7 +1553,7 @@ class _CropOverlayState extends State<_CropOverlay> {
               setState(() => _isDragging = false);
               widget.onDragEnd();
             },
-            child: const SizedBox.expand(),
+            child: SizedBox.expand(),
           ),
         ),
         buildCorner(
@@ -1679,7 +1696,11 @@ class _EditorBottomToolbar extends StatelessWidget {
           onPressed: () => onPanelSelected(index),
           icon: Icon(icon),
           tooltip: text,
-          color: isActive ? AppColors.primary : AppColors.subtitle,
+          color: isActive
+              ? AppColors.primary
+              : (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.subtitleOnDark
+                  : AppColors.subtitle),
           iconSize: 22,
           style: IconButton.styleFrom(
             backgroundColor:
@@ -1690,7 +1711,7 @@ class _EditorBottomToolbar extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: Colors.white,

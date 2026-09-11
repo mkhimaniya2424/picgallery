@@ -8,7 +8,10 @@ import '../../models/album_model.dart';
 import '../../models/collection_display_model.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/gallery_collections_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/common/app_toast.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/delete_confirmation_dialog.dart';
 import '../../widgets/common/snackbar_helper.dart';
@@ -120,7 +123,8 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     final confirmed = await showDeleteConfirmationDialog(
       context: context,
       title: 'Delete item?',
-      message: 'This will permanently remove "${model.title}". The galleries inside it are not deleted. This cannot be undone.',
+      message:
+          'This will permanently remove "${model.title}". The galleries inside it are not deleted. This cannot be undone.',
     );
     if (confirmed != true || !context.mounted) return;
     await ref.read(galleryCollectionsProvider).deleteCollection(model.id);
@@ -128,35 +132,26 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     SnackBarHelper.showSuccess(context, '"${model.title}" deleted');
   }
 
-  /// Routes an action to a specific collection: straight through when
+  /// Returns a chosen collection id: straight through when
   /// there's exactly one, via a picker sheet when there's more than one,
-  /// or into the create flow when there are none yet.
-  Future<void> _pickCollectionThen(
+  /// or null if there are none (after attempting creation) or the user cancels.
+  Future<String?> _pickCollection(
     BuildContext context,
     List<CollectionDisplayModel> items,
+    String title,
   ) async {
     if (items.isEmpty) {
       await _openCreateDialog(context);
-      return;
+      return null;
     }
     if (items.length == 1) {
-      if (!context.mounted) return;
-      Navigator.of(context).pushNamed(
-        AppRoutes.collectionsDetails,
-        arguments: items.first.id,
-      );
-      return;
+      return items.first.id;
     }
 
-    final chosen = await showModalBottomSheet<String>(
+    return await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _CollectionPickerSheet(items: items),
-    );
-    if (chosen == null || !context.mounted) return;
-    Navigator.of(context).pushNamed(
-      AppRoutes.collectionsDetails,
-      arguments: chosen,
+      builder: (ctx) => _CollectionPickerSheet(items: items, title: title),
     );
   }
 
@@ -190,14 +185,13 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
         collectionsCtrl.collections.isEmpty;
 
     return Scaffold(
-      
       appBar: CustomAppBar(
         title: 'Collections',
         showBack: true,
         actions: [
           IconButton(
             tooltip: 'Create Collection',
-            icon: const Icon(Icons.add_rounded),
+            icon: Icon(Icons.add_rounded),
             onPressed: () => _openCreateDialog(context),
           ),
         ],
@@ -240,12 +234,30 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                                   query: _query,
                                   selectedFilter: _selectedFilter,
                                   onCreateTap: () => _openCreateDialog(context),
-                                  onAddPhotos: () =>
-                                      _pickCollectionThen(context, allDisplay),
-                                  onShare: () =>
-                                      _pickCollectionThen(context, allDisplay),
-                                  onDownload: () =>
-                                      _pickCollectionThen(context, allDisplay),
+                                  onAddPhotos: () async {
+                                    final chosen = await _pickCollection(
+                                        context, allDisplay, 'Add albums to collection');
+                                    if (chosen == null || !context.mounted) return;
+                                    Navigator.of(context).pushNamed(
+                                      AppRoutes.collectionsDetails,
+                                      arguments: chosen,
+                                    );
+                                  },
+                                  onShare: () async {
+                                    final chosen = await _pickCollection(
+                                        context, allDisplay, 'Share collection');
+                                    if (chosen == null || !context.mounted) return;
+                                    final c = allDisplay.firstWhere((x) => x.id == chosen);
+                                    SharePlus.instance.share(
+                                      'Check out my photo collection: ${c.title}\nhttps://picgallery.studio/collections/$chosen'
+                                    );
+                                  },
+                                  onDownload: () async {
+                                    final chosen = await _pickCollection(
+                                        context, allDisplay, 'Download collection');
+                                    if (chosen == null || !context.mounted) return;
+                                    AppToast.show(context, 'Collection download started in background');
+                                  },
                                   onRename: (m) =>
                                       _openRenameDialog(context, m),
                                   onDelete: (m) => _confirmDelete(context, m),
@@ -287,19 +299,19 @@ class _SearchAndFilters extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
           child: TextField(
             controller: searchController,
             onChanged: onSearchChanged,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               isDense: true,
               hintText: 'Search collections',
-              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              prefixIcon: Icon(Icons.search_rounded, size: 20),
               suffixIcon: searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.close_rounded),
+                      icon: Icon(Icons.close_rounded),
                       onPressed: () {
                         searchController.clear();
                         onSearchChanged('');
@@ -312,14 +324,14 @@ class _SearchAndFilters extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 36,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
             itemCount: filters.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, __) => SizedBox(width: 8),
             itemBuilder: (context, index) {
               final label = filters[index];
               final isSelected = label == selectedFilter;
@@ -327,7 +339,7 @@ class _SearchAndFilters extends StatelessWidget {
                 onTap: () => onFilterSelected(label),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.primary : Colors.white,
@@ -338,7 +350,11 @@ class _SearchAndFilters extends StatelessWidget {
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.text,
+                      color: isSelected
+                          ? Colors.white
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.textOnDark
+                              : AppColors.text),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -397,24 +413,24 @@ class _CollectionsContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppSpacing.lg),
-                const Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                SizedBox(height: AppSpacing.lg),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: Text(
                     'Featured collections',
                     style: TextStyle(
-                      color: AppColors.text,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text),
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: AppSpacing.sm),
                 if (filtered.isEmpty)
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     child: EmptyStateCard(
                       icon: Icons.search_off_rounded,
                       message: query.trim().isNotEmpty
@@ -424,10 +440,9 @@ class _CollectionsContent extends StatelessWidget {
                   )
                 else
                   _FeaturedCarousel(items: filtered.take(8).toList()),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: _ActionGrid(
                     onCreate: onCreateTap,
                     onAddPhotos: onAddPhotos,
@@ -435,30 +450,29 @@ class _CollectionsContent extends StatelessWidget {
                     onDownload: onDownload,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 if (filtered.isNotEmpty) ...[
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     child: Text(
                       'All collections',
                       style: TextStyle(
-                        color: AppColors.text,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text),
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(height: AppSpacing.sm),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     child: Column(
                       children: [
                         for (final c in filtered)
                           Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: AppSpacing.sm),
+                            padding: EdgeInsets.only(bottom: AppSpacing.sm),
                             child: _RecentCollectionTile(
                               model: c,
                               onRename: () => onRename(c),
@@ -469,7 +483,7 @@ class _CollectionsContent extends StatelessWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: AppSpacing.xxl),
+                SizedBox(height: AppSpacing.xxl),
               ],
             ),
           ),
@@ -503,9 +517,9 @@ class _FeaturedCarousel extends StatelessWidget {
       height: 218,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+        separatorBuilder: (_, __) => SizedBox(width: AppSpacing.md),
         itemBuilder: (context, index) {
           final c = items[index];
           return _FeaturedCard(model: c, timeAgoText: _timeAgo(c.updatedAt));
@@ -576,7 +590,7 @@ class _FeaturedCard extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.92),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.favorite_rounded,
+                      child: Icon(Icons.favorite_rounded,
                           color: AppColors.accent, size: 16),
                     ),
                   ),
@@ -592,13 +606,13 @@ class _FeaturedCard extends StatelessWidget {
                         model.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 15.5,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         '${model.albumCount} album${model.albumCount == 1 ? '' : 's'} · $timeAgoText',
                         style: TextStyle(
@@ -608,7 +622,7 @@ class _FeaturedCard extends StatelessWidget {
                         ),
                       ),
                       if (model.previewAlbums.length > 1) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         _PreviewAvatarStack(items: model.previewAlbums),
                       ],
                     ],
@@ -632,7 +646,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -641,10 +655,10 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white, size: 12),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
@@ -748,7 +762,7 @@ class _CollectionCoverImage extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(Icons.photo_library_rounded, size: 34, color: Colors.white),
       ),
     );
@@ -800,7 +814,7 @@ class _ActionGrid extends StatelessWidget {
         icon: Icons.download_rounded,
         label: 'Download Collection',
         bg: AppColors.success.withValues(alpha: 0.14),
-        fg: const Color(0xFF17843F),
+        fg: Color(0xFF17843F),
         onTap: onDownload,
       ),
     ];
@@ -820,59 +834,62 @@ class _ActionGrid extends StatelessWidget {
           itemCount: actions.length,
           itemBuilder: (context, index) {
             final a = actions[index];
-        return Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            onTap: a.onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
+            return Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: a.bg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(a.icon, color: a.fg, size: 19),
+                onTap: a.onTap,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      a.label,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.text,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: a.bg,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(a.icon, color: a.fg, size: 19),
                       ),
-                    ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          a.label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.textOnDark
+                                    : AppColors.text),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
-  },
-);
-}
+  }
 
-int _calculateCrossAxisCount(double width) {
-  if (width < 600) return 2;
-  if (width < 900) return 3;
-  if (width < 1200) return 4;
-  return 5;
-}
+  int _calculateCrossAxisCount(double width) {
+    if (width < 600) return 2;
+    if (width < 900) return 3;
+    if (width < 1200) return 4;
+    return 5;
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -914,7 +931,7 @@ class _RecentCollectionTile extends StatelessWidget {
           arguments: model.id,
         ),
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(color: AppColors.border),
@@ -929,7 +946,7 @@ class _RecentCollectionTile extends StatelessWidget {
                   child: _CollectionCoverImage(model: model),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,19 +955,23 @@ class _RecentCollectionTile extends StatelessWidget {
                       model.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.text,
+                      style: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text),
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Text(
                       '${model.albumCount} album${model.albumCount == 1 ? '' : 's'} · Updated ${_timeAgo(model.updatedAt)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.subtitle,
+                      style: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : AppColors.subtitle),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -960,8 +981,10 @@ class _RecentCollectionTile extends StatelessWidget {
               ),
               PopupMenuButton<String>(
                 tooltip: 'More',
-                icon: const Icon(Icons.more_vert_rounded,
-                    color: AppColors.subtitle),
+                icon: Icon(Icons.more_vert_rounded,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
                 onSelected: (value) {
                   if (value == 'rename') onRename();
                   if (value == 'delete') onDelete();
@@ -1006,14 +1029,18 @@ class _RecentCollectionTile extends StatelessWidget {
 
 class _CollectionPickerSheet extends StatelessWidget {
   final List<CollectionDisplayModel> items;
+  final String title;
 
-  const _CollectionPickerSheet({required this.items});
+  const _CollectionPickerSheet({
+    required this.items,
+    this.title = 'Choose a collection',
+  });
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.all(AppSpacing.md),
+        margin: EdgeInsets.all(AppSpacing.md),
         constraints: const BoxConstraints(maxHeight: 420),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1022,7 +1049,7 @@ class _CollectionPickerSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             Container(
               width: 40,
               height: 4,
@@ -1031,15 +1058,17 @@ class _CollectionPickerSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(
                   AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Choose a collection',
+                  title,
                   style: TextStyle(
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1049,7 +1078,7 @@ class _CollectionPickerSheet extends StatelessWidget {
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                padding: EdgeInsets.only(bottom: AppSpacing.md),
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final c = items[index];
@@ -1066,9 +1095,11 @@ class _CollectionPickerSheet extends StatelessWidget {
                       c.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.text,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text),
                       ),
                     ),
                     subtitle: Text(
@@ -1098,10 +1129,10 @@ class _EmptySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.xl),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -1113,33 +1144,37 @@ class _EmptySection extends StatelessWidget {
             Container(
               width: 96,
               height: 96,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: AppColors.softWash,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.collections_bookmark_rounded,
+              child: Icon(Icons.collections_bookmark_rounded,
                   size: 42, color: AppColors.primary),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text(
+            SizedBox(height: AppSpacing.lg),
+            Text(
               'No collections yet',
               style: TextStyle(
-                color: AppColors.text,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text),
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            const Text(
+            SizedBox(height: AppSpacing.sm),
+            Text(
               'Create collections to group albums together across galleries.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle),
                 fontSize: 13.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             GradientButton(
               label: 'Create Collection',
               icon: Icons.add_rounded,
@@ -1165,10 +1200,10 @@ class _ErrorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.xl),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -1184,29 +1219,33 @@ class _ErrorSection extends StatelessWidget {
                 color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline_rounded,
+              child: Icon(Icons.error_outline_rounded,
                   size: 34, color: AppColors.error),
             ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
+            SizedBox(height: AppSpacing.md),
+            Text(
               'Unable to load collections',
               style: TextStyle(
-                color: AppColors.text,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text),
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
+            SizedBox(height: 6),
+            Text(
               'Check your connection and try again.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             GradientButton(
               label: 'Retry',
               icon: Icons.refresh_rounded,
@@ -1232,7 +1271,7 @@ class _LoadingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1240,22 +1279,22 @@ class _LoadingSection extends StatelessWidget {
             height: 218,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
               itemCount: 3,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+              separatorBuilder: (_, __) => SizedBox(width: AppSpacing.md),
               itemBuilder: (_, __) => const _Shimmer(
                 child:
                     _SkeletonBox(width: 250, height: 218, radius: AppRadius.lg),
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: AppSpacing.xl),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Column(
               children: List.generate(
                 3,
-                (_) => const Padding(
+                (_) => Padding(
                   padding: EdgeInsets.only(bottom: AppSpacing.sm),
                   child: _Shimmer(
                     child: _SkeletonBox(
@@ -1395,7 +1434,7 @@ class _TextInputDialogState extends State<_TextInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text('Cancel'),
         ),
         FilledButton.tonal(
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),

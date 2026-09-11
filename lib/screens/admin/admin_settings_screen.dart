@@ -41,7 +41,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   Future<void> _handlePrivateProfileChanged(bool value) async {
     setState(() => _savingPrivateProfile = true);
     try {
-      final updated = await ref.read(userRepositoryProvider).updateProfile(privateProfile: value);
+      final updated = await ref
+          .read(userRepositoryProvider)
+          .updateProfile(privateProfile: value);
       ref.read(authProvider.notifier).setUser(updated);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -90,8 +92,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal)),
                 if (isSelected)
-                  const Icon(Icons.check_rounded,
-                      color: AppColors.primary, size: 18),
+                  Icon(Icons.check_rounded, color: AppColors.primary, size: 18),
               ],
             ),
           );
@@ -131,8 +132,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal)),
                 if (isSelected)
-                  const Icon(Icons.check_rounded,
-                      color: AppColors.primary, size: 18),
+                  Icon(Icons.check_rounded, color: AppColors.primary, size: 18),
               ],
             ),
           );
@@ -144,7 +144,8 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   void _setupSecurityPin(SettingsModel settings) {
     showDialog(
       context: context,
-      builder: (context) => _SetupSecurityPinDialog(settings: settings, ref: ref),
+      builder: (context) =>
+          _SetupSecurityPinDialog(settings: settings, ref: ref),
     );
   }
 
@@ -168,14 +169,16 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
             style: TextStyle(
                 color: isDark ? AppColors.textOnDark : AppColors.text,
                 fontWeight: FontWeight.bold)),
-        content: const Text(
+        content: Text(
             'Do you want to restore the latest backup archive? This will overwrite current temporary configurations.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
                 style: TextStyle(
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                    color: isDark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -187,7 +190,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Restore',
+            child: Text('Restore',
                 style: TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold)),
           ),
@@ -205,7 +208,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
       applicationLegalese: '© 2026 PicGallery Studio. All Rights Reserved.',
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 12),
+          padding: EdgeInsets.only(top: 12),
           child: Text(
               'Designed as a state-of-the-art photography sharing and proofing ecosystem for pro photographers and studios.',
               style: TextStyle(
@@ -227,11 +230,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     ].where((s) => s.isNotEmpty).join(' • ');
 
     return Scaffold(
-      
       appBar: const CustomAppBar(title: 'Studio Settings', showBack: true),
       body: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         children: [
           // 1. GENERAL ACCOUNT
           _buildSectionHeader('General Info'),
@@ -243,7 +245,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               onTap: () => _editGeneralInfo(settings),
             ),
           ]),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
 
           // 2. PREFERENCES
           _buildSectionHeader('Preferences'),
@@ -271,8 +273,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               onTap: () => _showQualitySelector(settings),
             ),
           ]),
-          const SizedBox(height: AppSpacing.md),
-
+          SizedBox(height: AppSpacing.md),
 
           // 4. PRIVACY & SECURITY
           _buildSectionHeader('Security & Privacy'),
@@ -314,10 +315,11 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               icon: Icons.verified_user_outlined,
               title: 'App Permissions',
               subtitle: 'Camera, photo library & notifications',
-              onTap: () => Navigator.of(context).pushNamed(AppRoutes.permissions),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.permissions),
             ),
           ]),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
 
           // 5. SYSTEM BACKUP & DETAILS
           _buildSectionHeader('System Utilities'),
@@ -360,7 +362,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               onTap: _showAboutDialog,
             ),
           ]),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // LOGOUT & DANGER ZONE
           _buildSettingsCard([
@@ -386,7 +388,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
               },
             ),
           ]),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: AppSpacing.xl),
         ],
       ),
     );
@@ -394,10 +396,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 6, bottom: 8),
+      padding: EdgeInsets.only(left: 6, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.primary,
           fontSize: 12.5,
           fontWeight: FontWeight.bold,
@@ -412,9 +414,11 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
       final isDark = Theme.of(context).brightness == Brightness.dark;
       return Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+          color:
+              isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+          border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.border),
         ),
         child: Column(children: children),
       );
@@ -448,12 +452,11 @@ class _SettingsRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
         child: Row(
           children: [
             Icon(icon, size: 20, color: iconColor ?? AppColors.primary),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,11 +470,13 @@ class _SettingsRow extends StatelessWidget {
                             (isDark ? AppColors.textOnDark : AppColors.text)),
                   ),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(subtitle!,
                         style: TextStyle(
                             fontSize: 11.5,
-                            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : AppColors.subtitle,
                             fontWeight: FontWeight.w500)),
                   ],
                 ],
@@ -479,7 +484,8 @@ class _SettingsRow extends StatelessWidget {
             ),
             if (showChevron)
               Icon(Icons.chevron_right_rounded,
-                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, size: 20),
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                  size: 20),
           ],
         ),
       ),
@@ -509,12 +515,11 @@ class _SettingsToggleRow extends StatelessWidget {
       onTap: disabled ? null : () => onChanged(!value),
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
         child: Row(
           children: [
             Icon(icon, size: 20, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 title,
@@ -544,7 +549,8 @@ class _SetupSecurityPinDialog extends StatefulWidget {
   const _SetupSecurityPinDialog({required this.settings, required this.ref});
 
   @override
-  State<_SetupSecurityPinDialog> createState() => _SetupSecurityPinDialogState();
+  State<_SetupSecurityPinDialog> createState() =>
+      _SetupSecurityPinDialogState();
 }
 
 class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
@@ -594,7 +600,7 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
             ],
             TextFormField(
               controller: _pinCtrl,
@@ -616,11 +622,13 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
               // updated fine), so drive it explicitly off the controller
               // instead of relying on the framework's own listener.
               onChanged: (_) => setState(() {}),
-              buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+              buildCounter: (context,
+                  {required currentLength, required isFocused, maxLength}) {
                 return Text(
                   '${_pinCtrl.text.length}/$maxLength',
                   style: TextStyle(
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                    color:
+                        isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                     fontSize: 12,
                   ),
                 );
@@ -659,14 +667,16 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                 const SnackBar(content: Text('App Lock PIN disabled')),
               );
             },
-            child: const Text('Disable',
-                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+            child: Text('Disable',
+                style: TextStyle(
+                    color: AppColors.error, fontWeight: FontWeight.w700)),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text('Cancel',
               style: TextStyle(
-                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                  color:
+                      isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -689,16 +699,14 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                   .read(settingsProvider.notifier)
                   .updateSettings(updated);
               messenger.showSnackBar(
-                const SnackBar(
-                    content: Text('App Lock PIN set successfully')),
+                const SnackBar(content: Text('App Lock PIN set successfully')),
               );
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-          child: Text(
-              widget.settings.securityPinEnabled ? 'Update' : 'Enable',
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
+          child: Text(widget.settings.securityPinEnabled ? 'Update' : 'Enable',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ],
     );
@@ -720,7 +728,8 @@ class _BackupProgressDialog extends ConsumerStatefulWidget {
   const _BackupProgressDialog();
 
   @override
-  ConsumerState<_BackupProgressDialog> createState() => _BackupProgressDialogState();
+  ConsumerState<_BackupProgressDialog> createState() =>
+      _BackupProgressDialogState();
 }
 
 class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
@@ -741,7 +750,9 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
 
     final settings = ref.read(settingsProvider);
     try {
-      await ref.read(studioProfileRepositoryProvider).createBackup(settings.toJson());
+      await ref
+          .read(studioProfileRepositoryProvider)
+          .createBackup(settings.toJson());
       if (!mounted) return;
       ref.invalidate(latestBackupProvider);
       setState(() => _status = _BackupStatus.success);
@@ -782,13 +793,13 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
                 fontSize: 13.5),
           ),
           if (!isError) ...[
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             LinearProgressIndicator(
               value: isDone ? 1.0 : null,
               color: AppColors.primary,
               backgroundColor: isDark ? AppColors.darkBorder : AppColors.border,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               isDone ? '100% Completed' : 'Uploading…',
               style: TextStyle(
@@ -805,23 +816,27 @@ class _BackupProgressDialogState extends ConsumerState<_BackupProgressDialog> {
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
                 style: TextStyle(
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                    color: isDark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: _runBackup,
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
+            child: Text(
               'Retry',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ] else if (isDone)
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
+            child: Text(
               'Finish',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
       ],
@@ -840,10 +855,12 @@ class _RestoreProgressDialog extends ConsumerStatefulWidget {
   const _RestoreProgressDialog();
 
   @override
-  ConsumerState<_RestoreProgressDialog> createState() => _RestoreProgressDialogState();
+  ConsumerState<_RestoreProgressDialog> createState() =>
+      _RestoreProgressDialogState();
 }
 
-class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> {
+class _RestoreProgressDialogState
+    extends ConsumerState<_RestoreProgressDialog> {
   _RestoreStatus _status = _RestoreStatus.inProgress;
   String? _errorMessage;
 
@@ -860,9 +877,12 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
     });
 
     try {
-      final backup = await ref.read(studioProfileRepositoryProvider).getLatestBackup();
+      final backup =
+          await ref.read(studioProfileRepositoryProvider).getLatestBackup();
       final restoredSettings = SettingsModel.fromJson(backup.payload);
-      await ref.read(settingsProvider.notifier).updateSettings(restoredSettings);
+      await ref
+          .read(settingsProvider.notifier)
+          .updateSettings(restoredSettings);
       if (!mounted) return;
       setState(() => _status = _RestoreStatus.success);
     } on NotFoundException {
@@ -904,7 +924,8 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
             isNotFound
                 ? 'This studio has never made a backup, so there is nothing to restore yet.'
                 : isError
-                    ? (_errorMessage ?? 'Something went wrong. Please try again.')
+                    ? (_errorMessage ??
+                        'Something went wrong. Please try again.')
                     : isDone
                         ? 'Your studio settings have been restored from the latest backup.'
                         : 'Fetching your latest backup and restoring settings...',
@@ -913,13 +934,13 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
                 fontSize: 13.5),
           ),
           if (!isFailure) ...[
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             LinearProgressIndicator(
               value: isDone ? 1.0 : null,
               color: AppColors.primary,
               backgroundColor: isDark ? AppColors.darkBorder : AppColors.border,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               isDone ? '100% Completed' : 'Restoring…',
               style: TextStyle(
@@ -936,7 +957,9 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
                 style: TextStyle(
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                    color: isDark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -944,9 +967,10 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
               _triggerBackupFromDialogContext();
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
+            child: Text(
               'Back Up Now',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ] else if (isError) ...[
@@ -954,23 +978,27 @@ class _RestoreProgressDialogState extends ConsumerState<_RestoreProgressDialog> 
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
                 style: TextStyle(
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                    color: isDark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
           ),
           ElevatedButton(
             onPressed: _runRestore,
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
+            child: Text(
               'Retry',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ] else if (isDone)
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
+            child: Text(
               'Finish',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
       ],

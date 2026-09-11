@@ -74,23 +74,23 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 children: [
                   _buildPreviewSection(hasImage),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                   _buildActionsSection(hasImage),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: hasImage ? _continue : null,
-                  icon: const Icon(Icons.north_east_rounded),
-                  label: const Text('Continue'),
+                  icon: Icon(Icons.north_east_rounded),
+                  label: Text('Continue'),
                 ),
               ),
             ),
@@ -109,7 +109,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -127,23 +127,25 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
                   color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.check_rounded,
+                child: Icon(Icons.check_rounded,
                     size: 18, color: AppColors.primary),
               ),
-              const SizedBox(width: 10),
-              const Expanded(
+              SizedBox(width: 10),
+              Expanded(
                 child: Text(
                   'Selfie selected',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 15,
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.lg),
             child: AspectRatio(
@@ -166,25 +168,27 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
         children: [
           FilledButton.icon(
             onPressed: _pickFromGallery,
-            icon: const Icon(Icons.file_upload_outlined),
-            label: const Text('Upload from Gallery'),
+            icon: Icon(Icons.file_upload_outlined),
+            label: Text('Upload from Gallery'),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
             onPressed: _captureFromCamera,
-            icon: const Icon(Icons.camera_alt_rounded),
-            label: const Text('Capture from Camera'),
+            icon: Icon(Icons.camera_alt_rounded),
+            label: Text('Capture from Camera'),
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.border),
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const Text(
+          SizedBox(height: AppSpacing.lg),
+          Text(
             'Tip: Use a clear selfie with good lighting for best results.',
             style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: AppColors.subtitle),
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle)),
           ),
         ],
       );
@@ -195,17 +199,17 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
       children: [
         OutlinedButton.icon(
           onPressed: _replaceImage,
-          icon: const Icon(Icons.swap_horiz_rounded),
-          label: const Text('Replace image'),
+          icon: Icon(Icons.swap_horiz_rounded),
+          label: Text('Replace image'),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: AppColors.border),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         OutlinedButton.icon(
           onPressed: _removeImage,
-          icon: const Icon(Icons.delete_outline_rounded),
-          label: const Text('Remove'),
+          icon: Icon(Icons.delete_outline_rounded),
+          label: Text('Remove'),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: AppColors.border),
           ),

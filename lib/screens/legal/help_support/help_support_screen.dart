@@ -30,7 +30,6 @@ class HelpSupportScreen extends ConsumerWidget {
     final contentAsync = ref.watch(helpSupportProvider);
 
     return Scaffold(
-      
       appBar: const CustomAppBar(
         title: 'Help & Support',
       ),
@@ -59,7 +58,8 @@ class HelpSupportScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: InlineErrorBanner(
-                message: 'Couldn\'t load help & support. ${_friendlyError(error)}',
+                message:
+                    'Couldn\'t load help & support. ${_friendlyError(error)}',
                 action: TextButton(
                   onPressed: () => ref.invalidate(helpSupportProvider),
                   child: const Text('Retry'),
@@ -128,10 +128,11 @@ class _ContactBlock extends StatelessWidget {
         try {
           launched = await launchUrl(uri);
         } catch (_) {}
-        
+
         if (!launched && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No email app is available on this device.')),
+            const SnackBar(
+                content: Text('No email app is available on this device.')),
           );
         }
         break;
@@ -141,10 +142,11 @@ class _ContactBlock extends StatelessWidget {
         try {
           launched = await launchUrl(uri);
         } catch (_) {}
-        
+
         if (!launched && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No phone app is available on this device.')),
+            const SnackBar(
+                content: Text('No phone app is available on this device.')),
           );
         }
         break;
@@ -211,7 +213,9 @@ class GlassInfoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white.withValues(alpha: 0.88),
+        color: isDark
+            ? AppColors.darkSurface
+            : Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: isDark

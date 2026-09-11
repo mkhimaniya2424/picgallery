@@ -55,29 +55,29 @@ class HomeScreen extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+        padding: EdgeInsets.only(bottom: AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── 1. Welcome Header ──────────────────────────────────
             _buildHeroHeader(context, userName),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
 
             // ── 2. Quick Actions ───────────────────────────────────
             const QuickActionRow(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 3. Connected Studios ──────────────────────────────
             const ConnectedStudiosSection(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 4. Continue Viewing (Recent Galleries) ────────────
             const ContinueViewingSection(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 5. Recently Viewed ────────────────────────────────
             const RecentlyViewedSection(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 6. Trending Galleries ─────────────────────────────
             // "Recommended" (Task 21.19) was dropped here — its
@@ -87,11 +87,11 @@ class HomeScreen extends ConsumerWidget {
             // size-based sort stayed since it's the only distinct axis
             // among the three.
             const TrendingGalleriesSection(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 7. Saved Galleries (Favorites) ────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -111,15 +111,15 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 8. Recent Activity ──────────────────────────────
             const RecentActivitySection(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
 
             // ── 9. Upcoming Shared Galleries ────────────────────
             const SharedGalleriesSection(),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
@@ -138,7 +138,7 @@ class HomeScreen extends ConsumerWidget {
         AppSpacing.md,
         AppSpacing.lg,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: AppColors.heroGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(AppRadius.lg),
@@ -153,10 +153,12 @@ class HomeScreen extends ConsumerWidget {
               _HeroIconButton(
                 icon: Icons.menu_rounded,
                 onTap: () {
-                  context.findAncestorStateOfType<MainNavScreenState>()?.openDrawer();
+                  context
+                      .findAncestorStateOfType<MainNavScreenState>()
+                      ?.openDrawer();
                 },
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,12 +171,12 @@ class HomeScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       userName != null ? 'Welcome, $userName' : 'Welcome back',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 19,
                         fontWeight: FontWeight.w800,
@@ -193,7 +195,7 @@ class HomeScreen extends ConsumerWidget {
                     .findAncestorStateOfType<MainNavScreenState>()
                     ?.goToTab(2),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onTap: () => context
@@ -202,11 +204,11 @@ class HomeScreen extends ConsumerWidget {
                 child: Container(
                   width: 36,
                   height: 36,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.person_rounded,
                     color: AppColors.primary,
                     size: 20,
@@ -215,7 +217,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Material(
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -224,7 +226,7 @@ class HomeScreen extends ConsumerWidget {
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.discoverStudios),
               child: Container(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 12,
                 ),
@@ -236,7 +238,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Icon(Icons.search_rounded,
                         color: Colors.white.withValues(alpha: 0.85), size: 20),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'Search studios & galleries',
                       style: TextStyle(

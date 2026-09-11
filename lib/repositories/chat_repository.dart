@@ -67,8 +67,7 @@ class ApiChatRepository implements ChatRepository {
     final data = json as Map<String, dynamic>;
     final items = data['items'] as List<dynamic>;
     return items
-        .map((e) =>
-            ChatMessageModel.fromApiJson(e as Map<String, dynamic>))
+        .map((e) => ChatMessageModel.fromApiJson(e as Map<String, dynamic>))
         .toList(growable: false);
   }
 

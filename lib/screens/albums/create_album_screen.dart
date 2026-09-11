@@ -72,8 +72,8 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
       // Replace Create Album with Album Details so Back from there
       // returns straight to the Albums List instead of back through
       // this now-stale form.
-      Navigator.of(context)
-          .pushReplacementNamed(AppRoutes.adminAlbumDetails, arguments: created.id);
+      Navigator.of(context).pushReplacementNamed(AppRoutes.adminAlbumDetails,
+          arguments: created.id);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = '$e');
@@ -98,9 +98,9 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
       appBar: const CustomAppBar(title: 'Create Album', showBack: true),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: foldersLoading
-              ? const Center(child: LoadingWidget(message: 'Loading folders…'))
+              ? Center(child: LoadingWidget(message: 'Loading folders…'))
               : LayoutBuilder(
                   builder: (context, constraints) {
                     return SingleChildScrollView(
@@ -121,58 +121,66 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
                                       duration: AppDurations.fast,
                                       child: Text(
                                         _error!,
-                                        style: const TextStyle(
-                                            color: Colors.red, fontWeight: FontWeight.w700),
+                                        style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.w700),
                                       ),
                                     ),
-                                    const SizedBox(height: AppSpacing.sm),
+                                    SizedBox(height: AppSpacing.sm),
                                   ],
                                   CustomTextField(
                                     label: 'Album name',
                                     icon: Icons.photo_album_rounded,
                                     controller: _nameController,
-                                    validator: (v) => (v == null || v.trim().isEmpty)
-                                        ? 'Album name is required'
-                                        : null,
+                                    validator: (v) =>
+                                        (v == null || v.trim().isEmpty)
+                                            ? 'Album name is required'
+                                            : null,
                                   ),
-                                  const SizedBox(height: AppSpacing.md),
+                                  SizedBox(height: AppSpacing.md),
                                   CustomTextField(
                                     label: 'Description (optional)',
                                     icon: Icons.notes_rounded,
                                     controller: _descController,
                                     maxLines: 3,
                                   ),
-                                  const SizedBox(height: AppSpacing.md),
+                                  SizedBox(height: AppSpacing.md),
                                   DropdownButtonFormField<String?>(
                                     initialValue: _selectedFolderId,
                                     decoration: const InputDecoration(
                                       labelText: 'Folder (optional)',
-                                      prefixIcon: Icon(Icons.folder_outlined, size: 20),
+                                      prefixIcon:
+                                          Icon(Icons.folder_outlined, size: 20),
                                     ),
                                     items: [
                                       const DropdownMenuItem<String?>(
-                                          value: null, child: Text('No folder')),
+                                          value: null,
+                                          child: Text('No folder')),
                                       ...folderState.folders.map(
-                                        (FolderModel f) => DropdownMenuItem<String?>(
+                                        (FolderModel f) =>
+                                            DropdownMenuItem<String?>(
                                           value: f.id,
                                           child: Text(folderPath(f)),
                                         ),
                                       ),
                                     ],
-                                    onChanged: (v) => setState(() => _selectedFolderId = v),
+                                    onChanged: (v) =>
+                                        setState(() => _selectedFolderId = v),
                                   ),
                                   const Spacer(),
-                                  const SizedBox(height: AppSpacing.lg),
+                                  SizedBox(height: AppSpacing.lg),
                                   Row(
                                     children: [
                                       Expanded(
                                         child: OutlinedButton(
-                                          onPressed:
-                                              _isSaving ? null : () => Navigator.of(context).maybePop(),
-                                          child: const Text('Cancel'),
+                                          onPressed: _isSaving
+                                              ? null
+                                              : () => Navigator.of(context)
+                                                  .maybePop(),
+                                          child: Text('Cancel'),
                                         ),
                                       ),
-                                      const SizedBox(width: AppSpacing.sm),
+                                      SizedBox(width: AppSpacing.sm),
                                       Expanded(
                                         flex: 2,
                                         child: GradientButton(

@@ -32,12 +32,10 @@ class InvitationsScreen extends ConsumerWidget {
     // Get previously rejected invitations (for history)
     final rejectedInvites = connections
         .where((c) =>
-            c.status == ConnectionStatus.rejected &&
-            c.initiatedBy == 'studio')
+            c.status == ConnectionStatus.rejected && c.initiatedBy == 'studio')
         .toList();
 
     return Scaffold(
-      
       appBar: const CustomAppBar(
         title: 'Studio Invitations',
         showBack: true,
@@ -48,93 +46,93 @@ class InvitationsScreen extends ConsumerWidget {
           onRefresh: connNotifier.refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             children: [
-            // Pending invitations section
-            _SectionHeader(
-              title: 'Pending Invitations',
-              count: pendingInvites.length,
-              icon: Icons.mail_outline_rounded,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            if (pendingInvites.isEmpty)
-              const _EmptyState(
-                icon: Icons.mail_outline_rounded,
-                message: 'No pending studio invitations',
-                subtitle:
-                    'When a Studio sends you an invitation,\nit will appear here.',
-              )
-            else
-              ...pendingInvites.map((invite) => _InvitationCard(
-                    invitation: invite,
-                    key: ValueKey(invite.id),
-                    onAccept: () async {
-                      try {
-                        await connNotifier.clientAcceptInvite(invite.id);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'Accepted invitation from ${invite.clientData?.name ?? "Studio"}'),
-                              backgroundColor: AppColors.success,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Could not accept invitation. Try again.'),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    onReject: () async {
-                      try {
-                        await connNotifier.clientDeclineInvite(invite.id);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Invitation declined'),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Could not decline invitation. Try again.'),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  )),
-
-            // Divider if there are rejected invites
-            if (rejectedInvites.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.xl),
+              // Pending invitations section
               _SectionHeader(
-                title: 'Declined Invitations',
-                count: rejectedInvites.length,
-                icon: Icons.history_rounded,
+                title: 'Pending Invitations',
+                count: pendingInvites.length,
+                icon: Icons.mail_outline_rounded,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ...rejectedInvites.map((invite) => _RejectedInviteCard(
-                    key: ValueKey(invite.id),
-                    invitation: invite,
-                  )),
-            ],
+              SizedBox(height: AppSpacing.sm),
+              if (pendingInvites.isEmpty)
+                const _EmptyState(
+                  icon: Icons.mail_outline_rounded,
+                  message: 'No pending studio invitations',
+                  subtitle:
+                      'When a Studio sends you an invitation,\nit will appear here.',
+                )
+              else
+                ...pendingInvites.map((invite) => _InvitationCard(
+                      invitation: invite,
+                      key: ValueKey(invite.id),
+                      onAccept: () async {
+                        try {
+                          await connNotifier.clientAcceptInvite(invite.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Accepted invitation from ${invite.clientData?.name ?? "Studio"}'),
+                                backgroundColor: AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Could not accept invitation. Try again.'),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      onReject: () async {
+                        try {
+                          await connNotifier.clientDeclineInvite(invite.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Invitation declined'),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Could not decline invitation. Try again.'),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    )),
+
+              // Divider if there are rejected invites
+              if (rejectedInvites.isNotEmpty) ...[
+                SizedBox(height: AppSpacing.xl),
+                _SectionHeader(
+                  title: 'Declined Invitations',
+                  count: rejectedInvites.length,
+                  icon: Icons.history_rounded,
+                ),
+                SizedBox(height: AppSpacing.sm),
+                ...rejectedInvites.map((invite) => _RejectedInviteCard(
+                      key: ValueKey(invite.id),
+                      invitation: invite,
+                    )),
+              ],
             ],
           ),
         ),
@@ -159,25 +157,25 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            color: AppColors.text,
+          style: TextStyle(
+            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
             fontSize: 16,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             '$count',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.primary,
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -204,7 +202,7 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      padding: EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
@@ -213,22 +211,22 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(icon,
               color: AppColors.subtitle.withValues(alpha: 0.4), size: 48),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.subtitle,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.subtitle,
+            style: TextStyle(
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
               fontSize: 12,
               height: 1.4,
             ),
@@ -259,9 +257,9 @@ class _InvitationCard extends StatelessWidget {
     final email = clientData?.email ?? '';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.2),
@@ -270,7 +268,7 @@ class _InvitationCard extends StatelessWidget {
             AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -290,19 +288,19 @@ class _InvitationCard extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Text(
                     initials,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Studio Invitation',
                         style: TextStyle(
                           color: AppColors.primary,
@@ -311,21 +309,21 @@ class _InvitationCard extends StatelessWidget {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         studioName,
-                        style: const TextStyle(
-                          color: AppColors.text,
+                        style: TextStyle(
+                          color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                           fontSize: 14.5,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (email.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Text(
                           email,
-                          style: const TextStyle(
-                            color: AppColors.subtitle,
+                          style: TextStyle(
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                             fontSize: 11,
                           ),
                         ),
@@ -336,12 +334,12 @@ class _InvitationCard extends StatelessWidget {
                 // Status badge
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.hourglass_empty_rounded,
@@ -360,7 +358,7 @@ class _InvitationCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             // Action buttons
             Row(
               children: [
@@ -369,8 +367,8 @@ class _InvitationCard extends StatelessWidget {
                     height: 44,
                     child: ElevatedButton.icon(
                       onPressed: onAccept,
-                      icon: const Icon(Icons.check_rounded, size: 18),
-                      label: const Text(
+                      icon: Icon(Icons.check_rounded, size: 18),
+                      label: Text(
                         'Accept',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -388,14 +386,14 @@ class _InvitationCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: SizedBox(
                     height: 44,
                     child: OutlinedButton.icon(
                       onPressed: onReject,
-                      icon: const Icon(Icons.close_rounded, size: 18),
-                      label: const Text(
+                      icon: Icon(Icons.close_rounded, size: 18),
+                      label: Text(
                         'Decline',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -432,10 +430,10 @@ class _RejectedInviteCard extends StatelessWidget {
     final studioName = clientData?.name ?? 'Studio';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
@@ -449,27 +447,27 @@ class _RejectedInviteCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.cancel_rounded,
+            child: Icon(Icons.cancel_rounded,
                 color: AppColors.error, size: 18),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   studioName,
-                  style: const TextStyle(
-                    color: AppColors.text,
+                  style: TextStyle(
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
-                const Text(
+                SizedBox(height: 2),
+                Text(
                   'Invitation declined',
                   style: TextStyle(
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                     fontSize: 11,
                   ),
                 ),
@@ -477,12 +475,12 @@ class _RejectedInviteCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: AppColors.error.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Text(
+            child: Text(
               'Declined',
               style: TextStyle(
                 color: AppColors.error,

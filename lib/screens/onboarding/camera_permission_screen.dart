@@ -25,13 +25,17 @@ class CameraPermissionScreen extends ConsumerWidget {
   const CameraPermissionScreen({super.key, this.role});
 
   void _advance(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.photoLibraryPermission, arguments: role);
+    Navigator.of(context).pushReplacementNamed(AppRoutes.photoLibraryPermission,
+        arguments: role);
   }
 
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
-    final granted = await PermissionService.instance.checkAndRequestCameraPermission();
+    final granted =
+        await PermissionService.instance.checkAndRequestCameraPermission();
     try {
-      await ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: granted);
+      await ref
+          .read(authRepositoryProvider)
+          .updatePermissions(cameraPermissionGranted: granted);
     } on ApiException {
       // Best-effort — advance regardless, same as "Not Now".
     }

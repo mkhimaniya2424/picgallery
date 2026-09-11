@@ -47,18 +47,18 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Album?'),
+        title: Text('Delete Album?'),
         content: Text(
             'This will permanently remove "${album.name}" and its ${album.photoCount} photos. This can\'t be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -85,24 +85,31 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
-              child: Text('Move to folder', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
+              child: Text('Move to folder',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
             ),
             ListTile(
-              leading: const Icon(Icons.block_rounded, color: AppColors.subtitle),
-              title: const Text('No folder (unfile)'),
-              trailing:
-                  album.folderId == null ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+              leading: Icon(Icons.block_rounded,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
+              title: Text('No folder (unfile)'),
+              trailing: album.folderId == null
+                  ? Icon(Icons.check_rounded, color: AppColors.primary)
+                  : null,
               onTap: () => Navigator.of(ctx).pop(_unfileSentinel),
             ),
             const Divider(height: 1),
             ...folders.map(
               (f) => ListTile(
-                leading: const Icon(Icons.folder_rounded, color: AppColors.primary),
+                leading: Icon(Icons.folder_rounded, color: AppColors.primary),
                 title: Text(f.name),
-                trailing:
-                    album.folderId == f.id ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+                trailing: album.folderId == f.id
+                    ? Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
                 onTap: () => Navigator.of(ctx).pop(f.id),
               ),
             ),
@@ -112,14 +119,17 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
     );
 
     if (result == null || !mounted) return;
-    final newFolderId = identical(result, _unfileSentinel) ? null : result as String;
+    final newFolderId =
+        identical(result, _unfileSentinel) ? null : result as String;
     if (newFolderId == album.folderId) return;
 
     try {
       await ref.read(albumProvider).moveToFolder(album.id, newFolderId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(newFolderId == null ? 'Album unfiled' : 'Album moved')),
+        SnackBar(
+            content:
+                Text(newFolderId == null ? 'Album unfiled' : 'Album moved')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -139,7 +149,7 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
         actions: [
           IconButton(
             tooltip: 'Find by Face',
-            icon: const Icon(Icons.face_retouching_natural_rounded),
+            icon: Icon(Icons.face_retouching_natural_rounded),
             onPressed: () {
               // Scopes the search to the studio's own library — mirrors
               // POST /faces/search (owner-only), same backend endpoint
@@ -152,14 +162,14 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
           ),
           IconButton(
             tooltip: 'Manage Collections',
-            icon: const Icon(Icons.collections_bookmark_rounded),
+            icon: Icon(Icons.collections_bookmark_rounded),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.collections);
             },
           ),
           IconButton(
             tooltip: 'Manage Folders',
-            icon: const Icon(Icons.folder_rounded),
+            icon: Icon(Icons.folder_rounded),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.adminFolderList);
             },
@@ -173,8 +183,8 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
             Navigator.of(context).pushNamed(AppRoutes.adminAlbumCreate);
           });
         },
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Create Album'),
+        icon: Icon(Icons.add_rounded),
+        label: Text('Create Album'),
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -182,7 +192,7 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -199,10 +209,10 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                             },
                             decoration: InputDecoration(
                               hintText: 'Search albums…',
-                              prefixIcon: const Icon(Icons.search_rounded),
+                              prefixIcon: Icon(Icons.search_rounded),
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
-                                      icon: const Icon(Icons.clear_rounded),
+                                      icon: Icon(Icons.clear_rounded),
                                       onPressed: () {
                                         _searchController.clear();
                                         albumState.setSearchQuery('');
@@ -211,12 +221,12 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                                   : null,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          SizedBox(height: AppSpacing.md),
                           Row(
                             children: [
                               Expanded(
                                 child: DropdownButtonFormField<AlbumSortOption>(
-                                  value: albumState.sortOption,
+                                  initialValue: albumState.sortOption,
                                   items: const [
                                     DropdownMenuItem(
                                         value: AlbumSortOption.recent,
@@ -239,9 +249,11 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                                       const InputDecoration(labelText: 'Sort'),
                                 ),
                               ),
-                              const SizedBox(width: AppSpacing.sm),
+                              SizedBox(width: AppSpacing.sm),
                               IconButton.filledTonal(
-                                tooltip: albumState.isGrid ? 'Switch to list view' : 'Switch to grid view',
+                                tooltip: albumState.isGrid
+                                    ? 'Switch to list view'
+                                    : 'Switch to grid view',
                                 onPressed: albumState.toggleGridList,
                                 icon: Icon(albumState.isGrid
                                     ? Icons.grid_view_rounded
@@ -249,17 +261,18 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.sm),
+                          SizedBox(height: AppSpacing.sm),
                           Row(
                             children: [
                               Expanded(
                                 child: folderState.isLoading
-                                    ? const SizedBox.shrink()
+                                    ? SizedBox.shrink()
                                     : DropdownButtonFormField<String?>(
                                         // key forces a rebuild when the folder
                                         // list loads so the value stays in sync.
-                                        key: ValueKey('folder_filter_${folderState.folders.length}'),
-                                        value: albumState.folderId,
+                                        key: ValueKey(
+                                            'folder_filter_${folderState.folders.length}'),
+                                        initialValue: albumState.folderId,
                                         items: [
                                           const DropdownMenuItem<String?>(
                                             value: null,
@@ -281,9 +294,9 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                                         ),
                                       ),
                               ),
-                              const SizedBox(width: AppSpacing.sm),
+                              SizedBox(width: AppSpacing.sm),
                               FilterChip(
-                                label: const Text('Favorites'),
+                                label: Text('Favorites'),
                                 selected: albumState.filterOption ==
                                     AlbumFilterOption.favorites,
                                 onSelected: (v) {
@@ -294,20 +307,22 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.lg),
+                          SizedBox(height: AppSpacing.lg),
                         ],
                       );
                     },
                   ),
 
                   if (albumState.isLoading || folderState.isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                      child: Center(child: LoadingWidget(message: 'Loading albums…')),
-                    )
-                  else if (albumState.lastError != null && albumState.lastError!.trim().isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                      padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                      child: Center(
+                          child: LoadingWidget(message: 'Loading albums…')),
+                    )
+                  else if (albumState.lastError != null &&
+                      albumState.lastError!.trim().isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
                       child: Center(
                         child: EmptyStateCard(
                           icon: Icons.error_outline_rounded,
@@ -315,8 +330,9 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                         ),
                       ),
                     )
-                  else if (albumState.filteredAlbums.isEmpty && albumState.folderId != null)
-                    const Center(
+                  else if (albumState.filteredAlbums.isEmpty &&
+                      albumState.folderId != null)
+                    Center(
                       child: EmptyStateCard(
                         icon: Icons.photo_library_outlined,
                         message: 'No albums found in this folder.',
@@ -330,7 +346,7 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                     // can find them without needing the dashboard.
                     if (albumState.folderId == null)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        padding: EdgeInsets.only(bottom: AppSpacing.md),
                         child: InkWell(
                           onTap: () => Navigator.of(context).pushNamed(
                             AppRoutes.media,
@@ -339,38 +355,47 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           child: Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.lg,
                               vertical: AppSpacing.md,
                             ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [AppColors.primary.withValues(alpha: 0.15), AppColors.secondary.withValues(alpha: 0.10)],
+                                colors: [
+                                  AppColors.primary.withValues(alpha: 0.15),
+                                  AppColors.secondary.withValues(alpha: 0.10)
+                                ],
                               ),
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.35),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.35),
                                 width: 1,
                               ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.photo_library_rounded,
                                   color: AppColors.primary,
                                   size: 22,
                                 ),
-                                const SizedBox(width: AppSpacing.sm),
+                                SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: const [
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
                                         'Unfiled Uploads',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 13,
-                                          color: AppColors.text,
+                                          color:
+                                              (Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.textOnDark
+                                                  : AppColors.text),
                                         ),
                                       ),
                                       SizedBox(height: 2),
@@ -378,15 +403,22 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                                         'Photos uploaded without an album',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.subtitle,
+                                          color:
+                                              (Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.subtitleOnDark
+                                                  : AppColors.subtitle),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const Icon(
+                                Icon(
                                   Icons.chevron_right_rounded,
-                                  color: AppColors.subtitle,
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.subtitleOnDark
+                                      : AppColors.subtitle),
                                   size: 20,
                                 ),
                               ],
@@ -394,78 +426,84 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                           ),
                         ),
                       ),
-                      
+
                     if (albumState.filteredAlbums.isEmpty)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(top: AppSpacing.xxl),
                         child: Center(
                           child: EmptyStateCard(
                             icon: Icons.photo_library_outlined,
-                            message: 'No albums found. Try adjusting filters/search.',
+                            message:
+                                'No albums found. Try adjusting filters/search.',
                           ),
                         ),
                       )
                     else if (albumState.isGrid)
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: albumState.filteredAlbums.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: AppSpacing.md,
-                        crossAxisSpacing: AppSpacing.md,
-                        childAspectRatio: 0.68,
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: albumState.filteredAlbums.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: AppSpacing.md,
+                          crossAxisSpacing: AppSpacing.md,
+                          childAspectRatio: 0.68,
+                        ),
+                        itemBuilder: (context, i) {
+                          final album = albumState.filteredAlbums[i];
+                          return _AnimatedAlbumTile(
+                            index: i,
+                            child: AlbumCard(
+                              album: album,
+                              onToggleFavorite: () =>
+                                  albumState.toggleFavorite(album.id),
+                              onTap: () => Navigator.of(context).pushNamed(
+                                AppRoutes.adminAlbumDetails,
+                                arguments: album.id,
+                              ),
+                              onEdit: () => Navigator.of(context).pushNamed(
+                                AppRoutes.adminAlbumEdit,
+                                arguments: album.id,
+                              ),
+                              onMove: () =>
+                                  _moveAlbum(album, folderState.folders),
+                              onDelete: () => _confirmDeleteAlbum(album),
+                            ),
+                          );
+                        },
+                      )
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: albumState.filteredAlbums.length,
+                        separatorBuilder: (_, __) =>
+                            SizedBox(height: AppSpacing.sm),
+                        itemBuilder: (context, i) {
+                          final album = albumState.filteredAlbums[i];
+                          return _AnimatedAlbumTile(
+                            index: i,
+                            child: AlbumCard(
+                              album: album,
+                              onToggleFavorite: () =>
+                                  albumState.toggleFavorite(album.id),
+                              onTap: () => Navigator.of(context).pushNamed(
+                                AppRoutes.adminAlbumDetails,
+                                arguments: album.id,
+                              ),
+                              onEdit: () => Navigator.of(context).pushNamed(
+                                AppRoutes.adminAlbumEdit,
+                                arguments: album.id,
+                              ),
+                              onMove: () =>
+                                  _moveAlbum(album, folderState.folders),
+                              onDelete: () => _confirmDeleteAlbum(album),
+                              compact: true,
+                            ),
+                          );
+                        },
                       ),
-                      itemBuilder: (context, i) {
-                        final album = albumState.filteredAlbums[i];
-                        return _AnimatedAlbumTile(
-                          index: i,
-                          child: AlbumCard(
-                            album: album,
-                            onToggleFavorite: () => albumState.toggleFavorite(album.id),
-                            onTap: () => Navigator.of(context).pushNamed(
-                              AppRoutes.adminAlbumDetails,
-                              arguments: album.id,
-                            ),
-                            onEdit: () => Navigator.of(context).pushNamed(
-                              AppRoutes.adminAlbumEdit,
-                              arguments: album.id,
-                            ),
-                            onMove: () => _moveAlbum(album, folderState.folders),
-                            onDelete: () => _confirmDeleteAlbum(album),
-                          ),
-                        );
-                      },
-                    )
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: albumState.filteredAlbums.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, i) {
-                        final album = albumState.filteredAlbums[i];
-                        return _AnimatedAlbumTile(
-                          index: i,
-                          child: AlbumCard(
-                            album: album,
-                            onToggleFavorite: () => albumState.toggleFavorite(album.id),
-                            onTap: () => Navigator.of(context).pushNamed(
-                              AppRoutes.adminAlbumDetails,
-                              arguments: album.id,
-                            ),
-                            onEdit: () => Navigator.of(context).pushNamed(
-                              AppRoutes.adminAlbumEdit,
-                              arguments: album.id,
-                            ),
-                            onMove: () => _moveAlbum(album, folderState.folders),
-                            onDelete: () => _confirmDeleteAlbum(album),
-                            compact: true,
-                          ),
-                        );
-                      },
-                    ),
                   ],
                 ],
               ),
@@ -504,7 +542,8 @@ class _AnimatedAlbumTileState extends State<_AnimatedAlbumTile>
     vsync: this,
     duration: AppDurations.medium,
   );
-  late final Animation<double> _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+  late final Animation<double> _fade =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut);
   late final Animation<Offset> _slide = Tween(
     begin: const Offset(0, 0.06),
     end: Offset.zero,

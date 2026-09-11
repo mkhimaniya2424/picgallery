@@ -48,7 +48,8 @@ class PermissionService {
   /// show an explanatory UI before calling `.request()`, or to check
   /// state on screens like App Permissions without re-triggering the
   /// OS dialog.
-  Future<bool> isCameraPermissionGranted() async => (await Permission.camera.status).isGranted;
+  Future<bool> isCameraPermissionGranted() async =>
+      (await Permission.camera.status).isGranted;
 
   Future<bool> isStoragePermissionGranted() async {
     if (Platform.isAndroid || Platform.isIOS) {
@@ -58,12 +59,14 @@ class PermissionService {
     return true;
   }
 
-  Future<bool> isNotificationPermissionGranted() async => (await Permission.notification.status).isGranted;
+  Future<bool> isNotificationPermissionGranted() async =>
+      (await Permission.notification.status).isGranted;
 
   /// True if the user denied a permission with "Don't ask again" /
   /// permanently, meaning `.request()` won't show the OS dialog again
   /// and the only way forward is the device Settings app.
-  Future<bool> isPermanentlyDenied(Permission permission) async => (await permission.status).isPermanentlyDenied;
+  Future<bool> isPermanentlyDenied(Permission permission) async =>
+      (await permission.status).isPermanentlyDenied;
 
   /// Opens the app's page in the device's Settings app.
   Future<bool> openAppSettingsPage() => openAppSettings();

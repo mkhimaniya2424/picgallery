@@ -98,7 +98,7 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
           if (_query.isNotEmpty)
             IconButton(
               tooltip: 'Clear',
-              icon: const Icon(Icons.close_rounded),
+              icon: Icon(Icons.close_rounded),
               onPressed: () {
                 _controller.clear();
                 final controller = ref.read(mediaProvider);
@@ -110,17 +110,17 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: TextField(
               controller: _controller,
               autofocus: true,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: 'Search by file name, album, or folder…',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                prefixIcon: Icon(Icons.search_rounded, size: 20),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded),
+                        icon: Icon(Icons.close_rounded),
                         onPressed: () {
                           _controller.clear();
                           ref.read(mediaProvider).setSearchQuery('');
@@ -134,7 +134,7 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
             child: Row(
               children: [
@@ -143,15 +143,17 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                     _attempted && _query.isNotEmpty
                         ? '${results.length} match(es)'
                         : 'Type to search instantaneously',
-                    style: const TextStyle(
-                        color: AppColors.subtitle,
+                    style: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : AppColors.subtitle),
                         fontWeight: FontWeight.w700,
                         fontSize: 12.5),
                   ),
                 ),
                 IconButton(
                   tooltip: 'Filters',
-                  icon: const Icon(Icons.filter_list_rounded),
+                  icon: Icon(Icons.filter_list_rounded),
                   onPressed: () {
                     Navigator.of(context).pushNamed(AppRoutes.mediaFilter);
                   },
@@ -161,9 +163,9 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
           ),
           Expanded(
             child: c.isLoading
-                ? const Center(child: LoadingWidget(message: 'Searching…'))
+                ? Center(child: LoadingWidget(message: 'Searching…'))
                 : (!_attempted || _query.trim().isEmpty)
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.all(AppSpacing.lg),
                         child: EmptyStateCard(
                           icon: Icons.search_rounded,
@@ -172,7 +174,7 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                         ),
                       )
                     : results.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: EmptyStateCard(
                               icon: Icons.search_off_rounded,
                               message:
@@ -180,10 +182,10 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                             ),
                           )
                         : ListView.separated(
-                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            padding: EdgeInsets.all(AppSpacing.lg),
                             itemCount: results.length,
                             separatorBuilder: (_, __) =>
-                                const SizedBox(height: AppSpacing.sm),
+                                SizedBox(height: AppSpacing.sm),
                             itemBuilder: (context, i) {
                               final m = results[i];
                               return Material(
@@ -206,8 +208,7 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                                     );
                                   },
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsets.all(AppSpacing.md),
+                                    padding: EdgeInsets.all(AppSpacing.md),
                                     child: Row(
                                       children: [
                                         Container(
@@ -233,7 +234,7 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                                             size: 26,
                                           ),
                                         ),
-                                        const SizedBox(width: AppSpacing.md),
+                                        SizedBox(width: AppSpacing.md),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -242,21 +243,29 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                                               HighlightedText(
                                                 text: m.fileName,
                                                 query: _query,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 13.5,
                                                   fontWeight: FontWeight.w800,
-                                                  color: AppColors.text,
+                                                  color: (Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark
+                                                      ? AppColors.textOnDark
+                                                      : AppColors.text),
                                                 ),
                                               ),
-                                              const SizedBox(height: 4),
+                                              SizedBox(height: 4),
                                               Text(
                                                 '${m.albumId ?? 'No album'} • ${m.folderId ?? 'No folder'}',
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
-                                                  color: AppColors.subtitle,
+                                                  color: (Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark
+                                                      ? AppColors.subtitleOnDark
+                                                      : AppColors.subtitle),
                                                 ),
                                               ),
                                             ],
@@ -270,7 +279,11 @@ class _MediaSearchScreenState extends ConsumerState<MediaSearchScreen>
                                                 : Icons.favorite_border_rounded,
                                             color: m.isFavorite
                                                 ? AppColors.accent
-                                                : AppColors.subtitle,
+                                                : (Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.subtitleOnDark
+                                                    : AppColors.subtitle),
                                           ),
                                           onPressed: () => ref
                                               .read(mediaProvider)

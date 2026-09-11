@@ -126,17 +126,21 @@ class StudioClientConnection {
     final clientJson = json['client'] as Map<String, dynamic>?;
     final studioJson = json['studio'] as Map<String, dynamic>?;
     final viewerIsStudio = clientJson != null;
-    final otherId = viewerIsStudio ? clientJson['id'] as String : studioJson!['id'] as String;
+    final otherId = viewerIsStudio
+        ? clientJson['id'] as String
+        : studioJson!['id'] as String;
     final initiatedBy = json['initiated_by'] as String;
 
     return StudioClientConnection(
       id: json['id'] as String,
       studioId: viewerIsStudio ? currentUserId : otherId,
       clientId: viewerIsStudio ? otherId : currentUserId,
-      status: _statusFromApi(json['status'] as String, initiatedBy: initiatedBy),
+      status:
+          _statusFromApi(json['status'] as String, initiatedBy: initiatedBy),
       requestedAt: DateTime.parse(json['requested_at'] as String),
-      respondedAt:
-          json['responded_at'] != null ? DateTime.parse(json['responded_at'] as String) : null,
+      respondedAt: json['responded_at'] != null
+          ? DateTime.parse(json['responded_at'] as String)
+          : null,
       initiatedBy: initiatedBy,
       // Only the other party's *public* profile fields are available
       // here (id/name/avatar/city/bio/...) — nowhere near everything
@@ -147,14 +151,21 @@ class StudioClientConnection {
       // rather than fabricated, and callers that need the full picture
       // should still hit the client's own profile endpoint.
       clientData: ClientData(
-        id: viewerIsStudio ? (clientJson['id'] as String) : (studioJson!['id'] as String),
+        id: viewerIsStudio
+            ? (clientJson['id'] as String)
+            : (studioJson!['id'] as String),
         name: viewerIsStudio
             ? (clientJson['full_name'] as String? ?? '')
-            : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String? ?? ''),
+            : (studioJson!['business_name'] as String? ??
+                studioJson['full_name'] as String? ??
+                ''),
         initials: _initialsFrom(viewerIsStudio
             ? (clientJson['full_name'] as String?)
-            : (studioJson!['business_name'] as String? ?? studioJson['full_name'] as String?)),
-        gradient: _gradientFor(viewerIsStudio ? (clientJson['id'] as String) : (studioJson!['id'] as String)),
+            : (studioJson!['business_name'] as String? ??
+                studioJson['full_name'] as String?)),
+        gradient: _gradientFor(viewerIsStudio
+            ? (clientJson['id'] as String)
+            : (studioJson!['id'] as String)),
         bookingStatus: '',
         galleryStatus: GalleryStatus.notStarted,
         outstanding: '',
@@ -174,7 +185,8 @@ class StudioClientConnection {
         .join();
   }
 
-  static ConnectionStatus _statusFromApi(String status, {required String initiatedBy}) {
+  static ConnectionStatus _statusFromApi(String status,
+      {required String initiatedBy}) {
     switch (status) {
       case 'accepted':
         return ConnectionStatus.connected;

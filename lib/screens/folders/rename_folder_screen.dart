@@ -54,18 +54,23 @@ class _RenameFolderScreenState extends ConsumerState<RenameFolderScreen> {
               return SingleChildScrollView(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight, maxWidth: 520),
+                    constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight, maxWidth: 520),
                     child: IntrinsicHeight(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (_error != null) ...[
-                            Text(_error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+                            Text(_error!,
+                                style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w700)),
                             const SizedBox(height: AppSpacing.sm),
                           ],
                           TextField(
                             controller: _nameController,
-                            decoration: const InputDecoration(labelText: 'Folder name'),
+                            decoration:
+                                const InputDecoration(labelText: 'Folder name'),
                           ),
                           const Spacer(),
                           const SizedBox(height: AppSpacing.lg),
@@ -74,15 +79,19 @@ class _RenameFolderScreenState extends ConsumerState<RenameFolderScreen> {
                             onPressed: () async {
                               final name = _nameController.text.trim();
                               if (name.isEmpty) {
-                                setState(() => _error = 'Folder name is required');
+                                setState(
+                                    () => _error = 'Folder name is required');
                                 return;
                               }
                               try {
-                                await ref.read(folderProvider).renameFolder(folder.id, name);
+                                await ref
+                                    .read(folderProvider)
+                                    .renameFolder(folder.id, name);
                                 if (!context.mounted) return;
                                 setState(() => _error = null);
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(content: Text('Renamed to "$name"')));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text('Renamed to "$name"')));
                                 Navigator.of(context).maybePop();
                               } catch (e) {
                                 setState(() => _error = '$e');

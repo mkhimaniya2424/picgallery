@@ -4,10 +4,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' as http_parser;
 
-
-
-
-
 import '../core/network/api_client.dart';
 import '../models/media_model.dart';
 
@@ -76,8 +72,9 @@ class MediaUploadService {
       if (albumId != null) 'album_id': albumId,
       if (folderId != null) 'folder_id': folderId,
     };
-    final path =
-        query.isEmpty ? '/media/upload' : '/media/upload?${Uri(queryParameters: query).query}';
+    final path = query.isEmpty
+        ? '/media/upload'
+        : '/media/upload?${Uri(queryParameters: query).query}';
     final uri = Uri.parse('${_apiClient.baseUrl}$path');
 
     final request = http.MultipartRequest('POST', uri);
@@ -90,7 +87,7 @@ class MediaUploadService {
         'file',
         bytes,
         filename: fileName,
-contentType: http_parser.MediaType.parse(contentType),
+        contentType: http_parser.MediaType.parse(contentType),
       ),
     );
 
@@ -227,7 +224,9 @@ contentType: http_parser.MediaType.parse(contentType),
       }
     }
 
-    if (statusCode >= 200 && statusCode < 300 && decoded is Map<String, dynamic>) {
+    if (statusCode >= 200 &&
+        statusCode < 300 &&
+        decoded is Map<String, dynamic>) {
       return MediaModel.fromApiJson(decoded);
     }
 
@@ -243,7 +242,9 @@ contentType: http_parser.MediaType.parse(contentType),
       if (detail is String) return detail;
       if (detail is List) {
         return detail
-            .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
+            .map((e) => e is Map && e['msg'] != null
+                ? e['msg'].toString()
+                : e.toString())
             .join(', ');
       }
       return detail.toString();

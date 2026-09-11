@@ -53,7 +53,7 @@ class FaceSearchResultsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'Search Again',
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded),
             onPressed: () {
               ref.read(faceSearchProvider.notifier).reset();
               Navigator.of(context).pushNamedAndRemoveUntil(
@@ -73,12 +73,13 @@ class FaceSearchResultsScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.all(AppSpacing.xl),
       child: Center(
         child: EmptyStateCard(
           icon: Icons.search_off_rounded,
-          message: 'No matching photos found.\nTry a different selfie or adjust your search.',
+          message:
+              'No matching photos found.\nTry a different selfie or adjust your search.',
         ),
       ),
     );
@@ -86,7 +87,7 @@ class FaceSearchResultsScreen extends ConsumerWidget {
 
   Widget _buildGrid(BuildContext context, List<MediaModel> mediaList) {
     return GridView.builder(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(4),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 4,
@@ -115,12 +116,12 @@ class FaceSearchResultsScreen extends ConsumerWidget {
                     bottom: 6,
                     right: 6,
                     child: Container(
-                      padding: const EdgeInsets.all(3),
+                      padding: EdgeInsets.all(3),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.6),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.play_arrow_rounded,
                         color: Colors.white,
                         size: 14,

@@ -33,11 +33,14 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Recent Activity'),
       body: asyncSnapshot.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (error, _) => const Center(
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (error, _) => Center(
           child: Text('Could not load activity',
-              style: TextStyle(color: AppColors.subtitle)),
+              style: TextStyle(
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle))),
         ),
         data: (snapshot) {
           final entries = _filter == null
@@ -48,15 +51,15 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
             onRefresh: () =>
                 ref.read(adminDashboardProvider.notifier).refresh(),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
               children: [
                 _TypeFilterRow(
                     selected: _filter,
                     onSelected: (t) => setState(() => _filter = t)),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 if (snapshot.activityLog.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: AppSpacing.xxl),
                     child: EmptyTabPlaceholder(
                       icon: Icons.history_rounded,
@@ -66,7 +69,7 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
                     ),
                   )
                 else if (entries.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: AppSpacing.xxl),
                     child: Text(
                       'No matching activity for this filter',
@@ -74,7 +77,10 @@ class _RecentActivityScreenState extends ConsumerState<RecentActivityScreen> {
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.subtitle),
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle)),
                     ),
                   )
                 else
@@ -128,7 +134,7 @@ class _TypeFilterRow extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: types.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => SizedBox(width: 8),
         itemBuilder: (context, i) {
           final type = types[i];
           final isSelected = selected == type;
@@ -137,7 +143,7 @@ class _TypeFilterRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: AnimatedContainer(
               duration: AppDurations.fast,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: isSelected ? AppColors.buttonGradient : null,
                 color: isSelected
@@ -157,7 +163,9 @@ class _TypeFilterRow extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: isSelected
                       ? Colors.white
-                      : (isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                      : (isDark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
                 ),
               ),
             ),

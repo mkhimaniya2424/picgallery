@@ -15,7 +15,8 @@ class DiscoverStudiosScreen extends ConsumerStatefulWidget {
   const DiscoverStudiosScreen({super.key});
 
   @override
-  ConsumerState<DiscoverStudiosScreen> createState() => _DiscoverStudiosScreenState();
+  ConsumerState<DiscoverStudiosScreen> createState() =>
+      _DiscoverStudiosScreenState();
 }
 
 class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
@@ -33,10 +34,18 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
   Widget build(BuildContext context) {
     final provider = ref.watch(studioProvider);
     final studios = provider.filteredStudios;
-    final categories = ['All', 'Wedding', 'Portrait', 'Fashion', 'Editorial', 'Event', 'Landscape', 'Family'];
+    final categories = [
+      'All',
+      'Wedding',
+      'Portrait',
+      'Fashion',
+      'Editorial',
+      'Event',
+      'Landscape',
+      'Family'
+    ];
 
     return Scaffold(
-      
       appBar: const CustomAppBar(
         title: 'Discover Studios',
         showBack: true,
@@ -47,32 +56,41 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
             children: [
               // 1. Search Bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+                padding: EdgeInsets.fromLTRB(
+                    AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
                 child: TextField(
-                  onChanged: (val) => ref.read(studioProvider).setSearchQuery(val),
-                  style: const TextStyle(color: AppColors.text, fontSize: 14),
+                  onChanged: (val) =>
+                      ref.read(studioProvider).setSearchQuery(val),
+                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text), fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Search by studio, location, or tag...',
-                    hintStyle: const TextStyle(color: AppColors.subtitle, fontSize: 14),
-                    prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
+                    hintStyle: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 14),
+                    prefixIcon: Icon(Icons.search_rounded,
+                        color: AppColors.primary),
                     suffixIcon: provider.searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, color: AppColors.subtitle),
+                            icon: Icon(Icons.clear_rounded,
+                                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                             onPressed: () {
                               ref.read(studioProvider).setSearchQuery('');
                             },
                           )
                         : null,
-                    fillColor: Colors.white.withValues(alpha: 0.8),
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkSurface
+                        : Colors.white.withValues(alpha: 0.8),
                     filled: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+                      borderSide: const BorderSide(
+                          color: AppColors.primary, width: 1.6),
                     ),
                   ),
                 ),
@@ -83,19 +101,21 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
                 height: 52,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md, vertical: 8),
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
                     final cat = categories[index];
                     final isSelected = provider.selectedCategory == cat;
                     return Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: EdgeInsets.only(right: 8),
                       child: ChoiceChip(
                         label: Text(
                           cat,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.text,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
                             fontSize: 13,
                           ),
                         ),
@@ -106,14 +126,20 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
                           }
                         },
                         selectedColor: AppColors.primary,
-                        backgroundColor: Colors.white,
+                        backgroundColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkSurface
+                                : Colors.white,
                         checkmarkColor: Colors.white,
                         showCheckmark: false,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                           side: BorderSide(
-                            color: isSelected ? AppColors.primary : AppColors.border,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.border,
                           ),
                         ),
                       ),
@@ -125,7 +151,8 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
               // 3. Studio List
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () => ref.read(studioProvider.notifier).loadDirectory(),
+                  onRefresh: () =>
+                      ref.read(studioProvider.notifier).loadDirectory(),
                   child: _buildBody(provider, studios),
                 ),
               ),
@@ -142,7 +169,8 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
     // blank the list out from under the user.
     if (provider.isLoadingDirectory && provider.studios.isEmpty) {
       return _scrollableMessage(
-        const Center(child: LoadingWidget(message: 'Finding studios near you…')),
+        Center(
+            child: LoadingWidget(message: 'Finding studios near you…')),
       );
     }
 
@@ -150,12 +178,13 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
       return _scrollableMessage(
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: InlineErrorBanner(
               message: provider.directoryError!,
               action: TextButton(
-                onPressed: () => ref.read(studioProvider.notifier).loadDirectory(),
-                child: const Text('Retry'),
+                onPressed: () =>
+                    ref.read(studioProvider.notifier).loadDirectory(),
+                child: Text('Retry'),
               ),
             ),
           ),
@@ -168,13 +197,15 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 8, AppSpacing.md, AppSpacing.lg),
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.md, 8, AppSpacing.md, AppSpacing.lg),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       itemCount: studios.length,
       itemBuilder: (context, index) {
         final studio = studios[index];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: EdgeInsets.only(bottom: 18),
           child: StudioCard(studio: studio),
         );
       },
@@ -204,32 +235,32 @@ class _DiscoverStudiosScreenState extends ConsumerState<DiscoverStudiosScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.border.withValues(alpha: 0.4),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.search_off_rounded,
               size: 48,
-              color: AppColors.subtitle,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'No Studios Found',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Try adjusting your search filters or queries.',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.subtitle,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
             ),
           ),
         ],
@@ -268,7 +299,8 @@ class StudioCard extends ConsumerWidget {
                   // Cover Image
                   Positioned.fill(
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
                       child: Image.network(
                         studio.coverUrl,
                         fit: BoxFit.cover,
@@ -276,14 +308,15 @@ class StudioCard extends ConsumerWidget {
                           if (loadingProgress == null) return child;
                           return Container(
                             color: AppColors.border.withValues(alpha: 0.5),
-                            child: const Center(
+                            child: Center(
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           );
                         },
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: AppColors.border,
-                          child: const Icon(Icons.image_rounded, color: AppColors.subtitle),
+                          child: Icon(Icons.image_rounded,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                         ),
                       ),
                     ),
@@ -291,8 +324,9 @@ class StudioCard extends ConsumerWidget {
                   // Darken Overlay at top
                   Positioned.fill(
                     child: Container(
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(20)),
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -309,20 +343,23 @@ class StudioCard extends ConsumerWidget {
                     top: 12,
                     right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+                        border: Border.all(
+                            color: AppColors.gold.withValues(alpha: 0.4)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star_rounded, color: AppColors.gold, size: 14),
-                          const SizedBox(width: 4),
+                          Icon(Icons.star_rounded,
+                              color: AppColors.gold, size: 14),
+                          SizedBox(width: 4),
                           Text(
                             studio.rating.toString(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -337,7 +374,9 @@ class StudioCard extends ConsumerWidget {
                     top: 12,
                     left: 12,
                     child: GestureDetector(
-                      onTap: () => ref.read(studioProvider.notifier).toggleFavorite(studio.id),
+                      onTap: () => ref
+                          .read(studioProvider.notifier)
+                          .toggleFavorite(studio.id),
                       child: Container(
                         width: 32,
                         height: 32,
@@ -346,8 +385,12 @@ class StudioCard extends ConsumerWidget {
                           color: Colors.black.withValues(alpha: 0.45),
                         ),
                         child: Icon(
-                          studio.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          color: studio.isFavorite ? AppColors.error : Colors.white,
+                          studio.isFavorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: studio.isFavorite
+                              ? AppColors.error
+                              : Colors.white,
                           size: 18,
                         ),
                       ),
@@ -376,7 +419,8 @@ class StudioCard extends ConsumerWidget {
                         child: Image.network(
                           studio.logoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(
                             Icons.business_rounded,
                             color: AppColors.primary,
                           ),
@@ -387,11 +431,11 @@ class StudioCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24), // Offset for floating logo
+            SizedBox(height: 24), // Offset for floating logo
 
             // Content Section
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -402,8 +446,8 @@ class StudioCard extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           studio.name,
-                          style: const TextStyle(
-                            color: AppColors.text,
+                          style: TextStyle(
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -411,25 +455,26 @@ class StudioCard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 14),
-                      const SizedBox(width: 4),
+                      Icon(Icons.location_on_rounded,
+                          color: AppColors.primary, size: 14),
+                      SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           studio.location,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.subtitle,
+                          style: TextStyle(
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                             fontSize: 12.5,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // Categories tags
                   Wrap(
@@ -437,14 +482,15 @@ class StudioCard extends ConsumerWidget {
                     runSpacing: 4,
                     children: studio.categories.map((cat) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           cat,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -453,20 +499,20 @@ class StudioCard extends ConsumerWidget {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // About description snippet
                   Text(
                     studio.about,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.subtitle,
+                    style: TextStyle(
+                      color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                       fontSize: 12.5,
                       height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Action Row: Connect Button & Details navigation
                   Row(
@@ -474,7 +520,7 @@ class StudioCard extends ConsumerWidget {
                       Expanded(
                         child: _ConnectButton(studio: studio),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       OutlinedButton(
                         onPressed: () {
                           Navigator.pushNamed(
@@ -489,9 +535,10 @@ class StudioCard extends ConsumerWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 16),
                         ),
-                        child: const Text(
+                        child: Text(
                           'View Profile',
                           style: TextStyle(
                             fontSize: 13,
@@ -525,7 +572,9 @@ class _ConnectButton extends ConsumerWidget {
         if (!context.mounted) return;
         _showSnack(
           context,
-          success ? 'Connection request sent to ${studio.name}!' : 'Could not send the request. Try again.',
+          success
+              ? 'Connection request sent to ${studio.name}!'
+              : 'Could not send the request. Try again.',
           isError: !success,
         );
         break;
@@ -534,16 +583,17 @@ class _ConnectButton extends ConsumerWidget {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Withdraw request?'),
-            content: Text('Your pending request to ${studio.name} will be withdrawn.'),
+            title: Text('Withdraw request?'),
+            content: Text(
+                'Your pending request to ${studio.name} will be withdrawn.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text('Cancel'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Withdraw'),
+                child: Text('Withdraw'),
               ),
             ],
           ),
@@ -553,7 +603,9 @@ class _ConnectButton extends ConsumerWidget {
         if (!context.mounted) return;
         _showSnack(
           context,
-          success ? 'Request to ${studio.name} withdrawn.' : 'Could not withdraw the request. Try again.',
+          success
+              ? 'Request to ${studio.name} withdrawn.'
+              : 'Could not withdraw the request. Try again.',
           isError: !success,
         );
         break;
@@ -564,17 +616,20 @@ class _ConnectButton extends ConsumerWidget {
     }
   }
 
-  void _showSnack(BuildContext context, String message, {bool isError = false}) {
+  void _showSnack(BuildContext context, String message,
+      {bool isError = false}) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             Icon(
-              isError ? Icons.error_outline_rounded : Icons.check_circle_rounded,
+              isError
+                  ? Icons.error_outline_rounded
+                  : Icons.check_circle_rounded,
               color: Colors.white,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
@@ -588,7 +643,8 @@ class _ConnectButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = studio.connectionStatus;
-    final isPendingCall = ref.watch(studioProvider.select((p) => p.pendingConnectionIds.contains(studio.id)));
+    final isPendingCall = ref.watch(studioProvider
+        .select((p) => p.pendingConnectionIds.contains(studio.id)));
 
     Color buttonColor;
     Color textColor;
@@ -634,18 +690,19 @@ class _ConnectButton extends ConsumerWidget {
                 ? const BorderSide(color: AppColors.primary, width: 1)
                 : BorderSide.none,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: 16),
         ),
         icon: isPendingCall
             ? SizedBox(
                 width: 16,
                 height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
+                child:
+                    CircularProgressIndicator(strokeWidth: 2, color: textColor),
               )
             : Icon(icon, size: 18),
         label: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),

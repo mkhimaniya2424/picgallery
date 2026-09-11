@@ -113,8 +113,8 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     // this runs for the controller's whole lifetime, not just while the
     // wizard's Progress step is open, since a job can go offline-pending
     // long after the user has left that screen.
-    _offlineRetryTicker ??=
-        Timer.periodic(const Duration(seconds: 5), (_) => _tickOfflineRetries());
+    _offlineRetryTicker ??= Timer.periodic(
+        const Duration(seconds: 5), (_) => _tickOfflineRetries());
 
     // Load from Hive database
     final persistedJobs = await _localStore.load();
@@ -269,7 +269,8 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         webBytes: kIsWeb ? f.bytes : null,
         albumId: current.selectedAlbumId,
         folderId: current.selectedFolderId,
-        totalBytes: f.sizeBytes > 0 ? f.sizeBytes : 1024 * 1024 * 5, // Default to 5MB
+        totalBytes:
+            f.sizeBytes > 0 ? f.sizeBytes : 1024 * 1024 * 5, // Default to 5MB
         uploadedBytes: 0,
         createdAt: DateTime.now(),
         status: UploadJobStatus.queued,
@@ -296,8 +297,8 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
     final current = state.value;
     if (current == null) return;
-    if (current.jobs.every(
-        (j) => j.isDone || j.status == UploadJobStatus.paused)) {
+    if (current.jobs
+        .every((j) => j.isDone || j.status == UploadJobStatus.paused)) {
       return;
     }
 
@@ -351,7 +352,8 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
       // Only ever one real upload in flight at a time.
       if (_inFlightJobId == null && !anyUploading && hasQueued) {
-        final idx = s.jobs.indexWhere((j) => j.status == UploadJobStatus.queued);
+        final idx =
+            s.jobs.indexWhere((j) => j.status == UploadJobStatus.queued);
         if (idx != -1) {
           final job = s.jobs[idx];
 
@@ -360,7 +362,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
           final blockedByJobWifiOnly =
               job.wifiOnly && !_simulateCellular && !realOnWifi;
 
-          if (blockedBySimulation || blockedByRealGate || blockedByJobWifiOnly) {
+          if (blockedBySimulation ||
+              blockedByRealGate ||
+              blockedByJobWifiOnly) {
             // Block and queue the job instead of silently uploading over
             // mobile data — either the per-batch WiFi-only option was
             // tripped (by the dev "simulate cellular" toggle, or by a
@@ -485,9 +489,8 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       // the job survived a page reload, which drops in-memory state),
       // that's the same "can't get at this file anymore" situation as a
       // moved/deleted file on mobile — surface it the same way below.
-      final bytes = kIsWeb
-          ? job.webBytes
-          : await File(job.filePath).readAsBytes();
+      final bytes =
+          kIsWeb ? job.webBytes : await File(job.filePath).readAsBytes();
       if (bytes == null) {
         throw StateError('No bytes available for this file');
       }

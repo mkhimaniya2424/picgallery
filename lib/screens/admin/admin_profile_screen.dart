@@ -24,7 +24,6 @@ class AdminProfileScreen extends ConsumerWidget {
     (icon: Icons.help_outline_rounded, label: 'Help & Support'),
   ];
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull;
@@ -38,175 +37,187 @@ class AdminProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).brightness == Brightness.dark
           ? AppColors.darkBackground
-          : AppColors.background,
+          : (Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkBackground
+              : AppColors.background),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () => ref.read(authProvider.notifier).refreshMe(),
         child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.heroGradient,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 26,
-                            offset: const Offset(0, 12)),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: avatarUrl.isNotEmpty
-                        ? ClipOval(
-                            child: avatarUrl.startsWith('http')
-                                ? Image.network(avatarUrl, fit: BoxFit.cover, width: 88, height: 88)
-                                : Image.file(File(avatarUrl), fit: BoxFit.cover, width: 88, height: 88),
-                          )
-                        : Text(
-                            hasName ? name[0].toUpperCase() : '?',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700),
-                          ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(hasName ? name : 'Set up your profile',
-                      style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text(hasStudio ? studio : 'Set up your studio profile',
-                      style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            GlassCard(
-              borderRadius: AppRadius.lg,
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Column(
-                children: List.generate(_menu.length, (i) {
-                  final item = _menu[i];
-                  return _MenuRow(
-                    icon: item.icon,
-                    label: item.label,
-                    showDivider: i != _menu.length - 1,
-                    onTap: () {
-                      if (item.label == 'Studio Settings') {
-                        Navigator.of(context).pushNamed(AppRoutes.adminSettings);
-                      } else if (item.label == 'Download History') {
-                        Navigator.of(context).pushNamed(AppRoutes.downloadHistory);
-                      } else if (item.label == 'Help & Support') {
-                        Navigator.of(context).pushNamed(AppRoutes.helpSupport);
-                      } else {
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${item.label} coming soon')),
-                        );
-                      }
-                    },
-                  );
-                }),
-              ),
-            ),
-          const SizedBox(height: AppSpacing.lg),
-            GlassCard(
-              borderRadius: AppRadius.lg,
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: _MenuRow(
-                icon: Icons.logout_rounded,
-                label: 'Log Out',
-                iconColor: AppColors.error,
-                labelColor: AppColors.error,
-                showDivider: false,
-                onTap: () async {
-                  await ref.read(authProvider.notifier).logout();
-                  final currentSettings = ref.read(settingsProvider);
-                  await ref.read(settingsProvider.notifier).updateSettings(
-                        currentSettings.copyWith(
-                          photographerName: '',
-                          email: '',
-                          clientId: '',
-                        ),
-                      );
-                  if (context.mounted) {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                        AppRoutes.roleSelection, (route) => false);
-                  }
-                },
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            // ── Danger Zone ─────────────────────────────────────────
-            GlassCard(
-              fillColor: AppColors.error.withValues(alpha: 0.05),
-              border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
-              borderRadius: AppRadius.lg,
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: _MenuRow(
-                icon: Icons.delete_forever_rounded,
-                label: 'Delete Account',
-                iconColor: AppColors.error,
-                labelColor: AppColors.error,
-                showDivider: false,
-                onTap: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    barrierColor: Colors.black.withValues(alpha: 0.45),
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: AppColors.surface,
-                      surfaceTintColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.lg)),
-                      icon: Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.delete_forever_rounded,
-                            color: AppColors.error, size: 28),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics()),
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.heroGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 26,
+                              offset: const Offset(0, 12)),
+                        ],
                       ),
-                      title: const Text('Delete Account?',
-                          textAlign: TextAlign.center),
-                      content: const Text(
-                        'This will permanently delete your studio account and all associated data. This cannot be undone.',
-                        textAlign: TextAlign.center,
-                      ),
-                      actionsAlignment: MainAxisAlignment.center,
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(true),
-                          child: const Text('Continue',
+                      alignment: Alignment.center,
+                      child: avatarUrl.isNotEmpty
+                          ? ClipOval(
+                              child: avatarUrl.startsWith('http')
+                                  ? Image.network(avatarUrl,
+                                      fit: BoxFit.cover, width: 88, height: 88)
+                                  : Image.file(File(avatarUrl),
+                                      fit: BoxFit.cover, width: 88, height: 88),
+                            )
+                          : Text(
+                              hasName ? name[0].toUpperCase() : '?',
                               style: TextStyle(
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      ],
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w700),
+                            ),
                     ),
-                  );
-                  if (confirmed == true && context.mounted) {
-                    Navigator.of(context).pushNamed(AppRoutes.deleteAccount);
-                  }
-                },
+                    SizedBox(height: AppSpacing.md),
+                    Text(hasName ? name : 'Set up your profile',
+                        style: Theme.of(context).textTheme.titleLarge),
+                    SizedBox(height: 4),
+                    Text(hasStudio ? studio : 'Set up your studio profile',
+                        style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-          ],
-        ),
+              SizedBox(height: AppSpacing.xl),
+              GlassCard(
+                borderRadius: AppRadius.lg,
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  children: List.generate(_menu.length, (i) {
+                    final item = _menu[i];
+                    return _MenuRow(
+                      icon: item.icon,
+                      label: item.label,
+                      showDivider: i != _menu.length - 1,
+                      onTap: () {
+                        if (item.label == 'Studio Settings') {
+                          Navigator.of(context)
+                              .pushNamed(AppRoutes.adminSettings);
+                        } else if (item.label == 'Download History') {
+                          Navigator.of(context)
+                              .pushNamed(AppRoutes.downloadHistory);
+                        } else if (item.label == 'Help & Support') {
+                          Navigator.of(context)
+                              .pushNamed(AppRoutes.helpSupport);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('${item.label} coming soon')),
+                          );
+                        }
+                      },
+                    );
+                  }),
+                ),
+              ),
+              SizedBox(height: AppSpacing.lg),
+              GlassCard(
+                borderRadius: AppRadius.lg,
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: _MenuRow(
+                  icon: Icons.logout_rounded,
+                  label: 'Log Out',
+                  iconColor: AppColors.error,
+                  labelColor: AppColors.error,
+                  showDivider: false,
+                  onTap: () async {
+                    await ref.read(authProvider.notifier).logout();
+                    final currentSettings = ref.read(settingsProvider);
+                    await ref.read(settingsProvider.notifier).updateSettings(
+                          currentSettings.copyWith(
+                            photographerName: '',
+                            email: '',
+                            clientId: '',
+                          ),
+                        );
+                    if (context.mounted) {
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                          AppRoutes.roleSelection, (route) => false);
+                    }
+                  },
+                ),
+              ),
+              SizedBox(height: AppSpacing.lg),
+              // ── Danger Zone ─────────────────────────────────────────
+              GlassCard(
+                fillColor: AppColors.error.withValues(alpha: 0.05),
+                border:
+                    Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+                borderRadius: AppRadius.lg,
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: _MenuRow(
+                  icon: Icons.delete_forever_rounded,
+                  label: 'Delete Account',
+                  iconColor: AppColors.error,
+                  labelColor: AppColors.error,
+                  showDivider: false,
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      barrierColor: Colors.black.withValues(alpha: 0.45),
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor:
+                            (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkSurface
+                                : AppColors.surface),
+                        surfaceTintColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg)),
+                        icon: Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.delete_forever_rounded,
+                              color: AppColors.error, size: 28),
+                        ),
+                        title: Text('Delete Account?',
+                            textAlign: TextAlign.center),
+                        content: Text(
+                          'This will permanently delete your studio account and all associated data. This cannot be undone.',
+                          textAlign: TextAlign.center,
+                        ),
+                        actionsAlignment: MainAxisAlignment.center,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text('Continue',
+                                style: TextStyle(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      Navigator.of(context).pushNamed(AppRoutes.deleteAccount);
+                    }
+                  },
+                ),
+              ),
+              SizedBox(height: AppSpacing.xl),
+            ],
+          ),
         ),
       ),
     );
@@ -237,29 +248,36 @@ class _MenuRow extends StatelessWidget {
         InkWell(
           onTap: onTap ?? () {},
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: 14),
+            padding:
+                EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
             child: Row(
               children: [
                 Icon(icon, size: 20, color: iconColor ?? AppColors.primary),
-                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
-                        color: labelColor ?? Theme.of(context).colorScheme.onSurface),
+                        color: labelColor ??
+                            Theme.of(context).colorScheme.onSurface),
                   ),
                 ),
                 if (labelColor == null)
                   Icon(Icons.chevron_right_rounded,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant, size: 20),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 20),
               ],
             ),
           ),
         ),
-        if (showDivider) Divider(height: 1, color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
+        if (showDivider)
+          Divider(
+              height: 1,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkBorder
+                  : AppColors.border),
       ],
     );
   }

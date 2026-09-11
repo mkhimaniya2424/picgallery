@@ -50,9 +50,10 @@ class GalleryShareLink {
   });
 
   /// Primary HTTPS share URL for universal sharing (opens App if installed, Web Gallery if not).
-  String get primaryShareUrl => (shareUrl.isNotEmpty && !shareUrl.contains('localhost'))
-      ? shareUrl
-      : 'https://api.picgallery.in/gallery/$token';
+  String get primaryShareUrl =>
+      (shareUrl.isNotEmpty && !shareUrl.contains('localhost'))
+          ? shareUrl
+          : 'https://api.picgallery.in/gallery/$token';
 
   /// Legacy custom scheme deep link for backward compatibility.
   String get qrDeepLink => 'picgallery://shared/$token';
@@ -60,9 +61,10 @@ class GalleryShareLink {
   factory GalleryShareLink.fromApiJson(Map<String, dynamic> json) {
     final tokenVal = json['token'] as String;
     final rawUrl = json['share_url'] as String?;
-    final shareUrlVal = (rawUrl != null && rawUrl.isNotEmpty && !rawUrl.contains('localhost'))
-        ? rawUrl
-        : 'https://api.picgallery.in/gallery/$tokenVal';
+    final shareUrlVal =
+        (rawUrl != null && rawUrl.isNotEmpty && !rawUrl.contains('localhost'))
+            ? rawUrl
+            : 'https://api.picgallery.in/gallery/$tokenVal';
 
     return GalleryShareLink(
       id: json['id'] as String,
@@ -71,7 +73,9 @@ class GalleryShareLink {
       shareUrl: shareUrlVal,
       clientId: json['client_id'] as String?,
       hasPassword: json['has_password'] as bool? ?? false,
-      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at'] as String) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.tryParse(json['expires_at'] as String)
+          : null,
       allowDownload: json['allow_download'] as bool? ?? true,
       showWatermark: json['show_watermark'] as bool? ?? false,
       isRevoked: json['is_revoked'] as bool? ?? false,
@@ -79,9 +83,12 @@ class GalleryShareLink {
       isActive: json['is_active'] as bool? ?? true,
       viewsCount: json['views_count'] as int? ?? 0,
       downloadsCount: json['downloads_count'] as int? ?? 0,
-      lastViewedAt: json['last_viewed_at'] != null ? DateTime.tryParse(json['last_viewed_at'] as String) : null,
-      lastDownloadedAt:
-          json['last_downloaded_at'] != null ? DateTime.tryParse(json['last_downloaded_at'] as String) : null,
+      lastViewedAt: json['last_viewed_at'] != null
+          ? DateTime.tryParse(json['last_viewed_at'] as String)
+          : null,
+      lastDownloadedAt: json['last_downloaded_at'] != null
+          ? DateTime.tryParse(json['last_downloaded_at'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -93,7 +100,8 @@ class GalleryShareLink {
   /// null-safe defaults, [fromJson] just delegates to it — the only
   /// real addition here is [toJson], which the API layer never needed
   /// because the app never sends a link back to the server as JSON.
-  factory GalleryShareLink.fromJson(Map<String, dynamic> json) => GalleryShareLink.fromApiJson(json);
+  factory GalleryShareLink.fromJson(Map<String, dynamic> json) =>
+      GalleryShareLink.fromApiJson(json);
 
   Map<String, dynamic> toJson() {
     return {
@@ -195,8 +203,11 @@ class PublicGalleryData {
     final mediaJson = json['media'] as List<dynamic>? ?? const [];
     return PublicGalleryData(
       token: json['token'] as String,
-      album: PublicAlbumSummary.fromApiJson(json['album'] as Map<String, dynamic>),
-      media: mediaJson.map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>)).toList(),
+      album:
+          PublicAlbumSummary.fromApiJson(json['album'] as Map<String, dynamic>),
+      media: mediaJson
+          .map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>))
+          .toList(),
       allowDownload: json['allow_download'] as bool? ?? true,
       showWatermark: json['show_watermark'] as bool? ?? false,
       requiresPassword: json['requires_password'] as bool? ?? false,

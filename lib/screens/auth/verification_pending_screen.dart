@@ -29,14 +29,18 @@ class VerificationPendingScreen extends ConsumerStatefulWidget {
   const VerificationPendingScreen({super.key, required this.email, this.role});
 
   @override
-  ConsumerState<VerificationPendingScreen> createState() => _VerificationPendingScreenState();
+  ConsumerState<VerificationPendingScreen> createState() =>
+      _VerificationPendingScreenState();
 }
 
-class _VerificationPendingScreenState extends ConsumerState<VerificationPendingScreen>
+class _VerificationPendingScreenState
+    extends ConsumerState<VerificationPendingScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-      AnimationController(vsync: this, duration: AppDurations.medium)..forward();
-  late final Animation<double> _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+      AnimationController(vsync: this, duration: AppDurations.medium)
+        ..forward();
+  late final Animation<double> _scale =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
 
   bool _resending = false;
   bool _checking = false;
@@ -47,18 +51,21 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
       final user = await ref.read(authRepositoryProvider).getMe();
       if (!mounted) return;
       if (user.isEmailVerified) {
-        Navigator.of(context).pushNamed(AppRoutes.completeProfile, arguments: widget.role);
+        Navigator.of(context)
+            .pushNamed(AppRoutes.completeProfile, arguments: widget.role);
       } else {
         await AppPopup.show(
           context,
           title: "Not Verified Yet",
-          message: "You haven't verified your email yet. Check your inbox and tap the link, then try again.",
+          message:
+              "You haven't verified your email yet. Check your inbox and tap the link, then try again.",
           isError: true,
         );
       }
     } on ApiException catch (e) {
       if (!mounted) return;
-      await AppPopup.show(context, title: "Something Went Wrong", message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: "Something Went Wrong", message: e.message, isError: true);
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -67,12 +74,14 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
   Future<void> _resend() async {
     setState(() => _resending = true);
     try {
-      final message = await ref.read(authRepositoryProvider).sendVerificationEmail();
+      final message =
+          await ref.read(authRepositoryProvider).sendVerificationEmail();
       if (!mounted) return;
       await AppPopup.show(context, title: "Email Sent", message: message);
     } on ApiException catch (e) {
       if (!mounted) return;
-      await AppPopup.show(context, title: "Something Went Wrong", message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: "Something Went Wrong", message: e.message, isError: true);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -93,7 +102,8 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
         child: SafeArea(
           top: true,
           child: AuthContainer(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xl),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl, vertical: AppSpacing.xl),
             mainAxisAlignment: MainAxisAlignment.center,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -107,21 +117,30 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
                       gradient: AppColors.heroGradient,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: AppColors.accent.withValues(alpha: 0.3), blurRadius: 36, offset: const Offset(0, 16)),
+                        BoxShadow(
+                            color: AppColors.accent.withValues(alpha: 0.3),
+                            blurRadius: 36,
+                            offset: const Offset(0, 16)),
                       ],
                     ),
-                    child: const Icon(Icons.watch_later_rounded, color: Colors.white, size: 58),
+                    child: const Icon(Icons.watch_later_rounded,
+                        color: Colors.white, size: 58),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text('Verify your email to continue', style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+                Text('Verify your email to continue',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center),
                 const SizedBox(height: 10),
                 Text(
                   widget.email.isEmpty
                       ? 'We\'re still waiting on you to confirm your email before you can continue.'
                       : 'We\'re still waiting on you to confirm\n${widget.email}\nbefore you can continue.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: AppColors.subtitle),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 GradientButton(
@@ -133,8 +152,15 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
                 TextButton(
                   onPressed: _resending ? null : _resend,
                   child: _resending
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
-                      : const Text('Resend Email', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AppColors.primary))
+                      : const Text('Resend Email',
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700)),
                 ),
               ],
             ),

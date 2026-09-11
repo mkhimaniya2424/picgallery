@@ -108,7 +108,8 @@ class LocalStudioDirectoryRepository implements StudioDirectoryRepository {
     if (index == -1) {
       throw NotFoundException('Studio "$studioId" no longer exists');
     }
-    _studios[index] = _studios[index].copyWith(connectionStatus: StudioConnectionStatus.pending);
+    _studios[index] = _studios[index]
+        .copyWith(connectionStatus: StudioConnectionStatus.pending);
     await _store.saveAll(_studios);
   }
 
@@ -119,7 +120,8 @@ class LocalStudioDirectoryRepository implements StudioDirectoryRepository {
     if (index == -1) {
       throw NotFoundException('Studio "$studioId" no longer exists');
     }
-    _studios[index] = _studios[index].copyWith(connectionStatus: StudioConnectionStatus.notConnected);
+    _studios[index] = _studios[index]
+        .copyWith(connectionStatus: StudioConnectionStatus.notConnected);
     await _store.saveAll(_studios);
   }
 }

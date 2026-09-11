@@ -10,7 +10,8 @@ import 'auth_providers.dart';
 /// Singleton repository that talks to the three (now four, with album media)
 /// `/client/…` endpoints. Swap out [ApiClientGalleryRepository] here for a
 /// mock in tests — nothing else needs to change.
-final clientGalleryRepositoryProvider = Provider<ClientGalleryRepository>((ref) {
+final clientGalleryRepositoryProvider =
+    Provider<ClientGalleryRepository>((ref) {
   return ApiClientGalleryRepository(apiClient: ref.watch(apiClientProvider));
 });
 
@@ -80,15 +81,20 @@ class ClientGalleryState {
     return ClientGalleryState(
       studios: studios ?? this.studios,
       isLoadingStudios: isLoadingStudios ?? this.isLoadingStudios,
-      studiosError: clearStudiosError ? null : (studiosError ?? this.studiosError),
-      selectedStudioId:
-          clearSelectedStudio ? null : (selectedStudioId ?? this.selectedStudioId),
-      selectedStudio: clearSelectedStudio ? null : (selectedStudio ?? this.selectedStudio),
+      studiosError:
+          clearStudiosError ? null : (studiosError ?? this.studiosError),
+      selectedStudioId: clearSelectedStudio
+          ? null
+          : (selectedStudioId ?? this.selectedStudioId),
+      selectedStudio:
+          clearSelectedStudio ? null : (selectedStudio ?? this.selectedStudio),
       folders: folders ?? this.folders,
       isLoadingFolders: isLoadingFolders ?? this.isLoadingFolders,
-      foldersError: clearFoldersError ? null : (foldersError ?? this.foldersError),
-      selectedFolderId:
-          clearSelectedFolder ? null : (selectedFolderId ?? this.selectedFolderId),
+      foldersError:
+          clearFoldersError ? null : (foldersError ?? this.foldersError),
+      selectedFolderId: clearSelectedFolder
+          ? null
+          : (selectedFolderId ?? this.selectedFolderId),
       albums: albums ?? this.albums,
       isLoadingAlbums: isLoadingAlbums ?? this.isLoadingAlbums,
       albumsError: clearAlbumsError ? null : (albumsError ?? this.albumsError),
@@ -182,7 +188,8 @@ class ClientGalleryNotifier extends StateNotifier<ClientGalleryState> {
 
   Future<void> _loadAlbums(String studioId, {required String? folderId}) async {
     try {
-      final albums = await _repo.fetchSharedAlbums(studioId, folderId: folderId);
+      final albums =
+          await _repo.fetchSharedAlbums(studioId, folderId: folderId);
       state = state.copyWith(albums: albums, isLoadingAlbums: false);
     } catch (e) {
       state = state.copyWith(

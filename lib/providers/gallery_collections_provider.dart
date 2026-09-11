@@ -23,14 +23,15 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 /// media ids) changed, along with the screens that render them.
 final galleryCollectionsProvider =
     ChangeNotifierProvider<GalleryCollectionsController>((ref) {
-  final controller =
-      GalleryCollectionsController(repo: ref.watch(collectionRepositoryProvider));
+  final controller = GalleryCollectionsController(
+      repo: ref.watch(collectionRepositoryProvider));
   controller.load();
   return controller;
 });
 
 class GalleryCollectionsController extends ChangeNotifier {
-  GalleryCollectionsController({required CollectionRepository repo}) : _repo = repo;
+  GalleryCollectionsController({required CollectionRepository repo})
+      : _repo = repo;
 
   final CollectionRepository _repo;
 
@@ -158,7 +159,8 @@ class GalleryCollectionsController extends ChangeNotifier {
     if (toAdd.isEmpty) return;
 
     try {
-      final saved = await _repo.addAlbums(collectionId: collectionId, albumIds: toAdd);
+      final saved =
+          await _repo.addAlbums(collectionId: collectionId, albumIds: toAdd);
       _collections[idx] = saved;
       _lastError = null;
       notifyListeners();
@@ -179,7 +181,8 @@ class GalleryCollectionsController extends ChangeNotifier {
     if (!c.galleryIds.contains(galleryId)) return;
 
     try {
-      final saved = await _repo.removeAlbum(collectionId: collectionId, albumId: galleryId);
+      final saved = await _repo.removeAlbum(
+          collectionId: collectionId, albumId: galleryId);
       _collections[idx] = saved;
       _lastError = null;
       notifyListeners();
@@ -211,7 +214,8 @@ class GalleryCollectionsController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final saved = await _repo.reorderAlbums(collectionId: collectionId, albumIds: ids);
+      final saved =
+          await _repo.reorderAlbums(collectionId: collectionId, albumIds: ids);
       _collections[idx] = saved;
       _lastError = null;
       notifyListeners();

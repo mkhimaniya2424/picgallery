@@ -95,7 +95,8 @@ class _CollectionDetailsScreenState
     final confirmed = await showDeleteConfirmationDialog(
       context: context,
       title: 'Delete item?',
-      message: 'This will permanently remove "${collection.name}". The albums inside it are not deleted. This cannot be undone.',
+      message:
+          'This will permanently remove "${collection.name}". The albums inside it are not deleted. This cannot be undone.',
     );
     if (confirmed != true || !context.mounted) return;
     await ref.read(galleryCollectionsProvider).deleteCollection(collection.id);
@@ -124,7 +125,6 @@ class _CollectionDetailsScreenState
     }
 
     return Scaffold(
-      
       appBar: CustomAppBar(
         title: collection?.name ?? 'Collection',
         showBack: true,
@@ -133,12 +133,12 @@ class _CollectionDetailsScreenState
             : [
                 IconButton(
                   tooltip: 'Rename',
-                  icon: const Icon(Icons.edit_outlined),
+                  icon: Icon(Icons.edit_outlined),
                   onPressed: () => _openRenameDialog(context, collection),
                 ),
                 IconButton(
                   tooltip: 'Delete',
-                  icon: const Icon(Icons.delete_outline_rounded,
+                  icon: Icon(Icons.delete_outline_rounded,
                       color: AppColors.error),
                   onPressed: () => _confirmDelete(context, collection),
                 ),
@@ -153,16 +153,19 @@ class _CollectionDetailsScreenState
               children: [
                 if (collection != null)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.md,
-                        AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+                    padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm,
+                        AppSpacing.md, AppSpacing.sm),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         '${galleryIds.length} '
                         '${galleryIds.length == 1 ? 'album' : 'albums'} · '
                         'Updated ${_timeAgo(collection.updatedAt)}',
-                        style: const TextStyle(
-                          color: AppColors.subtitle,
+                        style: TextStyle(
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
                         ),
@@ -205,8 +208,8 @@ class _CollectionDetailsScreenState
           : FloatingActionButton.extended(
               heroTag: 'collection_details_fab',
               onPressed: () => _showAddGallerySheet(context, ref, collection),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Gallery'),
+              icon: Icon(Icons.add_rounded),
+              label: Text('Add Gallery'),
             ),
     );
   }
@@ -225,7 +228,6 @@ class _CollectionDetailsScreenState
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
@@ -234,7 +236,7 @@ class _CollectionDetailsScreenState
           builder: (ctx, setState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   AppSpacing.md,
                   AppSpacing.lg,
@@ -254,26 +256,32 @@ class _CollectionDetailsScreenState
                                 .titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.text,
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text),
                                 ),
                           ),
                         ),
                         IconButton(
                           tooltip: 'Close',
                           onPressed: () => Navigator.of(ctx).pop(),
-                          icon: const Icon(Icons.close_rounded),
+                          icon: Icon(Icons.close_rounded),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     if (available.isEmpty)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                         child: Center(
                           child: Text(
                             'No albums yet — create one first.',
                             style: TextStyle(
-                              color: AppColors.subtitle,
+                              color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -284,8 +292,9 @@ class _CollectionDetailsScreenState
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            final crossAxisCount =
-                                (constraints.maxWidth / 130).floor().clamp(2, 6);
+                            final crossAxisCount = (constraints.maxWidth / 130)
+                                .floor()
+                                .clamp(2, 6);
                             return GridView.builder(
                               itemCount: available.length,
                               gridDelegate:
@@ -338,25 +347,24 @@ class _CollectionDetailsScreenState
                                           ),
                                         ),
                                         child: Padding(
-                                          padding: const EdgeInsets.all(8),
+                                          padding: EdgeInsets.all(8),
                                           child: Column(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.end,
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              const Icon(
+                                              Icon(
                                                 Icons.photo_library_rounded,
                                                 color: Colors.white,
                                                 size: 22,
                                               ),
-                                              const SizedBox(height: 6),
+                                              SizedBox(height: 6),
                                               Text(
                                                 a.name,
                                                 maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
-                                                style: const TextStyle(
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w800,
@@ -376,7 +384,7 @@ class _CollectionDetailsScreenState
                                                   BorderRadius.circular(
                                                       AppRadius.lg),
                                             ),
-                                            child: const Center(
+                                            child: Center(
                                               child: Icon(
                                                   Icons.check_circle_rounded,
                                                   color: Colors.white),
@@ -393,7 +401,7 @@ class _CollectionDetailsScreenState
                                                   BorderRadius.circular(
                                                       AppRadius.lg),
                                             ),
-                                            child: const Align(
+                                            child: Align(
                                               alignment: Alignment.topRight,
                                               child: Padding(
                                                 padding: EdgeInsets.all(6),
@@ -413,12 +421,12 @@ class _CollectionDetailsScreenState
                           },
                         ),
                       ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     Row(
                       children: [
                         Expanded(
                           child: FilledButton.icon(
-                            icon: const Icon(Icons.add_rounded),
+                            icon: Icon(Icons.add_rounded),
                             label: Text(
                               'Add (${selected.length})',
                             ),
@@ -499,7 +507,7 @@ class _GalleryList extends ConsumerWidget {
             final a = albums[i];
             return Padding(
               key: ValueKey(a.id),
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: EdgeInsets.only(bottom: AppSpacing.sm),
               child: _GalleryRow(
                 index: i,
                 album: a,
@@ -544,7 +552,7 @@ class _GalleryRow extends StatelessWidget {
           arguments: album.id,
         ),
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
+          padding: EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.md),
             boxShadow: AppShadows.subtle,
@@ -553,10 +561,12 @@ class _GalleryRow extends StatelessWidget {
             children: [
               ReorderableDragStartListener(
                 index: index,
-                child: const Icon(Icons.drag_indicator_rounded,
-                    color: AppColors.subtitle),
+                child: Icon(Icons.drag_indicator_rounded,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Container(
                 width: 46,
                 height: 46,
@@ -568,13 +578,13 @@ class _GalleryRow extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.photo_library_rounded,
                   color: Colors.white,
                   size: 20,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,17 +594,21 @@ class _GalleryRow extends StatelessWidget {
                       album.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.text,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       '${album.photoCount} photo${album.photoCount == 1 ? '' : 's'} · '
                       '${album.videoCount} video${album.videoCount == 1 ? '' : 's'}',
-                      style: const TextStyle(
-                        color: AppColors.subtitle,
+                      style: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : AppColors.subtitle),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -605,7 +619,7 @@ class _GalleryRow extends StatelessWidget {
               IconButton(
                 tooltip: 'Remove',
                 onPressed: onRemove,
-                icon: const Icon(Icons.remove_circle_outline_rounded,
+                icon: Icon(Icons.remove_circle_outline_rounded,
                     color: AppColors.error),
               ),
             ],
@@ -628,44 +642,48 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 88,
               height: 88,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: AppColors.softWash,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.collections_bookmark_rounded,
+              child: Icon(Icons.collections_bookmark_rounded,
                   size: 38, color: AppColors.primary),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text(
+            SizedBox(height: AppSpacing.lg),
+            Text(
               'Nothing here yet',
               style: TextStyle(
-                color: AppColors.text,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text),
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            const Text(
+            SizedBox(height: AppSpacing.sm),
+            Text(
               'Add albums to start building this collection.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle),
                 fontSize: 13.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             TextButton.icon(
               onPressed: onAdd,
-              icon: const Icon(Icons.add_rounded, color: AppColors.primary),
-              label: const Text(
+              icon: Icon(Icons.add_rounded, color: AppColors.primary),
+              label: Text(
                 'Add Gallery',
                 style: TextStyle(
                   color: AppColors.primary,
@@ -685,7 +703,7 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: LoadingWidget(message: 'Loading collection…'));
+    return Center(child: LoadingWidget(message: 'Loading collection…'));
   }
 }
 
@@ -697,7 +715,7 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -708,33 +726,37 @@ class _ErrorState extends StatelessWidget {
                 color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline_rounded,
+              child: Icon(Icons.error_outline_rounded,
                   size: 32, color: AppColors.error),
             ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
+            SizedBox(height: AppSpacing.md),
+            Text(
               'Unable to load this collection',
               style: TextStyle(
-                color: AppColors.text,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text),
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
+            SizedBox(height: 6),
+            Text(
               'Check your connection and try again.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             TextButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
-              label: const Text(
+              icon: Icon(Icons.refresh_rounded, color: AppColors.primary),
+              label: Text(
                 'Retry',
                 style: TextStyle(
                   color: AppColors.primary,
@@ -754,13 +776,15 @@ class _NotFoundState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.xl),
         child: Text(
           'Collection not found.',
           style: TextStyle(
-            color: AppColors.subtitle,
+            color: (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.subtitleOnDark
+                : AppColors.subtitle),
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -818,7 +842,7 @@ class _TextInputDialogState extends State<_TextInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text('Cancel'),
         ),
         FilledButton.tonal(
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),

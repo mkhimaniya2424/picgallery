@@ -52,7 +52,9 @@ class _ServerSettingsSheetState extends State<ServerSettingsSheet> {
     if (uri != null && uri.scheme == 'http' && uri.port == 8000) {
       return uri.host;
     }
-    return baseUrl.endsWith('/api/v1') ? baseUrl.substring(0, baseUrl.length - '/api/v1'.length) : baseUrl;
+    return baseUrl.endsWith('/api/v1')
+        ? baseUrl.substring(0, baseUrl.length - '/api/v1'.length)
+        : baseUrl;
   }
 
   Future<void> _save() async {
@@ -77,12 +79,15 @@ class _ServerSettingsSheetState extends State<ServerSettingsSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -93,17 +98,21 @@ class _ServerSettingsSheetState extends State<ServerSettingsSheet> {
                 width: 40,
                 height: 4,
                 margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(4)),
               ),
             ),
-            Text('Server Settings', style: Theme.of(context).textTheme.titleLarge),
+            Text('Server Settings',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 6),
             Text(
               "Point the app at your backend: either your PC's LAN IP (find it with "
               '`ipconfig` on Windows or `ifconfig` on Mac/Linux — only works on the same '
               "Wi-Fi), or a persistent tunnel URL (e.g. from ngrok or Cloudflare Tunnel) "
               'so it works from any network, including mobile data. No code edit or rebuild needed.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
+              style:
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
             const SizedBox(height: AppSpacing.lg),
             CustomTextField(
@@ -114,7 +123,8 @@ class _ServerSettingsSheetState extends State<ServerSettingsSheet> {
               keyboardType: TextInputType.url,
             ),
             const SizedBox(height: AppSpacing.lg),
-            GradientButton(label: 'Save & Use Now', isLoading: _saving, onPressed: _save),
+            GradientButton(
+                label: 'Save & Use Now', isLoading: _saving, onPressed: _save),
           ],
         ),
       ),

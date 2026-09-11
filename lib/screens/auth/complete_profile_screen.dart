@@ -16,7 +16,12 @@ import '../../widgets/inputs/custom_text_field.dart';
 
 /// Specializations a Studio can tag themselves with — shown as selectable
 /// chips on step "Studio business details" (photographer role only).
-const List<String> kStudioSpecializations = ['Wedding', 'Portrait', 'Event', 'Product'];
+const List<String> kStudioSpecializations = [
+  'Wedding',
+  'Portrait',
+  'Event',
+  'Product'
+];
 
 /// Final onboarding step: profile photo placeholder + personal details.
 /// No image picker package is wired up (no backend / no API per the
@@ -39,7 +44,8 @@ class CompleteProfileScreen extends ConsumerStatefulWidget {
   const CompleteProfileScreen({super.key, this.role});
 
   @override
-  ConsumerState<CompleteProfileScreen> createState() => _CompleteProfileScreenState();
+  ConsumerState<CompleteProfileScreen> createState() =>
+      _CompleteProfileScreenState();
 }
 
 class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
@@ -101,7 +107,8 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_isPhotographer && _specializations.isEmpty) {
-      AppToast.show(context, 'Select at least one specialization', isError: true);
+      AppToast.show(context, 'Select at least one specialization',
+          isError: true);
       return;
     }
     setState(() => _isSaving = true);
@@ -112,21 +119,28 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
             country: _country,
             state: _state,
             city: _city,
-            address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-            bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
-            studioName: _isPhotographer ? _studioNameController.text.trim() : null,
+            address: _addressController.text.trim().isEmpty
+                ? null
+                : _addressController.text.trim(),
+            bio: _bioController.text.trim().isEmpty
+                ? null
+                : _bioController.text.trim(),
+            studioName:
+                _isPhotographer ? _studioNameController.text.trim() : null,
             specializations: _isPhotographer ? _specializations.toList() : null,
           );
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      await AppPopup.show(context, title: 'Something Went Wrong', message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: 'Something Went Wrong', message: e.message, isError: true);
       return;
     }
 
     if (!mounted) return;
     setState(() => _isSaving = false);
-    Navigator.of(context).pushReplacementNamed(AppRoutes.cameraPermission, arguments: widget.role);
+    Navigator.of(context).pushReplacementNamed(AppRoutes.cameraPermission,
+        arguments: widget.role);
   }
 
   @override
@@ -145,7 +159,8 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: _isPhotographer ? 'Studio Details' : 'Complete Profile'),
+      appBar: CustomAppBar(
+          title: _isPhotographer ? 'Studio Details' : 'Complete Profile'),
       body: ScreenBackdrop(
         child: SafeArea(
           top: false,
@@ -169,11 +184,17 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                                 gradient: AppColors.heroGradient,
                                 shape: BoxShape.circle,
                                 boxShadow: [
-                                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 30, offset: const Offset(0, 12)),
+                                  BoxShadow(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 30,
+                                      offset: const Offset(0, 12)),
                                 ],
                               ),
                               child: Icon(
-                                _isPhotographer ? Icons.storefront_rounded : Icons.person_rounded,
+                                _isPhotographer
+                                    ? Icons.storefront_rounded
+                                    : Icons.person_rounded,
                                 color: Colors.white,
                                 size: 48,
                               ),
@@ -182,7 +203,8 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                               bottom: 0,
                               right: 0,
                               child: InkWell(
-                                onTap: () => AppToast.show(context, 'Photo upload — coming soon'),
+                                onTap: () => AppToast.show(
+                                    context, 'Photo upload — coming soon'),
                                 borderRadius: BorderRadius.circular(100),
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
@@ -190,9 +212,15 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                                     color: Colors.white,
                                     shape: BoxShape.circle,
                                     border: Border.all(color: AppColors.border),
-                                    boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 10)],
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.2),
+                                          blurRadius: 10)
+                                    ],
                                   ),
-                                  child: const Icon(Icons.camera_alt_rounded, size: 16, color: AppColors.primary),
+                                  child: const Icon(Icons.camera_alt_rounded,
+                                      size: 16, color: AppColors.primary),
                                 ),
                               ),
                             ),
@@ -204,7 +232,9 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                         label: 'Name',
                         icon: Icons.person_outline_rounded,
                         controller: _nameController,
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Name is required'
+                            : null,
                       ),
                       if (_isPhotographer) ...[
                         const SizedBox(height: AppSpacing.md),
@@ -212,7 +242,9 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                           label: 'Studio Name',
                           icon: Icons.storefront_rounded,
                           controller: _studioNameController,
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Studio name is required' : null,
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Studio name is required'
+                              : null,
                         ),
                       ],
                       const SizedBox(height: AppSpacing.md),
@@ -229,10 +261,18 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      CustomTextField(label: 'Address', icon: Icons.home_outlined, controller: _addressController, maxLines: 2),
+                      CustomTextField(
+                          label: 'Address',
+                          icon: Icons.home_outlined,
+                          controller: _addressController,
+                          maxLines: 2),
                       if (_isPhotographer) ...[
                         const SizedBox(height: AppSpacing.lg),
-                        Text('Specialization', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
+                        Text('Specialization',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(fontSize: 15)),
                         const SizedBox(height: 6),
                         Text(
                           'Select what this studio shoots — helps clients discover you.',
@@ -248,7 +288,9 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                               label: Text(spec),
                               selected: selected,
                               onSelected: (v) => setState(() {
-                                v ? _specializations.add(spec) : _specializations.remove(spec);
+                                v
+                                    ? _specializations.add(spec)
+                                    : _specializations.remove(spec);
                               }),
                               showCheckmark: false,
                               labelStyle: TextStyle(
@@ -256,19 +298,33 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                                 fontSize: 13,
                                 color: selected ? Colors.white : AppColors.text,
                               ),
-                              backgroundColor: Colors.white.withValues(alpha: 0.7),
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.7),
                               selectedColor: AppColors.primary,
-                              side: BorderSide(color: selected ? AppColors.primary : AppColors.border),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              side: BorderSide(
+                                  color: selected
+                                      ? AppColors.primary
+                                      : AppColors.border),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.pill)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 4),
                             );
                           }).toList(),
                         ),
                       ],
                       const SizedBox(height: AppSpacing.md),
-                      CustomTextField(label: 'Bio', icon: Icons.edit_note_rounded, controller: _bioController, maxLines: 3),
+                      CustomTextField(
+                          label: 'Bio',
+                          icon: Icons.edit_note_rounded,
+                          controller: _bioController,
+                          maxLines: 3),
                       const SizedBox(height: AppSpacing.xl),
-                      GradientButton(label: 'Save', isLoading: _isSaving, onPressed: _save),
+                      GradientButton(
+                          label: 'Save',
+                          isLoading: _isSaving,
+                          onPressed: _save),
                       const SizedBox(height: AppSpacing.xl),
                     ],
                   ),

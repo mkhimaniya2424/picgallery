@@ -37,16 +37,16 @@ class ConnectedAlbumsState {
   /// Most-recently-updated albums first — backs "Continue browsing" /
   /// "Recently Viewed"-style carousels. Capped at [limit].
   List<AlbumModel> recentAlbums({int limit = 5}) {
-    final sorted = [...albums]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final sorted = [...albums]
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return sorted.take(limit).toList(growable: false);
   }
 
   /// Highest asset-count albums first, empty albums excluded — backs
   /// "Trending"-style carousels. Capped at [limit].
   List<AlbumModel> trendingAlbums({int limit = 5}) {
-    final sorted = [...albums]
-      ..sort((a, b) =>
-          (b.photoCount + b.videoCount).compareTo(a.photoCount + a.videoCount));
+    final sorted = [...albums]..sort((a, b) =>
+        (b.photoCount + b.videoCount).compareTo(a.photoCount + a.videoCount));
     return sorted
         .where((a) => a.photoCount + a.videoCount > 0)
         .take(limit)

@@ -38,7 +38,6 @@ class _AdminMainNavScreenState extends ConsumerState<AdminMainNavScreen> {
     const AdminProfileScreen(),
   ];
 
-
   @override
   Widget build(BuildContext context) {
     final authUser = ref.watch(authProvider).valueOrNull;
@@ -87,11 +86,11 @@ class BackgroundUploadIndicator extends ConsumerWidget {
     final queueStateAsync = ref.watch(uploadQueueProvider);
 
     return queueStateAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => SizedBox.shrink(),
+      error: (_, __) => SizedBox.shrink(),
       data: (state) {
         final activeJobs = state.jobs.where((j) => !j.isDone).toList();
-        if (activeJobs.isEmpty) return const SizedBox.shrink();
+        if (activeJobs.isEmpty) return SizedBox.shrink();
 
         final isProcessing = state.isProcessing;
         final completedCount = state.completedCount;
@@ -99,7 +98,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
         final progress = state.overallProgress;
 
         return Card(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 12),
           elevation: 4,
           shadowColor: Colors.black.withValues(alpha: 0.12),
           shape:
@@ -110,7 +109,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
             },
             borderRadius: BorderRadius.circular(16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
@@ -136,7 +135,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                       size: 16,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -149,7 +148,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                               isProcessing
                                   ? 'Uploading: $completedCount of $totalCount done'
                                   : 'Uploads Paused ($completedCount of $totalCount done)',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.black87,
@@ -167,7 +166,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
@@ -184,7 +183,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -192,7 +191,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                         IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          icon: const Icon(Icons.pause_rounded,
+                          icon: Icon(Icons.pause_rounded,
                               size: 20, color: Colors.orange),
                           onPressed: () =>
                               ref.read(uploadQueueProvider.notifier).pauseAll(),
@@ -202,13 +201,13 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                         IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          icon: const Icon(Icons.play_arrow_rounded,
+                          icon: Icon(Icons.play_arrow_rounded,
                               size: 20, color: AppColors.primary),
                           onPressed: () => ref
                               .read(uploadQueueProvider.notifier)
                               .resumeAll(),
                         ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       IconButton(
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -218,16 +217,16 @@ class BackgroundUploadIndicator extends ConsumerWidget {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('Cancel Uploads?'),
-                              content: const Text(
+                              title: Text('Cancel Uploads?'),
+                              content: Text(
                                   'Cancel all pending and active background uploads?'),
                               actions: [
                                 TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('No')),
+                                    child: Text('No')),
                                 FilledButton(
                                     onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Yes, Cancel')),
+                                    child: Text('Yes, Cancel')),
                               ],
                             ),
                           );

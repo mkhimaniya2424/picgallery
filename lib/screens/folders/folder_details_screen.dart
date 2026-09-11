@@ -31,7 +31,8 @@ class FolderDetailsScreen extends ConsumerStatefulWidget {
   const FolderDetailsScreen({super.key, required this.folderId});
 
   @override
-  ConsumerState<FolderDetailsScreen> createState() => _FolderDetailsScreenState();
+  ConsumerState<FolderDetailsScreen> createState() =>
+      _FolderDetailsScreenState();
 }
 
 class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
@@ -82,7 +83,9 @@ class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
     // (AlbumModel.folderId), so this preview always matches what's
     // actually filed here instead of a stand-in approximation.
     final albumState = ref.watch(albumProvider);
-    final relatedAlbums = albumState.allAlbums.where((a) => a.folderId == folderId).toList()
+    final relatedAlbums = albumState.allAlbums
+        .where((a) => a.folderId == folderId)
+        .toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
     final mediaState = ref.watch(mediaProvider);
@@ -125,7 +128,9 @@ class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
                   children: [
                     InkWell(
                       onTap: () => Navigator.of(context).popUntil(
-                        (route) => route.settings.name == AppRoutes.adminFolderList || route.isFirst,
+                        (route) =>
+                            route.settings.name == AppRoutes.adminFolderList ||
+                            route.isFirst,
                       ),
                       child: const Text(
                         'Folders',
@@ -139,7 +144,8 @@ class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
                     for (final ancestor in ancestors) ...[
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.subtitle),
+                        child: Icon(Icons.chevron_right_rounded,
+                            size: 16, color: AppColors.subtitle),
                       ),
                       InkWell(
                         onTap: () => Navigator.of(context).pushNamed(
@@ -268,8 +274,9 @@ class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
               const EmptyStateCard(message: 'No subfolders here yet.')
             else
               ...subfolders.map((child) {
-                final childCount =
-                    folderState.folders.where((f) => f.parentId == child.id).length;
+                final childCount = folderState.folders
+                    .where((f) => f.parentId == child.id)
+                    .length;
                 final cover = coverForFolder(
                   folderId: child.id,
                   allMedia: mediaState.allMedia,
@@ -316,7 +323,8 @@ class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
             const SizedBox(height: AppSpacing.sm),
             if (directMedia.isEmpty)
               const EmptyStateCard(
-                  message: 'No media added to this folder yet. Tap "Add Media" to upload some.')
+                  message:
+                      'No media added to this folder yet. Tap "Add Media" to upload some.')
             else
               GridView.builder(
                 shrinkWrap: true,

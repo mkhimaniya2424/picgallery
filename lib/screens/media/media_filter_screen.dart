@@ -23,42 +23,45 @@ class MediaFilterScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(AppSpacing.lg),
             child: Text(
               'Filter your local Hive media library',
               style: TextStyle(
-                  color: AppColors.subtitle, fontWeight: FontWeight.w700),
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle),
+                  fontWeight: FontWeight.w700),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
                 FilterChip(
-                  label: const Text('Photos'),
+                  label: Text('Photos'),
                   selected: c.type == MediaType.photo,
                   onSelected: (v) => ref
                       .read(mediaProvider)
                       .setType(v ? MediaType.photo : null),
                 ),
                 FilterChip(
-                  label: const Text('Videos'),
+                  label: Text('Videos'),
                   selected: c.type == MediaType.video,
                   onSelected: (v) => ref
                       .read(mediaProvider)
                       .setType(v ? MediaType.video : null),
                 ),
                 FilterChip(
-                  label: const Text('Favorites'),
+                  label: Text('Favorites'),
                   selected: c.filterOption == MediaFilterOption.favorites,
                   onSelected: (v) => ref.read(mediaProvider).setFilterOption(
                       v ? MediaFilterOption.favorites : MediaFilterOption.all),
                 ),
                 FilterChip(
-                  label: const Text('Reset'),
+                  label: Text('Reset'),
                   selected: false,
                   onSelected: (_) {
                     final controller = ref.read(mediaProvider);
@@ -75,12 +78,12 @@ class MediaFilterScreen extends ConsumerWidget {
           ),
           const Spacer(),
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: SizedBox(
               width: double.infinity,
               child: FilledButton.tonal(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Apply'),
+                child: Text('Apply'),
               ),
             ),
           )

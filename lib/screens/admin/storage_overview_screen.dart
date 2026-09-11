@@ -29,13 +29,16 @@ class StorageOverviewScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Storage Overview'),
       body: asyncSnapshot.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (error, _) => const Center(
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (error, _) => Center(
           child: Padding(
             padding: EdgeInsets.all(AppSpacing.lg),
             child: Text('Could not load storage data',
-                style: TextStyle(color: AppColors.subtitle)),
+                style: TextStyle(
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle))),
           ),
         ),
         data: (snapshot) => RefreshIndicator(
@@ -63,16 +66,16 @@ class StorageOverviewScreen extends ConsumerWidget {
                 ..sort((a, b) => b.mediaCount.compareTo(a.mediaCount));
 
               return ListView(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                     AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
                 children: [
                   StorageUsageCard(
                     usedLabel: storageStat.value,
                     totalLabel: '',
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   const SectionHeader(title: 'Breakdown', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -105,10 +108,10 @@ class StorageOverviewScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   const SectionHeader(
                       title: 'Heaviest Uploads', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   heaviest.isEmpty
                       ? const EmptyStateCard(
                           icon: Icons.cloud_off_rounded,
@@ -127,10 +130,10 @@ class StorageOverviewScreen extends ConsumerWidget {
                           itemBuilder: (_, i) =>
                               RecentUploadCard(data: heaviest[i]),
                         ),
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   const SectionHeader(
                       title: 'Albums Using Storage', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   albumUploads.isEmpty
                       ? const EmptyStateCard(message: 'No albums yet')
                       : SizedBox(
@@ -139,37 +142,42 @@ class StorageOverviewScreen extends ConsumerWidget {
                             scrollDirection: Axis.horizontal,
                             itemCount: albumUploads.length,
                             separatorBuilder: (_, __) =>
-                                const SizedBox(width: AppSpacing.sm),
+                                SizedBox(width: AppSpacing.sm),
                             itemBuilder: (_, i) =>
                                 RecentAlbumCard(data: albumUploads[i]),
                           ),
                         ),
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   Builder(
                     builder: (context) {
-                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      final isDark =
+                          Theme.of(context).brightness == Brightness.dark;
                       return Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           gradient: isDark ? null : AppColors.softWash,
                           color: isDark ? AppColors.darkSurface : null,
                           borderRadius: BorderRadius.circular(AppRadius.lg),
                           border: Border.all(
-                            color: isDark ? AppColors.darkBorder : AppColors.border,
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
                           ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.workspace_premium_rounded,
+                            Icon(Icons.workspace_premium_rounded,
                                 color: AppColors.primary),
-                            const SizedBox(width: AppSpacing.md),
+                            SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Text(
                                 'Running low on space? Upgrade your studio plan for more storage.',
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? AppColors.textOnDark : AppColors.text,
+                                  color: isDark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text,
                                 ),
                               ),
                             ),

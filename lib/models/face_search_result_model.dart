@@ -14,7 +14,8 @@ class FaceSearchResultModel {
     required this.similarity,
   });
 
-  factory FaceSearchResultModel.fromJson(Map<String, dynamic> json) => FaceSearchResultModel(
+  factory FaceSearchResultModel.fromJson(Map<String, dynamic> json) =>
+      FaceSearchResultModel(
         media: MediaModel.fromApiJson(json['media'] as Map<String, dynamic>),
         similarity: (json['similarity'] as num?)?.toDouble() ?? 0.0,
       );
@@ -39,13 +40,15 @@ class FaceSearchApiResponse {
     required this.matches,
   });
 
-  factory FaceSearchApiResponse.fromJson(Map<String, dynamic> json) => FaceSearchApiResponse(
+  factory FaceSearchApiResponse.fromJson(Map<String, dynamic> json) =>
+      FaceSearchApiResponse(
         detectedFaces: (json['detected_faces'] as List<dynamic>? ?? const [])
             .map((e) => DetectedFaceModel.fromJson(e as Map<String, dynamic>))
             .toList(),
         searchedFaceIndex: json['searched_face_index'] as int?,
         matches: (json['matches'] as List<dynamic>? ?? const [])
-            .map((e) => FaceSearchResultModel.fromJson(e as Map<String, dynamic>))
+            .map((e) =>
+                FaceSearchResultModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
 }

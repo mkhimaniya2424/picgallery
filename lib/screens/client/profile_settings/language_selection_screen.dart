@@ -24,7 +24,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
       appBar: CustomAppBar(title: l10n.language, showBack: true),
       body: SafeArea(
         child: ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           itemCount: languages.length,
           separatorBuilder: (_, __) => const Divider(height: 1),
           itemBuilder: (context, index) {
@@ -36,12 +36,12 @@ class LanguageSelectionScreen extends ConsumerWidget {
                 selected
                     ? Icons.radio_button_checked_rounded
                     : Icons.radio_button_off_rounded,
-                color: selected ? AppColors.primary : AppColors.subtitle,
+                color: selected ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
               ),
               title: Text(lang, style: Theme.of(context).textTheme.titleLarge),
               trailing: selected
                   ? Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.12),
@@ -50,7 +50,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
                       ),
                       child: Text(
                         l10n.selected,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                             fontSize: 12.5),
@@ -63,9 +63,8 @@ class LanguageSelectionScreen extends ConsumerWidget {
                       .read(userRepositoryProvider)
                       .updateProfile(appLanguage: lang);
                   ref.read(authProvider.notifier).setUser(updatedUser);
-                  await ref
-                      .read(settingsProvider.notifier)
-                      .updateSettings(settings.copyWith(language: updatedUser.appLanguage));
+                  await ref.read(settingsProvider.notifier).updateSettings(
+                      settings.copyWith(language: updatedUser.appLanguage));
                 } catch (_) {
                   await ref
                       .read(settingsProvider.notifier)

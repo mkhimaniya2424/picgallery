@@ -14,8 +14,9 @@ class MediaFormatUtils {
       size /= 1024;
       unitIndex++;
     }
-    final formatted =
-        (size >= 100 || unitIndex == 0) ? size.toStringAsFixed(0) : size.toStringAsFixed(1);
+    final formatted = (size >= 100 || unitIndex == 0)
+        ? size.toStringAsFixed(0)
+        : size.toStringAsFixed(1);
     return '$formatted ${units[unitIndex]}';
   }
 
@@ -40,8 +41,18 @@ class MediaFormatUtils {
   static String formatDate(DateTime dt) {
     final local = dt.toLocal();
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final hour12 = local.hour % 12 == 0 ? 12 : local.hour % 12;
     final period = local.hour >= 12 ? 'PM' : 'AM';

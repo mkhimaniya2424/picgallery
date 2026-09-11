@@ -31,29 +31,32 @@ class NotificationsScreen extends ConsumerWidget {
           asyncSnapshot.maybeWhen(
             data: (snapshot) => snapshot.unreadNotificationCount > 0
                 ? Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.md),
+                    padding: EdgeInsets.only(right: AppSpacing.md),
                     child: TextButton(
                       onPressed: () => ref
                           .read(adminDashboardProvider.notifier)
                           .markAllNotificationsRead(),
-                      child: const Text('Mark all read',
+                      child: Text('Mark all read',
                           style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary)),
                     ),
                   )
-                : const SizedBox.shrink(),
-            orElse: () => const SizedBox.shrink(),
+                : SizedBox.shrink(),
+            orElse: () => SizedBox.shrink(),
           ),
         ],
       ),
       body: asyncSnapshot.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (error, _) => const Center(
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (error, _) => Center(
           child: Text('Could not load notifications',
-              style: TextStyle(color: AppColors.subtitle)),
+              style: TextStyle(
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle))),
         ),
         data: (snapshot) {
           final notifications = snapshot.notifications;
@@ -70,26 +73,25 @@ class NotificationsScreen extends ConsumerWidget {
             onRefresh: () =>
                 ref.read(adminDashboardProvider.notifier).refresh(),
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: notifications.length,
               itemBuilder: (context, i) {
                 final n = notifications[i];
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  padding: EdgeInsets.only(bottom: AppSpacing.md),
                   child: Dismissible(
                     key: ValueKey(n.id),
                     direction: DismissDirection.endToStart,
                     background: Container(
                       alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.lg),
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
-                      child: const Icon(Icons.delete_outline_rounded,
+                      child: Icon(Icons.delete_outline_rounded,
                           color: Colors.white),
                     ),
                     onDismissed: (_) => ref
@@ -97,7 +99,7 @@ class NotificationsScreen extends ConsumerWidget {
                         .deleteNotification(n.id),
                     child: GlassCard(
                       fillColor: Colors.white.withValues(alpha: 0.7),
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: NotificationTile(
                         data: n,
                         isLast: true,

@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
 import 'package:http/http.dart' as http;
 
 import '../auth/auth_manager.dart';
@@ -33,7 +33,8 @@ class ApiClient {
   set authToken(String? token) {
     _inMemoryToken = token;
     if (_authManager != null && token != null) {
-      _authManager!.setTokens(accessToken: token, refreshToken: _authManager!.refreshToken);
+      _authManager.setTokens(
+          accessToken: token, refreshToken: _authManager.refreshToken);
     }
   }
 
@@ -71,8 +72,9 @@ class ApiClient {
   static String baseUrlForHost(String host) {
     final trimmed = host.trim();
     if (trimmed.contains('://')) {
-      final withoutTrailingSlash =
-          trimmed.endsWith('/') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
+      final withoutTrailingSlash = trimmed.endsWith('/')
+          ? trimmed.substring(0, trimmed.length - 1)
+          : trimmed;
       return withoutTrailingSlash.endsWith('/api/v1')
           ? withoutTrailingSlash
           : '$withoutTrailingSlash/api/v1';
@@ -116,7 +118,8 @@ class ApiClient {
         ));
   }
 
-  Future<dynamic> post(String path, {Object? body, bool withAuth = true}) async {
+  Future<dynamic> post(String path,
+      {Object? body, bool withAuth = true}) async {
     debugPrint('[ApiClient] POST ${_url(path)} | body: $body');
     return _guarded(() => _dio.post(
           _url(path),
@@ -139,7 +142,8 @@ class ApiClient {
         ));
   }
 
-  Future<dynamic> patch(String path, {Object? body, bool withAuth = true}) async {
+  Future<dynamic> patch(String path,
+      {Object? body, bool withAuth = true}) async {
     return _guarded(() => _dio.patch(
           _url(path),
           data: body,
@@ -150,7 +154,8 @@ class ApiClient {
         ));
   }
 
-  Future<dynamic> delete(String path, {Object? body, bool withAuth = true}) async {
+  Future<dynamic> delete(String path,
+      {Object? body, bool withAuth = true}) async {
     return _guarded(() => _dio.delete(
           _url(path),
           data: body,
@@ -164,12 +169,15 @@ class ApiClient {
   Future<dynamic> _guarded(Future<Response> Function() send) async {
     try {
       final response = await send();
-      debugPrint('[ApiClient] ✅ HTTP ${response.statusCode} | body: ${response.data}');
+      debugPrint(
+          '[ApiClient] ✅ HTTP ${response.statusCode} | body: ${response.data}');
       return _handleResponse(response);
     } on DioException catch (e) {
-      debugPrint('[ApiClient] ❌ DioException type: ${e.type} | message: ${e.message}');
+      debugPrint(
+          '[ApiClient] ❌ DioException type: ${e.type} | message: ${e.message}');
       if (e.response != null) {
-        debugPrint('[ApiClient] ❌ DioException has response: status=${e.response!.statusCode} body=${e.response!.data}');
+        debugPrint(
+            '[ApiClient] ❌ DioException has response: status=${e.response!.statusCode} body=${e.response!.data}');
         return _handleResponse(e.response!);
       }
       debugPrint('[ApiClient] ❌ No response — network/timeout failure');
@@ -197,23 +205,28 @@ class ApiClient {
     }
 
     final extracted = _extractMessage(data, response.statusMessage ?? '');
-    debugPrint('[ApiClient] ❌ _handleResponse: status=$statusCode | extracted="$extracted" | raw=$data');
+    debugPrint(
+        '[ApiClient] ❌ _handleResponse: status=$statusCode | extracted="$extracted" | raw=$data');
     throw ApiException(statusCode, extracted);
   }
 
   String _extractMessage(dynamic decoded, String rawBody) {
-    debugPrint('[ApiClient] _extractMessage: decoded=$decoded | rawBody=$rawBody');
+    debugPrint(
+        '[ApiClient] _extractMessage: decoded=$decoded | rawBody=$rawBody');
     if (decoded is Map<String, dynamic>) {
       if (decoded.containsKey('detail')) {
         final detail = decoded['detail'];
-        debugPrint('[ApiClient] _extractMessage: found detail=$detail (type: ${detail.runtimeType})');
+        debugPrint(
+            '[ApiClient] _extractMessage: found detail=$detail (type: ${detail.runtimeType})');
         if (detail is String) return detail;
         if (detail is Map && detail.containsKey('message')) {
           return detail['message'].toString();
         }
         if (detail is List) {
           return detail
-              .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
+              .map((e) => e is Map && e['msg'] != null
+                  ? e['msg'].toString()
+                  : e.toString())
               .join(', ');
         }
         return detail.toString();
@@ -223,7 +236,8 @@ class ApiClient {
         return decoded['message'].toString();
       }
     }
-    debugPrint('[ApiClient] _extractMessage: no recognized key — falling back to rawBody');
+    debugPrint(
+        '[ApiClient] _extractMessage: no recognized key — falling back to rawBody');
     return rawBody.isNotEmpty ? rawBody : 'Unknown error';
   }
 

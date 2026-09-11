@@ -19,7 +19,8 @@ import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/inputs/custom_text_field.dart';
 import '../../services/download_service_impl.dart';
 import '../../services/media_file_cache.dart';
-import '../../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+import '../../providers/auth_providers.dart'
+    show apiClientProvider;
 
 const _gridFileCache = MediaFileCache();
 const _gridDownloadService = DownloadServiceImpl();
@@ -46,13 +47,14 @@ class SharedGalleryScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SharedGalleryScreen> createState() => _SharedGalleryScreenState();
+  ConsumerState<SharedGalleryScreen> createState() =>
+      _SharedGalleryScreenState();
 }
 
 class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _obscurePasscode = true;
+  final bool _obscurePasscode = true;
   final Set<String> _selectedIds = {};
 
   bool get _isSelectionMode => _selectedIds.isNotEmpty;
@@ -92,7 +94,8 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
       case PublicGalleryStatus.loading:
         return const Scaffold(
           appBar: CustomAppBar(title: 'Shared Gallery', showBack: true),
-          body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary)),
         );
 
       case PublicGalleryStatus.notFound:
@@ -171,12 +174,12 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   }
 
   Widget _buildPreviewBanner() {
-    if (!widget.isPreview) return const SizedBox.shrink();
+    if (!widget.isPreview) return SizedBox.shrink();
     return Container(
       width: double.infinity,
       color: Colors.amber.shade800,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: const Row(
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.remove_red_eye_rounded, color: Colors.white, size: 16),
@@ -198,16 +201,21 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   // -------------------------------------------------------------
   // PRIVATE GALLERY ACCESS SCREEN (Passcode Gate)
   // -------------------------------------------------------------
-  Widget _buildPasscodeGate(BuildContext context, PublicGalleryController controller) {
+  Widget _buildPasscodeGate(
+      BuildContext context, PublicGalleryController controller) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.text, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Private Access',
-            style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w800)),
+        title: Text('Private Access',
+            style: TextStyle(
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
+                fontSize: 16,
+                fontWeight: FontWeight.w800)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -217,11 +225,11 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 480),
                     child: GlassCard(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      padding: EdgeInsets.all(AppSpacing.xl),
                       borderRadius: AppRadius.lg,
                       child: Form(
                         key: _formKey,
@@ -231,46 +239,62 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.lock_person_rounded, color: AppColors.primary, size: 20),
-                                const SizedBox(width: 10),
+                                Icon(Icons.lock_person_rounded,
+                                    color: AppColors.primary, size: 20),
+                                SizedBox(width: 10),
                                 Text(
                                   'Password Protected',
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w900,
                                       ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            const Text(
+                            SizedBox(height: 8),
+                            Text(
                               'This gallery contains private content. Enter the passcode to continue.',
-                              style: TextStyle(fontSize: 12, color: AppColors.subtitle, height: 1.4),
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                                  height: 1.4),
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            const Text(
+                            SizedBox(height: AppSpacing.md),
+                            Text(
                               'Passcode',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.text),
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text)),
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: 6),
                             CustomTextField(
                               label: 'Enter Passcode',
                               icon: Icons.key_rounded,
                               controller: _passwordController,
                               obscureText: _obscurePasscode,
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Enter passcode';
+                                if (v == null || v.isEmpty) {
+                                  return 'Enter passcode';
+                                }
                                 return null;
                               },
                             ),
-                            if (controller.status == PublicGalleryStatus.wrongPassword) ...[
-                              const SizedBox(height: AppSpacing.sm),
-                              const Text(
+                            if (controller.status ==
+                                PublicGalleryStatus.wrongPassword) ...[
+                              SizedBox(height: AppSpacing.sm),
+                              Text(
                                 'Incorrect passcode. Please try again.',
-                                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12),
+                                style: TextStyle(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12),
                               ),
                             ],
-                            const SizedBox(height: AppSpacing.lg),
+                            SizedBox(height: AppSpacing.lg),
                             GradientButton(
                               label: 'Unlock & View Gallery',
                               onPressed: _submitPasscode,
@@ -292,7 +316,8 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   // -------------------------------------------------------------
   // PUBLIC OR UNLOCKED GALLERY SCREEN (Parallax Cover, Info, Grid)
   // -------------------------------------------------------------
-  Widget _buildGallery(BuildContext context, PublicGalleryData data, PublicGalleryController controller) {
+  Widget _buildGallery(BuildContext context, PublicGalleryData data,
+      PublicGalleryController controller) {
     final albumMedia = List<MediaModel>.from(data.media)
       ..sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
     final hasCover = albumMedia.isNotEmpty;
@@ -308,7 +333,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
             elevation: 0,
             leadingWidth: 64,
             leading: Padding(
-              padding: const EdgeInsets.only(left: 12),
+              padding: EdgeInsets.only(left: 12),
               child: Center(
                 child: InkWell(
                   onTap: () => Navigator.pop(context),
@@ -317,11 +342,12 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 16),
                   ),
                 ),
               ),
@@ -329,11 +355,16 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 data.album.name,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
-                  shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 2))],
+                  shadows: [
+                    Shadow(
+                        color: Colors.black54,
+                        blurRadius: 4,
+                        offset: Offset(0, 2))
+                  ],
                 ),
               ),
               centerTitle: true,
@@ -342,7 +373,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                 children: [
                   _buildCoverImage(coverMedia, data.album.gradientArgb),
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.black38, Colors.black87],
                         begin: Alignment.topCenter,
@@ -356,65 +387,82 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (widget.isPreview) ...[
                     _buildPreviewBanner(),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                   ],
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: data.requiresPassword
-                              ? Colors.purple.withOpacity(0.12)
-                              : Colors.blue.withOpacity(0.12),
+                              ? Colors.purple.withValues(alpha: 0.12)
+                              : Colors.blue.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
                             color: data.requiresPassword
-                                ? Colors.purple.withOpacity(0.3)
-                                : Colors.blue.withOpacity(0.3),
+                                ? Colors.purple.withValues(alpha: 0.3)
+                                : Colors.blue.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(data.requiresPassword ? Icons.lock_open_rounded : Icons.public_rounded,
-                                size: 12, color: data.requiresPassword ? Colors.purple : Colors.blue),
-                            const SizedBox(width: 4),
+                            Icon(
+                                data.requiresPassword
+                                    ? Icons.lock_open_rounded
+                                    : Icons.public_rounded,
+                                size: 12,
+                                color: data.requiresPassword
+                                    ? Colors.purple
+                                    : Colors.blue),
+                            SizedBox(width: 4),
                             Text(
-                              data.requiresPassword ? 'Private Unlocked' : 'Public Gallery',
+                              data.requiresPassword
+                                  ? 'Private Unlocked'
+                                  : 'Public Gallery',
                               style: TextStyle(
-                                  color: data.requiresPassword ? Colors.purple : Colors.blue,
+                                  color: data.requiresPassword
+                                      ? Colors.purple
+                                      : Colors.blue,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.12),
+                          color: Colors.grey.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '${albumMedia.length} Photos & Videos',
-                          style: const TextStyle(color: AppColors.subtitle, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Welcome to your proofing gallery. Tap any image to review details, zoom, or playback video.',
-                    style: TextStyle(color: AppColors.subtitle, fontSize: 12, height: 1.4),
+                    style: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 12, height: 1.4),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   const Divider(color: AppColors.border),
                 ],
               ),
@@ -430,9 +478,10 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                   ),
                 )
               : SliverPadding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       crossAxisSpacing: 8,
                       mainAxisSpacing: 8,
@@ -441,7 +490,8 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, i) {
                         final m = albumMedia[i];
-                        return _buildGridItem(context, m, albumMedia, data.showWatermark, data.allowDownload);
+                        return _buildGridItem(context, m, albumMedia,
+                            data.showWatermark, data.allowDownload);
                       },
                       childCount: albumMedia.length,
                     ),
@@ -459,7 +509,8 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                 // For web/mobile downloading, loop through ids and download individually.
                 final apiClient = ref.read(apiClientProvider);
                 for (final id in ids) {
-                  final m = albumMedia.firstWhere((x) => x.id == id, orElse: () => albumMedia.first);
+                  final m = albumMedia.firstWhere((x) => x.id == id,
+                      orElse: () => albumMedia.first);
                   if (m.id != id) continue; // Not found
 
                   if (kIsWeb) {
@@ -488,7 +539,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                   }
                 }
               },
-              icon: const Icon(Icons.download_rounded),
+              icon: Icon(Icons.download_rounded),
               label: Text('Download ${_selectedIds.length} items'),
               backgroundColor: AppColors.primary,
             )
@@ -505,10 +556,11 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                           token: widget.token,
                           password: controller.password,
                         );
-                    Navigator.of(context).pushNamed(AppRoutes.faceSearchLanding);
+                    Navigator.of(context)
+                        .pushNamed(AppRoutes.faceSearchLanding);
                   },
-                  icon: const Icon(Icons.face_retouching_natural_rounded),
-                  label: const Text('Find My Photos'),
+                  icon: Icon(Icons.face_retouching_natural_rounded),
+                  label: Text('Find My Photos'),
                   backgroundColor: AppColors.primary,
                 )
               : null),
@@ -518,15 +570,16 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   Widget _buildCoverImage(MediaModel? media, List<int> fallbackGradient) {
     if (media == null) {
       return Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF2C3E50), Color(0xFF000000)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: const Center(
-          child: Icon(Icons.photo_library_rounded, color: Colors.white24, size: 48),
+        child: Center(
+          child: Icon(Icons.photo_library_rounded,
+              color: Colors.white24, size: 48),
         ),
       );
     }
@@ -540,7 +593,10 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
           errorBuilder: (_, __, ___) => Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(media.gradientArgb.first), Color(media.gradientArgb[1])],
+                colors: [
+                  Color(media.gradientArgb.first),
+                  Color(media.gradientArgb[1])
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -556,7 +612,12 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(fallbackGradient.first), Color(fallbackGradient.length > 1 ? fallbackGradient[1] : fallbackGradient.first)],
+          colors: [
+            Color(fallbackGradient.first),
+            Color(fallbackGradient.length > 1
+                ? fallbackGradient[1]
+                : fallbackGradient.first)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -578,16 +639,20 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
       ),
       child: Center(
         child: Icon(
-          m.type == MediaType.photo ? Icons.image_rounded : Icons.play_arrow_rounded,
+          m.type == MediaType.photo
+              ? Icons.image_rounded
+              : Icons.play_arrow_rounded,
           color: Colors.white60,
         ),
       ),
     );
   }
 
-  Widget _buildGridItem(BuildContext context, MediaModel m, List<MediaModel> allMedia, bool showWatermark, bool allowDownload) {
+  Widget _buildGridItem(BuildContext context, MediaModel m,
+      List<MediaModel> allMedia, bool showWatermark, bool allowDownload) {
     final thumbPath = m.displayThumbnailPath;
-    final isNetwork = thumbPath.startsWith('http://') || thumbPath.startsWith('https://');
+    final isNetwork =
+        thumbPath.startsWith('http://') || thumbPath.startsWith('https://');
     final file = (!isNetwork && thumbPath.isNotEmpty) ? File(thumbPath) : null;
     final hasRealFile = isNetwork || (file != null && file.existsSync());
 
@@ -662,12 +727,12 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                 bottom: 6,
                 right: 6,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
+                  padding: EdgeInsets.all(4),
+                  decoration: BoxDecoration(
                     color: Colors.black54,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.play_arrow_rounded,
                     color: Colors.white,
                     size: 14,
@@ -681,15 +746,16 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                     child: RotationTransition(
                       turns: const AlwaysStoppedAnimation(-25 / 360),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.black12.withOpacity(0.04),
+                          color: Colors.black12.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           AppStrings.appName,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.24),
+                            color: Colors.white.withValues(alpha: 0.24),
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
@@ -703,10 +769,11 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
             if (_selectedIds.contains(m.id))
               Positioned.fill(
                 child: Container(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   alignment: Alignment.topLeft,
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(Icons.check_circle_rounded, color: Colors.white),
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.check_circle_rounded,
+                      color: Colors.white),
                 ),
               ),
           ],

@@ -21,7 +21,8 @@ final shareLinkRepositoryProvider = Provider<ShareLinkRepository>((ref) {
 /// every album up front — `ShareSettingsScreen` only ever needs the one
 /// album it's showing.
 class ShareLinkController extends ChangeNotifier {
-  ShareLinkController({required ShareLinkRepository repository, required this.albumId})
+  ShareLinkController(
+      {required ShareLinkRepository repository, required this.albumId})
       : _repo = repository;
 
   final ShareLinkRepository _repo;
@@ -137,7 +138,8 @@ enum PublicGalleryStatus {
 /// `SharedGalleryScreen` (reached via a `picgallery://shared/{token}`
 /// deep link or "Preview Client View") gets a fresh instance per link.
 class PublicGalleryController extends ChangeNotifier {
-  PublicGalleryController({required ShareLinkRepository repository, required this.token})
+  PublicGalleryController(
+      {required ShareLinkRepository repository, required this.token})
       : _repo = repository;
 
   final ShareLinkRepository _repo;
@@ -175,13 +177,15 @@ class PublicGalleryController extends ChangeNotifier {
   /// Runs once on creation: checks whether the link needs a passcode
   /// before ever fetching (and counting a view for) the full gallery.
   Future<void> checkStatus() async {
-    debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController checking status for token/shareId: $token');
+    debugPrint(
+        '[API_LOOKUP_DEBUG] PublicGalleryController checking status for token/shareId: $token');
     _status = PublicGalleryStatus.loading;
     notifyListeners();
 
     try {
       final status = await _repo.fetchStatus(token);
-      debugPrint('[API_LOOKUP_DEBUG] Status response - requiresPassword: ${status.requiresPassword}, isActive: ${status.isActive}');
+      debugPrint(
+          '[API_LOOKUP_DEBUG] Status response - requiresPassword: ${status.requiresPassword}, isActive: ${status.isActive}');
       if (!status.isActive) {
         // The status endpoint doesn't distinguish revoked vs. expired
         // (both just collapse to `is_active: false`) — fetching once
@@ -202,7 +206,8 @@ class PublicGalleryController extends ChangeNotifier {
   }
 
   Future<void> unlock({String? password}) async {
-    debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController unlocking token: $token (hasPassword: ${password != null})');
+    debugPrint(
+        '[API_LOOKUP_DEBUG] PublicGalleryController unlocking token: $token (hasPassword: ${password != null})');
     _status = PublicGalleryStatus.loading;
     notifyListeners();
 
@@ -210,15 +215,18 @@ class PublicGalleryController extends ChangeNotifier {
       _data = await _repo.fetchPublicGallery(token: token, password: password);
       _status = PublicGalleryStatus.loaded;
       _password = password;
-      debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController successfully loaded album: ${_data?.album.name}');
+      debugPrint(
+          '[API_LOOKUP_DEBUG] PublicGalleryController successfully loaded album: ${_data?.album.name}');
     } catch (e) {
-      _handleError(e, isPasswordAttempt: password != null && password.isNotEmpty);
+      _handleError(e,
+          isPasswordAttempt: password != null && password.isNotEmpty);
     }
     notifyListeners();
   }
 
   void _handleError(Object error, {bool isPasswordAttempt = false}) {
-    debugPrint('[API_LOOKUP_DEBUG] PublicGalleryController error for token $token: $error');
+    debugPrint(
+        '[API_LOOKUP_DEBUG] PublicGalleryController error for token $token: $error');
     if (error is ApiException) {
       switch (error.statusCode) {
         case 404:
@@ -233,7 +241,9 @@ class PublicGalleryController extends ChangeNotifier {
           _status = PublicGalleryStatus.unauthorized;
           break;
         case 401:
-          _status = isPasswordAttempt ? PublicGalleryStatus.wrongPassword : PublicGalleryStatus.needsPassword;
+          _status = isPasswordAttempt
+              ? PublicGalleryStatus.wrongPassword
+              : PublicGalleryStatus.needsPassword;
           break;
         case 410:
           _status = error.message.toLowerCase().contains('revoked')
@@ -246,7 +256,8 @@ class PublicGalleryController extends ChangeNotifier {
       }
     } else {
       _status = PublicGalleryStatus.error;
-      _errorMessage = "Couldn't reach the server. Check your connection and try again.";
+      _errorMessage =
+          "Couldn't reach the server. Check your connection and try again.";
     }
   }
 
@@ -275,7 +286,8 @@ class PublicGalleryController extends ChangeNotifier {
 }
 
 final publicGalleryProvider =
-    ChangeNotifierProvider.family<PublicGalleryController, String>((ref, token) {
+    ChangeNotifierProvider.family<PublicGalleryController, String>(
+        (ref, token) {
   final controller = PublicGalleryController(
     repository: ref.watch(shareLinkRepositoryProvider),
     token: token,

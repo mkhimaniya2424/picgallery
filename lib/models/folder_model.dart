@@ -49,7 +49,8 @@ class FolderModel {
       id: json['id'] as String,
       name: json['name'] as String,
       albumCount: json['album_count'] as int? ?? 0,
-      gradientArgb: (json['gradient_argb'] as List<dynamic>?)?.cast<int>() ?? const [],
+      gradientArgb:
+          (json['gradient_argb'] as List<dynamic>?)?.cast<int>() ?? const [],
       parentId: json['parent_id'] as String?,
       isHidden: json['is_hidden'] as bool? ?? false,
       isFavorite: json['is_favorite'] as bool? ?? false,
@@ -85,7 +86,8 @@ class FolderModel {
       id: json['id'] as String,
       name: json['name'] as String,
       albumCount: json['albumCount'] as int? ?? 0,
-      gradientArgb: (json['gradientArgb'] as List<dynamic>?)?.cast<int>() ?? const [],
+      gradientArgb:
+          (json['gradientArgb'] as List<dynamic>?)?.cast<int>() ?? const [],
       parentId: json['parentId'] as String?,
       isHidden: json['isHidden'] as bool? ?? false,
       isFavorite: json['isFavorite'] as bool? ?? false,

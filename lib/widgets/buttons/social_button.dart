@@ -32,7 +32,8 @@ class SocialButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: isDark
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: isLoading ? 0.7 : 0.9)
+              ? colorScheme.surfaceContainerHighest
+                  .withValues(alpha: isLoading ? 0.7 : 0.9)
               : Colors.white.withValues(alpha: isLoading ? 0.5 : 0.7),
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: colorScheme.outline),

@@ -88,7 +88,9 @@ class FaceSearchState {
       isProcessing: isProcessing ?? this.isProcessing,
       statusMessage: statusMessage ?? this.statusMessage,
       detectedFaces: detectedFaces ?? this.detectedFaces,
-      searchedFaceIndex: clearSearchedFaceIndex ? null : (searchedFaceIndex ?? this.searchedFaceIndex),
+      searchedFaceIndex: clearSearchedFaceIndex
+          ? null
+          : (searchedFaceIndex ?? this.searchedFaceIndex),
       searchResults: searchResults ?? this.searchResults,
       error: clearError ? null : (error ?? this.error),
       albumIdFilter: albumIdFilter ?? this.albumIdFilter,
@@ -141,26 +143,31 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
   }
 
   Future<bool> pickSelfie(ImageSource source) async {
-    state = state.copyWith(isProcessing: true, statusMessage: 'Opening picker…', clearError: true);
+    state = state.copyWith(
+        isProcessing: true, statusMessage: 'Opening picker…', clearError: true);
 
     try {
       if (source == ImageSource.camera) {
-        final granted = await PermissionService.instance.checkAndRequestCameraPermission();
+        final granted =
+            await PermissionService.instance.checkAndRequestCameraPermission();
         if (!granted) {
-          state = state.copyWith(isProcessing: false, error: 'Camera permission denied.');
+          state = state.copyWith(
+              isProcessing: false, error: 'Camera permission denied.');
           return false;
         }
       }
 
       final file = await _picker.pickImage(source: source);
       if (file == null) {
-        state = state.copyWith(isProcessing: false, statusMessage: 'Selection cancelled');
+        state = state.copyWith(
+            isProcessing: false, statusMessage: 'Selection cancelled');
         return false;
       }
 
       return await selectSelfieFile(File(file.path));
     } catch (e) {
-      state = state.copyWith(isProcessing: false, error: 'Failed to pick image: ${e.toString()}');
+      state = state.copyWith(
+          isProcessing: false, error: 'Failed to pick image: ${e.toString()}');
       return false;
     }
   }
@@ -189,7 +196,8 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
       state = state.copyWith(error: 'No selfie selected yet.');
       return false;
     }
-    state = state.copyWith(isProcessing: true, statusMessage: 'Searching…', clearError: true);
+    state = state.copyWith(
+        isProcessing: true, statusMessage: 'Searching…', clearError: true);
     return _runSearch(selfie, faceIndex: faceIndex);
   }
 
@@ -199,7 +207,8 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
       if (state.mode == FaceSearchMode.sharedGallery) {
         final token = state.shareToken;
         if (token == null) {
-          state = state.copyWith(isProcessing: false, error: 'No shared gallery selected.');
+          state = state.copyWith(
+              isProcessing: false, error: 'No shared gallery selected.');
           return false;
         }
         response = await _repo.searchSharedGallery(
@@ -236,7 +245,8 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
       state = state.copyWith(isProcessing: false, error: e.message);
       return false;
     } catch (e) {
-      state = state.copyWith(isProcessing: false, error: 'Face search failed: ${e.toString()}');
+      state = state.copyWith(
+          isProcessing: false, error: 'Face search failed: ${e.toString()}');
       return false;
     }
   }
@@ -246,4 +256,6 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
   }
 }
 
-final faceSearchProvider = NotifierProvider<FaceSearchNotifier, FaceSearchState>(FaceSearchNotifier.new);
+final faceSearchProvider =
+    NotifierProvider<FaceSearchNotifier, FaceSearchState>(
+        FaceSearchNotifier.new);

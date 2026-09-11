@@ -47,7 +47,8 @@ class ChatMessageModel {
         'isRead': isRead,
       };
 
-  factory ChatMessageModel.fromJson(Map<String, dynamic> json) => ChatMessageModel(
+  factory ChatMessageModel.fromJson(Map<String, dynamic> json) =>
+      ChatMessageModel(
         id: json['id'] as String,
         connectionId: json['connectionId'] as String,
         senderId: json['senderId'] as String,
@@ -83,7 +84,8 @@ class ChatMessageModel {
   ///   `thread_id` -> `connectionId` (in this model, thread == connection)
   ///   `sender_role` -> `senderRole`
   ///   `created_at` -> `sentAt`
-  factory ChatMessageModel.fromApiJson(Map<String, dynamic> json) => ChatMessageModel(
+  factory ChatMessageModel.fromApiJson(Map<String, dynamic> json) =>
+      ChatMessageModel(
         id: json['id'] as String,
         connectionId: json['thread_id'] as String,
         senderId: json['sender_id'] as String,

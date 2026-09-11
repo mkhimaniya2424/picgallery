@@ -29,7 +29,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key, this.email, this.token});
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -107,20 +108,29 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         gradient: AppColors.heroGradient,
                         borderRadius: BorderRadius.circular(44),
                         boxShadow: [
-                          BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 36, offset: const Offset(0, 16)),
+                          BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 36,
+                              offset: const Offset(0, 16)),
                         ],
                       ),
-                      child: const Icon(Icons.password_rounded, color: Colors.white, size: 68),
+                      child: const Icon(Icons.password_rounded,
+                          color: Colors.white, size: 68),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  Text('Reset Password', style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+                  Text('Reset Password',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      textAlign: TextAlign.center),
                   const SizedBox(height: 6),
                   Text(
                     widget.email == null || widget.email!.isEmpty
                         ? 'Enter the code we emailed you and choose a new password.'
                         : 'Enter the code we sent to\n${widget.email}\nand choose a new password.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(color: AppColors.subtitle),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   if (_errorMessage != null) ...[
@@ -133,7 +143,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     icon: Icons.pin_outlined,
                     controller: _codeController,
                     keyboardType: TextInputType.number,
-                    validator: (v) => (v == null || v.trim().length != 6) ? 'Enter the 6-digit code' : null,
+                    validator: (v) => (v == null || v.trim().length != 6)
+                        ? 'Enter the 6-digit code'
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   CustomTextField(
@@ -142,8 +154,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     obscureText: true,
                     controller: _passwordController,
                     validator: (v) {
-                      if (v == null || v.length < 8) return 'At least 8 characters, including a number';
-                      if (!RegExp(r'[0-9]').hasMatch(v)) return 'Include at least one number';
+                      if (v == null || v.length < 8) {
+                        return 'At least 8 characters, including a number';
+                      }
+                      if (!RegExp(r'[0-9]').hasMatch(v)) {
+                        return 'Include at least one number';
+                      }
                       return null;
                     },
                   ),
@@ -153,15 +169,25 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     icon: Icons.lock_outline_rounded,
                     obscureText: true,
                     controller: _confirmController,
-                    validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
+                    validator: (v) => v != _passwordController.text
+                        ? 'Passwords do not match'
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  GradientButton(label: 'Reset Password', isLoading: _isLoading, onPressed: _resetPassword),
+                  GradientButton(
+                      label: 'Reset Password',
+                      isLoading: _isLoading,
+                      onPressed: _resetPassword),
                   const SizedBox(height: AppSpacing.lg),
                   Center(
                     child: TextButton(
-                      onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (r) => false),
-                      child: const Text('Back to Login', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                      onPressed: () => Navigator.of(context)
+                          .pushNamedAndRemoveUntil(
+                              AppRoutes.login, (r) => false),
+                      child: const Text('Back to Login',
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],

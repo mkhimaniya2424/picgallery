@@ -5,6 +5,7 @@
 /// - UI rendering (thumbnails, resolution labels, durations) is handled
 ///   by widgets/screens in later phases.
 library;
+
 import 'edit_recipe.dart';
 
 enum MediaType {
@@ -120,7 +121,9 @@ class MediaModel {
     final durationMs = json['duration_ms'] as int?;
     return MediaModel(
       id: json['id'] as String,
-      type: (json['type'] as String) == 'video' ? MediaType.video : MediaType.photo,
+      type: (json['type'] as String) == 'video'
+          ? MediaType.video
+          : MediaType.photo,
       filePath: '',
       thumbnailPath: '',
       fileName: json['file_name'] as String,
@@ -158,7 +161,8 @@ class MediaModel {
     String? fileName,
     EditRecipe? editRecipe,
     bool clearEditRecipe = false,
-  }) => {
+  }) =>
+      {
         if (albumId != null) 'album_id': albumId,
         if (clearAlbum) 'clear_album': true,
         if (folderId != null) 'folder_id': folderId,
@@ -166,7 +170,8 @@ class MediaModel {
         if (isFavorite != null) 'is_favorite': isFavorite,
         if (fileName != null) 'file_name': fileName,
         if (clearEditRecipe) 'clear_edit_recipe': true,
-        if (!clearEditRecipe && editRecipe != null) 'edit_recipe': editRecipe.toJson(),
+        if (!clearEditRecipe && editRecipe != null)
+          'edit_recipe': editRecipe.toJson(),
       };
 
   /// What to actually render for this item: the local file path when one

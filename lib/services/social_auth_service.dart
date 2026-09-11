@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:google_sign_in/google_sign_in.dart' as gsign;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-
 /// Result returned by SocialAuthService.signInWithGoogle / signInWithApple
 /// — callers expect `.provider`, `.idToken` and `.fullName`.
 class SocialAuthResult {
@@ -15,7 +14,8 @@ class SocialAuthResult {
   final String idToken;
   final String? fullName;
 
-  SocialAuthResult({required this.provider, required this.idToken, this.fullName});
+  SocialAuthResult(
+      {required this.provider, required this.idToken, this.fullName});
 }
 
 /// Thrown when the user cancels a social sign-in flow.
@@ -62,7 +62,8 @@ class SocialAuthService {
         scopeHint: <String>['email', 'profile'],
       );
     } catch (e) {
-      debugPrint('[SocialAuth] signInWithGoogle authenticate() threw: ${e.runtimeType} — $e');
+      debugPrint(
+          '[SocialAuth] signInWithGoogle authenticate() threw: ${e.runtimeType} — $e');
       if (e is gsign.GoogleSignInException) {
         debugPrint('[SocialAuth] GoogleSignInException code: ${e.code}');
 
@@ -74,11 +75,14 @@ class SocialAuthService {
         // We also check toString() as a safe fallback since description is nullable.
         final String errStr = e.description ?? e.toString();
         if (errStr.contains('reauth') || errStr.contains('[16]')) {
-          debugPrint('[SocialAuth] Detected reauth error — clearing stale tokens...');
+          debugPrint(
+              '[SocialAuth] Detected reauth error — clearing stale tokens...');
           try {
             await gsInstance.disconnect();
           } catch (_) {
-            try { await gsInstance.signOut(); } catch (_) {}
+            try {
+              await gsInstance.signOut();
+            } catch (_) {}
           }
           throw SocialAuthReauthNeeded(errStr);
         }
@@ -103,7 +107,8 @@ class SocialAuthService {
       throw Exception('Google Sign-In returned no ID token');
     }
 
-    return SocialAuthResult(provider: 'google', idToken: idToken, fullName: fullName);
+    return SocialAuthResult(
+        provider: 'google', idToken: idToken, fullName: fullName);
   }
 
   /// Tries to silently recover the Google account the user already selected
@@ -134,7 +139,8 @@ class SocialAuthService {
       // previously authenticated account to restore.
       final gsign.GoogleSignInAccount? account =
           await gsInstance.attemptLightweightAuthentication();
-      debugPrint('[SocialAuth] signInWithGoogleSilent result: ${account?.email ?? "null (no cached account)"}');
+      debugPrint(
+          '[SocialAuth] signInWithGoogleSilent result: ${account?.email ?? "null (no cached account)"}');
 
       if (account == null) return null;
 
@@ -142,7 +148,8 @@ class SocialAuthService {
       final String? idToken = auth.idToken;
 
       if (idToken == null || idToken.isEmpty) {
-        debugPrint('[SocialAuth] signInWithGoogleSilent: silent account found but no idToken');
+        debugPrint(
+            '[SocialAuth] signInWithGoogleSilent: silent account found but no idToken');
         return null;
       }
 
@@ -155,11 +162,11 @@ class SocialAuthService {
       // ── DEBUG: surface the REAL error in the UI (remove after diagnosis) ──
       final errMsg = '[${e.runtimeType}] $e';
       lastSilentError = errMsg;
-      debugPrint('[SocialAuth] signInWithGoogleSilent THREW:\n  type : ${e.runtimeType}\n  error: $e\n  stack: $stack');
+      debugPrint(
+          '[SocialAuth] signInWithGoogleSilent THREW:\n  type : ${e.runtimeType}\n  error: $e\n  stack: $stack');
       return null; // treat any error as "not available silently"
     }
   }
-
 
   /// Signs in with Apple and returns an ID token + optional full name.
 
@@ -179,11 +186,16 @@ class SocialAuthService {
       final given = credential.givenName ?? '';
       final family = credential.familyName ?? '';
       final fullName = '$given $family'.trim();
-      return SocialAuthResult(provider: 'apple', idToken: idToken, fullName: fullName.isEmpty ? null : fullName);
+      return SocialAuthResult(
+          provider: 'apple',
+          idToken: idToken,
+          fullName: fullName.isEmpty ? null : fullName);
     } catch (e) {
       // The sign_in_with_apple package throws its own exceptions for
       // cancellation; map them to SocialAuthCancelled for callers.
-      if (e.toString().toLowerCase().contains('cancel')) throw SocialAuthCancelled();
+      if (e.toString().toLowerCase().contains('cancel')) {
+        throw SocialAuthCancelled();
+      }
       rethrow;
     }
   }

@@ -5,7 +5,8 @@ import '../core/network/api_client.dart';
 import '../models/media_comment.dart';
 import '../models/media_like.dart';
 import '../models/media_model.dart';
-import '../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+import '../providers/auth_providers.dart'
+    show apiClientProvider, authStateProvider;
 import '../storage/media_likes_comments_local_store.dart';
 
 /// Provider for likes + comments UI in MediaDetails.
@@ -62,7 +63,8 @@ class MediaLikesCommentsController extends ChangeNotifier {
 
   /// Whether [fetchComments] has already been called for [mediaId] this
   /// session — check this before calling it again from a `build` method.
-  bool hasFetchedComments(String mediaId) => _fetchedCommentsFor.contains(mediaId);
+  bool hasFetchedComments(String mediaId) =>
+      _fetchedCommentsFor.contains(mediaId);
 
   bool hasFetchedLikes(String mediaId) => _fetchedLikesFor.contains(mediaId);
 

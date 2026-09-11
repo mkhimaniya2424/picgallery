@@ -51,7 +51,10 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: color ?? AppColors.text,
+        backgroundColor: color ??
+            (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.textOnDark
+                : AppColors.text),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
@@ -75,18 +78,17 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'dashboard_add_media_fab',
         onPressed: _addMedia,
-        icon: const Icon(Icons.add_photo_alternate_rounded),
-        label: const Text('Add Media'),
+        icon: Icon(Icons.add_photo_alternate_rounded),
+        label: Text('Add Media'),
       ),
       drawer: StudioDrawer(onNavigateToTab: widget.onNavigateToTab),
       appBar: CustomAppBar(
         showBack: false,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
+          padding: EdgeInsets.only(left: 12),
           child: GlassIconButton(
             icon: Icons.menu_rounded,
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
@@ -95,7 +97,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
         titleWidget: ShaderMask(
           shaderCallback: (bounds) =>
               AppColors.heroGradient.createShader(bounds),
-          child: const Text(
+          child: Text(
             'PicGallery Studio',
             style: TextStyle(
                 color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
@@ -104,13 +106,16 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
         actions: [
           dashboardAsync.maybeWhen(
             data: (snapshot) => Padding(
-              padding: const EdgeInsets.only(right: 4),
+              padding: EdgeInsets.only(right: 4),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_none_rounded,
-                        color: AppColors.text, size: 24),
+                    icon: Icon(Icons.notifications_none_rounded,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text),
+                        size: 24),
                     onPressed: () => Navigator.of(context)
                         .pushNamed(AppRoutes.notifications),
                   ),
@@ -119,17 +124,21 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
                           color: AppColors.accent,
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                           border: Border.all(
-                              color: AppColors.background, width: 1.5),
+                              color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.darkBackground
+                                  : AppColors.background),
+                              width: 1.5),
                         ),
                         child: Text(
                           '${snapshot.unreadNotificationCount}',
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: Colors.white,
                               fontSize: 9,
                               fontWeight: FontWeight.w800),
@@ -140,38 +149,45 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
               ),
             ),
             orElse: () => IconButton(
-              icon: const Icon(Icons.notifications_none_rounded,
-                  color: AppColors.text, size: 24),
+              icon: Icon(Icons.notifications_none_rounded,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text),
+                  size: 24),
               onPressed: () =>
                   Navigator.of(context).pushNamed(AppRoutes.notifications),
             ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
         ],
       ),
       body: SafeArea(
         child: dashboardAsync.when(
-          loading: () => const Center(
+          loading: () => Center(
               child: CircularProgressIndicator(color: AppColors.primary)),
           error: (err, _) => Center(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline_rounded,
+                  Icon(Icons.error_outline_rounded,
                       color: AppColors.error, size: 40),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   Text('Could not load your dashboard\n$err',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: AppColors.subtitle, fontSize: 13)),
-                  const SizedBox(height: AppSpacing.md),
+                      style: TextStyle(
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
+                          fontSize: 13)),
+                  SizedBox(height: AppSpacing.md),
                   FilledButton.icon(
                     onPressed: () =>
                         ref.read(adminDashboardProvider.notifier).refresh(),
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('Retry'),
+                    icon: Icon(Icons.refresh_rounded, size: 18),
+                    label: Text('Retry'),
                   ),
                 ],
               ),
@@ -184,27 +200,27 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics()),
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                   horizontal: AppSpacing.md, vertical: AppSpacing.md),
               children: [
                 ..._buildHeaderGreeting(snapshot),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   child: WelcomeCard(
                     pendingDeliveries: snapshot.pendingDeliveriesCount,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 60),
                   child: _buildStatsGrid(snapshot),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 100),
                   child: _buildQuickActions(snapshot),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 120),
                   child: SectionHeader(
@@ -212,13 +228,12 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                     onAction: () => widget.onNavigateToTab?.call(1),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 120),
                   child: _buildRecentUploads(snapshot),
                 ),
-
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 180),
                   child: SectionHeader(
@@ -227,7 +242,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                         .pushNamed(AppRoutes.storageOverview),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 180),
                   child: StorageUsageCard(
@@ -237,7 +252,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                         .pushNamed(AppRoutes.storageOverview),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 220),
                   child: SectionHeader(
@@ -245,12 +260,12 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                     onAction: () => widget.onNavigateToTab?.call(2),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 220),
                   child: _buildRecentClients(snapshot),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 260),
                   child: SectionHeader(
@@ -260,12 +275,12 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                         .pushNamed(AppRoutes.adminAnalytics),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 260),
                   child: _buildAnalyticsCarousel(snapshot),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 300),
                   child: SectionHeader(
@@ -274,13 +289,13 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                         .pushNamed(AppRoutes.recentActivity),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 300),
                   child: ActivityTimelineList(
                       entries: snapshot.activityLog.take(5).toList()),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
               ],
             ),
           ),
@@ -303,7 +318,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(
           'Set up your studio profile',
           style: TextStyle(
@@ -317,13 +332,15 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
 
     return [
       Text(
-        hasPhotographerName ? 'Hi, ${snapshot.photographerName} 👋' : 'Hi there 👋',
+        hasPhotographerName
+            ? 'Hi, ${snapshot.photographerName} 👋'
+            : 'Hi there 👋',
         style: TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurfaceVariant),
       ),
-      const SizedBox(height: 2),
+      SizedBox(height: 2),
       Text(
         hasStudioName ? snapshot.studioName : 'Set up your studio profile',
         style: TextStyle(
@@ -348,7 +365,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: uploads.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+        separatorBuilder: (_, __) => SizedBox(width: AppSpacing.md),
         itemBuilder: (context, i) {
           final upload = uploads[i];
           return SizedBox(
@@ -419,14 +436,16 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
         SectionHeader(
           title: 'Quick Actions',
           onAction: () {
-            Navigator.of(context).pushNamed(AppRoutes.quickActions).then((tabIndex) {
+            Navigator.of(context)
+                .pushNamed(AppRoutes.quickActions)
+                .then((tabIndex) {
               if (tabIndex is int && context.mounted) {
                 widget.onNavigateToTab?.call(tabIndex);
               }
             });
           },
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         if (actions.isEmpty)
           const EmptyStateCard(
               icon: Icons.bolt_rounded, message: 'No quick actions available')
@@ -437,7 +456,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               itemCount: actions.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              separatorBuilder: (_, __) => SizedBox(width: AppSpacing.sm),
               itemBuilder: (context, i) {
                 final action = actions[i];
                 return SizedBox(
@@ -471,7 +490,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
       children: [
         for (final client in clients) ...[
           RecentClientTile(data: client),
-          if (client != clients.last) const SizedBox(height: AppSpacing.sm),
+          if (client != clients.last) SizedBox(height: AppSpacing.sm),
         ],
       ],
     );
@@ -488,7 +507,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: snapshot.analytics.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+        separatorBuilder: (_, __) => SizedBox(width: AppSpacing.md),
         itemBuilder: (context, i) =>
             AnalyticsChartCard(series: snapshot.analytics[i]),
       ),

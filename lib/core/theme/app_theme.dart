@@ -290,8 +290,8 @@ class AppTheme {
       iconTheme: const IconThemeData(color: AppColors.textOnDark),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.darkSurfaceRaised,
-        contentTextStyle: GoogleFonts.poppins(
-            color: AppColors.textOnDark, fontSize: 13),
+        contentTextStyle:
+            GoogleFonts.poppins(color: AppColors.textOnDark, fontSize: 13),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),

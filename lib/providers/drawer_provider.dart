@@ -19,10 +19,14 @@ enum SubscriptionPlan {
 
   String get name {
     switch (this) {
-      case SubscriptionPlan.free:    return 'No Plan';
-      case SubscriptionPlan.trial:   return 'Trial';
-      case SubscriptionPlan.pro:     return 'Pro';
-      case SubscriptionPlan.premium: return 'Premium';
+      case SubscriptionPlan.free:
+        return 'No Plan';
+      case SubscriptionPlan.trial:
+        return 'Trial';
+      case SubscriptionPlan.pro:
+        return 'Pro';
+      case SubscriptionPlan.premium:
+        return 'Premium';
     }
   }
 }
@@ -30,7 +34,7 @@ enum SubscriptionPlan {
 /// Brand colors for plan badges — kept separate to avoid import cycles.
 class AppDrawerPlanColors {
   AppDrawerPlanColors._();
-  static const Color pro     = Color(0xFF7C5CFF);
+  static const Color pro = Color(0xFF7C5CFF);
   static const Color premium = Color(0xFFEFBF6B);
 }
 
@@ -39,10 +43,13 @@ class AppDrawerPlanColors {
 /// Full subscription lifecycle state persisted across app restarts.
 class SubscriptionState {
   final SubscriptionPlan plan;
+
   /// When the current plan was activated (exact DateTime, including time-of-day).
   final DateTime? activatedAt;
+
   /// When the current plan expires (same time-of-day as [activatedAt]).
   final DateTime? expiresAt;
+
   /// Whether this activation was a free trial.
   final bool isTrial;
 
@@ -82,10 +89,10 @@ class SubscriptionState {
   bool get isActive => !isExpired && plan != SubscriptionPlan.free;
 
   // ── SharedPreferences keys ────────────────────────────────────────────────
-  static const _kPlan        = 'sub_plan';
+  static const _kPlan = 'sub_plan';
   static const _kActivatedAt = 'sub_activated_at';
-  static const _kExpiresAt   = 'sub_expires_at';
-  static const _kIsTrial     = 'sub_is_trial';
+  static const _kExpiresAt = 'sub_expires_at';
+  static const _kIsTrial = 'sub_is_trial';
 
   /// Persist this state to SharedPreferences.
   Future<void> save() async {
@@ -111,13 +118,14 @@ class SubscriptionState {
       orElse: () => SubscriptionPlan.free,
     );
     final activatedRaw = prefs.getString(_kActivatedAt);
-    final expiresRaw   = prefs.getString(_kExpiresAt);
-    final isTrial      = prefs.getBool(_kIsTrial) ?? false;
+    final expiresRaw = prefs.getString(_kExpiresAt);
+    final isTrial = prefs.getBool(_kIsTrial) ?? false;
 
     return SubscriptionState(
       plan: plan,
-      activatedAt: activatedRaw != null ? DateTime.tryParse(activatedRaw) : null,
-      expiresAt:   expiresRaw   != null ? DateTime.tryParse(expiresRaw)   : null,
+      activatedAt:
+          activatedRaw != null ? DateTime.tryParse(activatedRaw) : null,
+      expiresAt: expiresRaw != null ? DateTime.tryParse(expiresRaw) : null,
       isTrial: isTrial,
     );
   }
@@ -154,7 +162,8 @@ class SubscriptionStateNotifier extends AsyncNotifier<SubscriptionState> {
       plan = SubscriptionPlan.premium;
     } else if (user.currentPlan == 'pro') {
       plan = SubscriptionPlan.pro;
-    } else if (user.currentPlan == 'trial' || user.subscriptionStatus == 'trial') {
+    } else if (user.currentPlan == 'trial' ||
+        user.subscriptionStatus == 'trial') {
       plan = SubscriptionPlan.trial;
     }
 
@@ -162,10 +171,11 @@ class SubscriptionStateNotifier extends AsyncNotifier<SubscriptionState> {
     bool isExpired = false;
     if (user.subscriptionStatus == 'expired') {
       isExpired = true;
-    } else if (user.planExpiry != null && DateTime.now().isAfter(user.planExpiry!)) {
+    } else if (user.planExpiry != null &&
+        DateTime.now().isAfter(user.planExpiry!)) {
       isExpired = true;
     }
-    
+
     if (isExpired) {
       plan = SubscriptionPlan.free;
     }

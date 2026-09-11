@@ -31,10 +31,13 @@ void main() {
     await Hive.initFlutter();
   });
 
-  testWidgets('App boots and shows the splash screen', (WidgetTester tester) async {
+  testWidgets('App boots and shows the splash screen',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [tokenStorageProvider.overrideWithValue(_FakeTokenStorage())],
+        overrides: [
+          tokenStorageProvider.overrideWithValue(_FakeTokenStorage())
+        ],
         child: const PicGallery(),
       ),
     );
@@ -51,7 +54,8 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('Dark mode text fields use dark theme colors', (WidgetTester tester) async {
+  testWidgets('Dark mode text fields use dark theme colors',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,

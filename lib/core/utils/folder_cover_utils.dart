@@ -18,10 +18,8 @@ MediaModel? coverForFolder({
   }
   if (direct.isNotEmpty) return direct.first;
 
-  final albumIds = allAlbums
-      .where((a) => a.folderId == folderId)
-      .map((a) => a.id)
-      .toSet();
+  final albumIds =
+      allAlbums.where((a) => a.folderId == folderId).map((a) => a.id).toSet();
   if (albumIds.isEmpty) return null;
 
   final viaAlbums =

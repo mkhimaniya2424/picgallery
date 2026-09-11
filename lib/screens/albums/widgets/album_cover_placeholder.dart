@@ -16,7 +16,7 @@ class AlbumCoverPlaceholder extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(Icons.photo_library_rounded, size: 34, color: Colors.white),
       ),
     );

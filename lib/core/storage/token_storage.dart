@@ -12,16 +12,20 @@ class TokenStorage {
 
   Future<String?> readToken() => _secureStorage.getAccessToken();
 
-  Future<void> saveRefreshToken(String token) => _secureStorage.saveRefreshToken(token);
+  Future<void> saveRefreshToken(String token) =>
+      _secureStorage.saveRefreshToken(token);
 
   Future<String?> readRefreshToken() => _secureStorage.getRefreshToken();
 
-  Future<void> saveTokens({required String accessToken, required String refreshToken}) =>
-      _secureStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+  Future<void> saveTokens(
+          {required String accessToken, required String refreshToken}) =>
+      _secureStorage.saveTokens(
+          accessToken: accessToken, refreshToken: refreshToken);
 
   Future<void> clearToken() => _secureStorage.clearTokens();
 
-  Future<void> saveRememberMe(bool rememberMe) => _secureStorage.saveRememberMe(rememberMe);
+  Future<void> saveRememberMe(bool rememberMe) =>
+      _secureStorage.saveRememberMe(rememberMe);
 
   Future<bool> readRememberMe() => _secureStorage.readRememberMe();
 

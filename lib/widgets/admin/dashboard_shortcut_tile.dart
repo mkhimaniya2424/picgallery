@@ -31,9 +31,11 @@ class DashboardShortcutTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 16, 8),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+          color:
+              isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+          border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.border),
           boxShadow:
               AppShadows.soft(gradient.last, opacity: 0.07, blur: 14, y: 7),
         ),

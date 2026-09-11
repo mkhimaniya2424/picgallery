@@ -131,7 +131,8 @@ class StudioDrawer extends ConsumerWidget {
   Widget _buildSectionHeader(BuildContext context, String title) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md + AppSpacing.xs, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md + AppSpacing.xs,
+          AppSpacing.md, AppSpacing.md, AppSpacing.xs),
       child: Text(
         title,
         style: TextStyle(
@@ -181,106 +182,133 @@ class StudioDrawer extends ConsumerWidget {
                   icon: Icons.dashboard_rounded,
                   label: 'Dashboard',
                   selected: selectedId == 'dashboard',
-                  onTap: () => _handleTap(context, ref, 'dashboard', _DrawerAction.tab, tabIndex: 0),
+                  onTap: () => _handleTap(
+                      context, ref, 'dashboard', _DrawerAction.tab,
+                      tabIndex: 0),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.notifications_rounded,
                   label: 'Notifications',
                   selected: selectedId == 'notifications',
                   badgeCount: unreadCount,
-                  onTap: () => _handleTap(context, ref, 'notifications', _DrawerAction.route, routeName: AppRoutes.notifications),
+                  onTap: () => _handleTap(
+                      context, ref, 'notifications', _DrawerAction.route,
+                      routeName: AppRoutes.notifications),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.bar_chart_rounded,
                   label: 'Analytics',
                   selected: selectedId == 'reports',
-                  onTap: () => _handleTap(context, ref, 'reports', _DrawerAction.route, routeName: AppRoutes.adminAnalytics),
+                  onTap: () => _handleTap(
+                      context, ref, 'reports', _DrawerAction.route,
+                      routeName: AppRoutes.adminAnalytics),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.photo_library_rounded,
                   label: 'Gallery',
                   selected: selectedId == 'gallery',
-                  onTap: () => _handleTap(context, ref, 'gallery', _DrawerAction.tab, tabIndex: 1),
+                  onTap: () => _handleTap(
+                      context, ref, 'gallery', _DrawerAction.tab,
+                      tabIndex: 1),
                 ),
-
                 _buildSectionHeader(context, 'CONTENT'),
                 _StudioDrawerTile(
                   icon: Icons.collections_rounded,
                   label: 'Albums',
                   selected: selectedId == 'albums',
-                  onTap: () => _handleTap(context, ref, 'albums', _DrawerAction.tab, tabIndex: 1),
+                  onTap: () => _handleTap(
+                      context, ref, 'albums', _DrawerAction.tab,
+                      tabIndex: 1),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.folder_rounded,
                   label: 'Folders',
                   selected: selectedId == 'folders',
-                  onTap: () => _handleTap(context, ref, 'folders', _DrawerAction.route, routeName: AppRoutes.adminFolderList),
+                  onTap: () => _handleTap(
+                      context, ref, 'folders', _DrawerAction.route,
+                      routeName: AppRoutes.adminFolderList),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.perm_media_rounded,
                   label: 'Media',
                   selected: selectedId == 'media',
-                  onTap: () => _handleTap(context, ref, 'media', _DrawerAction.route, routeName: AppRoutes.media),
+                  onTap: () => _handleTap(
+                      context, ref, 'media', _DrawerAction.route,
+                      routeName: AppRoutes.media),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.cloud_upload_rounded,
                   label: 'Uploads',
                   selected: selectedId == 'uploads',
-                  onTap: () => _handleTap(context, ref, 'uploads', _DrawerAction.route, routeName: AppRoutes.uploadQueue),
+                  onTap: () => _handleTap(
+                      context, ref, 'uploads', _DrawerAction.route,
+                      routeName: AppRoutes.uploadQueue),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.face_retouching_natural_rounded,
                   label: 'Face Search',
                   selected: selectedId == 'face_search',
                   onTap: () {
-                    ref.read(selectedDrawerItemProvider.notifier).select('face_search');
+                    ref
+                        .read(selectedDrawerItemProvider.notifier)
+                        .select('face_search');
                     Navigator.of(context).pop();
                     // Scopes the search to the studio's own library —
                     // same POST /faces/search endpoint, mirrors the
                     // AppBar action on AlbumsListScreen.
                     ref.read(faceSearchProvider.notifier).useMyLibrary();
-                    Navigator.of(context).pushNamed(AppRoutes.faceSearchLanding);
+                    Navigator.of(context)
+                        .pushNamed(AppRoutes.faceSearchLanding);
                   },
                 ),
-
                 _buildSectionHeader(context, 'RELATIONSHIPS'),
                 _StudioDrawerTile(
                   icon: Icons.people_rounded,
                   label: 'Clients',
                   selected: selectedId == 'clients',
-                  onTap: () => _handleTap(context, ref, 'clients', _DrawerAction.tab, tabIndex: 2),
+                  onTap: () => _handleTap(
+                      context, ref, 'clients', _DrawerAction.tab,
+                      tabIndex: 2),
                 ),
-
                 _buildSectionHeader(context, 'BUSINESS'),
                 _SubscriptionDrawerTile(
                   selected: selectedId == 'subscription_plans',
-                  onTap: () => _handleTap(context, ref, 'subscription_plans', _DrawerAction.route, routeName: AppRoutes.subscriptionPlans),
+                  onTap: () => _handleTap(
+                      context, ref, 'subscription_plans', _DrawerAction.route,
+                      routeName: AppRoutes.subscriptionPlans),
                 ),
-
                 _buildSectionHeader(context, 'SETTINGS'),
                 _StudioDrawerTile(
                   icon: Icons.settings_rounded,
                   label: 'Studio Settings',
                   selected: selectedId == 'settings',
-                  onTap: () => _handleTap(context, ref, 'settings', _DrawerAction.route, routeName: AppRoutes.adminSettings),
+                  onTap: () => _handleTap(
+                      context, ref, 'settings', _DrawerAction.route,
+                      routeName: AppRoutes.adminSettings),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.support_agent_rounded,
                   label: 'Help & Support',
                   selected: selectedId == 'help',
-                  onTap: () => _handleTap(context, ref, 'help', _DrawerAction.route, routeName: AppRoutes.helpSupport),
+                  onTap: () => _handleTap(
+                      context, ref, 'help', _DrawerAction.route,
+                      routeName: AppRoutes.helpSupport),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.privacy_tip_outlined,
                   label: 'Privacy Policy',
                   selected: selectedId == 'privacy',
-                  onTap: () => _handleTap(context, ref, 'privacy', _DrawerAction.route, routeName: AppRoutes.privacyPolicy),
+                  onTap: () => _handleTap(
+                      context, ref, 'privacy', _DrawerAction.route,
+                      routeName: AppRoutes.privacyPolicy),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.description_outlined,
                   label: 'Terms & Conditions',
                   selected: selectedId == 'terms',
-                  onTap: () => _handleTap(context, ref, 'terms', _DrawerAction.route, routeName: AppRoutes.termsConditions),
+                  onTap: () => _handleTap(
+                      context, ref, 'terms', _DrawerAction.route,
+                      routeName: AppRoutes.termsConditions),
                 ),
               ],
             ),
@@ -336,7 +364,8 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
       child: MouseRegion(
         onEnter: (_) => setState(() => _hovering = true),
         onExit: (_) => setState(() => _hovering = false),
@@ -347,14 +376,19 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
             onTap: widget.onTap,
             borderRadius: BorderRadius.circular(AppRadius.md),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: 10),
               decoration: BoxDecoration(
                 color: selected
                     ? AppColors.primary.withValues(alpha: 0.08)
-                    : (_hovering ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent),
+                    : (_hovering
+                        ? AppColors.primary.withValues(alpha: 0.04)
+                        : Colors.transparent),
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 border: selected
-                    ? Border.all(color: AppColors.primary.withValues(alpha: 0.15), width: 1)
+                    ? Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        width: 1)
                     : Border.all(color: Colors.transparent, width: 1),
                 boxShadow: selected
                     ? [
@@ -381,7 +415,9 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
                   Icon(
                     widget.icon,
                     size: 20,
-                    color: selected ? AppColors.primary : colorScheme.onSurfaceVariant,
+                    color: selected
+                        ? AppColors.primary
+                        : colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -389,14 +425,18 @@ class _StudioDrawerTileState extends State<_StudioDrawerTile> {
                       widget.label,
                       style: TextStyle(
                         fontSize: 13.5,
-                        fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                        color: selected ? AppColors.primary : colorScheme.onSurface,
+                        fontWeight:
+                            selected ? FontWeight.w800 : FontWeight.w600,
+                        color: selected
+                            ? AppColors.primary
+                            : colorScheme.onSurface,
                       ),
                     ),
                   ),
                   if (widget.badgeCount > 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: selected ? AppColors.primary : AppColors.accent,
                         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -437,14 +477,16 @@ class _SubscriptionDrawerTile extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.md),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.md),
               color: selected
@@ -489,7 +531,9 @@ class _SubscriptionDrawerTile extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
-                          color: selected ? AppColors.primary : colorScheme.onSurface,
+                          color: selected
+                              ? AppColors.primary
+                              : colorScheme.onSurface,
                         ),
                       ),
                       const Text(
@@ -505,9 +549,11 @@ class _SubscriptionDrawerTile extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppColors.gold, Color(0xFFF59E0B)]),
+                    gradient: const LinearGradient(
+                        colors: [AppColors.gold, Color(0xFFF59E0B)]),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: const Text(

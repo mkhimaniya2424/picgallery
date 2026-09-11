@@ -18,7 +18,7 @@ class AlertsScreen extends ConsumerWidget {
     final controller = ref.watch(alertsProvider);
 
     if (controller.isLoading && controller.items.isEmpty) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
@@ -35,9 +35,9 @@ class AlertsScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: controller.refresh,
       child: ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         itemCount: controller.items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+        separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
         itemBuilder: (context, index) {
           final alert = controller.items[index];
           return _AlertTile(
@@ -59,13 +59,15 @@ class _AlertTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: alert.isRead ? AppColors.surface : AppColors.primary.withValues(alpha: 0.06),
+      color: alert.isRead
+          ? (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.surface)
+          : AppColors.primary.withValues(alpha: 0.06),
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(color: AppColors.border),
@@ -76,15 +78,13 @@ class _AlertTile extends StatelessWidget {
               Container(
                 width: 10,
                 height: 10,
-                margin: const EdgeInsets.only(top: 4),
+                margin: EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: alert.isRead
-                      ? Colors.transparent
-                      : AppColors.primary,
+                  color: alert.isRead ? Colors.transparent : AppColors.primary,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,17 +92,18 @@ class _AlertTile extends StatelessWidget {
                     Text(
                       alert.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight:
-                                alert.isRead ? FontWeight.w600 : FontWeight.w800,
+                            fontWeight: alert.isRead
+                                ? FontWeight.w600
+                                : FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       alert.message,
                       style: Theme.of(context)
                           .textTheme
                           .bodyMedium
-                          ?.copyWith(color: AppColors.subtitle),
+                          ?.copyWith(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle)),
                     ),
                   ],
                 ),

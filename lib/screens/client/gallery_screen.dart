@@ -52,15 +52,15 @@ class GalleryScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      
       appBar: CustomAppBar(
         showBack: false,
         title: l10n.gallery,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu_rounded),
-            onPressed: () =>
-                context.findAncestorStateOfType<MainNavScreenState>()?.openDrawer(),
+            icon: Icon(Icons.menu_rounded),
+            onPressed: () => context
+                .findAncestorStateOfType<MainNavScreenState>()
+                ?.openDrawer(),
           ),
         ),
       ),
@@ -85,10 +85,12 @@ class _ClientGalleryGridView extends ConsumerStatefulWidget {
   const _ClientGalleryGridView();
 
   @override
-  ConsumerState<_ClientGalleryGridView> createState() => _ClientGalleryGridViewState();
+  ConsumerState<_ClientGalleryGridView> createState() =>
+      _ClientGalleryGridViewState();
 }
 
-class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> {
+class _ClientGalleryGridViewState
+    extends ConsumerState<_ClientGalleryGridView> {
   /// null = "All" chip selected (no studio scoping).
   String? _selectedStudioId;
 
@@ -178,12 +180,14 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
     );
   }
 
-  Widget _buildBody(ConnectedAlbumsState connectedState, List<SharedStudioModel> studios) {
+  Widget _buildBody(
+      ConnectedAlbumsState connectedState, List<SharedStudioModel> studios) {
     final hasLoadedAlbums = connectedState.albums.isNotEmpty;
 
     if (connectedState.isLoading && !hasLoadedAlbums) {
       return _scrollable(
-        const Center(child: LoadingWidget(message: 'Loading shared galleries…')),
+        Center(
+            child: LoadingWidget(message: 'Loading shared galleries…')),
       );
     }
 
@@ -191,7 +195,7 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
       return _scrollable(
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: InlineErrorBanner(message: connectedState.error!),
           ),
         ),
@@ -200,7 +204,7 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
 
     if (connectedState.albums.isEmpty) {
       return _scrollable(
-        const Center(
+        Center(
           child: Padding(
             padding: EdgeInsets.all(AppSpacing.xl),
             child: Column(
@@ -215,7 +219,7 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
                   'Studios you connect with will share galleries here.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -236,14 +240,15 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
     if (_likedOnly) {
       if (_isLoadingLikedAlbums && _likedAlbums == null) {
         return _scrollable(
-          const Center(child: LoadingWidget(message: 'Loading liked galleries…')),
+          Center(
+              child: LoadingWidget(message: 'Loading liked galleries…')),
         );
       }
       if (_likedAlbumsError != null && _likedAlbums == null) {
         return _scrollable(
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               child: InlineErrorBanner(message: _likedAlbumsError!),
             ),
           ),
@@ -272,18 +277,18 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: TextField(
               controller: _searchController,
               onChanged: (v) => setState(() => _searchQuery = v),
               decoration: InputDecoration(
                 hintText: 'Search galleries…',
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
+                        icon: Icon(Icons.clear_rounded),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -293,9 +298,9 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: DropdownButtonFormField<_GallerySortOption>(
               initialValue: _sortOption,
               items: const [
@@ -320,28 +325,28 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
             ),
           ),
           if (studios.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _StudioFilterChips(
               studios: studios,
               selectedStudioId: _selectedStudioId,
               onSelect: _onSelectStudio,
             ),
           ],
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Align(
               alignment: Alignment.centerLeft,
               child: FilterChip(
-                label: const Text('Liked'),
-                avatar: const Icon(Icons.favorite_rounded, size: 16),
+                label: Text('Liked'),
+                avatar: Icon(Icons.favorite_rounded, size: 16),
                 selected: _likedOnly,
                 onSelected: _onToggleLiked,
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: filteredAlbums.isEmpty
                 ? EmptyStateCard(
                     icon: Icons.photo_library_outlined,
@@ -351,7 +356,8 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
                             ? 'No liked galleries yet.'
                             : 'No galleries shared from this studio yet.',
                   )
-                : GalleryGrid(albums: filteredAlbums, maxItems: filteredAlbums.length),
+                : GalleryGrid(
+                    albums: filteredAlbums, maxItems: filteredAlbums.length),
           ),
         ],
       ),
@@ -365,11 +371,12 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
         sorted.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         break;
       case _GallerySortOption.name:
-        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        sorted.sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
       case _GallerySortOption.mostMedia:
-        sorted.sort((a, b) =>
-            (b.photoCount + b.videoCount).compareTo(a.photoCount + a.videoCount));
+        sorted.sort((a, b) => (b.photoCount + b.videoCount)
+            .compareTo(a.photoCount + a.videoCount));
         break;
     }
     return sorted;
@@ -379,8 +386,8 @@ class _ClientGalleryGridViewState extends ConsumerState<_ClientGalleryGridView> 
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          physics:
-              const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics()),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: child,
@@ -415,9 +422,9 @@ class _StudioFilterChips extends StatelessWidget {
       height: 42,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
         itemCount: studios.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => SizedBox(width: 8),
         itemBuilder: (_, index) {
           if (index == 0) {
             return _StudioChip(
@@ -458,7 +465,7 @@ class _StudioChip extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: 16),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -473,7 +480,7 @@ class _StudioChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : AppColors.text,
+              color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
             ),
           ),
         ),

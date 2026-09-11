@@ -60,7 +60,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     if (trimmed.isEmpty) return;
 
     Uri? uri = Uri.tryParse(trimmed);
-    
+
     // If input is not a scheme-qualified URL, treat it as a bare share token.
     if (uri == null ||
         (!trimmed.startsWith('http://') &&
@@ -114,7 +114,9 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
           backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
           title: Text(
             'Enter code',
-            style: TextStyle(color: isDark ? AppColors.textOnDark : AppColors.text, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: isDark ? AppColors.textOnDark : AppColors.text,
+                fontWeight: FontWeight.bold),
           ),
           content: TextField(
             controller: controller,
@@ -127,11 +129,11 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, controller.text),
-              child: const Text('Go'),
+              child: Text('Go'),
             ),
           ],
         );
@@ -149,25 +151,26 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Scan QR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Scan QR',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             tooltip: 'Scan from gallery',
-            icon: const Icon(Icons.image_outlined, color: Colors.white),
+            icon: Icon(Icons.image_outlined, color: Colors.white),
             onPressed: _scanFromGallery,
           ),
           IconButton(
             tooltip: 'Flip camera',
-            icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
+            icon: Icon(Icons.cameraswitch_rounded, color: Colors.white),
             onPressed: () => _controller.switchCamera(),
           ),
           ValueListenableBuilder<MobileScannerState>(
             valueListenable: _controller,
             builder: (context, state, child) {
               if (state.torchState == TorchState.unavailable) {
-                return const SizedBox.shrink();
+                return SizedBox.shrink();
               }
               final on = state.torchState == TorchState.on;
               return IconButton(
@@ -204,16 +207,18 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
             right: 0,
             child: Column(
               children: [
-                const Text(
+                Text(
                   'Align QR code within the frame to scan',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 TextButton.icon(
                   onPressed: _showManualEntryDialog,
-                  icon: const Icon(Icons.keyboard_alt_outlined, color: Colors.white70, size: 18),
-                  label: const Text('Enter code instead', style: TextStyle(color: Colors.white70)),
+                  icon: Icon(Icons.keyboard_alt_outlined,
+                      color: Colors.white70, size: 18),
+                  label: Text('Enter code instead',
+                      style: TextStyle(color: Colors.white70)),
                 ),
               ],
             ),
@@ -225,8 +230,9 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
                 duration: const Duration(milliseconds: 200),
                 child: Container(
                   color: Colors.black54,
-                  child: const Center(
-                    child: Icon(Icons.check_circle_rounded, color: AppColors.success, size: 96),
+                  child: Center(
+                    child: Icon(Icons.check_circle_rounded,
+                        color: AppColors.success, size: 96),
                   ),
                 ),
               ),

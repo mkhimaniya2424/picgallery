@@ -152,18 +152,23 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
     // Build a clientId -> {views, downloads} lookup from the client-stats
     // response so we can merge real numbers into each ClientData below.
     final clientStatsItems =
-        (clientStatsJson['items'] as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+        (clientStatsJson['items'] as List<dynamic>? ?? const [])
+            .cast<Map<String, dynamic>>();
     final downloadsByClientId = <String, int>{
       for (final item in clientStatsItems)
-        item['client_id'] as String: (item['total_downloads'] as num?)?.toInt() ?? 0,
+        item['client_id'] as String:
+            (item['total_downloads'] as num?)?.toInt() ?? 0,
     };
     final viewsByClientId = <String, int>{
       for (final item in clientStatsItems)
-        item['client_id'] as String: (item['total_views'] as num?)?.toInt() ?? 0,
+        item['client_id'] as String:
+            (item['total_views'] as num?)?.toInt() ?? 0,
     };
     final galleriesByClientId = <String, List<String>>{
       for (final item in clientStatsItems)
-        item['client_id'] as String: (item['assigned_gallery_ids'] as List<dynamic>? ?? []).cast<String>(),
+        item['client_id'] as String:
+            (item['assigned_gallery_ids'] as List<dynamic>? ?? [])
+                .cast<String>(),
     };
 
     final currentUserId = _currentUserId();
@@ -183,7 +188,9 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
           final views = viewsByClientId[cd.id] ?? 0;
           final downloads = downloadsByClientId[cd.id] ?? 0;
           final assignedGalleries = galleriesByClientId[cd.id] ?? const [];
-          if (views == 0 && downloads == 0 && assignedGalleries.isEmpty) return cd;
+          if (views == 0 && downloads == 0 && assignedGalleries.isEmpty) {
+            return cd;
+          }
           return cd.copyWith(
             totalViews: views,
             totalDownloads: downloads,
@@ -193,17 +200,22 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
         .whereType<ClientData>()
         .toList(growable: false);
 
-    final albums = albumsJson.map((e) => AlbumModel.fromApiJson(e as Map<String, dynamic>)).toList(growable: false);
-    final recentUploads =
-        DashboardUploadsDto.fromApiJson(mediaJson).toAlbumUploads(albums: albums);
+    final albums = albumsJson
+        .map((e) => AlbumModel.fromApiJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+    final recentUploads = DashboardUploadsDto.fromApiJson(mediaJson)
+        .toAlbumUploads(albums: albums);
 
     final notifications = notificationsJson
         .map((e) =>
-            DashboardNotificationDto.fromApiJson(e as Map<String, dynamic>).toNotificationData())
+            DashboardNotificationDto.fromApiJson(e as Map<String, dynamic>)
+                .toNotificationData())
         .toList(growable: false);
 
-    final activityLog = DashboardActivityLogDto.fromApiJson(activityLogJson).toActivityLog();
-    final analytics = DashboardAnalyticsDto.fromApiJson(analyticsJson).toAnalyticsSeries();
+    final activityLog =
+        DashboardActivityLogDto.fromApiJson(activityLogJson).toActivityLog();
+    final analytics =
+        DashboardAnalyticsDto.fromApiJson(analyticsJson).toAnalyticsSeries();
 
     final stats = DashboardStatsDto.fromApiJson(statsJson);
 
@@ -257,10 +269,9 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
     return _notificationsRepo.deleteOne(notificationId);
   }
 
-
-
   @override
-  Future<ClientData> addClient({required String name, required String initials}) {
+  Future<ClientData> addClient(
+      {required String name, required String initials}) {
     throw UnimplementedError(
       'ApiAdminDashboardRepository does not back this yet, and there is no '
       '"create client" endpoint — clients only ever come from an '
@@ -277,22 +288,25 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
   }
 
   @override
-  Future<void> assignGalleriesToClient(String clientId, List<String> galleryIds) async {
+  Future<void> assignGalleriesToClient(
+      String clientId, List<String> galleryIds) async {
     // 1. Fetch current active shares for this client
-    final currentSharesResponse = await _apiClient.get('/studio/shares?client_id=$clientId');
-    final currentShares = (currentSharesResponse as List<dynamic>).cast<Map<String, dynamic>>();
-    
+    final currentSharesResponse =
+        await _apiClient.get('/studio/shares?client_id=$clientId');
+    final currentShares =
+        (currentSharesResponse as List<dynamic>).cast<Map<String, dynamic>>();
+
     final currentAlbumIds = <String, String>{}; // Maps album_id -> share_id
     for (final share in currentShares) {
       currentAlbumIds[share['album_id'] as String] = share['id'] as String;
     }
-    
+
     final desiredSet = galleryIds.toSet();
     final currentSet = currentAlbumIds.keys.toSet();
-    
+
     final toAdd = desiredSet.difference(currentSet);
     final toRemove = currentSet.difference(desiredSet);
-    
+
     // 2. Add new shares
     for (final albumId in toAdd) {
       await _apiClient.post('/studio/shares', body: {
@@ -300,7 +314,7 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
         'client_id': clientId,
       });
     }
-    
+
     // 3. Revoke removed shares
     for (final albumId in toRemove) {
       final shareId = currentAlbumIds[albumId]!;
@@ -321,7 +335,8 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
   }
 
   @override
-  Future<AlbumUploadData> addUpload({required String albumName, required bool isVideo}) {
+  Future<AlbumUploadData> addUpload(
+      {required String albumName, required bool isVideo}) {
     throw UnimplementedError(
       'ApiAdminDashboardRepository does not back this yet — real uploads go '
       'through MediaUploadService / ApiMediaRepository.uploadMedia '
@@ -359,7 +374,8 @@ class ApiAdminDashboardRepository implements AdminDashboardRepository {
     // needed a fresh read of the live data, which fetchSnapshot()
     // already provides.
     final snapshot = await fetchSnapshot();
-    final photosStat = snapshot.stats.firstWhere((s) => s.label == 'Total Photos');
+    final photosStat =
+        snapshot.stats.firstWhere((s) => s.label == 'Total Photos');
     return 'Photos ${photosStat.value} • '
         'Clients ${snapshot.clients.length}';
   }

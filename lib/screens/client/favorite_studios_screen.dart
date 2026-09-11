@@ -19,7 +19,8 @@ class FavoriteStudiosScreen extends ConsumerStatefulWidget {
   const FavoriteStudiosScreen({super.key});
 
   @override
-  ConsumerState<FavoriteStudiosScreen> createState() => _FavoriteStudiosScreenState();
+  ConsumerState<FavoriteStudiosScreen> createState() =>
+      _FavoriteStudiosScreenState();
 }
 
 class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
@@ -37,10 +38,10 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(studioProvider);
-    final favoriteStudios = provider.studios.where((s) => s.isFavorite).toList();
+    final favoriteStudios =
+        provider.studios.where((s) => s.isFavorite).toList();
 
     return Scaffold(
-      
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Favorite Studios',
@@ -49,9 +50,10 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
       body: ScreenBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(top: kToolbarHeight),
+            padding: EdgeInsets.only(top: kToolbarHeight),
             child: RefreshIndicator(
-              onRefresh: () => ref.read(studioProvider.notifier).loadFavorites(),
+              onRefresh: () =>
+                  ref.read(studioProvider.notifier).loadFavorites(),
               child: _buildBody(provider, favoriteStudios),
             ),
           ),
@@ -60,10 +62,11 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
     );
   }
 
-  Widget _buildBody(StudioNotifier provider, List<StudioModel> favoriteStudios) {
+  Widget _buildBody(
+      StudioNotifier provider, List<StudioModel> favoriteStudios) {
     if (provider.isLoadingFavorites && favoriteStudios.isEmpty) {
       return _scrollableMessage(
-        const Center(child: LoadingWidget(message: 'Loading your favorites…')),
+        Center(child: LoadingWidget(message: 'Loading your favorites…')),
       );
     }
 
@@ -71,7 +74,7 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
       return _scrollableMessage(
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: InlineErrorBanner(message: provider.favoritesError!),
           ),
         ),
@@ -83,13 +86,15 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 8, AppSpacing.md, AppSpacing.lg),
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.md, 8, AppSpacing.md, AppSpacing.lg),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       itemCount: favoriteStudios.length,
       itemBuilder: (context, index) {
         final studio = favoriteStudios[index];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: EdgeInsets.only(bottom: 18),
           child: StudioCard(studio: studio),
         );
       },
@@ -103,7 +108,8 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics()),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: child,
@@ -114,7 +120,7 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -129,7 +135,7 @@ class _FavoriteStudiosScreenState extends ConsumerState<FavoriteStudiosScreen> {
               'Studios you bookmark will appear here for quick access.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),

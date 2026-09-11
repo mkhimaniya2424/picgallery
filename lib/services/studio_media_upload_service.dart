@@ -32,7 +32,8 @@ class StudioPortfolioImage {
 /// are all real `multipart/form-data` requests, not JSON bodies, so
 /// none of them can go through [ApiClient.post].
 class StudioMediaUploadService {
-  StudioMediaUploadService({required ApiClient apiClient, http.Client? httpClient})
+  StudioMediaUploadService(
+      {required ApiClient apiClient, http.Client? httpClient})
       : _apiClient = apiClient,
         _httpClient = httpClient ?? http.Client();
 
@@ -49,7 +50,11 @@ class StudioMediaUploadService {
     required String fileName,
     required String contentType,
   }) async {
-    final decoded = await _upload(path: '/studios/me/avatar', bytes: bytes, fileName: fileName, contentType: contentType);
+    final decoded = await _upload(
+        path: '/studios/me/avatar',
+        bytes: bytes,
+        fileName: fileName,
+        contentType: contentType);
     return decoded['avatar_url'] as String?;
   }
 
@@ -60,7 +65,11 @@ class StudioMediaUploadService {
     required String fileName,
     required String contentType,
   }) async {
-    final decoded = await _upload(path: '/studios/me/cover', bytes: bytes, fileName: fileName, contentType: contentType);
+    final decoded = await _upload(
+        path: '/studios/me/cover',
+        bytes: bytes,
+        fileName: fileName,
+        contentType: contentType);
     return decoded['cover_image_url'] as String?;
   }
 
@@ -70,7 +79,11 @@ class StudioMediaUploadService {
     required String fileName,
     required String contentType,
   }) async {
-    final decoded = await _upload(path: '/studios/me/portfolio', bytes: bytes, fileName: fileName, contentType: contentType);
+    final decoded = await _upload(
+        path: '/studios/me/portfolio',
+        bytes: bytes,
+        fileName: fileName,
+        contentType: contentType);
     return StudioPortfolioImage.fromApiJson(decoded);
   }
 
@@ -82,7 +95,12 @@ class StudioMediaUploadService {
     required List<int> bytes,
     required String fileName,
     required String contentType,
-  }) => _upload(path: path, bytes: bytes, fileName: fileName, contentType: contentType);
+  }) =>
+      _upload(
+          path: path,
+          bytes: bytes,
+          fileName: fileName,
+          contentType: contentType);
 
   /// Shared multipart POST — same shape as [MediaUploadService.upload],
   /// minus the send-progress plumbing (these are small profile images,
@@ -113,9 +131,9 @@ class StudioMediaUploadService {
     final http.StreamedResponse streamedResponse;
     try {
       streamedResponse = await _httpClient.send(request).timeout(
-        _timeout,
-        onTimeout: _throwTimeout,
-      );
+            _timeout,
+            onTimeout: _throwTimeout,
+          );
     } on ApiException {
       rethrow;
     } catch (_) {
@@ -148,7 +166,9 @@ class StudioMediaUploadService {
       }
     }
 
-    if (statusCode >= 200 && statusCode < 300 && decoded is Map<String, dynamic>) {
+    if (statusCode >= 200 &&
+        statusCode < 300 &&
+        decoded is Map<String, dynamic>) {
       return decoded;
     }
 
@@ -164,7 +184,9 @@ class StudioMediaUploadService {
       if (detail is String) return detail;
       if (detail is List) {
         return detail
-            .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
+            .map((e) => e is Map && e['msg'] != null
+                ? e['msg'].toString()
+                : e.toString())
             .join(', ');
       }
       return detail.toString();

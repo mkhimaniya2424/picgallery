@@ -67,13 +67,15 @@ Future<void> showShareWithClientSheet(
         SnackBar(content: Text('Shared "$itemLabel" with $clientName')),
       );
     } else {
-      final result = await repo.shareFolder(folderId: folderId!, clientId: selected.clientId);
+      final result = await repo.shareFolder(
+          folderId: folderId!, clientId: selected.clientId);
       if (!context.mounted) return;
       final message = result.shares.isEmpty
           ? 'This folder has no albums to share yet.'
           : 'Shared ${result.shares.length} album${result.shares.length == 1 ? '' : 's'} '
               'from "$itemLabel" with $clientName';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     }
   } catch (e) {
     if (!context.mounted) return;
@@ -98,7 +100,8 @@ class _ClientPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +127,8 @@ class _ClientPickerSheet extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: EmptyStateCard(
                   icon: Icons.people_outline_rounded,
-                  message: 'No connected clients yet. Connect with a client first '
+                  message:
+                      'No connected clients yet. Connect with a client first '
                       'to share galleries with them.',
                 ),
               )
@@ -139,7 +143,8 @@ class _ClientPickerSheet extends StatelessWidget {
                     final name = connection.clientData?.name ?? 'Client';
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.12),
                         child: Text(
                           name.isNotEmpty ? name[0].toUpperCase() : 'C',
                           style: const TextStyle(
@@ -148,8 +153,10 @@ class _ClientPickerSheet extends StatelessWidget {
                           ),
                         ),
                       ),
-                      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+                      title: Text(name,
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                      trailing: const Icon(Icons.chevron_right_rounded,
+                          color: AppColors.subtitle),
                       onTap: () => Navigator.of(context).pop(connection),
                     );
                   },

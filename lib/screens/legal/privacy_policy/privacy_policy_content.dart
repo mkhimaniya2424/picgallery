@@ -1,5 +1,3 @@
-
-
 class PolicyBullet {
   final String text;
   const PolicyBullet(this.text);

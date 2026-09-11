@@ -13,16 +13,14 @@ class ApiSearchRepository implements SearchRepository {
 
   /// GET /search?q=...&type=...
   @override
-  Future<List<SearchResultItem>> search({String query = '', SearchResultType? type}) async {
+  Future<List<SearchResultItem>> search(
+      {String query = '', SearchResultType? type}) async {
     final params = <String, String>{'q': query};
     if (type != null) params['type'] = type.name;
     final path = '/search?${Uri(queryParameters: params).query}';
 
     final json = await _apiClient.get(path);
-    return (json as List)
-        .cast<Map<String, dynamic>>()
-        .map(_fromJson)
-        .toList();
+    return (json as List).cast<Map<String, dynamic>>().map(_fromJson).toList();
   }
 
   /// GET /search/suggestions

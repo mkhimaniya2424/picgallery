@@ -89,9 +89,8 @@ class DownloadServiceImpl implements DownloadService {
       }
 
       final tempDir = await getTemporaryDirectory();
-      final safeName = fileName.trim().isEmpty
-          ? 'picgallery_download.$ext'
-          : fileName;
+      final safeName =
+          fileName.trim().isEmpty ? 'picgallery_download.$ext' : fileName;
 
       final file = File('${tempDir.path}/$safeName');
       await file.writeAsBytes(bytes, flush: true);
@@ -195,7 +194,8 @@ class DownloadServiceImpl implements DownloadService {
     // log to the client-only `/client/download-history` instead — the
     // studio route 403s for a client token, which is exactly why client
     // downloads were never showing up in Download History before.
-    final endpoint = isClientUser ? '/client/download-history' : '/download-history';
+    final endpoint =
+        isClientUser ? '/client/download-history' : '/download-history';
     try {
       // Prefer the id the caller already knows about. The file-based
       // lookup below only exists for call sites that never had a
@@ -206,7 +206,8 @@ class DownloadServiceImpl implements DownloadService {
       // downloads of server-hosted photos/videos.
       String? resolvedId = mediaId;
       if (resolvedId == null || resolvedId.isEmpty) {
-        final media = await _findMediaFor(filePath: filePath, fileName: fileName);
+        final media =
+            await _findMediaFor(filePath: filePath, fileName: fileName);
         if (media == null) return;
         resolvedId = media.id;
       }
@@ -241,7 +242,8 @@ class DownloadServiceImpl implements DownloadService {
   /// by [filePath] (the path-based downloadOriginal/saveToGallery calls)
   /// or, failing that, by [fileName] (downloadBytes' web-only, bytes-only
   /// calls, which never have a local path to match on).
-  Future<MediaModel?> _findMediaFor({String? filePath, String? fileName}) async {
+  Future<MediaModel?> _findMediaFor(
+      {String? filePath, String? fileName}) async {
     final store = MediaLocalStore();
     final all = await store.load();
 
@@ -270,7 +272,8 @@ class DownloadServiceImpl implements DownloadService {
       if (!await _validate(context, filePath)) return false;
       if (!context.mounted) return false;
 
-      final saved = await _downloadToUserLocation(context: context, filePath: filePath);
+      final saved =
+          await _downloadToUserLocation(context: context, filePath: filePath);
       if (saved) {
         await _recordDownloadHistory(
           filePath: filePath,
@@ -369,7 +372,8 @@ class DownloadServiceImpl implements DownloadService {
       if (!context.mounted) return false;
 
       if (!_hasNativeGallery) {
-        final saved = await _downloadToUserLocation(context: context, filePath: filePath);
+        final saved =
+            await _downloadToUserLocation(context: context, filePath: filePath);
         if (saved) {
           await _recordDownloadHistory(
             filePath: filePath,
@@ -426,7 +430,8 @@ class DownloadServiceImpl implements DownloadService {
     } on GalException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save to gallery: ${e.type.message}')),
+          SnackBar(
+              content: Text('Failed to save to gallery: ${e.type.message}')),
         );
       }
       return false;
@@ -525,48 +530,82 @@ class DownloadServiceImpl implements DownloadService {
       // Rotate and flip around center
       canvas.translate(rotatedW / 2, rotatedH / 2);
       canvas.rotate(recipe.rotation * math.pi / 180);
-      canvas.scale(recipe.flipHorizontal ? -1.0 : 1.0, recipe.flipVertical ? -1.0 : 1.0);
+      canvas.scale(
+          recipe.flipHorizontal ? -1.0 : 1.0, recipe.flipVertical ? -1.0 : 1.0);
       canvas.translate(-origW / 2, -origH / 2);
 
       final paint = Paint();
-      final hasColorEdits = recipe.hasEdits && (
-        recipe.brightness != 0.0 ||
-        recipe.contrast != 0.0 ||
-        recipe.saturation != 0.0 ||
-        recipe.exposure != 0.0 ||
-        recipe.temperature != 0.0 ||
-        (recipe.filter != null && recipe.filter != 'none')
-      );
+      final hasColorEdits = recipe.hasEdits &&
+          (recipe.brightness != 0.0 ||
+              recipe.contrast != 0.0 ||
+              recipe.saturation != 0.0 ||
+              recipe.exposure != 0.0 ||
+              recipe.temperature != 0.0 ||
+              (recipe.filter != null && recipe.filter != 'none'));
       final colorMatrix = hasColorEdits ? recipe.combinedColorMatrix : null;
 
       if (recipe.sharpen > 0.0) {
         // Draw base image with (1 + sharpen) scale
         final sharpenMatrix = [
-          1.0 + recipe.sharpen, 0.0, 0.0, 0.0, 0.0,
-          0.0, 1.0 + recipe.sharpen, 0.0, 0.0, 0.0,
-          0.0, 0.0, 1.0 + recipe.sharpen, 0.0, 0.0,
-          0.0, 0.0, 0.0, 1.0, 0.0,
+          1.0 + recipe.sharpen,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0 + recipe.sharpen,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0 + recipe.sharpen,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
         ];
-        final combinedOriginalMatrix = colorMatrix != null 
+        final combinedOriginalMatrix = colorMatrix != null
             ? EditRecipe.multiplyMatrices(sharpenMatrix, colorMatrix)
             : sharpenMatrix;
-            
-        final originalPaint = Paint()..colorFilter = ColorFilter.matrix(combinedOriginalMatrix);
+
+        final originalPaint = Paint()
+          ..colorFilter = ColorFilter.matrix(combinedOriginalMatrix);
         canvas.drawImage(image, Offset.zero, originalPaint);
-        
+
         // Draw blurred image with -sharpen scale
         final blurMatrix = [
-          -recipe.sharpen, 0.0, 0.0, 0.0, 0.0,
-          0.0, -recipe.sharpen, 0.0, 0.0, 0.0,
-          0.0, 0.0, -recipe.sharpen, 0.0, 0.0,
-          0.0, 0.0, 0.0, 1.0, 0.0,
+          -recipe.sharpen,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -recipe.sharpen,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -recipe.sharpen,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
         ];
-        final combinedBlurMatrix = colorMatrix != null 
+        final combinedBlurMatrix = colorMatrix != null
             ? EditRecipe.multiplyMatrices(blurMatrix, colorMatrix)
             : blurMatrix;
-            
+
         final blurPaint = Paint()
-          ..imageFilter = ui.ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5, tileMode: TileMode.clamp)
+          ..imageFilter = ui.ImageFilter.blur(
+              sigmaX: 1.5, sigmaY: 1.5, tileMode: TileMode.clamp)
           ..colorFilter = ColorFilter.matrix(combinedBlurMatrix)
           ..blendMode = BlendMode.plus;
         canvas.drawImage(image, Offset.zero, blurPaint);
@@ -579,11 +618,14 @@ class DownloadServiceImpl implements DownloadService {
 
       final picture = recorder.endRecording();
       final renderedImage = await picture.toImage(targetW, targetH);
-      final byteData = await renderedImage.toByteData(format: ui.ImageByteFormat.png);
+      final byteData =
+          await renderedImage.toByteData(format: ui.ImageByteFormat.png);
       final renderedBytes = byteData!.buffer.asUint8List();
 
       final fileName = sourceFile.uri.pathSegments.last;
-      final baseName = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+      final baseName = fileName.contains('.')
+          ? fileName.substring(0, fileName.lastIndexOf('.'))
+          : fileName;
 
       final tempDir = await getTemporaryDirectory();
       final editedFile = File(

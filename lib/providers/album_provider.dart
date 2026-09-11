@@ -67,7 +67,8 @@ class AlbumState {
     final q = searchQuery.trim().toLowerCase();
     if (q.isNotEmpty) {
       list = list.where(
-        (a) => a.name.toLowerCase().contains(q) ||
+        (a) =>
+            a.name.toLowerCase().contains(q) ||
             (a.description?.toLowerCase().contains(q) ?? false),
       );
     }
@@ -188,7 +189,8 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
       _syncFolderCounts(next.allAlbums);
       return next;
     } catch (e) {
-      return initial.copyWith(isLoading: false, lastError: e.toString(), allAlbums: const []);
+      return initial.copyWith(
+          isLoading: false, lastError: e.toString(), allAlbums: const []);
     }
   }
 
@@ -200,12 +202,14 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
       final albums = await _repo.fetchAlbums();
       final current = state.valueOrNull;
       final base = current ?? _empty();
-      final next = base.copyWith(isLoading: false, lastError: null, allAlbums: albums);
+      final next =
+          base.copyWith(isLoading: false, lastError: null, allAlbums: albums);
       _syncFolderCounts(next.allAlbums);
       state = AsyncValue.data(next);
     } catch (e) {
       final current = state.valueOrNull ?? _empty();
-      state = AsyncValue.data(current.copyWith(isLoading: false, lastError: e.toString()));
+      state = AsyncValue.data(
+          current.copyWith(isLoading: false, lastError: e.toString()));
     }
   }
 
@@ -322,7 +326,8 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
     var shouldClearDescription = clearDescription;
     if (description != null) {
       validDescription = Validators.ensureValidDescription(description);
-      shouldClearDescription = shouldClearDescription || validDescription == null;
+      shouldClearDescription =
+          shouldClearDescription || validDescription == null;
     }
 
     final updated = currentAlbum.copyWith(
@@ -475,12 +480,14 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
 
   Future<void> _replaceAlbumAt(int idx, AlbumModel updated) async {
     final current = state.value ?? _empty();
-    final saved = await _repo.updateAlbum(updated.copyWith(updatedAt: DateTime.now()));
+    final saved =
+        await _repo.updateAlbum(updated.copyWith(updatedAt: DateTime.now()));
 
     final nextAlbums = [...current.allAlbums];
     nextAlbums[idx] = saved;
 
-    state = AsyncValue.data(current.copyWith(allAlbums: nextAlbums, lastError: null));
+    state = AsyncValue.data(
+        current.copyWith(allAlbums: nextAlbums, lastError: null));
   }
 
   void _syncFolderCounts(List<AlbumModel> albums) {
@@ -532,24 +539,29 @@ class AlbumFacade {
   List<AlbumModel> get allAlbums => List.unmodifiable(_state.allAlbums);
   List<AlbumModel> get filteredAlbums => _state.filteredAlbums;
   List<AlbumModel> get recentAlbums => _state.recentAlbums;
-  AlbumStatistics statistics({String? folderId}) => _state.statistics(folderId: folderId);
+  AlbumStatistics statistics({String? folderId}) =>
+      _state.statistics(folderId: folderId);
 
   // Actions (compat)
   Future<void> load() => _notifier.load();
 
   void setSearchQuery(String value) => _notifier.setSearchQuery(value);
   void setSortOption(AlbumSortOption value) => _notifier.setSortOption(value);
-  void setFilterOption(AlbumFilterOption value) => _notifier.setFilterOption(value);
+  void setFilterOption(AlbumFilterOption value) =>
+      _notifier.setFilterOption(value);
   void setFolder(String? folderId) => _notifier.setFolder(folderId);
   void toggleGridList() => _notifier.toggleGridList();
 
-  Future<void> toggleFavorite(String albumId) => _notifier.toggleFavorite(albumId);
+  Future<void> toggleFavorite(String albumId) =>
+      _notifier.toggleFavorite(albumId);
 
   Future<AlbumModel> createAlbum({
     required String name,
     String? description,
     String? folderId,
-  }) => _notifier.createAlbum(name: name, description: description, folderId: folderId);
+  }) =>
+      _notifier.createAlbum(
+          name: name, description: description, folderId: folderId);
 
   Future<AlbumModel> updateAlbum({
     required String id,
@@ -558,7 +570,8 @@ class AlbumFacade {
     bool clearDescription = false,
     String? folderId,
     bool clearFolder = false,
-  }) => _notifier.updateAlbum(
+  }) =>
+      _notifier.updateAlbum(
         id: id,
         name: name,
         description: description,
@@ -569,14 +582,20 @@ class AlbumFacade {
 
   Future<void> deleteAlbum(String id) => _notifier.deleteAlbum(id);
 
-  Future<void> moveToFolder(String albumId, String? folderId) => _notifier.moveToFolder(albumId, folderId);
+  Future<void> moveToFolder(String albumId, String? folderId) =>
+      _notifier.moveToFolder(albumId, folderId);
 
-  void clearFolderAssignment(String folderId) => _notifier.clearFolderAssignment(folderId);
+  void clearFolderAssignment(String folderId) =>
+      _notifier.clearFolderAssignment(folderId);
 
-  Future<void> setPhotoCount(String albumId, int count) => _notifier.setPhotoCount(albumId, count);
-  Future<void> adjustPhotoCount(String albumId, int delta) => _notifier.adjustPhotoCount(albumId, delta);
-  Future<void> setFolderCount(String albumId, int count) => _notifier.setFolderCount(albumId, count);
-  Future<void> adjustFolderCount(String albumId, int delta) => _notifier.adjustFolderCount(albumId, delta);
+  Future<void> setPhotoCount(String albumId, int count) =>
+      _notifier.setPhotoCount(albumId, count);
+  Future<void> adjustPhotoCount(String albumId, int delta) =>
+      _notifier.adjustPhotoCount(albumId, delta);
+  Future<void> setFolderCount(String albumId, int count) =>
+      _notifier.setFolderCount(albumId, count);
+  Future<void> adjustFolderCount(String albumId, int delta) =>
+      _notifier.adjustFolderCount(albumId, delta);
 }
 
 final albumProvider = Provider<AlbumFacade>((ref) {

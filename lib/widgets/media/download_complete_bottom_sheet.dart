@@ -120,25 +120,35 @@ class DownloadCompleteBottomSheet extends StatelessWidget {
   Widget _buildThumbnail() {
     Widget thumbWidget;
 
-    if (!kIsWeb && thumbnailPath != null && thumbnailPath!.isNotEmpty && File(thumbnailPath!).existsSync()) {
+    if (!kIsWeb &&
+        thumbnailPath != null &&
+        thumbnailPath!.isNotEmpty &&
+        File(thumbnailPath!).existsSync()) {
       thumbWidget = Image.file(
         File(thumbnailPath!),
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => _buildFallbackIcon(),
       );
-    } else if (!kIsWeb && filePath != null && filePath!.isNotEmpty && File(filePath!).existsSync()) {
+    } else if (!kIsWeb &&
+        filePath != null &&
+        filePath!.isNotEmpty &&
+        File(filePath!).existsSync()) {
       thumbWidget = Image.file(
         File(filePath!),
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => _buildFallbackIcon(),
       );
-    } else if (media != null && media!.thumbnailPath.isNotEmpty && File(media!.thumbnailPath).existsSync()) {
+    } else if (media != null &&
+        media!.thumbnailPath.isNotEmpty &&
+        File(media!.thumbnailPath).existsSync()) {
       thumbWidget = Image.file(
         File(media!.thumbnailPath),
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => _buildFallbackIcon(),
       );
-    } else if (media != null && media!.remoteThumbnailUrl != null && media!.remoteThumbnailUrl!.isNotEmpty) {
+    } else if (media != null &&
+        media!.remoteThumbnailUrl != null &&
+        media!.remoteThumbnailUrl!.isNotEmpty) {
       thumbWidget = Image.network(
         media!.remoteThumbnailUrl!,
         fit: BoxFit.cover,
@@ -162,7 +172,9 @@ class DownloadCompleteBottomSheet extends StatelessWidget {
   }
 
   Widget _buildFallbackIcon() {
-    final isVideo = media?.type == MediaType.video || fileName.toLowerCase().endsWith('.mp4') || fileName.toLowerCase().endsWith('.mov');
+    final isVideo = media?.type == MediaType.video ||
+        fileName.toLowerCase().endsWith('.mp4') ||
+        fileName.toLowerCase().endsWith('.mov');
     return Center(
       child: Icon(
         isVideo ? Icons.movie_outlined : Icons.image_outlined,
@@ -265,10 +277,11 @@ class DownloadCompleteBottomSheet extends StatelessWidget {
                         fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.text,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.text,
+                                ),
                       ),
                       const SizedBox(height: 4),
                       Text(

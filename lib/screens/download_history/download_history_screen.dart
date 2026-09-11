@@ -22,7 +22,8 @@ class DownloadHistoryScreen extends ConsumerStatefulWidget {
   const DownloadHistoryScreen({super.key});
 
   @override
-  ConsumerState<DownloadHistoryScreen> createState() => _DownloadHistoryScreenState();
+  ConsumerState<DownloadHistoryScreen> createState() =>
+      _DownloadHistoryScreenState();
 }
 
 class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
@@ -202,101 +203,108 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                           borderRadius: BorderRadius.circular(16),
                           onTap: () => openItem(item),
                           child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.md),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _Thumb(
-                                thumbnailPath: item.thumbnailPath,
-                                networkThumbnailUrl: item.thumbnailUrl ?? item.fileUrl,
-                                media: resolvedMedia,
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            item.fileName,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge,
-                                          ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppSpacing.sm,
-                                            vertical: AppSpacing.xs,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: badgeColor.withValues(
-                                                alpha: 0.15),
-                                            border:
-                                                Border.all(color: badgeColor),
-                                            borderRadius:
-                                                BorderRadius.circular(999),
-                                          ),
-                                          child: Text(
-                                            badgeText,
-                                            style: TextStyle(
-                                              color: badgeColor,
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 12.5,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.md),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _Thumb(
+                                  thumbnailPath: item.thumbnailPath,
+                                  networkThumbnailUrl:
+                                      item.thumbnailUrl ?? item.fileUrl,
+                                  media: resolvedMedia,
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              item.fileName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      '${_formatBytes(item.size)} • ${_formatDateTime(item.downloadedAt)}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded),
-                                color: AppColors.error,
-                                onPressed: () async {
-                                  final confirmed = await showDeleteConfirmationDialog(
-                                    context: context,
-                                    title: 'Delete item?',
-                                    message: 'Remove "${item.fileName}" from your download history? This cannot be undone.',
-                                  );
-                                  if (!context.mounted) return;
-                                  if (confirmed) {
-                                    await controller.deleteOne(item.id);
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).clearSnackBars();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: const Text('Item deleted'),
-                                        backgroundColor: AppColors.success,
-                                        behavior: SnackBarBehavior.floating,
-                                        action: SnackBarAction(
-                                          label: 'Undo',
-                                          textColor: Colors.white,
-                                          onPressed: () async {
-                                            await controller.undo();
-                                          },
-                                        ),
+                                          const SizedBox(width: AppSpacing.sm),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppSpacing.sm,
+                                              vertical: AppSpacing.xs,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: badgeColor.withValues(
+                                                  alpha: 0.15),
+                                              border:
+                                                  Border.all(color: badgeColor),
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
+                                            ),
+                                            child: Text(
+                                              badgeText,
+                                              style: TextStyle(
+                                                color: badgeColor,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 12.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${_formatBytes(item.size)} • ${_formatDateTime(item.downloadedAt)}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon:
+                                      const Icon(Icons.delete_outline_rounded),
+                                  color: AppColors.error,
+                                  onPressed: () async {
+                                    final confirmed =
+                                        await showDeleteConfirmationDialog(
+                                      context: context,
+                                      title: 'Delete item?',
+                                      message:
+                                          'Remove "${item.fileName}" from your download history? This cannot be undone.',
                                     );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
+                                    if (!context.mounted) return;
+                                    if (confirmed) {
+                                      await controller.deleteOne(item.id);
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(context)
+                                          .clearSnackBars();
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: const Text('Item deleted'),
+                                          backgroundColor: AppColors.success,
+                                          behavior: SnackBarBehavior.floating,
+                                          action: SnackBarAction(
+                                            label: 'Undo',
+                                            textColor: Colors.white,
+                                            onPressed: () async {
+                                              await controller.undo();
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -316,10 +324,12 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                     onPressed: controller.items.isEmpty
                         ? null
                         : () async {
-                            final confirmed = await showDeleteConfirmationDialog(
+                            final confirmed =
+                                await showDeleteConfirmationDialog(
                               context: context,
                               title: 'Delete item?',
-                              message: 'This will remove all download history items. You can undo right away.',
+                              message:
+                                  'This will remove all download history items. You can undo right away.',
                               confirmText: 'Clear All',
                             );
                             if (!context.mounted) return;
@@ -358,7 +368,8 @@ class _Thumb extends StatelessWidget {
   final String thumbnailPath;
   final String? networkThumbnailUrl;
   final media_model.MediaModel? media;
-  const _Thumb({required this.thumbnailPath, this.networkThumbnailUrl, this.media});
+  const _Thumb(
+      {required this.thumbnailPath, this.networkThumbnailUrl, this.media});
 
   @override
   Widget build(BuildContext context) {
@@ -377,7 +388,9 @@ class _Thumb extends StatelessWidget {
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => media != null
             ? MediaThumb(media: media!)
-            : (hasNetworkThumb ? _NetworkThumb(url: networkUrl) : _Placeholder()),
+            : (hasNetworkThumb
+                ? _NetworkThumb(url: networkUrl)
+                : _Placeholder()),
       );
     } else if (media != null) {
       // Resolved against the current account's own media list — the

@@ -96,8 +96,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                 const SizedBox(height: AppSpacing.xxl),
                 GradientButton(
                   label: 'Continue',
-                  onPressed: () => Navigator.of(context)
-                      .pushNamed(AppRoutes.completeProfile, arguments: widget.role ?? UserRole.client),
+                  onPressed: () => Navigator.of(context).pushNamed(
+                      AppRoutes.completeProfile,
+                      arguments: widget.role ?? UserRole.client),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextButton(
@@ -121,4 +122,3 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     );
   }
 }
-

@@ -47,7 +47,8 @@ class MediaFileCache {
       media.fileName,
       fallback: media.type == MediaType.video ? '.mp4' : '.jpg',
     );
-    final cacheDir = Directory('${Directory.systemTemp.path}/gallery_media_cache');
+    final cacheDir =
+        Directory('${Directory.systemTemp.path}/gallery_media_cache');
     final file = File('${cacheDir.path}/${media.id}$ext');
 
     // Reuse what's already been fetched rather than downloading again
@@ -75,7 +76,8 @@ class MediaFileCache {
       media.fileName,
       fallback: media.type == MediaType.video ? '.mp4' : '.jpg',
     );
-    final fileName = media.fileName.isNotEmpty ? media.fileName : '${media.id}$ext';
+    final fileName =
+        media.fileName.isNotEmpty ? media.fileName : '${media.id}$ext';
 
     if (!media.isDisplayPathNetwork) {
       // Device-local media has no meaning on web (no filesystem), so

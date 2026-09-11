@@ -4,7 +4,8 @@ import '../models/media_model.dart';
 import '../repositories/media_repository.dart';
 import 'media_provider.dart';
 
-final trashProvider = StateNotifierProvider.autoDispose<TrashNotifier, List<MediaModel>>((ref) {
+final trashProvider =
+    StateNotifierProvider.autoDispose<TrashNotifier, List<MediaModel>>((ref) {
   final repo = ref.watch(mediaRepositoryProvider);
   return TrashNotifier(repo, ref);
 });
@@ -24,7 +25,8 @@ class TrashNotifier extends StateNotifier<List<MediaModel>> {
 
   Future<void> restore(String id) async {
     final item = state.firstWhere((m) => m.id == id);
-    final restored = item.copyWith(isDeleted: false, modifiedAt: DateTime.now());
+    final restored =
+        item.copyWith(isDeleted: false, modifiedAt: DateTime.now());
     await _repo.updateMedia(restored);
     await load();
     await _ref.read(mediaProvider).load();

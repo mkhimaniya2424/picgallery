@@ -32,7 +32,8 @@ void main() {
       expect(result.id, equals('abc123xyz'));
     });
 
-    test('Canonical HTTPS share URL with trailing slash is parsed correctly', () {
+    test('Canonical HTTPS share URL with trailing slash is parsed correctly',
+        () {
       final uri = Uri.parse('https://api.picgallery.in/shared/abc123xyz/');
       final result = parseAction(uri);
       expect(result, isNotNull);

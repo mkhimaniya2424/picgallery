@@ -29,7 +29,6 @@ class ChatScreen extends ConsumerWidget {
     final threads = chatState.threads;
 
     return Scaffold(
-      
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(
         title: 'Messages',
@@ -38,48 +37,50 @@ class ChatScreen extends ConsumerWidget {
       body: ScreenBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(top: kToolbarHeight),
+            padding: EdgeInsets.only(top: kToolbarHeight),
             child: chatState.isLoading && threads.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : threads.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(context)
                     : RefreshIndicator(
                         onRefresh: () =>
                             ref.read(chatProvider.notifier).refresh(),
                         child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.md, vertical: 12),
                           itemCount: threads.length,
                           itemBuilder: (context, index) {
                             final thread = threads[index];
                             final msgs = chatState.messagesForThread(thread.id);
-                            final unreadCount = msgs
-                                .where((m) => !m.isRead)
-                                .length;
+                            final unreadCount =
+                                msgs.where((m) => !m.isRead).length;
 
                             return Padding(
                               key: ValueKey(thread.id),
-                              padding: const EdgeInsets.only(bottom: 12),
+                              padding: EdgeInsets.only(bottom: 12),
                               child: GlassCard(
                                 padding: EdgeInsets.zero,
                                 borderRadius: 16,
                                 child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
+                                  contentPadding: EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 8),
                                   leading: CircleAvatar(
                                     radius: 24,
-                                    backgroundColor:
-                                        AppColors.primary.withValues(alpha: 0.1),
-                                    backgroundImage: _hasAvatarUrl(thread.otherPartyAvatar)
+                                    backgroundColor: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    backgroundImage: _hasAvatarUrl(
+                                            thread.otherPartyAvatar)
                                         ? NetworkImage(thread.otherPartyAvatar!)
                                         : null,
-                                    onBackgroundImageError: _hasAvatarUrl(thread.otherPartyAvatar)
-                                        ? (error, stackTrace) {}
-                                        : null,
-                                    child: _hasAvatarUrl(thread.otherPartyAvatar)
-                                        ? null
-                                        : const Icon(Icons.person_rounded,
-                                            color: AppColors.primary),
+                                    onBackgroundImageError:
+                                        _hasAvatarUrl(thread.otherPartyAvatar)
+                                            ? (error, stackTrace) {}
+                                            : null,
+                                    child:
+                                        _hasAvatarUrl(thread.otherPartyAvatar)
+                                            ? null
+                                            : Icon(Icons.person_rounded,
+                                                color: AppColors.primary),
                                   ),
                                   title: Row(
                                     mainAxisAlignment:
@@ -88,26 +89,26 @@ class ChatScreen extends ConsumerWidget {
                                       Expanded(
                                         child: Text(
                                           thread.otherPartyName,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 15,
-                                            color: AppColors.text,
+                                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                                           ),
                                         ),
                                       ),
                                       if (thread.lastMessageAt != null)
                                         Text(
                                           _formatTime(thread.lastMessageAt!),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
-                                            color: AppColors.subtitle,
+                                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                     ],
                                   ),
                                   subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 4),
+                                    padding: EdgeInsets.only(top: 4),
                                     child: Row(
                                       children: [
                                         Expanded(
@@ -119,8 +120,8 @@ class ChatScreen extends ConsumerWidget {
                                             style: TextStyle(
                                               fontSize: 13,
                                               color: unreadCount > 0
-                                                  ? AppColors.text
-                                                  : AppColors.subtitle,
+                                                  ? (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text)
+                                                  : (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.w700
                                                   : FontWeight.w400,
@@ -129,14 +130,14 @@ class ChatScreen extends ConsumerWidget {
                                         ),
                                         if (unreadCount > 0)
                                           Container(
-                                            padding: const EdgeInsets.all(6),
-                                            decoration: const BoxDecoration(
+                                            padding: EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
                                               color: AppColors.primary,
                                               shape: BoxShape.circle,
                                             ),
                                             child: Text(
                                               unreadCount.toString(),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
@@ -156,8 +157,7 @@ class ChatScreen extends ConsumerWidget {
                                       arguments: {
                                         'threadId': thread.id,
                                         'connectionId': thread.connectionId,
-                                        'otherPartyName':
-                                            thread.otherPartyName,
+                                        'otherPartyName': thread.otherPartyName,
                                         'otherPartyAvatar':
                                             thread.otherPartyAvatar,
                                       },
@@ -175,8 +175,8 @@ class ChatScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -191,7 +191,7 @@ class ChatScreen extends ConsumerWidget {
               'Direct conversations with connected studios will be listed here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),

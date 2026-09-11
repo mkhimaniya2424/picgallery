@@ -13,16 +13,18 @@ class AlbumDetailsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurface
             : Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+        border:
+            Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
       ),
       child: Row(
         children: [
@@ -38,13 +40,13 @@ class AlbumDetailsHeader extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(Icons.photo_library_rounded,
                     color: Colors.white, size: 34),
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +60,7 @@ class AlbumDetailsHeader extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: AppSpacing.sm),
                 Text(
                   '${album.photoCount} photos • ${album.folderCount} folders',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(

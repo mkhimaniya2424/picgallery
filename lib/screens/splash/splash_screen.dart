@@ -76,8 +76,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // _isSplashActive is reset to false — without it, any subsequent deep link
       // received while SharedGalleryScreen is open would be silently queued in
       // _pendingInitialUri rather than handled by handleLink().
-      final consumedDeepLink =
-          DeepLinkService.instance.consumeInitialGalleryLink(Navigator.of(context));
+      final consumedDeepLink = DeepLinkService.instance
+          .consumeInitialGalleryLink(Navigator.of(context));
       if (consumedDeepLink) {
         DeepLinkService.instance.onSplashComplete();
         return;
@@ -119,8 +119,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // replace SplashScreen directly with SharedGalleryScreen.
       // Same onSplashComplete() call as above — both early-return paths must
       // reset _isSplashActive so subsequent stream deep links are not dropped.
-      final consumedDeepLinkAfterAsync =
-          DeepLinkService.instance.consumeInitialGalleryLink(Navigator.of(context));
+      final consumedDeepLinkAfterAsync = DeepLinkService.instance
+          .consumeInitialGalleryLink(Navigator.of(context));
       if (consumedDeepLinkAfterAsync) {
         DeepLinkService.instance.onSplashComplete();
         return;
@@ -165,15 +165,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             destination.route == AppRoutes.completeProfile);
 
     if (!isGateScreen) {
-      navigator.pushReplacementNamed(destination.route, arguments: destination.arguments);
+      navigator.pushReplacementNamed(destination.route,
+          arguments: destination.arguments);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         DeepLinkService.instance.onSplashComplete();
       });
       return;
     }
 
-    final legacyRole =
-        user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final legacyRole = user.role == AppUserRole.photographer
+        ? UserRole.photographer
+        : UserRole.client;
     navigator.pushReplacementNamed(AppRoutes.roleSelection);
     navigator.pushNamed(AppRoutes.login, arguments: legacyRole);
     navigator.pushNamed(destination.route, arguments: destination.arguments);
@@ -206,8 +208,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       );
     }
 
-    final legacyRole =
-        user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final legacyRole = user.role == AppUserRole.photographer
+        ? UserRole.photographer
+        : UserRole.client;
 
     if (!user.isEmailVerified) {
       return _ResolvedDestination(
@@ -216,10 +219,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       );
     }
     if (!user.hasCompletedProfile) {
-      return _ResolvedDestination(AppRoutes.completeProfile, arguments: legacyRole);
+      return _ResolvedDestination(AppRoutes.completeProfile,
+          arguments: legacyRole);
     }
     return _ResolvedDestination(
-      legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home,
+      legacyRole == UserRole.photographer
+          ? AppRoutes.adminHome
+          : AppRoutes.home,
     );
   }
 
@@ -306,7 +312,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: LinearProgressIndicator(
                           minHeight: 4,
                           backgroundColor: trackColor,
-                          valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                          valueColor:
+                              const AlwaysStoppedAnimation(AppColors.primary),
                         ),
                       ),
                     ),

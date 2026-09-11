@@ -45,8 +45,6 @@ class QuickActionData {
   });
 }
 
-
-
 class AlbumUploadData {
   final String id;
   final String albumName;
@@ -90,17 +88,24 @@ class AlbumUploadData {
         'thumbnailUrl': thumbnailUrl,
       };
 
-  factory AlbumUploadData.fromJson(Map<String, dynamic> json) => AlbumUploadData(
+  factory AlbumUploadData.fromJson(Map<String, dynamic> json) =>
+      AlbumUploadData(
         id: json['id'] as String,
         albumName: json['albumName'] as String,
         albumId: json['albumId'] as String?,
-        uploadedAgo: relativeTime(DateTime.tryParse(json['uploadedAt'] as String? ?? '') ?? DateTime.now()),
+        uploadedAgo: relativeTime(
+            DateTime.tryParse(json['uploadedAt'] as String? ?? '') ??
+                DateTime.now()),
         mediaCount: json['mediaCount'] as int,
         // ignore: non_constant_identifier_names
-        icon: (json['isVideo'] as bool? ?? false) ? Icons.movie_creation_rounded : Icons.photo_camera_rounded,
-        gradient: (json['gradient'] as List).map((v) => Color(v as int)).toList(),
+        icon: (json['isVideo'] as bool? ?? false)
+            ? Icons.movie_creation_rounded
+            : Icons.photo_camera_rounded,
+        gradient:
+            (json['gradient'] as List).map((v) => Color(v as int)).toList(),
         isVideo: json['isVideo'] as bool? ?? false,
-        uploadedAt: DateTime.tryParse(json['uploadedAt'] as String? ?? '') ?? DateTime.now(),
+        uploadedAt: DateTime.tryParse(json['uploadedAt'] as String? ?? '') ??
+            DateTime.now(),
         thumbnailUrl: json['thumbnailUrl'] as String?,
       );
 }
@@ -153,7 +158,8 @@ class ClientData {
     int? totalDownloads,
     double? bookingValue,
     List<String>? activityLog,
-  }) => ClientData(
+  }) =>
+      ClientData(
         id: id,
         name: name,
         initials: initials,
@@ -193,15 +199,20 @@ class ClientData {
         id: json['id'] as String,
         name: json['name'] as String,
         initials: json['initials'] as String,
-        gradient: (json['gradient'] as List).map((v) => Color(v as int)).toList(),
+        gradient:
+            (json['gradient'] as List).map((v) => Color(v as int)).toList(),
         bookingStatus: json['bookingStatus'] as String,
-        galleryStatus: GalleryStatus.values.byName(json['galleryStatus'] as String),
+        galleryStatus:
+            GalleryStatus.values.byName(json['galleryStatus'] as String),
         outstanding: json['outstanding'] as String,
         isPaid: json['isPaid'] as bool,
         bookingValue: (json['bookingValue'] as num?)?.toDouble() ?? 0,
         email: json['email'] as String? ?? '',
-        lastActive: json['lastActive'] != null ? DateTime.tryParse(json['lastActive'] as String) : null,
-        assignedGalleryIds: (json['assignedGalleryIds'] as List?)?.cast<String>() ?? const [],
+        lastActive: json['lastActive'] != null
+            ? DateTime.tryParse(json['lastActive'] as String)
+            : null,
+        assignedGalleryIds:
+            (json['assignedGalleryIds'] as List?)?.cast<String>() ?? const [],
         totalViews: json['totalViews'] as int? ?? 0,
         totalDownloads: json['totalDownloads'] as int? ?? 0,
         activityLog: (json['activityLog'] as List?)?.cast<String>() ?? const [],
@@ -247,12 +258,14 @@ class NotificationData {
         'isRead': isRead,
       };
 
-  factory NotificationData.fromJson(Map<String, dynamic> json) => NotificationData(
+  factory NotificationData.fromJson(Map<String, dynamic> json) =>
+      NotificationData(
         id: json['id'] as String,
         type: NotificationType.values.byName(json['type'] as String),
         title: json['title'] as String,
         subtitle: json['subtitle'] as String,
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+            DateTime.now(),
         isRead: json['isRead'] as bool? ?? false,
       );
 }
@@ -292,26 +305,48 @@ class ActivityEntry {
         type: ActivityType.values.byName(json['type'] as String),
         title: json['title'] as String,
         subtitle: json['subtitle'] as String,
-        timestamp: DateTime.tryParse(json['timestamp'] as String? ?? '') ?? DateTime.now(),
+        timestamp: DateTime.tryParse(json['timestamp'] as String? ?? '') ??
+            DateTime.now(),
       );
 
   (IconData, List<Color>) get style {
     switch (type) {
       case ActivityType.upload:
-        return (Icons.cloud_upload_rounded, const [Color(0xFF7C5CFF), Color(0xFFA855F7)]);
+        return (
+          Icons.cloud_upload_rounded,
+          const [Color(0xFF7C5CFF), Color(0xFFA855F7)]
+        );
       case ActivityType.album:
-        return (Icons.create_new_folder_rounded, const [Color(0xFFEC4899), Color(0xFFF472B6)]);
+        return (
+          Icons.create_new_folder_rounded,
+          const [Color(0xFFEC4899), Color(0xFFF472B6)]
+        );
       case ActivityType.client:
-        return (Icons.person_add_alt_1_rounded, const [Color(0xFF7C5CFF), Color(0xFFEC4899)]);
+        return (
+          Icons.person_add_alt_1_rounded,
+          const [Color(0xFF7C5CFF), Color(0xFFEC4899)]
+        );
 
       case ActivityType.gallery:
-        return (Icons.ios_share_rounded, const [Color(0xFFA855F7), Color(0xFFEC4899)]);
+        return (
+          Icons.ios_share_rounded,
+          const [Color(0xFFA855F7), Color(0xFFEC4899)]
+        );
       case ActivityType.profile:
-        return (Icons.person_rounded, const [Color(0xFFF59E0B), Color(0xFFEC4899)]);
+        return (
+          Icons.person_rounded,
+          const [Color(0xFFF59E0B), Color(0xFFEC4899)]
+        );
       case ActivityType.qr:
-        return (Icons.qr_code_scanner_rounded, const [Color(0xFFF59E0B), Color(0xFF7C5CFF)]);
+        return (
+          Icons.qr_code_scanner_rounded,
+          const [Color(0xFFF59E0B), Color(0xFF7C5CFF)]
+        );
       case ActivityType.report:
-        return (Icons.insert_chart_rounded, const [Color(0xFFA855F7), Color(0xFF7C5CFF)]);
+        return (
+          Icons.insert_chart_rounded,
+          const [Color(0xFFA855F7), Color(0xFF7C5CFF)]
+        );
     }
   }
 }
@@ -347,8 +382,10 @@ class AdminDashboardSnapshot {
   final List<NotificationData> notifications;
   final List<ActivityEntry> activityLog;
   final int sharedGalleryCount;
+
   /// Studio-wide total gallery views (sum of ShareLink.views_count).
   final int totalGalleryViews;
+
   /// Studio-wide total gallery downloads (count of DownloadEvent rows).
   final int totalGalleryDownloads;
 
@@ -356,7 +393,6 @@ class AdminDashboardSnapshot {
     required this.studioName,
     required this.photographerName,
     required this.stats,
-
     required this.quickActions,
     required this.recentUploads,
     required this.clients,
@@ -368,9 +404,8 @@ class AdminDashboardSnapshot {
     this.totalGalleryDownloads = 0,
   });
 
-  int get unreadNotificationCount => notifications.where((n) => !n.isRead).length;
-
-
+  int get unreadNotificationCount =>
+      notifications.where((n) => !n.isRead).length;
 
   int get pendingDeliveriesCount =>
       clients.where((c) => c.galleryStatus != GalleryStatus.delivered).length;
@@ -380,7 +415,6 @@ class AdminDashboardSnapshot {
     String? photographerName,
     List<StatCardData>? stats,
     List<QuickActionData>? quickActions,
-
     List<AlbumUploadData>? recentUploads,
     List<ClientData>? clients,
     List<AnalyticsSeries>? analytics,
@@ -394,7 +428,6 @@ class AdminDashboardSnapshot {
       studioName: studioName ?? this.studioName,
       photographerName: photographerName ?? this.photographerName,
       stats: stats ?? this.stats,
-
       quickActions: quickActions ?? this.quickActions,
       recentUploads: recentUploads ?? this.recentUploads,
       clients: clients ?? this.clients,
@@ -403,7 +436,8 @@ class AdminDashboardSnapshot {
       activityLog: activityLog ?? this.activityLog,
       sharedGalleryCount: sharedGalleryCount ?? this.sharedGalleryCount,
       totalGalleryViews: totalGalleryViews ?? this.totalGalleryViews,
-      totalGalleryDownloads: totalGalleryDownloads ?? this.totalGalleryDownloads,
+      totalGalleryDownloads:
+          totalGalleryDownloads ?? this.totalGalleryDownloads,
     );
   }
 }

@@ -112,7 +112,8 @@ NetworkErrorView mapNetworkError(Object error, {String? fallbackMessage}) {
 
   return NetworkErrorView(
     title: 'Something went wrong',
-    message: fallbackMessage ?? (error is ApiException ? error.message : error.toString()),
+    message: fallbackMessage ??
+        (error is ApiException ? error.message : error.toString()),
     action: NetworkErrorAction.retry,
     showCachedDataBanner: false,
   );
@@ -128,7 +129,8 @@ void applyNetworkErrorAction({
   VoidCallback? onRetry,
 }) {
   if (view.action == NetworkErrorAction.relogin) {
-    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.onboarding, (r) => false);
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(AppRoutes.onboarding, (r) => false);
     return;
   }
 
@@ -136,4 +138,3 @@ void applyNetworkErrorAction({
     onRetry?.call();
   }
 }
-

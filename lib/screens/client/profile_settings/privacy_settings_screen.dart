@@ -16,7 +16,8 @@ class PrivacySettingsScreen extends ConsumerStatefulWidget {
   const PrivacySettingsScreen({super.key});
 
   @override
-  ConsumerState<PrivacySettingsScreen> createState() => _PrivacySettingsScreenState();
+  ConsumerState<PrivacySettingsScreen> createState() =>
+      _PrivacySettingsScreenState();
 }
 
 class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
@@ -37,7 +38,9 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
   Future<void> _handleAllowDownloadsChanged(bool value) async {
     setState(() => _savingDownloads = true);
     try {
-      final updated = await ref.read(userRepositoryProvider).updateProfile(allowDownloads: value);
+      final updated = await ref
+          .read(userRepositoryProvider)
+          .updateProfile(allowDownloads: value);
       ref.read(authProvider.notifier).setUser(updated);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -57,7 +60,9 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
   Future<void> _handlePrivateProfileChanged(bool value) async {
     setState(() => _savingPrivateProfile = true);
     try {
-      final updated = await ref.read(userRepositoryProvider).updateProfile(privateProfile: value);
+      final updated = await ref
+          .read(userRepositoryProvider)
+          .updateProfile(privateProfile: value);
       ref.read(authProvider.notifier).setUser(updated);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -74,21 +79,24 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
   void _setupSecurityPin(SettingsModel settings) {
     showDialog(
       context: context,
-      builder: (context) => _SetupSecurityPinDialog(settings: settings, ref: ref),
+      builder: (context) =>
+          _SetupSecurityPinDialog(settings: settings, ref: ref),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
-    final allowDownloads = ref.watch(authProvider).valueOrNull?.allowDownloads ?? true;
-    final privateProfile = ref.watch(authProvider).valueOrNull?.privateProfile ?? false;
+    final allowDownloads =
+        ref.watch(authProvider).valueOrNull?.allowDownloads ?? true;
+    final privateProfile =
+        ref.watch(authProvider).valueOrNull?.privateProfile ?? false;
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Privacy & Security', showBack: true),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           children: [
             _ToggleTile(
               icon: Icons.lock_outline_rounded,
@@ -97,7 +105,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
               disabled: _savingPrivateProfile,
               onChanged: _handlePrivateProfileChanged,
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _ToggleTile(
               icon: Icons.download_for_offline_rounded,
               title: 'Download Permissions',
@@ -105,7 +113,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
               disabled: _savingDownloads,
               onChanged: _handleAllowDownloadsChanged,
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _TapTile(
               icon: Icons.pin_rounded,
               title: 'App Lock',
@@ -117,7 +125,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
               onTap: () => _setupSecurityPin(settings),
             ),
             if (settings.securityPinEnabled) ...[
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               _ToggleTile(
                 icon: Icons.fingerprint_rounded,
                 title: 'Require PIN on Launch',
@@ -127,18 +135,20 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                     .updateSettings(settings.copyWith(requirePinOnLaunch: v)),
               ),
             ],
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             TextButton.icon(
               onPressed: () {
                 Navigator.of(context).pushNamed(AppRoutes.deleteAccount);
               },
-              icon: const Icon(Icons.delete_forever_rounded, color: AppColors.error),
-              label: const Text(
+              icon: Icon(Icons.delete_forever_rounded,
+                  color: AppColors.error),
+              label: Text(
                 'Delete Account',
-                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: AppColors.error, fontWeight: FontWeight.bold),
               ),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   side: const BorderSide(color: AppColors.error),
@@ -170,9 +180,11 @@ class _ToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
@@ -188,7 +200,7 @@ class _ToggleTile extends StatelessWidget {
             ),
             child: Icon(icon, color: AppColors.primary),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,13 +239,15 @@ class _TapTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.darkSurface
+          : Colors.white,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -250,21 +264,25 @@ class _TapTile extends StatelessWidget {
                 ),
                 child: Icon(icon, color: AppColors.primary),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(fontSize: 11.5, color: AppColors.subtitle, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontSize: 11.5,
+                          color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                          fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle, size: 20),
+              Icon(Icons.chevron_right_rounded,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), size: 20),
             ],
           ),
         ),
@@ -285,7 +303,8 @@ class _SetupSecurityPinDialog extends StatefulWidget {
   const _SetupSecurityPinDialog({required this.settings, required this.ref});
 
   @override
-  State<_SetupSecurityPinDialog> createState() => _SetupSecurityPinDialogState();
+  State<_SetupSecurityPinDialog> createState() =>
+      _SetupSecurityPinDialogState();
 }
 
 class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
@@ -316,9 +335,12 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
       surfaceTintColor: Colors.transparent,
       title: Text(
-          widget.settings.securityPinEnabled ? 'Change Security PIN' : 'Setup App Lock PIN',
+          widget.settings.securityPinEnabled
+              ? 'Change Security PIN'
+              : 'Setup App Lock PIN',
           style: TextStyle(
-              color: isDark ? AppColors.textOnDark : AppColors.text, fontWeight: FontWeight.bold)),
+              color: isDark ? AppColors.textOnDark : AppColors.text,
+              fontWeight: FontWeight.bold)),
       content: Form(
         key: _formKey,
         child: Column(
@@ -338,7 +360,7 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
             ],
             TextFormField(
               controller: _pinCtrl,
@@ -360,11 +382,13 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
               // updated fine), so drive it explicitly off the controller
               // instead of relying on the framework's own listener.
               onChanged: (_) => setState(() {}),
-              buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+              buildCounter: (context,
+                  {required currentLength, required isFocused, maxLength}) {
                 return Text(
                   '${_pinCtrl.text.length}/$maxLength',
                   style: TextStyle(
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                    color:
+                        isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                     fontSize: 12,
                   ),
                 );
@@ -373,7 +397,9 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                 labelText: '4-Digit PIN',
                 hintText: '••••',
                 suffixIcon: IconButton(
-                  icon: Icon(_obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+                  icon: Icon(_obscure
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
@@ -402,18 +428,23 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                 requirePinOnLaunch: false,
               );
               navigator.pop();
-              await widget.ref.read(settingsProvider.notifier).updateSettings(updated);
+              await widget.ref
+                  .read(settingsProvider.notifier)
+                  .updateSettings(updated);
               messenger.showSnackBar(
                 const SnackBar(content: Text('App Lock PIN disabled')),
               );
             },
-            child: const Text('Disable',
-                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+            child: Text('Disable',
+                style: TextStyle(
+                    color: AppColors.error, fontWeight: FontWeight.w700)),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text('Cancel',
-              style: TextStyle(color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+              style: TextStyle(
+                  color:
+                      isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -427,11 +458,14 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
                 // launch, not just save a PIN that's never enforced.
                 // Preserve the user's existing choice when they're just
                 // changing an already-active PIN.
-                requirePinOnLaunch:
-                    widget.settings.securityPinEnabled ? widget.settings.requirePinOnLaunch : true,
+                requirePinOnLaunch: widget.settings.securityPinEnabled
+                    ? widget.settings.requirePinOnLaunch
+                    : true,
               );
               navigator.pop();
-              await widget.ref.read(settingsProvider.notifier).updateSettings(updated);
+              await widget.ref
+                  .read(settingsProvider.notifier)
+                  .updateSettings(updated);
               messenger.showSnackBar(
                 const SnackBar(content: Text('App Lock PIN set successfully')),
               );
@@ -439,7 +473,8 @@ class _SetupSecurityPinDialogState extends State<_SetupSecurityPinDialog> {
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
           child: Text(widget.settings.securityPinEnabled ? 'Update' : 'Enable',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ],
     );

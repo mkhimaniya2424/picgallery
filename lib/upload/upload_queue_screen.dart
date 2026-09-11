@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 import '../core/theme/app_theme.dart';
 import '../providers/album_provider.dart';
 import '../providers/folder_provider.dart';
@@ -52,31 +51,37 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   // ---------------------------------------------------------------------
   // Dialogs for creating Album / Folder inline
   // ---------------------------------------------------------------------
-  Future<void> _showCreateAlbumDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showCreateAlbumDialog(
+      BuildContext context, WidgetRef ref) async {
     final nameController = TextEditingController();
     final descController = TextEditingController();
-    
+
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Create New Album', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Create New Album',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Album Name', hintText: 'e.g. Summer Vacation'),
+              decoration: const InputDecoration(
+                  labelText: 'Album Name', hintText: 'e.g. Summer Vacation'),
               autofocus: true,
             ),
             const SizedBox(height: 10),
             TextField(
               controller: descController,
-              decoration: const InputDecoration(labelText: 'Description (Optional)'),
+              decoration:
+                  const InputDecoration(labelText: 'Description (Optional)'),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Create'),
@@ -88,13 +93,18 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
     if (created == true && nameController.text.trim().isNotEmpty) {
       try {
         final newAlbum = await ref.read(albumProvider).createAlbum(
-          name: nameController.text.trim(),
-          description: descController.text.trim().isNotEmpty ? descController.text.trim() : null,
-        );
-        ref.read(uploadQueueProvider.notifier).updateOptions(albumId: newAlbum.id);
+              name: nameController.text.trim(),
+              description: descController.text.trim().isNotEmpty
+                  ? descController.text.trim()
+                  : null,
+            );
+        ref
+            .read(uploadQueueProvider.notifier)
+            .updateOptions(albumId: newAlbum.id);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Album "${newAlbum.name}" created successfully')),
+            SnackBar(
+                content: Text('Album "${newAlbum.name}" created successfully')),
           );
         }
       } catch (e) {
@@ -107,20 +117,25 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
     }
   }
 
-  Future<void> _showCreateFolderDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showCreateFolderDialog(
+      BuildContext context, WidgetRef ref) async {
     final nameController = TextEditingController();
 
     final created = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Create New Folder', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Create New Folder',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(labelText: 'Folder Name', hintText: 'e.g. Clients 2026'),
+          decoration: const InputDecoration(
+              labelText: 'Folder Name', hintText: 'e.g. Clients 2026'),
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Create'),
@@ -132,12 +147,16 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
     if (created == true && nameController.text.trim().isNotEmpty) {
       try {
         final newFolder = await ref.read(folderProvider).createFolder(
-          name: nameController.text.trim(),
-        );
-        ref.read(uploadQueueProvider.notifier).updateOptions(folderId: newFolder.id);
+              name: nameController.text.trim(),
+            );
+        ref
+            .read(uploadQueueProvider.notifier)
+            .updateOptions(folderId: newFolder.id);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Folder "${newFolder.name}" created successfully')),
+            SnackBar(
+                content:
+                    Text('Folder "${newFolder.name}" created successfully')),
           );
         }
       } catch (e) {
@@ -155,7 +174,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   // ---------------------------------------------------------------------
 
   // STEP 0: SELECT & PREVIEW FILES
-  Widget _buildSelectionStep(BuildContext context, UploadQueueState state, UploadQueueController notifier) {
+  Widget _buildSelectionStep(BuildContext context, UploadQueueState state,
+      UploadQueueController notifier) {
     final files = state.tempPickedFiles;
     final totalSize = files.fold<int>(0, (sum, f) => sum + f.sizeBytes);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -188,17 +208,21 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: isDark ? AppColors.textOnDark : AppColors.text,
+                            color:
+                                isDark ? AppColors.textOnDark : AppColors.text,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Select high-quality images and video files to upload to your Studio Gallery.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
-                                height: 1.4,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: isDark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle,
+                                    height: 1.4,
+                                  ),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
@@ -206,8 +230,17 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                             final rawFiles = await FilePicker.pickFiles(
                               type: FileType.custom,
                               allowedExtensions: const [
-                                'jpg', 'jpeg', 'png', 'webp', 'heic',
-                                'mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'
+                                'jpg',
+                                'jpeg',
+                                'png',
+                                'webp',
+                                'heic',
+                                'mp4',
+                                'mov',
+                                'mkv',
+                                'webm',
+                                'avi',
+                                'm4v'
                               ],
                             );
                             if (rawFiles.isNotEmpty) {
@@ -217,7 +250,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                               final picked = <PickedFileInfo>[];
                               for (final f in rawFiles) {
                                 final size = await f.length();
-                                final bytes = kIsWeb ? await f.readAsBytes() : null;
+                                final bytes =
+                                    kIsWeb ? await f.readAsBytes() : null;
                                 final ext = f.extension;
                                 picked.add(PickedFileInfo(
                                   name: f.name,
@@ -230,12 +264,16 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                               notifier.updatePickedFiles(picked);
                             }
                           },
-                          icon: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white),
-                          label: const Text('Browse Files', style: TextStyle(color: Colors.white)),
+                          icon: const Icon(Icons.add_photo_alternate_rounded,
+                              color: Colors.white),
+                          label: const Text('Browse Files',
+                              style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 22, vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(999)),
                           ),
                         ),
                       ],
@@ -247,17 +285,26 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       width: double.infinity,
-                      color: isDark ? AppColors.darkSurface : Colors.grey.shade50,
+                      color:
+                          isDark ? AppColors.darkSurface : Colors.grey.shade50,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Selected ${files.length} file(s)',
-                            style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? AppColors.textOnDark : AppColors.text),
+                            style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.textOnDark
+                                    : AppColors.text),
                           ),
                           Text(
                             'Total Size: ${_humanBytes(totalSize)}',
-                            style: TextStyle(color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                                color: isDark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle,
+                                fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -266,7 +313,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                     Expanded(
                       child: GridView.builder(
                         padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
@@ -282,9 +330,15 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                             children: [
                               Container(
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkSurface : Colors.grey.shade100,
+                                  color: isDark
+                                      ? AppColors.darkSurface
+                                      : Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.2)),
+                                  border: Border.all(
+                                      color: isDark
+                                          ? AppColors.darkBorder
+                                          : Colors.black
+                                              .withValues(alpha: 0.2)),
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: Center(
@@ -307,30 +361,42 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                                               width: double.infinity,
                                               height: double.infinity,
                                             )
-                                      : Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.play_circle_outline_rounded,
-                                              size: 32,
-                                              color: Colors.black.withValues(alpha: 0.2),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                              child: Text(
-                                                f.extension?.toUpperCase() ?? 'FILE',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 10,
-                                                  color: isDark ? AppColors.subtitleOnDark : Colors.black45,
+                                          : Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons
+                                                      .play_circle_outline_rounded,
+                                                  size: 32,
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.2),
                                                 ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
+                                                const SizedBox(height: 4),
+                                                Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 4.0),
+                                                  child: Text(
+                                                    f.extension
+                                                            ?.toUpperCase() ??
+                                                        'FILE',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      fontSize: 10,
+                                                      color: isDark
+                                                          ? AppColors
+                                                              .subtitleOnDark
+                                                          : Colors.black45,
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
                                 ),
                               ),
                               Positioned(
@@ -365,7 +431,11 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkSurface : Colors.white,
-              border: Border(top: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey.shade100)),
+              border: Border(
+                  top: BorderSide(
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : Colors.grey.shade100)),
             ),
             child: Row(
               children: [
@@ -390,7 +460,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   }
 
   // STEP 1: OPTIONS & CONFIGURATION
-  Widget _buildOptionsStep(BuildContext context, UploadQueueState state, UploadQueueController notifier) {
+  Widget _buildOptionsStep(BuildContext context, UploadQueueState state,
+      UploadQueueController notifier) {
     final albums = ref.watch(albumProvider).allAlbums;
     final folders = ref.watch(folderProvider).folders;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -405,7 +476,10 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             // Target Destination Panel
             Text(
               'Upload Target Destination',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? AppColors.textOnDark : AppColors.text),
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? AppColors.textOnDark : AppColors.text),
             ),
             const SizedBox(height: 8),
             Row(
@@ -413,12 +487,16 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String?>(
                     initialValue: state.selectedAlbumId,
-                    decoration: const InputDecoration(labelText: 'Select Album'),
+                    decoration:
+                        const InputDecoration(labelText: 'Select Album'),
                     items: [
-                      const DropdownMenuItem<String?>(value: null, child: Text('No Album')),
-                      ...albums.map((a) => DropdownMenuItem<String?>(value: a.id, child: Text(a.name))),
+                      const DropdownMenuItem<String?>(
+                          value: null, child: Text('No Album')),
+                      ...albums.map((a) => DropdownMenuItem<String?>(
+                          value: a.id, child: Text(a.name))),
                     ],
-                    onChanged: (val) => notifier.updateOptions(albumId: val, clearAlbum: val == null),
+                    onChanged: (val) => notifier.updateOptions(
+                        albumId: val, clearAlbum: val == null),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -435,12 +513,16 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String?>(
                     initialValue: state.selectedFolderId,
-                    decoration: const InputDecoration(labelText: 'Select Folder'),
+                    decoration:
+                        const InputDecoration(labelText: 'Select Folder'),
                     items: [
-                      const DropdownMenuItem<String?>(value: null, child: Text('No Folder')),
-                      ...folders.map((f) => DropdownMenuItem<String?>(value: f.id, child: Text(f.name))),
+                      const DropdownMenuItem<String?>(
+                          value: null, child: Text('No Folder')),
+                      ...folders.map((f) => DropdownMenuItem<String?>(
+                          value: f.id, child: Text(f.name))),
                     ],
-                    onChanged: (val) => notifier.updateOptions(folderId: val, clearFolder: val == null),
+                    onChanged: (val) => notifier.updateOptions(
+                        folderId: val, clearFolder: val == null),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -453,11 +535,14 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             ),
 
             const SizedBox(height: 24),
-            
+
             // Renaming Settings
             Text(
               'Batch Renaming Settings',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? AppColors.textOnDark : AppColors.text),
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? AppColors.textOnDark : AppColors.text),
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -474,7 +559,10 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             const SizedBox(height: 4),
             Text(
               'Files will be renamed sequentially: Prefix (1).jpg, Prefix (2).jpg, etc.',
-              style: TextStyle(fontSize: 11, color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                  fontWeight: FontWeight.w500),
             ),
 
             const SizedBox(height: 24),
@@ -482,7 +570,10 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             // Settings & Compression Panel
             Text(
               'Upload Options',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? AppColors.textOnDark : AppColors.text),
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? AppColors.textOnDark : AppColors.text),
             ),
             const SizedBox(height: 6),
             SwitchListTile(
@@ -495,11 +586,13 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
               title: const Text('Keep Original Quality'),
               subtitle: const Text('Avoid compression artifacts'),
               value: state.keepOriginalQuality,
-              onChanged: (val) => notifier.updateOptions(keepOriginalQuality: val),
+              onChanged: (val) =>
+                  notifier.updateOptions(keepOriginalQuality: val),
             ),
             SwitchListTile(
               title: const Text('Upload Original Metadata'),
-              subtitle: const Text('Retains EXIF tags, GPS details & creation dates'),
+              subtitle:
+                  const Text('Retains EXIF tags, GPS details & creation dates'),
               value: state.uploadMetadata,
               onChanged: (val) => notifier.updateOptions(uploadMetadata: val),
             ),
@@ -539,7 +632,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   }
 
   // STEP 2: ACTIVE PROGRESS
-  Widget _buildProgressStep(BuildContext context, UploadQueueState state, UploadQueueController notifier) {
+  Widget _buildProgressStep(BuildContext context, UploadQueueState state,
+      UploadQueueController notifier) {
     final completedCount = state.completedCount;
     final totalCount = state.jobs.length;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -548,9 +642,11 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
     String formattedSpeed = '0 KB/s';
     if (state.speedBytesPerSecond > 0) {
       if (state.speedBytesPerSecond >= 1024 * 1024) {
-        formattedSpeed = '${(state.speedBytesPerSecond / 1024 / 1024).toStringAsFixed(1)} MB/s';
+        formattedSpeed =
+            '${(state.speedBytesPerSecond / 1024 / 1024).toStringAsFixed(1)} MB/s';
       } else {
-        formattedSpeed = '${(state.speedBytesPerSecond / 1024).toStringAsFixed(0)} KB/s';
+        formattedSpeed =
+            '${(state.speedBytesPerSecond / 1024).toStringAsFixed(0)} KB/s';
       }
     }
 
@@ -572,9 +668,15 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : Colors.white,
-            border: Border(bottom: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey.shade100)),
+            border: Border(
+                bottom: BorderSide(
+                    color:
+                        isDark ? AppColors.darkBorder : Colors.grey.shade100)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2))
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2))
             ],
           ),
           child: Column(
@@ -584,16 +686,24 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    state.isProcessing ? 'Uploading Studio Media...' : 'Upload Process Paused',
+                    state.isProcessing
+                        ? 'Uploading Studio Media...'
+                        : 'Upload Process Paused',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
-                      color: state.isProcessing ? AppColors.primary : Colors.orange.shade800,
+                      color: state.isProcessing
+                          ? AppColors.primary
+                          : Colors.orange.shade800,
                     ),
                   ),
                   Text(
                     '$completedCount of $totalCount done',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? AppColors.subtitleOnDark : Colors.black54, fontSize: 13),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color:
+                            isDark ? AppColors.subtitleOnDark : Colors.black54,
+                        fontSize: 13),
                   ),
                 ],
               ),
@@ -603,9 +713,13 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 child: LinearProgressIndicator(
                   value: state.overallProgress,
                   minHeight: 8,
-                  backgroundColor: isDark ? AppColors.darkSurfaceRaised : Colors.grey.shade100,
+                  backgroundColor: isDark
+                      ? AppColors.darkSurfaceRaised
+                      : Colors.grey.shade100,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    state.isProcessing ? AppColors.primary : Colors.orange.shade700,
+                    state.isProcessing
+                        ? AppColors.primary
+                        : Colors.orange.shade700,
                   ),
                 ),
               ),
@@ -615,21 +729,39 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.speed_rounded, size: 14, color: isDark ? AppColors.subtitleOnDark : Colors.black45),
+                      Icon(Icons.speed_rounded,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.subtitleOnDark
+                              : Colors.black45),
                       const SizedBox(width: 4),
                       Text(
                         formattedSpeed,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? AppColors.subtitleOnDark : Colors.black54),
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : Colors.black54),
                       ),
                     ],
                   ),
                   Row(
                     children: [
-                      Icon(Icons.timer_outlined, size: 14, color: isDark ? AppColors.subtitleOnDark : Colors.black45),
+                      Icon(Icons.timer_outlined,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.subtitleOnDark
+                              : Colors.black45),
                       const SizedBox(width: 4),
                       Text(
                         state.isProcessing ? formattedTime : 'Paused',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.subtitleOnDark : Colors.black54),
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : Colors.black54),
                       ),
                     ],
                   ),
@@ -654,7 +786,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                         ),
                       ),
                     )
-                  else if (state.jobs.any((j) => j.status == UploadJobStatus.paused))
+                  else if (state.jobs
+                      .any((j) => j.status == UploadJobStatus.paused))
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: notifier.resumeAll,
@@ -682,16 +815,22 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Interactive Network Simulator (Wi-Fi vs Cellular test toggle)
               InkWell(
                 onTap: notifier.toggleSimulationNetwork,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.blue.shade900.withValues(alpha: 0.2) : Colors.blue.shade50.withValues(alpha: 0.2),
+                    color: isDark
+                        ? Colors.blue.shade900.withValues(alpha: 0.2)
+                        : Colors.blue.shade50.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: isDark ? Colors.blue.shade800 : Colors.blue.shade100),
+                    border: Border.all(
+                        color: isDark
+                            ? Colors.blue.shade800
+                            : Colors.blue.shade100),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -699,9 +838,13 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                       Row(
                         children: [
                           Icon(
-                            notifier.simulateCellular ? Icons.signal_cellular_alt_rounded : Icons.wifi_rounded,
+                            notifier.simulateCellular
+                                ? Icons.signal_cellular_alt_rounded
+                                : Icons.wifi_rounded,
                             size: 16,
-                            color: isDark ? Colors.blue.shade300 : Colors.blue.shade800,
+                            color: isDark
+                                ? Colors.blue.shade300
+                                : Colors.blue.shade800,
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -756,7 +899,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   }
 
   // STEP 3: UPLOAD COMPLETE
-  Widget _buildCompleteStep(BuildContext context, UploadQueueState state, UploadQueueController notifier) {
+  Widget _buildCompleteStep(BuildContext context, UploadQueueState state,
+      UploadQueueController notifier) {
     final failedCount = state.failedCount;
     final completedCount = state.completedCount;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -772,13 +916,13 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: failedCount > 0 
-                    ? Colors.orange.withValues(alpha: 0.2) 
+                color: failedCount > 0
+                    ? Colors.orange.withValues(alpha: 0.2)
                     : AppColors.success.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: failedCount > 0 
-                      ? Colors.orange.withValues(alpha: 0.2) 
+                  color: failedCount > 0
+                      ? Colors.orange.withValues(alpha: 0.2)
                       : AppColors.success.withValues(alpha: 0.2),
                   width: 2,
                 ),
@@ -791,41 +935,51 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                   return Transform.scale(
                     scale: val,
                     child: Icon(
-                      failedCount > 0 ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+                      failedCount > 0
+                          ? Icons.warning_amber_rounded
+                          : Icons.check_circle_rounded,
                       size: 54,
-                      color: failedCount > 0 ? Colors.orange.shade800 : AppColors.success,
+                      color: failedCount > 0
+                          ? Colors.orange.shade800
+                          : AppColors.success,
                     ),
                   );
                 },
               ),
             ),
             const SizedBox(height: 24),
-              Text(
-                failedCount > 0 ? 'Upload Process Finished' : 'Upload Complete!',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: isDark ? AppColors.textOnDark : AppColors.text,
-                ),
+            Text(
+              failedCount > 0 ? 'Upload Process Finished' : 'Upload Complete!',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: isDark ? AppColors.textOnDark : AppColors.text,
               ),
+            ),
             const SizedBox(height: 10),
-              Text(
-                failedCount > 0
-                    ? 'Successfully uploaded $completedCount items, but $failedCount failed.'
-                    : 'All $completedCount items have been uploaded to your gallery successfully.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: isDark ? AppColors.subtitleOnDark : Colors.black54, height: 1.4),
-              ),
+            Text(
+              failedCount > 0
+                  ? 'Successfully uploaded $completedCount items, but $failedCount failed.'
+                  : 'All $completedCount items have been uploaded to your gallery successfully.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? AppColors.subtitleOnDark : Colors.black54,
+                  height: 1.4),
+            ),
             const SizedBox(height: 36),
 
             // Metrics Summary Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.2)),
-                ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : Colors.black.withValues(alpha: 0.2)),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -840,28 +994,45 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                        Text(
-                          'Uploaded',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.subtitleOnDark : Colors.black54),
-                        ),
+                      Text(
+                        'Uploaded',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : Colors.black54),
+                      ),
                     ],
                   ),
-                    Container(width: 1, height: 34, color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.2)),
+                  Container(
+                      width: 1,
+                      height: 34,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : Colors.black.withValues(alpha: 0.2)),
                   Column(
                     children: [
-                        Text(
-                          '$failedCount',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: failedCount > 0 ? AppColors.error : (isDark ? Colors.white38 : Colors.black38),
-                          ),
+                      Text(
+                        '$failedCount',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: failedCount > 0
+                              ? AppColors.error
+                              : (isDark ? Colors.white38 : Colors.black38),
                         ),
+                      ),
                       const SizedBox(height: 4),
-                        Text(
-                          'Failed',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.subtitleOnDark : Colors.black54),
-                        ),
+                      Text(
+                        'Failed',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : Colors.black54),
+                      ),
                     ],
                   ),
                 ],
@@ -878,7 +1049,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                   await notifier.retryFailed();
                 },
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                label: const Text('Retry Failed Uploads', style: TextStyle(color: Colors.white)),
+                label: const Text('Retry Failed Uploads',
+                    style: TextStyle(color: Colors.white)),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   minimumSize: const Size(double.infinity, 50),
@@ -946,10 +1118,15 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Cancel Uploads?'),
-                        content: const Text('Are you sure you want to cancel all active and queued uploads?'),
+                        content: const Text(
+                            'Are you sure you want to cancel all active and queued uploads?'),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
-                          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Yes, Cancel All')),
+                          TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('No')),
+                          FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Yes, Cancel All')),
                         ],
                       ),
                     );
@@ -974,7 +1151,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, size: 54, color: AppColors.error),
+                const Icon(Icons.error_outline_rounded,
+                    size: 54, color: AppColors.error),
                 const SizedBox(height: 12),
                 Text('Error loading queue: $e', textAlign: TextAlign.center),
               ],
@@ -986,10 +1164,14 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: switch (state.wizardStep) {
-                0 => _buildSelectionStep(context, state, ref.read(uploadQueueProvider.notifier)),
-                1 => _buildOptionsStep(context, state, ref.read(uploadQueueProvider.notifier)),
-                2 => _buildProgressStep(context, state, ref.read(uploadQueueProvider.notifier)),
-                _ => _buildCompleteStep(context, state, ref.read(uploadQueueProvider.notifier)),
+                0 => _buildSelectionStep(
+                    context, state, ref.read(uploadQueueProvider.notifier)),
+                1 => _buildOptionsStep(
+                    context, state, ref.read(uploadQueueProvider.notifier)),
+                2 => _buildProgressStep(
+                    context, state, ref.read(uploadQueueProvider.notifier)),
+                _ => _buildCompleteStep(
+                    context, state, ref.read(uploadQueueProvider.notifier)),
               },
             ),
           );

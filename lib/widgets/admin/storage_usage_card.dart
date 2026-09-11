@@ -35,9 +35,11 @@ class StorageUsageCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+          color:
+              isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+          border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.border),
           boxShadow: AppShadows.soft(AppColors.primary,
               opacity: 0.08, blur: 24, y: 12),
         ),
@@ -68,11 +70,13 @@ class StorageUsageCard extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? AppColors.textOnDark : AppColors.text)),
+                          color:
+                              isDark ? AppColors.textOnDark : AppColors.text)),
                 ),
                 if (clamped == null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -86,7 +90,9 @@ class StorageUsageCard extends StatelessWidget {
                 else
                   Icon(Icons.arrow_forward_ios_rounded,
                       size: 13,
-                      color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                      color: isDark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -96,7 +102,8 @@ class StorageUsageCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: clamped,
                   minHeight: 10,
-                  backgroundColor: isDark ? AppColors.darkBorder : AppColors.border,
+                  backgroundColor:
+                      isDark ? AppColors.darkBorder : AppColors.border,
                   valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                 ),
               )
@@ -127,13 +134,17 @@ class StorageUsageCard extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle))
+                          color: isDark
+                              ? AppColors.subtitleOnDark
+                              : AppColors.subtitle))
                 else if (clamped == null)
                   Text('no storage limit',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                          color: isDark
+                              ? AppColors.subtitleOnDark
+                              : AppColors.subtitle)),
               ],
             ),
           ],

@@ -34,10 +34,12 @@ class SharedAlbumPreviewScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SharedAlbumPreviewScreen> createState() => _SharedAlbumPreviewScreenState();
+  ConsumerState<SharedAlbumPreviewScreen> createState() =>
+      _SharedAlbumPreviewScreenState();
 }
 
-class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScreen> {
+class _SharedAlbumPreviewScreenState
+    extends ConsumerState<SharedAlbumPreviewScreen> {
   List<MediaModel> _mediaList = [];
   bool _isLoading = true;
   String? _error;
@@ -55,7 +57,8 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
     });
     try {
       final repo = ref.read(clientGalleryRepositoryProvider);
-      final media = await repo.fetchSharedAlbumMedia(widget.studioId, widget.album.id);
+      final media =
+          await repo.fetchSharedAlbumMedia(widget.studioId, widget.album.id);
       if (mounted) {
         setState(() {
           _mediaList = media;
@@ -118,11 +121,11 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
           expand: false,
           builder: (context, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
-                color: AppColors.background,
+              decoration: BoxDecoration(
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.darkBackground : AppColors.background),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.sm,
                 AppSpacing.md,
@@ -132,7 +135,9 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
                 final lc = ref.watch(mediaLikesCommentsProvider);
                 if (!lc.hasFetchedComments(media.id)) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ref.read(mediaLikesCommentsProvider).fetchComments(media.id);
+                    ref
+                        .read(mediaLikesCommentsProvider)
+                        .fetchComments(media.id);
                   });
                 }
                 return MediaCommentsSection(
@@ -168,7 +173,6 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: CustomAppBar(title: widget.album.name, showBack: true),
       body: SafeArea(
         child: RefreshIndicator(
@@ -181,11 +185,13 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
 
   Widget _buildBody() {
     if (_isLoading && _mediaList.isEmpty) {
-      return const Center(child: LoadingWidget(message: 'Loading gallery media…'));
+      return Center(
+          child: LoadingWidget(message: 'Loading gallery media…'));
     }
 
     if (_error != null && _mediaList.isEmpty) {
-      final isNotFound = _error!.contains('404') || _error!.toLowerCase().contains('not found');
+      final isNotFound = _error!.contains('404') ||
+          _error!.toLowerCase().contains('not found');
       final message = isNotFound
           ? 'This shared gallery is no longer available.'
           : 'Unable to load gallery photos. Check your connection and try again.';
@@ -194,16 +200,16 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
         child: Container(
           height: MediaQuery.of(context).size.height * 0.7,
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               InlineErrorBanner(message: message),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               ElevatedButton.icon(
                 onPressed: _loadMedia,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Try Again'),
+                icon: Icon(Icons.refresh_rounded),
+                label: Text('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -221,7 +227,7 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
         child: Container(
           height: MediaQuery.of(context).size.height * 0.7,
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: EdgeInsets.all(AppSpacing.xl),
           child: const EmptyStateCard(
             icon: Icons.photo_library_outlined,
             message: 'No photos or videos in this album yet.',
@@ -231,8 +237,9 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
     }
 
     return GridView.builder(
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: EdgeInsets.all(AppSpacing.md),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 6,
@@ -246,7 +253,8 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
         // Seed once from the server-provided like_count/is_liked_by_me
         // (harmless no-op after the first build or a real toggle).
         ref.read(mediaLikesCommentsProvider).seedLikeState(media);
-        final likeState = ref.watch(mediaLikesCommentsProvider).likeStateFor(media.id);
+        final likeState =
+            ref.watch(mediaLikesCommentsProvider).likeStateFor(media.id);
         return GestureDetector(
           onTap: () => _openMedia(index),
           child: Hero(
@@ -265,25 +273,27 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
                     Image.network(
                       url,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image_rounded, color: AppColors.subtitle, size: 24),
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Icon(Icons.broken_image_rounded,
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), size: 24),
                       ),
                     )
                   else
-                    const Center(
-                      child: Icon(Icons.image_outlined, color: AppColors.subtitle, size: 24),
+                    Center(
+                      child: Icon(Icons.image_outlined,
+                          color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), size: 24),
                     ),
                   if (media.type == MediaType.video)
                     Positioned(
                       right: 6,
                       bottom: 6,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
+                        padding: EdgeInsets.all(3),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.6),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.play_arrow_rounded,
                           color: Colors.white,
                           size: 14,
@@ -315,17 +325,22 @@ class _SharedAlbumPreviewScreenState extends ConsumerState<SharedAlbumPreviewScr
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         GestureDetector(
-                          onTap: () =>
-                              ref.read(mediaLikesCommentsProvider).toggleLike(media.id),
+                          onTap: () => ref
+                              .read(mediaLikesCommentsProvider)
+                              .toggleLike(media.id),
                           child: _TileOverlayChip(
                             icon: likeState.liked
                                 ? Icons.favorite_rounded
                                 : Icons.favorite_border_rounded,
-                            iconColor: likeState.liked ? Colors.redAccent : Colors.white,
-                            label: likeState.count > 0 ? '${likeState.count}' : null,
+                            iconColor: likeState.liked
+                                ? Colors.redAccent
+                                : Colors.white,
+                            label: likeState.count > 0
+                                ? '${likeState.count}'
+                                : null,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         GestureDetector(
                           onTap: () => _openComments(media),
                           child: const _TileOverlayChip(
@@ -353,12 +368,13 @@ class _TileOverlayChip extends StatelessWidget {
   final Color iconColor;
   final String? label;
 
-  const _TileOverlayChip({required this.icon, required this.iconColor, this.label});
+  const _TileOverlayChip(
+      {required this.icon, required this.iconColor, this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(20),
@@ -368,10 +384,10 @@ class _TileOverlayChip extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: iconColor),
           if (label != null) ...[
-            const SizedBox(width: 3),
+            SizedBox(width: 3),
             Text(
               label!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,

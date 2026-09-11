@@ -67,7 +67,8 @@ class FaceSearchApiService {
       if (faceIndex != null) 'face_index': faceIndex.toString(),
       if (threshold != null) 'threshold': threshold.toString(),
     };
-    final path = '/faces/search${query.isEmpty ? '' : '?${Uri(queryParameters: query).query}'}';
+    final path =
+        '/faces/search${query.isEmpty ? '' : '?${Uri(queryParameters: query).query}'}';
     return _post(path, selfie, withAuth: true);
   }
 
@@ -100,11 +101,13 @@ class FaceSearchApiService {
       if (faceIndex != null) 'face_index': faceIndex.toString(),
       if (threshold != null) 'threshold': threshold.toString(),
     };
-    final path = '/client/faces/search${query.isEmpty ? '' : '?${Uri(queryParameters: query).query}'}';
+    final path =
+        '/client/faces/search${query.isEmpty ? '' : '?${Uri(queryParameters: query).query}'}';
     return _post(path, selfie, withAuth: true);
   }
 
-  Future<FaceSearchApiResponse> _post(String path, File selfie, {required bool withAuth}) async {
+  Future<FaceSearchApiResponse> _post(String path, File selfie,
+      {required bool withAuth}) async {
     final uri = Uri.parse('${_apiClient.baseUrl}$path');
     final request = http.MultipartRequest('POST', uri);
 
@@ -116,7 +119,9 @@ class FaceSearchApiService {
     }
 
     final bytes = await selfie.readAsBytes();
-    final fileName = selfie.uri.pathSegments.isNotEmpty ? selfie.uri.pathSegments.last : 'selfie.jpg';
+    final fileName = selfie.uri.pathSegments.isNotEmpty
+        ? selfie.uri.pathSegments.last
+        : 'selfie.jpg';
     request.files.add(
       http.MultipartFile.fromBytes(
         'file',
@@ -128,7 +133,9 @@ class FaceSearchApiService {
 
     final http.StreamedResponse streamedResponse;
     try {
-      streamedResponse = await _httpClient.send(request).timeout(_timeout, onTimeout: _throwTimeout);
+      streamedResponse = await _httpClient
+          .send(request)
+          .timeout(_timeout, onTimeout: _throwTimeout);
     } on FaceSearchException {
       rethrow;
     } catch (_) {
@@ -146,7 +153,8 @@ class FaceSearchApiService {
   }
 
   String _guessSubtype(String fileName) {
-    final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : '';
+    final ext =
+        fileName.contains('.') ? fileName.split('.').last.toLowerCase() : '';
     switch (ext) {
       case 'png':
         return 'png';
@@ -171,11 +179,14 @@ class FaceSearchApiService {
       }
     }
 
-    if (response.statusCode >= 200 && response.statusCode < 300 && decoded is Map<String, dynamic>) {
+    if (response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        decoded is Map<String, dynamic>) {
       return FaceSearchApiResponse.fromJson(decoded);
     }
 
-    throw FaceSearchException(response.statusCode, _extractMessage(decoded, response.body));
+    throw FaceSearchException(
+        response.statusCode, _extractMessage(decoded, response.body));
   }
 
   /// Same FastAPI `HTTPException`/validation-error unwrapping
@@ -186,7 +197,11 @@ class FaceSearchApiService {
       final detail = decoded['detail'];
       if (detail is String) return detail;
       if (detail is List) {
-        return detail.map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString()).join(', ');
+        return detail
+            .map((e) => e is Map && e['msg'] != null
+                ? e['msg'].toString()
+                : e.toString())
+            .join(', ');
       }
       return detail.toString();
     }

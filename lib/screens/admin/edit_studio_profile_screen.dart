@@ -13,7 +13,8 @@ import '../../providers/settings_provider.dart';
 import '../../providers/studio_provider.dart';
 import '../../providers/user_providers.dart';
 import '../../services/media_picker_service.dart' show MediaContentType;
-import '../../services/studio_media_upload_service.dart' show StudioPortfolioImage;
+import '../../services/studio_media_upload_service.dart'
+    show StudioPortfolioImage;
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/screen_backdrop.dart';
@@ -26,10 +27,12 @@ class EditStudioProfileScreen extends ConsumerStatefulWidget {
   const EditStudioProfileScreen({super.key, required this.settings});
 
   @override
-  ConsumerState<EditStudioProfileScreen> createState() => _EditStudioProfileScreenState();
+  ConsumerState<EditStudioProfileScreen> createState() =>
+      _EditStudioProfileScreenState();
 }
 
-class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScreen> {
+class _EditStudioProfileScreenState
+    extends ConsumerState<EditStudioProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _studioNameController;
   late final TextEditingController _photoNameController;
@@ -83,12 +86,12 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     final authUser = ref.read(authProvider).valueOrNull;
     final studioNotifier = ref.read(studioProvider.notifier);
     final studio = studioNotifier.studios.cast<StudioModel?>().firstWhere(
-      (s) => s?.id == widget.settings.studioId,
-      orElse: () => studioNotifier.studios.cast<StudioModel?>().firstWhere(
-        (s) => s?.email == widget.settings.email,
-        orElse: () => null,
-      ),
-    );
+          (s) => s?.id == widget.settings.studioId,
+          orElse: () => studioNotifier.studios.cast<StudioModel?>().firstWhere(
+                (s) => s?.email == widget.settings.email,
+                orElse: () => null,
+              ),
+        );
 
     final nextLogo = authUser?.avatarUrl ?? studio?.logoUrl ?? _logoPath;
     final nextCover = authUser?.coverImageUrl ?? studio?.coverUrl ?? _coverPath;
@@ -144,9 +147,9 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     final studio = studioNotifier.studios.cast<StudioModel?>().firstWhere(
           (s) => s?.id == widget.settings.studioId,
           orElse: () => studioNotifier.studios.cast<StudioModel?>().firstWhere(
-            (s) => s?.email == widget.settings.email,
-            orElse: () => null,
-          ),
+                (s) => s?.email == widget.settings.email,
+                orElse: () => null,
+              ),
         );
 
     if (studio != null) {
@@ -160,11 +163,14 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     // Seed website from the backend-synced cachedUser field first, then
     // fall back to the local settings cache so the value still shows if
     // the auth cache has not refreshed yet.
-    _websiteController = TextEditingController(text: cachedUser?.website ?? currentSettings.website);
-    _instagramController = TextEditingController(text: cachedUser?.instagramUrl);
+    _websiteController = TextEditingController(
+        text: cachedUser?.website ?? currentSettings.website);
+    _instagramController =
+        TextEditingController(text: cachedUser?.instagramUrl);
     _facebookController = TextEditingController(text: cachedUser?.facebookUrl);
     _youtubeController = TextEditingController(text: cachedUser?.youtubeUrl);
-    _pinterestController = TextEditingController(text: cachedUser?.pinterestUrl);
+    _pinterestController =
+        TextEditingController(text: cachedUser?.pinterestUrl);
 
     // Seed specializations from the backend-synced cachedUser field, not from
     // the local-only studio.categories cache (which never gets updated when
@@ -188,15 +194,20 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     final user = ref.read(authProvider).valueOrNull;
     if (user == null) return;
     setState(() {
-      _studioNameController.text = user.studioName ?? _studioNameController.text;
+      _studioNameController.text =
+          user.studioName ?? _studioNameController.text;
       _photoNameController.text = user.fullName;
       _emailController.text = user.email;
-      _studioAddressController.text = user.studioAddress ?? _studioAddressController.text;
-      _websiteController.text = user.website ?? ref.read(settingsProvider).website;
-      _instagramController.text = user.instagramUrl ?? _instagramController.text;
+      _studioAddressController.text =
+          user.studioAddress ?? _studioAddressController.text;
+      _websiteController.text =
+          user.website ?? ref.read(settingsProvider).website;
+      _instagramController.text =
+          user.instagramUrl ?? _instagramController.text;
       _facebookController.text = user.facebookUrl ?? _facebookController.text;
       _youtubeController.text = user.youtubeUrl ?? _youtubeController.text;
-      _pinterestController.text = user.pinterestUrl ?? _pinterestController.text;
+      _pinterestController.text =
+          user.pinterestUrl ?? _pinterestController.text;
       _country = user.country ?? _country;
       _state = user.state ?? _state;
       _city = user.city ?? _city;
@@ -255,11 +266,14 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
 
     try {
       final bytes = await picked.readAsBytes();
-      final contentType = picked.mimeType ?? MediaContentType.forFileName(picked.name);
+      final contentType =
+          picked.mimeType ?? MediaContentType.forFileName(picked.name);
       final repo = ref.read(studioProfileRepositoryProvider);
       final url = isLogo
-          ? await repo.uploadAvatar(bytes: bytes, fileName: picked.name, contentType: contentType)
-          : await repo.uploadCover(bytes: bytes, fileName: picked.name, contentType: contentType);
+          ? await repo.uploadAvatar(
+              bytes: bytes, fileName: picked.name, contentType: contentType)
+          : await repo.uploadCover(
+              bytes: bytes, fileName: picked.name, contentType: contentType);
 
       if (!mounted) return;
 
@@ -273,17 +287,21 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       });
 
       ref.read(studioProvider.notifier).updateCachedBranding(
-        logoUrl: isLogo ? newPath : null,
-        coverUrl: !isLogo ? newPath : null,
-      );
+            logoUrl: isLogo ? newPath : null,
+            coverUrl: !isLogo ? newPath : null,
+          );
 
       await ref.read(authProvider.notifier).refreshMe();
       final refreshedUser = ref.read(authProvider).valueOrNull;
       if (refreshedUser != null && newPath != null && newPath.isNotEmpty) {
         if (isLogo) {
-          ref.read(authProvider.notifier).setUser(refreshedUser.copyWith(avatarUrl: newPath));
+          ref
+              .read(authProvider.notifier)
+              .setUser(refreshedUser.copyWith(avatarUrl: newPath));
         } else {
-          ref.read(authProvider.notifier).setUser(refreshedUser.copyWith(coverImageUrl: newPath));
+          ref
+              .read(authProvider.notifier)
+              .setUser(refreshedUser.copyWith(coverImageUrl: newPath));
         }
       }
 
@@ -303,7 +321,9 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       if (mounted) {
         SnackBarHelper.showSuccess(
           context,
-          isLogo ? 'Studio logo updated successfully.' : 'Cover photo updated successfully.',
+          isLogo
+              ? 'Studio logo updated successfully.'
+              : 'Cover photo updated successfully.',
         );
       }
     } catch (e) {
@@ -343,7 +363,8 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
   Future<void> _loadPortfolio() async {
     setState(() => _isLoadingPortfolio = true);
     try {
-      final images = await ref.read(studioProfileRepositoryProvider).fetchPortfolio();
+      final images =
+          await ref.read(studioProfileRepositoryProvider).fetchPortfolio();
       if (!mounted) return;
       setState(() => _portfolioImages = images);
     } catch (_) {
@@ -377,12 +398,14 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     setState(() => _isAddingPortfolioImage = true);
     try {
       final bytes = await picked.readAsBytes();
-      final contentType = picked.mimeType ?? MediaContentType.forFileName(picked.name);
-      final image = await ref.read(studioProfileRepositoryProvider).addPortfolioImage(
-            bytes: bytes,
-            fileName: picked.name,
-            contentType: contentType,
-          );
+      final contentType =
+          picked.mimeType ?? MediaContentType.forFileName(picked.name);
+      final image =
+          await ref.read(studioProfileRepositoryProvider).addPortfolioImage(
+                bytes: bytes,
+                fileName: picked.name,
+                contentType: contentType,
+              );
       if (!mounted) return;
       setState(() => _portfolioImages = [image, ..._portfolioImages]);
     } catch (e) {
@@ -407,11 +430,14 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     final previousImages = List<StudioPortfolioImage>.from(_portfolioImages);
     setState(() {
       _deletingPortfolioIds.add(imageId);
-      _portfolioImages = _portfolioImages.where((img) => img.id != imageId).toList();
+      _portfolioImages =
+          _portfolioImages.where((img) => img.id != imageId).toList();
     });
 
     try {
-      await ref.read(studioProfileRepositoryProvider).deletePortfolioImage(imageId);
+      await ref
+          .read(studioProfileRepositoryProvider)
+          .deletePortfolioImage(imageId);
     } catch (e) {
       if (!mounted) return;
       setState(() => _portfolioImages = previousImages);
@@ -438,7 +464,8 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
     bool isUploading = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     final placeholderBg = isDark
         ? AppColors.darkSurfaceRaised
         : AppColors.background.withValues(alpha: 0.8);
@@ -488,11 +515,12 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
             clip(
               Container(
                 color: Colors.black.withValues(alpha: 0.45),
-                child: const Center(
+                child: Center(
                   child: SizedBox(
                     height: 22,
                     width: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
                   ),
                 ),
               ),
@@ -532,9 +560,8 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
             youtubeUrl: _youtubeController.text.trim(),
             pinterestUrl: _pinterestController.text.trim(),
             // Categories/Specializations map to the specializations column.
-            specializations: _selectedCategories.isNotEmpty
-                ? _selectedCategories
-                : null,
+            specializations:
+                _selectedCategories.isNotEmpty ? _selectedCategories : null,
           );
       ref.read(authProvider.notifier).setUser(updatedUser);
 
@@ -556,10 +583,11 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       // Find original StudioModel
       var studio = studioNotifier.studios.cast<StudioModel?>().firstWhere(
             (s) => s?.id == widget.settings.studioId,
-            orElse: () => studioNotifier.studios.cast<StudioModel?>().firstWhere(
-              (s) => s?.email == widget.settings.email,
-              orElse: () => null,
-            ),
+            orElse: () =>
+                studioNotifier.studios.cast<StudioModel?>().firstWhere(
+                      (s) => s?.email == widget.settings.email,
+                      orElse: () => null,
+                    ),
           );
 
       final studioIdToUse = studio?.id ?? widget.settings.studioId;
@@ -581,33 +609,42 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
       }
 
       if (mounted) {
-        SnackBarHelper.showSuccess(context, 'Studio profile updated successfully.');
+        SnackBarHelper.showSuccess(
+            context, 'Studio profile updated successfully.');
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            backgroundColor: AppColors.surface,
+            backgroundColor: (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkSurface
+                : AppColors.surface),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+                Icon(Icons.check_circle_rounded,
+                    color: AppColors.success, size: 24),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Profile saved',
                     style: TextStyle(
-                      color: AppColors.text,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ],
             ),
-            content: const Text(
+            content: Text(
               'Your studio branding and profile details have been updated and are now visible.',
-              style: TextStyle(color: AppColors.subtitle),
+              style: TextStyle(
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ),
             actions: [
               TextButton(
@@ -615,7 +652,7 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 },
-                child: const Text(
+                child: Text(
                   'Done',
                   style: TextStyle(
                     color: AppColors.primary,
@@ -658,481 +695,530 @@ class _EditStudioProfileScreenState extends ConsumerState<EditStudioProfileScree
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     final placeholderBg = isDark
         ? AppColors.darkSurfaceRaised
         : AppColors.background.withValues(alpha: 0.8);
     final placeholderBorder = isDark ? AppColors.darkBorder : AppColors.border;
 
     return Scaffold(
-      
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'Edit Studio Profile', showBack: true),
       body: ScreenBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(top: kToolbarHeight),
+            padding: EdgeInsets.only(top: kToolbarHeight),
             child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. Cover & Logo Photo Selectors
-                  GlassCard(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Branding Assets',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Cover & Logo Photo Selectors
+                    GlassCard(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Branding Assets',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Cover banner selector
-                        Stack(
-                          children: [
-                            _buildImageWidget(_coverPath, Icons.landscape_rounded, 130, double.infinity, isUploading: _isUploadingCover),
-                            Positioned(
-                              bottom: 8,
-                              right: 8,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.6),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 18),
-                                  onPressed: () => _pickImage(false),
+                          SizedBox(height: 12),
+                          // Cover banner selector
+                          Stack(
+                            children: [
+                              _buildImageWidget(_coverPath,
+                                  Icons.landscape_rounded, 130, double.infinity,
+                                  isUploading: _isUploadingCover),
+                              Positioned(
+                                bottom: 8,
+                                right: 8,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(Icons.camera_alt_rounded,
+                                        color: Colors.white, size: 18),
+                                    onPressed: () => _pickImage(false),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Logo avatar selector
-                        Row(
-                          children: [
-                            Stack(
-                              children: [
-                                _buildImageWidget(_logoPath, Icons.business_rounded, 80, 80, isCircle: true, isUploading: _isUploadingLogo),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    height: 32,
-                                    width: 32,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
-                                      onPressed: () => _pickImage(true),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          // Logo avatar selector
+                          Row(
+                            children: [
+                              Stack(
                                 children: [
-                                  Text(
-                                    'Studio Logo & Cover Photo',
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Upload JPG/PNG assets. These will be shown on your client facing portal.',
-                                    style: TextStyle(
-                                      color: subtitleColor,
-                                      fontSize: 11.5,
+                                  _buildImageWidget(
+                                      _logoPath, Icons.business_rounded, 80, 80,
+                                      isCircle: true,
+                                      isUploading: _isUploadingLogo),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      height: 32,
+                                      width: 32,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.white, width: 2),
+                                      ),
+                                      child: IconButton(
+                                        icon: Icon(Icons.camera_alt_rounded,
+                                            color: Colors.white, size: 14),
+                                        onPressed: () => _pickImage(true),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // 1b. Showcase Portfolio grid
-                  GlassCard(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Showcase Portfolio',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Add a few of your best shots to show clients on your public profile.',
-                          style: TextStyle(color: subtitleColor, fontSize: 11.5),
-                        ),
-                        const SizedBox(height: 12),
-                        if (_isLoadingPortfolio)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        else
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _portfolioImages.length + 1,
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
-                            ),
-                            itemBuilder: (context, index) {
-                              if (index == _portfolioImages.length) {
-                                return GestureDetector(
-                                  onTap: _isAddingPortfolioImage ? null : _pickPortfolioImage,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: placeholderBg,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: placeholderBorder, width: 1.5),
-                                    ),
-                                    child: Center(
-                                      child: _isAddingPortfolioImage
-                                          ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(strokeWidth: 2),
-                                            )
-                                          : Icon(Icons.add_rounded, color: subtitleColor, size: 28),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              final image = _portfolioImages[index];
-                              final isDeleting = _deletingPortfolioIds.contains(image.id);
-                              return Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Image.network(
-                                      image.url,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => Container(
-                                        color: placeholderBg,
-                                        child: Icon(Icons.broken_image_rounded, color: subtitleColor),
+                              SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Studio Logo & Cover Photo',
+                                      style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ),
-                                  if (isDeleting)
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Upload JPG/PNG assets. These will be shown on your client facing portal.',
+                                      style: TextStyle(
+                                        color: subtitleColor,
+                                        fontSize: 11.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: AppSpacing.md),
+
+                    // 1b. Showcase Portfolio grid
+                    GlassCard(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Showcase Portfolio',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Add a few of your best shots to show clients on your public profile.',
+                            style:
+                                TextStyle(color: subtitleColor, fontSize: 11.5),
+                          ),
+                          SizedBox(height: 12),
+                          if (_isLoadingPortfolio)
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          else
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _portfolioImages.length + 1,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
+                              ),
+                              itemBuilder: (context, index) {
+                                if (index == _portfolioImages.length) {
+                                  return GestureDetector(
+                                    onTap: _isAddingPortfolioImage
+                                        ? null
+                                        : _pickPortfolioImage,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: placeholderBg,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: placeholderBorder,
+                                            width: 1.5),
+                                      ),
+                                      child: Center(
+                                        child: _isAddingPortfolioImage
+                                            ? SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                        strokeWidth: 2),
+                                              )
+                                            : Icon(Icons.add_rounded,
+                                                color: subtitleColor, size: 28),
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                final image = _portfolioImages[index];
+                                final isDeleting =
+                                    _deletingPortfolioIds.contains(image.id);
+                                return Stack(
+                                  fit: StackFit.expand,
+                                  children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child: Container(
-                                        color: Colors.black.withValues(alpha: 0.45),
-                                        child: const Center(
-                                          child: SizedBox(
-                                            height: 18,
-                                            width: 18,
-                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      child: Image.network(
+                                        image.url,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                          color: placeholderBg,
+                                          child: Icon(
+                                              Icons.broken_image_rounded,
+                                              color: subtitleColor),
+                                        ),
+                                      ),
+                                    ),
+                                    if (isDeleting)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Container(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.45),
+                                          child: Center(
+                                            child: SizedBox(
+                                              height: 18,
+                                              width: 18,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: GestureDetector(
+                                          onTap: () =>
+                                              _deletePortfolioImage(image.id),
+                                          child: Container(
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.black54,
+                                                shape: BoxShape.circle),
+                                            child: Icon(Icons.close_rounded,
+                                                color: Colors.white, size: 14),
                                           ),
                                         ),
                                       ),
-                                    )
-                                  else
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: GestureDetector(
-                                        onTap: () => _deletePortfolioImage(image.id),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                                          child: const Icon(Icons.close_rounded, color: Colors.white, size: 14),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              );
+                                  ],
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: AppSpacing.md),
+
+                    // 2. Identity info fields card
+                    GlassCard(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Identity & Contact Info',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          TextFormField(
+                            controller: _studioNameController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration:
+                                const InputDecoration(labelText: 'Studio Name'),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Enter studio name'
+                                : null,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _photoNameController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration: const InputDecoration(
+                                labelText: 'Photographer Name'),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Enter photographer name'
+                                : null,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _studioAddressController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration: const InputDecoration(
+                                labelText: 'Studio Address'),
+                            maxLines: 2,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          CascadingLocationPicker(
+                            initialCountry: _country,
+                            initialState: _state,
+                            initialCity: _city,
+                            onChanged: (country, state, city) {
+                              _country = country;
+                              _state = state;
+                              _city = city;
                             },
                           ),
-                      ],
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _emailController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            enabled: false,
+                            decoration: const InputDecoration(
+                              labelText: 'Email Address',
+                              helperText:
+                                  'Email can\'t be changed here. Contact support to update it.',
+                              helperMaxLines: 2,
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _websiteController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration:
+                                const InputDecoration(labelText: 'Website URL'),
+                            keyboardType: TextInputType.url,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
 
-                  // 2. Identity info fields card
-                  GlassCard(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Identity & Contact Info',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                    // 3. Social Media Links
+                    GlassCard(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Social Media Links',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _studioNameController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Studio Name'),
-                          validator: (v) => v == null || v.trim().isEmpty ? 'Enter studio name' : null,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _photoNameController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Photographer Name'),
-                          validator: (v) => v == null || v.trim().isEmpty ? 'Enter photographer name' : null,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _studioAddressController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Studio Address'),
-                          maxLines: 2,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        CascadingLocationPicker(
-                          initialCountry: _country,
-                          initialState: _state,
-                          initialCity: _city,
-                          onChanged: (country, state, city) {
-                            _country = country;
-                            _state = state;
-                            _city = city;
-                          },
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _emailController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          enabled: false,
-                          decoration: const InputDecoration(
-                            labelText: 'Email Address',
-                            helperText: 'Email can\'t be changed here. Contact support to update it.',
-                            helperMaxLines: 2,
+                          SizedBox(height: 12),
+                          TextFormField(
+                            controller: _instagramController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration: const InputDecoration(
+                                labelText: 'Instagram URL'),
+                            keyboardType: TextInputType.url,
                           ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _websiteController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Website URL'),
-                          keyboardType: TextInputType.url,
-                        ),
-                      ],
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _facebookController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration: const InputDecoration(
+                                labelText: 'Facebook URL'),
+                            keyboardType: TextInputType.url,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _youtubeController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration:
+                                const InputDecoration(labelText: 'YouTube URL'),
+                            keyboardType: TextInputType.url,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _pinterestController,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration: const InputDecoration(
+                                labelText: 'Pinterest URL'),
+                            keyboardType: TextInputType.url,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
 
-                  // 3. Social Media Links
-                  GlassCard(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Social Media Links',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                    // 4. Specialization Choice Chips
+                    GlassCard(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Specializations / Categories',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _instagramController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Instagram URL'),
-                          keyboardType: TextInputType.url,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _facebookController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Facebook URL'),
-                          keyboardType: TextInputType.url,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _youtubeController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'YouTube URL'),
-                          keyboardType: TextInputType.url,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _pinterestController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(labelText: 'Pinterest URL'),
-                          keyboardType: TextInputType.url,
-                        ),
-                      ],
+                          SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _availableSpecializations.map((cat) {
+                              final isSelected =
+                                  _selectedCategories.contains(cat);
+                              return FilterChip(
+                                selected: isSelected,
+                                label: Text(cat),
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.white : textColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                selectedColor: AppColors.primary,
+                                checkmarkColor: Colors.white,
+                                backgroundColor: isDark
+                                    ? AppColors.darkSurfaceRaised
+                                    : Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : (isDark
+                                            ? AppColors.darkBorder
+                                            : AppColors.border),
+                                  ),
+                                ),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedCategories.add(cat);
+                                    } else {
+                                      _selectedCategories.remove(cat);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
 
-                  // 4. Specialization Choice Chips
-                  GlassCard(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Specializations / Categories',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                    // 5. Business description multiline card
+                    GlassCard(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Business Description',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          TextFormField(
+                            controller: _aboutController,
+                            maxLines: 4,
+                            style: TextStyle(color: textColor, fontSize: 14),
+                            decoration: const InputDecoration(
+                              hintText:
+                                  'Tell clients about your studio philosophy, equipment, experience, and style...',
+                              alignLabelWithHint: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: AppSpacing.lg),
+
+                    // 5. Save Button
+                    Container(
+                      width: double.infinity,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.24),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _handleSave,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _availableSpecializations.map((cat) {
-                            final isSelected = _selectedCategories.contains(cat);
-                            return FilterChip(
-                              selected: isSelected,
-                              label: Text(cat),
-                              labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : textColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              selectedColor: AppColors.primary,
-                              checkmarkColor: Colors.white,
-                              backgroundColor: isDark ? AppColors.darkSurfaceRaised : Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : (isDark ? AppColors.darkBorder : AppColors.border),
+                        child: _isSaving
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
                               ),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedCategories.add(cat);
-                                  } else {
-                                    _selectedCategories.remove(cat);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // 5. Business description multiline card
-                  GlassCard(
-                    borderRadius: 16,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Business Description',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _aboutController,
-                          maxLines: 4,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: const InputDecoration(
-                            hintText: 'Tell clients about your studio philosophy, equipment, experience, and style...',
-                            alignLabelWithHint: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // 5. Save Button
-                  Container(
-                    width: double.infinity,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.24),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _handleSave,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
                       ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Save Changes',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                ],
+                    SizedBox(height: AppSpacing.xl),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

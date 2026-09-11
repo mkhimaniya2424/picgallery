@@ -13,7 +13,8 @@ import '../../providers/drawer_provider.dart';
 /// right after navigating (before the async provider resolved) would
 /// incorrectly show "plan has expired" even for an active subscription,
 /// only to work correctly on the very next tap once the data had loaded.
-Future<void> requireActiveSubscription(BuildContext context, WidgetRef ref, VoidCallback onSuccess) async {
+Future<void> requireActiveSubscription(
+    BuildContext context, WidgetRef ref, VoidCallback onSuccess) async {
   final subStateAsync = ref.read(subscriptionStateProvider);
 
   final subState = subStateAsync.isLoading
@@ -22,7 +23,9 @@ Future<void> requireActiveSubscription(BuildContext context, WidgetRef ref, Void
 
   if (!context.mounted) return;
 
-  if (subState == null || subState.plan == SubscriptionPlan.free || subState.isExpired) {
+  if (subState == null ||
+      subState.plan == SubscriptionPlan.free ||
+      subState.isExpired) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Your plan has expired. Please upgrade to continue.'),

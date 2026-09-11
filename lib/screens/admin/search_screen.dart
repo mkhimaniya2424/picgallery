@@ -76,7 +76,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       SnackBar(
         content: Text('Opening "${item.title}"'),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.text,
+        backgroundColor: (Theme.of(context).brightness == Brightness.dark
+            ? AppColors.textOnDark
+            : AppColors.text),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
@@ -104,7 +106,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         actions: [
           if (_query.trim().isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.open_in_full_rounded),
+              icon: Icon(Icons.open_in_full_rounded),
               tooltip: 'View full results',
               onPressed: () => Navigator.pushNamed(
                 context,
@@ -116,9 +118,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           SearchFilterChips(selected: _filter, onSelected: _selectFilter),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Expanded(
             child: _query.trim().isEmpty
                 ? _SearchLanding(
@@ -158,7 +160,7 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
@@ -166,8 +168,12 @@ class _SearchField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.search_rounded, size: 20, color: AppColors.subtitle),
-          const SizedBox(width: 8),
+          Icon(Icons.search_rounded,
+              size: 20,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.subtitleOnDark
+                  : AppColors.subtitle)),
+          SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,
@@ -175,13 +181,19 @@ class _SearchField extends StatelessWidget {
               onChanged: onChanged,
               onSubmitted: onSubmitted,
               textInputAction: TextInputAction.search,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.text),
-              decoration: const InputDecoration(
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
+              decoration: InputDecoration(
                 hintText: 'Search albums, photos, videos, folders…',
-                hintStyle: TextStyle(fontSize: 13, color: AppColors.subtitle),
+                hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -191,14 +203,17 @@ class _SearchField extends StatelessWidget {
           ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
             builder: (context, value, _) {
-              if (value.text.isEmpty) return const SizedBox.shrink();
+              if (value.text.isEmpty) return SizedBox.shrink();
               return InkWell(
                 onTap: onClear,
                 borderRadius: BorderRadius.circular(100),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(4),
                   child: Icon(Icons.close_rounded,
-                      size: 18, color: AppColors.subtitle),
+                      size: 18,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle)),
                 ),
               );
             },
@@ -225,22 +240,24 @@ class _SearchLanding extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
       children: [
         if (recentSearches.isNotEmpty) ...[
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text('Recent Searches',
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.text)),
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text))),
               ),
               InkWell(
                 onTap: onClearAll,
-                child: const Text('Clear all',
+                child: Text('Clear all',
                     style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
@@ -248,35 +265,45 @@ class _SearchLanding extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: recentSearches.map((term) {
               return InputChip(
                 label: Text(term,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.text)),
-                avatar: const Icon(Icons.history_rounded,
-                    size: 16, color: AppColors.subtitle),
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text))),
+                avatar: Icon(Icons.history_rounded,
+                    size: 16,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
                 backgroundColor: Colors.white,
                 side: const BorderSide(color: AppColors.border),
                 onPressed: () => onTapTerm(term),
                 onDeleted: () => onRemoveTerm(term),
-                deleteIconColor: AppColors.subtitle,
+                deleteIconColor:
+                    (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
               );
             }).toList(),
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: AppSpacing.xl),
         ],
-        const Text('Search Suggestions',
+        Text('Search Suggestions',
             style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: AppColors.text)),
-        const SizedBox(height: AppSpacing.sm),
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text))),
+        SizedBox(height: AppSpacing.sm),
         Consumer(
           builder: (context, ref, _) {
             return FutureBuilder<List<String>>(
@@ -284,7 +311,7 @@ class _SearchLanding extends StatelessWidget {
               builder: (context, snapshot) {
                 final suggestions = snapshot.data ?? const [];
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
                     child: Center(
                         child: CircularProgressIndicator(
@@ -297,18 +324,25 @@ class _SearchLanding extends StatelessWidget {
                       onTap: () => onTapTerm(s),
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: EdgeInsets.symmetric(vertical: 10),
                         child: Row(
                           children: [
-                            const Icon(Icons.north_west_rounded,
-                                size: 15, color: AppColors.subtitle),
-                            const SizedBox(width: 10),
+                            Icon(Icons.north_west_rounded,
+                                size: 15,
+                                color: (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle)),
+                            SizedBox(width: 10),
                             Expanded(
                                 child: Text(s,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.w500,
-                                        color: AppColors.text))),
+                                        color: (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.textOnDark
+                                            : AppColors.text)))),
                           ],
                         ),
                       ),
@@ -337,12 +371,11 @@ class _SearchResultsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     final items = results ?? const [];
     if (items.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.all(AppSpacing.lg),
         child: EmptyStateCard(
           icon: Icons.search_off_rounded,
@@ -351,10 +384,10 @@ class _SearchResultsList extends StatelessWidget {
       );
     }
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
+      padding:
+          EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+      separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, i) =>
           SearchResultTile(data: items[i], onTap: () => onResultTap(items[i])),
     );

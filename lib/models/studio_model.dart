@@ -75,11 +75,13 @@ class StudioModel {
       about: (json['bio'] as String?) ?? '',
       logoUrl: (json['avatar_url'] as String?) ?? '',
       coverUrl: (json['cover_image_url'] as String?) ?? '',
-      categories: (json['specializations'] as List<dynamic>?)?.cast<String>() ?? const [],
+      categories: (json['specializations'] as List<dynamic>?)?.cast<String>() ??
+          const [],
       rating: 0,
       reviewCount: 0,
       location: location,
-      galleryUrls: (json['gallery_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
+      galleryUrls:
+          (json['gallery_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
       connectionStatus: StudioConnectionStatus.notConnected,
       email: (json['email'] as String?) ?? '',
       website: (json['website'] as String?) ?? '',
@@ -110,11 +112,13 @@ class StudioModel {
       about: (json['bio'] as String?) ?? '',
       logoUrl: (json['avatar_url'] as String?) ?? '',
       coverUrl: (json['cover_image_url'] as String?) ?? '',
-      categories: (json['specializations'] as List<dynamic>?)?.cast<String>() ?? const [],
+      categories: (json['specializations'] as List<dynamic>?)?.cast<String>() ??
+          const [],
       rating: 0,
       reviewCount: 0,
       location: location,
-      galleryUrls: (json['gallery_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
+      galleryUrls:
+          (json['gallery_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
       connectionStatus: StudioConnectionStatus.values.firstWhere(
         (e) => e.name == json['connection_status'],
         orElse: () => StudioConnectionStatus.notConnected,
@@ -140,11 +144,13 @@ class StudioModel {
       about: json['about'] as String? ?? '',
       logoUrl: json['logoUrl'] as String? ?? '',
       coverUrl: json['coverUrl'] as String? ?? '',
-      categories: (json['categories'] as List<dynamic>?)?.cast<String>() ?? const [],
+      categories:
+          (json['categories'] as List<dynamic>?)?.cast<String>() ?? const [],
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
       reviewCount: json['reviewCount'] as int? ?? 0,
       location: json['location'] as String? ?? '',
-      galleryUrls: (json['galleryUrls'] as List<dynamic>?)?.cast<String>() ?? const [],
+      galleryUrls:
+          (json['galleryUrls'] as List<dynamic>?)?.cast<String>() ?? const [],
       connectionStatus: StudioConnectionStatus.values.firstWhere(
         (e) => e.name == json['connectionStatus'],
         orElse: () => StudioConnectionStatus.notConnected,

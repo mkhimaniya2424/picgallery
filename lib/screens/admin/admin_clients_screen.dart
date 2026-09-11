@@ -90,12 +90,14 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                           ),
                           IconButton(
                             icon: Icon(Icons.close_rounded,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.xs),
+                      SizedBox(height: AppSpacing.xs),
                       // `POST /connections/invite-by-email` handles both
                       // cases: if this email already has a PicGallery
                       // client account it's connected right away; if not,
@@ -104,23 +106,35 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                       // they register with this email.
                       Text(
                         "If they already have a PicGallery client account we'll connect right away. Otherwise the invitation will appear in your Sent Invitations tab once they sign up.",
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                        style: TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 13),
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(height: AppSpacing.md),
                       TextFormField(
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email Address',
-                          labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          labelStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant),
                           filled: true,
-                          fillColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+                          fillColor:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.darkSurfaceRaised
+                                  : AppColors.surfaceElevated,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none),
                           prefixIcon: Icon(Icons.email_rounded,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant),
                         ),
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface),
                         validator: (val) {
                           if (val == null || val.trim().isEmpty) {
                             return 'Please enter an email';
@@ -134,7 +148,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                         onSaved: (val) => email = val!.trim(),
                         enabled: !isSending,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(height: AppSpacing.lg),
                       SizedBox(
                         width: double.infinity,
                         height: 52,
@@ -164,10 +178,9 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                                     setSheetState(() => isSending = false);
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(
-                                            e is NotFoundException
-                                                ? e.message
-                                                : 'Could not send the invitation. Please try again.'),
+                                        content: Text(e is NotFoundException
+                                            ? e.message
+                                            : 'Could not send the invitation. Please try again.'),
                                       ),
                                     );
                                   }
@@ -179,7 +192,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                             elevation: 0,
                           ),
                           child: isSending
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 22,
                                   height: 22,
                                   child: CircularProgressIndicator(
@@ -188,7 +201,7 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
                                         AlwaysStoppedAnimation(Colors.white),
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'Send Invitation',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -212,24 +225,23 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       floatingActionButton: FloatingActionButton(
         heroTag: 'admin_clients_fab',
         onPressed: _showInviteClientDialog,
         backgroundColor: AppColors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+        child: Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
       ),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Clients',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded),
             tooltip: 'Refresh requests',
             onPressed: () => ref.read(connectionsProvider.notifier).refresh(),
           ),
@@ -241,18 +253,25 @@ class _AdminClientsScreenState extends ConsumerState<AdminClientsScreen>
             // Tab bar
             Container(
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border)),
+                border: Border(
+                    bottom: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkBorder
+                            : AppColors.border)),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicatorColor: AppColors.primary,
                 indicatorWeight: 3,
                 labelColor: AppColors.primary,
-                unselectedLabelColor: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle,
-                labelStyle: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 14),
-                unselectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 14),
+                unselectedLabelColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle,
+                labelStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                unselectedLabelStyle:
+                    TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 tabs: const [
                   Tab(text: 'Pending Requests'),
                   Tab(text: 'Sent Invitations'),
@@ -286,21 +305,23 @@ class _PendingRequestsTab extends ConsumerWidget {
     final connNotifier = ref.read(connectionsProvider.notifier);
 
     return connectionsAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
       error: (err, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
-            const SizedBox(height: AppSpacing.sm),
-            const Text('Failed to load requests', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
-            const SizedBox(height: AppSpacing.sm),
+            Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+            SizedBox(height: AppSpacing.sm),
+            Text('Failed to load requests',
+                style: TextStyle(
+                    color: AppColors.error, fontWeight: FontWeight.w600)),
+            SizedBox(height: AppSpacing.sm),
             TextButton.icon(
               onPressed: () => connNotifier.refresh(),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              icon: Icon(Icons.refresh_rounded),
+              label: Text('Retry'),
             ),
           ],
         ),
@@ -318,8 +339,12 @@ class _PendingRequestsTab extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.person_add_disabled_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4), size: 48),
-                const SizedBox(height: AppSpacing.sm),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.4),
+                    size: 48),
+                SizedBox(height: AppSpacing.sm),
                 Text(
                   'No pending requests',
                   style: TextStyle(
@@ -328,7 +353,7 @@ class _PendingRequestsTab extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'Clients can send you a connection request\nfrom the Discover Studios screen.',
                   textAlign: TextAlign.center,
@@ -348,7 +373,7 @@ class _PendingRequestsTab extends ConsumerWidget {
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics()),
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             itemCount: pendingRequests.length,
             itemBuilder: (context, index) {
               final request = pendingRequests[index];
@@ -427,11 +452,11 @@ class _ConnectedClientsTab extends ConsumerWidget {
         .toList();
 
     return dashboardAsync.when(
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary)),
+      loading: () =>
+          Center(child: CircularProgressIndicator(color: AppColors.primary)),
       error: (err, _) => Center(
           child: Text('Error loading clients: $err',
-              style: const TextStyle(color: AppColors.error))),
+              style: TextStyle(color: AppColors.error))),
       data: (snapshot) {
         if (connected.isEmpty) {
           return Center(
@@ -439,22 +464,30 @@ class _ConnectedClientsTab extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.people_outline_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4), size: 48),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.4),
+                    size: 48),
+                SizedBox(height: AppSpacing.sm),
+                Text(
                   'No connected clients yet',
                   style: TextStyle(
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4),
+                Text(
                   'Accept pending requests to build\nyour client list.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                     fontSize: 12,
                   ),
                 ),
@@ -473,16 +506,15 @@ class _ConnectedClientsTab extends ConsumerWidget {
 
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           itemCount: connected.length,
           itemBuilder: (context, index) {
             final conn = connected[index];
             final rawClientData = conn.clientData;
-            if (rawClientData == null) return const SizedBox.shrink();
+            if (rawClientData == null) return SizedBox.shrink();
 
             // Prefer the richer dashboard snapshot entry when it exists.
-            final clientData =
-                dashboardById[rawClientData.id] ?? rawClientData;
+            final clientData = dashboardById[rawClientData.id] ?? rawClientData;
 
             return _ClientCard(
               client: clientData,
@@ -545,16 +577,21 @@ class _PendingRequestCardState extends State<_PendingRequestCard> {
     final clientInitials = widget.clientInitials;
     final clientEmail = widget.clientEmail;
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurfaceRaised
+            : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
+        border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkBorder
+                : AppColors.border),
         boxShadow:
             AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
             Container(
@@ -571,14 +608,14 @@ class _PendingRequestCardState extends State<_PendingRequestCard> {
               alignment: Alignment.center,
               child: Text(
                 clientInitials,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,15 +628,14 @@ class _PendingRequestCardState extends State<_PendingRequestCard> {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Pending Request',
                       style: TextStyle(
                         color: AppColors.primary,
@@ -609,7 +645,7 @@ class _PendingRequestCardState extends State<_PendingRequestCard> {
                     ),
                   ),
                   if (clientEmail.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       clientEmail,
                       style: TextStyle(
@@ -621,9 +657,9 @@ class _PendingRequestCardState extends State<_PendingRequestCard> {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             if (_isProcessing)
-              const SizedBox(
+              SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -640,20 +676,20 @@ class _PendingRequestCardState extends State<_PendingRequestCard> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.check_rounded,
+                      icon: Icon(Icons.check_rounded,
                           color: AppColors.success, size: 20),
                       onPressed: () => _handle(widget.onAccept),
                       tooltip: 'Accept',
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.close_rounded,
+                      icon: Icon(Icons.close_rounded,
                           color: AppColors.error, size: 20),
                       onPressed: () => _handle(widget.onReject),
                       tooltip: 'Reject',
@@ -679,22 +715,23 @@ class _SentInvitationsTab extends ConsumerWidget {
     final connNotifier = ref.read(connectionsProvider.notifier);
 
     return connectionsAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
       error: (err, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
-            const SizedBox(height: AppSpacing.sm),
-            const Text('Failed to load invitations',
-                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
-            const SizedBox(height: AppSpacing.sm),
+            Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+            SizedBox(height: AppSpacing.sm),
+            Text('Failed to load invitations',
+                style: TextStyle(
+                    color: AppColors.error, fontWeight: FontWeight.w600)),
+            SizedBox(height: AppSpacing.sm),
             TextButton.icon(
               onPressed: () => connNotifier.refresh(),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              icon: Icon(Icons.refresh_rounded),
+              label: Text('Retry'),
             ),
           ],
         ),
@@ -713,9 +750,12 @@ class _SentInvitationsTab extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.send_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.35),
                     size: 48),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: AppSpacing.sm),
                 Text(
                   'No sent invitations',
                   style: TextStyle(
@@ -724,7 +764,7 @@ class _SentInvitationsTab extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'Use the + button to invite a client.\nPending invitations will appear here.',
                   textAlign: TextAlign.center,
@@ -744,7 +784,7 @@ class _SentInvitationsTab extends ConsumerWidget {
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics()),
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             itemCount: sentInvites.length,
             itemBuilder: (context, index) {
               final invite = sentInvites[index];
@@ -760,20 +800,20 @@ class _SentInvitationsTab extends ConsumerWidget {
                     builder: (ctx) => AlertDialog(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
-                      title: const Text('Cancel Invitation',
+                      title: Text('Cancel Invitation',
                           style: TextStyle(fontWeight: FontWeight.w800)),
                       content: Text(
                           'Cancel the invitation sent to ${client?.name ?? "this client"}?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Keep'),
+                          child: Text('Keep'),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, true),
                           style: TextButton.styleFrom(
                               foregroundColor: AppColors.error),
-                          child: const Text('Cancel Invitation'),
+                          child: Text('Cancel Invitation'),
                         ),
                       ],
                     ),
@@ -795,7 +835,8 @@ class _SentInvitationsTab extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Failed to cancel. Please try again.'),
+                            content:
+                                Text('Failed to cancel. Please try again.'),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -840,11 +881,13 @@ class _SentInvitationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
             ? AppColors.darkSurfaceRaised
-            : AppColors.surfaceElevated,
+            : (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkSurfaceRaised
+                : AppColors.surfaceElevated),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Theme.of(context).brightness == Brightness.dark
@@ -855,7 +898,7 @@ class _SentInvitationCard extends StatelessWidget {
             AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
             // Avatar
@@ -873,14 +916,14 @@ class _SentInvitationCard extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 clientInitials,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             // Info
             Expanded(
               child: Column(
@@ -894,17 +937,17 @@ class _SentInvitationCard extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.10),
+                          color: Color(0xFF6366F1).withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Invite Sent',
                           style: TextStyle(
                             color: Color(0xFF6366F1),
@@ -913,7 +956,7 @@ class _SentInvitationCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         _formatSentAt(),
                         style: TextStyle(
@@ -924,7 +967,7 @@ class _SentInvitationCard extends StatelessWidget {
                     ],
                   ),
                   if (clientEmail.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       clientEmail,
                       style: TextStyle(
@@ -936,7 +979,7 @@ class _SentInvitationCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             // Cancel button
             Container(
               decoration: BoxDecoration(
@@ -944,7 +987,7 @@ class _SentInvitationCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: IconButton(
-                icon: const Icon(Icons.cancel_outlined,
+                icon: Icon(Icons.cancel_outlined,
                     color: AppColors.error, size: 20),
                 onPressed: onCancel,
                 tooltip: 'Cancel invitation',
@@ -971,7 +1014,7 @@ class _ClientCard extends StatelessWidget {
       case GalleryStatus.delivered:
         return ('Delivered', AppColors.success);
       case GalleryStatus.editing:
-        return ('Editing', const Color(0xFFF59E0B));
+        return ('Editing', Color(0xFFF59E0B));
       case GalleryStatus.notStarted:
         return ('Not Started', AppColors.subtitle);
     }
@@ -981,11 +1024,16 @@ class _ClientCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final (galleryLabel, galleryColor) = _galleryLabel;
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurfaceRaised
+            : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
+        border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkBorder
+                : AppColors.border),
         boxShadow:
             AppShadows.soft(AppColors.primary, opacity: 0.04, blur: 16, y: 8),
       ),
@@ -996,7 +1044,7 @@ class _ClientCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               child: Row(
                 children: [
                   Container(
@@ -1013,14 +1061,14 @@ class _ClientCard extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       client.initials,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
                         fontSize: 15,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,7 +1081,7 @@ class _ClientCard extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Wrap(
                           spacing: 6,
                           runSpacing: 6,
@@ -1046,7 +1094,8 @@ class _ClientCard extends StatelessWidget {
                             // a simple "Connected" badge instead to avoid
                             // misleading "Not Started / Unpaid" defaults.
                             if (client.bookingValue > 0 ||
-                                client.galleryStatus != GalleryStatus.notStarted) ...[
+                                client.galleryStatus !=
+                                    GalleryStatus.notStarted) ...[
                               _Badge(label: galleryLabel, color: galleryColor),
                               _Badge(
                                 label: client.isPaid ? 'Paid' : 'Unpaid',
@@ -1066,7 +1115,7 @@ class _ClientCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -1101,7 +1150,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),

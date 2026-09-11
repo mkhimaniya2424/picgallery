@@ -193,9 +193,14 @@ class UploadJobModel {
       folderId: json['folderId'] as String?,
       totalBytes: json['totalBytes'] as int? ?? 0,
       uploadedBytes: json['uploadedBytes'] as int? ?? 0,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      startedAt: json['startedAt'] != null ? DateTime.tryParse(json['startedAt'] as String) : null,
-      finishedAt: json['finishedAt'] != null ? DateTime.tryParse(json['finishedAt'] as String) : null,
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      startedAt: json['startedAt'] != null
+          ? DateTime.tryParse(json['startedAt'] as String)
+          : null,
+      finishedAt: json['finishedAt'] != null
+          ? DateTime.tryParse(json['finishedAt'] as String)
+          : null,
       status: status,
       errorMessage: json['errorMessage'] as String?,
       compress: json['compress'] as bool? ?? false,

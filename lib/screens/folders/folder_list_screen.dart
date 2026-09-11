@@ -48,7 +48,8 @@ class _FolderListScreenState extends ConsumerState<FolderListScreen> {
     final mediaState = ref.watch(mediaProvider);
     final albumState = ref.watch(albumProvider);
 
-    final rootFolders = folderState.folders.where((f) => f.parentId == null).toList();
+    final rootFolders =
+        folderState.folders.where((f) => f.parentId == null).toList();
     final hasError = folderState.lastError != null && rootFolders.isEmpty;
 
     Widget body;

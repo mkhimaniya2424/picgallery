@@ -32,14 +32,16 @@ class MediaThumb extends StatelessWidget {
         return Image.network(
           path,
           fit: fit,
-          errorBuilder: (context, error, stackTrace) => _Placeholder(media: media),
+          errorBuilder: (context, error, stackTrace) =>
+              _Placeholder(media: media),
         );
       }
       if (!kIsWeb && path.isNotEmpty && File(path).existsSync()) {
         return Image.file(
           File(path),
           fit: fit,
-          errorBuilder: (context, error, stackTrace) => _Placeholder(media: media),
+          errorBuilder: (context, error, stackTrace) =>
+              _Placeholder(media: media),
         );
       }
     } else {
@@ -50,13 +52,17 @@ class MediaThumb extends StatelessWidget {
         return Image.network(
           thumbPath,
           fit: fit,
-          errorBuilder: (context, error, stackTrace) => _Placeholder(media: media),
+          errorBuilder: (context, error, stackTrace) =>
+              _Placeholder(media: media),
         );
-      } else if (!kIsWeb && thumbPath.isNotEmpty && File(thumbPath).existsSync()) {
+      } else if (!kIsWeb &&
+          thumbPath.isNotEmpty &&
+          File(thumbPath).existsSync()) {
         return Image.file(
           File(thumbPath),
           fit: fit,
-          errorBuilder: (context, error, stackTrace) => _Placeholder(media: media),
+          errorBuilder: (context, error, stackTrace) =>
+              _Placeholder(media: media),
         );
       }
     }
@@ -84,7 +90,9 @@ class _Placeholder extends StatelessWidget {
       ),
       child: Center(
         child: Icon(
-          media.type == MediaType.photo ? Icons.image_rounded : Icons.videocam_rounded,
+          media.type == MediaType.photo
+              ? Icons.image_rounded
+              : Icons.videocam_rounded,
           color: Colors.white.withValues(alpha: 0.94),
           size: 26,
         ),

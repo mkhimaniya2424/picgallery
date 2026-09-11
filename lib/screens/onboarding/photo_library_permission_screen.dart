@@ -22,13 +22,18 @@ class PhotoLibraryPermissionScreen extends ConsumerWidget {
   const PhotoLibraryPermissionScreen({super.key, this.role});
 
   void _advance(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.pushNotificationPermission, arguments: role);
+    Navigator.of(context).pushReplacementNamed(
+        AppRoutes.pushNotificationPermission,
+        arguments: role);
   }
 
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
-    final granted = await PermissionService.instance.checkAndRequestStoragePermission();
+    final granted =
+        await PermissionService.instance.checkAndRequestStoragePermission();
     try {
-      await ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: granted);
+      await ref
+          .read(authRepositoryProvider)
+          .updatePermissions(photoLibraryPermissionGranted: granted);
     } on ApiException {
       // Best-effort — advance regardless, same as "Not Now".
     }

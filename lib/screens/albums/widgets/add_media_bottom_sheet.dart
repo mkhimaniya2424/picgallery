@@ -31,20 +31,22 @@ class AddMediaBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
             AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Add Media',
               style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.text),
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _ActionTile(
               icon: Icons.add_photo_alternate_rounded,
               iconColor: AppColors.primary,
@@ -52,7 +54,7 @@ class AddMediaBottomSheet extends StatelessWidget {
               subtitle: 'Choose one or more photos from your gallery',
               onTap: () => Navigator.of(context).pop(AddMediaAction.photos),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             _ActionTile(
               icon: Icons.video_camera_back_rounded,
               iconColor: AppColors.secondary,
@@ -60,16 +62,19 @@ class AddMediaBottomSheet extends StatelessWidget {
               subtitle: 'Choose a video from your gallery',
               onTap: () => Navigator.of(context).pop(AddMediaAction.videos),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  foregroundColor: AppColors.subtitle,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  foregroundColor:
+                      (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
                 ),
-                child: const Text('Cancel',
+                child: Text('Cancel',
                     style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
@@ -104,7 +109,7 @@ class _ActionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(color: AppColors.border),
@@ -120,31 +125,39 @@ class _ActionTile extends StatelessWidget {
                 ),
                 child: Icon(icon, color: iconColor),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       label,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.text),
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.textOnDark
+                                  : AppColors.text)),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.subtitle),
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle)),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.subtitle),
+              Icon(Icons.chevron_right_rounded,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ],
           ),
         ),

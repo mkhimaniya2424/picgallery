@@ -49,10 +49,9 @@ class GalleryCollectionModel {
     return GalleryCollectionModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      galleryIds: (json['gallery_ids'] as List?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
+      galleryIds:
+          (json['gallery_ids'] as List?)?.map((e) => e as String).toList() ??
+              const [],
       displayOrder: json['display_order'] as int? ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -64,10 +63,9 @@ class GalleryCollectionModel {
     return GalleryCollectionModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      galleryIds: (json['galleryIds'] as List?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
+      galleryIds:
+          (json['galleryIds'] as List?)?.map((e) => e as String).toList() ??
+              const [],
       displayOrder: json['displayOrder'] as int? ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),

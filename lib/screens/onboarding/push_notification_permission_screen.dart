@@ -23,12 +23,15 @@ class PushNotificationPermissionScreen extends ConsumerWidget {
   const PushNotificationPermissionScreen({super.key, this.role});
 
   void _finish(BuildContext context) {
-    final destination = role == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
-    Navigator.of(context).pushNamedAndRemoveUntil(destination, (route) => false);
+    final destination =
+        role == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(destination, (route) => false);
   }
 
   Future<void> _allow(BuildContext context, WidgetRef ref) async {
-    final granted = await PermissionService.instance.checkAndRequestNotificationPermission();
+    final granted = await PermissionService.instance
+        .checkAndRequestNotificationPermission();
     try {
       final updated = await ref
           .read(authRepositoryProvider)
@@ -52,7 +55,8 @@ class PushNotificationPermissionScreen extends ConsumerWidget {
     return PermissionRequestSheet(
       icon: Icons.notifications_active_rounded,
       title: 'Stay in the Loop',
-      description: 'Get notified about bookings, messages, and delivery updates',
+      description:
+          'Get notified about bookings, messages, and delivery updates',
       onAllow: () => _allow(context, ref),
       onSkip: () => _finish(context),
     );

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-
-
 import 'media_copy_move_flow_screen.dart';
 
 class MediaBatchWorkflows {

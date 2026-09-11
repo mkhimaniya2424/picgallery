@@ -44,10 +44,12 @@ class CascadingLocationPicker extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CascadingLocationPicker> createState() => _CascadingLocationPickerState();
+  ConsumerState<CascadingLocationPicker> createState() =>
+      _CascadingLocationPickerState();
 }
 
-class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicker> {
+class _CascadingLocationPickerState
+    extends ConsumerState<CascadingLocationPicker> {
   String? _country;
   String? _state;
   String? _city;
@@ -125,7 +127,8 @@ class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicke
     }
     setState(() => _statesLoading = true);
     try {
-      final list = await ref.read(locationRepositoryProvider).fetchStates(country);
+      final list =
+          await ref.read(locationRepositoryProvider).fetchStates(country);
       if (!mounted || _country != country) return;
       setState(() {
         _states = list;
@@ -153,7 +156,9 @@ class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicke
     }
     setState(() => _citiesLoading = true);
     try {
-      final list = await ref.read(locationRepositoryProvider).fetchCities(country, state);
+      final list = await ref
+          .read(locationRepositoryProvider)
+          .fetchCities(country, state);
       if (!mounted || _country != country || _state != state) return;
       setState(() {
         _cities = list;
@@ -241,10 +246,13 @@ class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicke
 
   @override
   Widget build(BuildContext context) {
-    final stateEnabled = _country != null && !_statesLoading && _states.isNotEmpty;
-    final stateShowFallback = _country != null && !_statesLoading && _states.isEmpty;
+    final stateEnabled =
+        _country != null && !_statesLoading && _states.isNotEmpty;
+    final stateShowFallback =
+        _country != null && !_statesLoading && _states.isEmpty;
     final cityEnabled = _state != null && !_citiesLoading && _cities.isNotEmpty;
-    final cityShowFallback = _state != null && !_citiesLoading && _cities.isEmpty;
+    final cityShowFallback =
+        _state != null && !_citiesLoading && _cities.isEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +287,8 @@ class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicke
             controller: _stateFallbackController,
             decoration: const InputDecoration(
               labelText: 'State / Province (type it)',
-              prefixIcon: Icon(Icons.edit_location_alt_outlined, color: AppColors.subtitle, size: 20),
+              prefixIcon: Icon(Icons.edit_location_alt_outlined,
+                  color: AppColors.subtitle, size: 20),
             ),
             onChanged: (_) => _emit(),
           ),
@@ -306,7 +315,8 @@ class _CascadingLocationPickerState extends ConsumerState<CascadingLocationPicke
             controller: _cityFallbackController,
             decoration: const InputDecoration(
               labelText: 'City (type it)',
-              prefixIcon: Icon(Icons.edit_location_alt_outlined, color: AppColors.subtitle, size: 20),
+              prefixIcon: Icon(Icons.edit_location_alt_outlined,
+                  color: AppColors.subtitle, size: 20),
             ),
             onChanged: (_) => _emit(),
           ),
@@ -342,13 +352,15 @@ class _PickerField extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     final disabledColor = isDark ? AppColors.darkBorder : AppColors.border;
 
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: enabled ? AppColors.primary : subtitleColor, size: 20),
+        prefixIcon: Icon(icon,
+            color: enabled ? AppColors.primary : subtitleColor, size: 20),
         enabled: enabled || loading,
       ),
       child: InkWell(
@@ -370,7 +382,8 @@ class _PickerField extends StatelessWidget {
               SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: subtitleColor),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: subtitleColor),
               )
             else
               Icon(Icons.arrow_drop_down_rounded,
@@ -391,7 +404,8 @@ class _LocationSearchSheet extends StatefulWidget {
   final List<String> options;
   final String? current;
 
-  const _LocationSearchSheet({required this.title, required this.options, required this.current});
+  const _LocationSearchSheet(
+      {required this.title, required this.options, required this.current});
 
   static Future<String?> show(
     BuildContext context, {
@@ -407,7 +421,8 @@ class _LocationSearchSheet extends StatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _LocationSearchSheet(title: title, options: options, current: current),
+      builder: (context) => _LocationSearchSheet(
+          title: title, options: options, current: current),
     );
   }
 
@@ -429,7 +444,10 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
     setState(() {
       _filtered = query.trim().isEmpty
           ? widget.options
-          : widget.options.where((o) => o.toLowerCase().contains(query.trim().toLowerCase())).toList();
+          : widget.options
+              .where(
+                  (o) => o.toLowerCase().contains(query.trim().toLowerCase()))
+              .toList();
     });
   }
 
@@ -447,7 +465,8 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
     final sheetHeight = MediaQuery.of(context).size.height * 0.75;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     final handleColor = isDark ? AppColors.darkBorder : AppColors.border;
 
     return SafeArea(
@@ -465,13 +484,16 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(widget.title,
                       style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textColor)),
                   Text('${_filtered.length} of ${widget.options.length}',
                       style: TextStyle(fontSize: 12.5, color: subtitleColor)),
                 ],
@@ -486,14 +508,16 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                 style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   hintText: 'Search…',
-                  prefixIcon: Icon(Icons.search_rounded, color: subtitleColor, size: 20),
+                  prefixIcon: Icon(Icons.search_rounded,
+                      color: subtitleColor, size: 20),
                 ),
               ),
             ),
             Expanded(
               child: _filtered.isEmpty
                   ? Center(
-                      child: Text('No matches', style: TextStyle(color: subtitleColor)))
+                      child: Text('No matches',
+                          style: TextStyle(color: subtitleColor)))
                   : ListView.builder(
                       // Always a real scrollable list — every filtered
                       // entry is laid out and reachable, never capped.
@@ -505,10 +529,14 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                         return ListTile(
                           title: Text(option,
                               style: TextStyle(
-                                  color: selected ? AppColors.primary : textColor,
-                                  fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
+                                  color:
+                                      selected ? AppColors.primary : textColor,
+                                  fontWeight: selected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal)),
                           trailing: selected
-                              ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 18)
+                              ? const Icon(Icons.check_rounded,
+                                  color: AppColors.primary, size: 18)
                               : null,
                           onTap: () => Navigator.of(context).pop(option),
                         );
@@ -530,32 +558,200 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
 /// backend is unreachable when a state/state+city is needed, the field
 /// disables and the free-text fallback below it takes over instead.
 const List<String> _kAllCountries = [
-  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina',
-  'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados',
-  'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina',
-  'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia',
-  'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia',
-  'Comoros', 'Congo (Congo-Brazzaville)', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czechia',
-  'Democratic Republic of the Congo', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
-  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini',
-  'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana',
-  'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras',
-  'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy',
-  'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kosovo', 'Kuwait',
-  'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein',
-  'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta',
-  'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco',
-  'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal',
-  'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia',
-  'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay',
-  'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda',
-  'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa',
-  'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles',
-  'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia',
-  'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname',
-  'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand',
-  'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan',
-  'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States',
-  'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia',
+  'Afghanistan',
+  'Albania',
+  'Algeria',
+  'Andorra',
+  'Angola',
+  'Antigua and Barbuda',
+  'Argentina',
+  'Armenia',
+  'Australia',
+  'Austria',
+  'Azerbaijan',
+  'Bahamas',
+  'Bahrain',
+  'Bangladesh',
+  'Barbados',
+  'Belarus',
+  'Belgium',
+  'Belize',
+  'Benin',
+  'Bhutan',
+  'Bolivia',
+  'Bosnia and Herzegovina',
+  'Botswana',
+  'Brazil',
+  'Brunei',
+  'Bulgaria',
+  'Burkina Faso',
+  'Burundi',
+  'Cabo Verde',
+  'Cambodia',
+  'Cameroon',
+  'Canada',
+  'Central African Republic',
+  'Chad',
+  'Chile',
+  'China',
+  'Colombia',
+  'Comoros',
+  'Congo (Congo-Brazzaville)',
+  'Costa Rica',
+  'Croatia',
+  'Cuba',
+  'Cyprus',
+  'Czechia',
+  'Democratic Republic of the Congo',
+  'Denmark',
+  'Djibouti',
+  'Dominica',
+  'Dominican Republic',
+  'Ecuador',
+  'Egypt',
+  'El Salvador',
+  'Equatorial Guinea',
+  'Eritrea',
+  'Estonia',
+  'Eswatini',
+  'Ethiopia',
+  'Fiji',
+  'Finland',
+  'France',
+  'Gabon',
+  'Gambia',
+  'Georgia',
+  'Germany',
+  'Ghana',
+  'Greece',
+  'Grenada',
+  'Guatemala',
+  'Guinea',
+  'Guinea-Bissau',
+  'Guyana',
+  'Haiti',
+  'Honduras',
+  'Hungary',
+  'Iceland',
+  'India',
+  'Indonesia',
+  'Iran',
+  'Iraq',
+  'Ireland',
+  'Israel',
+  'Italy',
+  'Jamaica',
+  'Japan',
+  'Jordan',
+  'Kazakhstan',
+  'Kenya',
+  'Kiribati',
+  'Kosovo',
+  'Kuwait',
+  'Kyrgyzstan',
+  'Laos',
+  'Latvia',
+  'Lebanon',
+  'Lesotho',
+  'Liberia',
+  'Libya',
+  'Liechtenstein',
+  'Lithuania',
+  'Luxembourg',
+  'Madagascar',
+  'Malawi',
+  'Malaysia',
+  'Maldives',
+  'Mali',
+  'Malta',
+  'Marshall Islands',
+  'Mauritania',
+  'Mauritius',
+  'Mexico',
+  'Micronesia',
+  'Moldova',
+  'Monaco',
+  'Mongolia',
+  'Montenegro',
+  'Morocco',
+  'Mozambique',
+  'Myanmar',
+  'Namibia',
+  'Nauru',
+  'Nepal',
+  'Netherlands',
+  'New Zealand',
+  'Nicaragua',
+  'Niger',
+  'Nigeria',
+  'North Korea',
+  'North Macedonia',
+  'Norway',
+  'Oman',
+  'Pakistan',
+  'Palau',
+  'Palestine',
+  'Panama',
+  'Papua New Guinea',
+  'Paraguay',
+  'Peru',
+  'Philippines',
+  'Poland',
+  'Portugal',
+  'Qatar',
+  'Romania',
+  'Russia',
+  'Rwanda',
+  'Saint Kitts and Nevis',
+  'Saint Lucia',
+  'Saint Vincent and the Grenadines',
+  'Samoa',
+  'San Marino',
+  'Sao Tome and Principe',
+  'Saudi Arabia',
+  'Senegal',
+  'Serbia',
+  'Seychelles',
+  'Sierra Leone',
+  'Singapore',
+  'Slovakia',
+  'Slovenia',
+  'Solomon Islands',
+  'Somalia',
+  'South Africa',
+  'South Korea',
+  'South Sudan',
+  'Spain',
+  'Sri Lanka',
+  'Sudan',
+  'Suriname',
+  'Sweden',
+  'Switzerland',
+  'Syria',
+  'Taiwan',
+  'Tajikistan',
+  'Tanzania',
+  'Thailand',
+  'Timor-Leste',
+  'Togo',
+  'Tonga',
+  'Trinidad and Tobago',
+  'Tunisia',
+  'Turkey',
+  'Turkmenistan',
+  'Tuvalu',
+  'Uganda',
+  'Ukraine',
+  'United Arab Emirates',
+  'United Kingdom',
+  'United States',
+  'Uruguay',
+  'Uzbekistan',
+  'Vanuatu',
+  'Vatican City',
+  'Venezuela',
+  'Vietnam',
+  'Yemen',
+  'Zambia',
   'Zimbabwe',
 ];

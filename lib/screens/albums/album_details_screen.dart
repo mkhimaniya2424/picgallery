@@ -54,9 +54,6 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
     super.dispose();
   }
 
-
-
-
   /// Opens the Add Media bottom sheet, runs the matching `image_picker`
   /// flow, and stores the result only in the local `mediaProvider` +
   /// Hive-backed repository — no uploads, no backend calls.
@@ -67,7 +64,7 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
     final notifier = ref.read(uploadQueueProvider.notifier);
     await notifier.resetWizard();
     notifier.updateOptions(albumId: album.id, folderId: album.folderId);
-    
+
     if (!mounted) return;
     Navigator.of(context).pushNamed(AppRoutes.uploadQueue);
   }
@@ -89,22 +86,23 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
           shrinkWrap: true,
           children: [
             ListTile(
-              leading:
-                  const Icon(Icons.block_rounded, color: AppColors.subtitle),
-              title: const Text('No folder (unfile)'),
+              leading: Icon(Icons.block_rounded,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
+              title: Text('No folder (unfile)'),
               trailing: album.folderId == null
-                  ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                  ? Icon(Icons.check_rounded, color: AppColors.primary)
                   : null,
               onTap: () => Navigator.of(ctx).pop(_UnfileSentinel.instance),
             ),
             const Divider(height: 1),
             ...folders.map(
               (f) => ListTile(
-                leading:
-                    const Icon(Icons.folder_rounded, color: AppColors.primary),
+                leading: Icon(Icons.folder_rounded, color: AppColors.primary),
                 title: Text(f.name),
                 trailing: album.folderId == f.id
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    ? Icon(Icons.check_rounded, color: AppColors.primary)
                     : null,
                 onTap: () => Navigator.of(ctx).pop(f.id),
               ),
@@ -188,7 +186,7 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
               albumId: album.id,
               itemLabel: album.name,
             ),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
+            icon: Icon(Icons.person_add_alt_1_rounded),
           ),
           IconButton(
             tooltip: 'Share Settings',
@@ -198,7 +196,7 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                 arguments: album.id,
               );
             },
-            icon: const Icon(Icons.share_rounded),
+            icon: Icon(Icons.share_rounded),
           ),
           IconButton(
             tooltip:
@@ -212,7 +210,9 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                   ? AppColors.accent
                   : (Theme.of(context).brightness == Brightness.dark
                       ? AppColors.textOnDark
-                      : AppColors.text),
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text)),
             ),
           ),
         ],
@@ -227,18 +227,18 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                 // Two columns on wide/tablet layouts, single column on phones.
                 final isWide = constraints.maxWidth >= 720;
                 final content = ListView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   children: [
                     AlbumDetailsHeader(album: album),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     if (folder != null || album.description != null)
                       Builder(builder: (context) {
                         final isDark =
                             Theme.of(context).brightness == Brightness.dark;
                         return Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                          padding: EdgeInsets.all(AppSpacing.md),
+                          margin: EdgeInsets.only(bottom: AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: isDark
                                 ? AppColors.darkSurface
@@ -260,20 +260,23 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                                       fontWeight: FontWeight.w500,
                                       color: isDark
                                           ? AppColors.textOnDark
-                                          : AppColors.text),
+                                          : (Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? AppColors.textOnDark
+                                              : AppColors.text)),
                                 ),
                                 if (folder != null)
-                                  const SizedBox(height: AppSpacing.sm),
+                                  SizedBox(height: AppSpacing.sm),
                               ],
                               if (folder != null)
                                 Row(
                                   children: [
-                                    const Icon(Icons.folder_rounded,
+                                    Icon(Icons.folder_rounded,
                                         size: 16, color: AppColors.primary),
-                                    const SizedBox(width: 6),
+                                    SizedBox(width: 6),
                                     Text(
                                       'Filed under "${folder.name}"',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w700,
                                           color: AppColors.primary),
@@ -292,11 +295,11 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                               AppRoutes.adminAlbumEdit,
                               arguments: album.id,
                             ),
-                            icon: const Icon(Icons.edit_outlined),
-                            label: const Text('Edit Album'),
+                            icon: Icon(Icons.edit_outlined),
+                            label: Text('Edit Album'),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
+                        SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: _isMoving
@@ -304,28 +307,28 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                                 : () => _pickFolder(
                                     context, album, folderState.folders),
                             icon: _isMoving
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 16,
                                     height: 16,
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2))
-                                : const Icon(Icons.drive_file_move_rounded),
-                            label: const Text('Move'),
+                                : Icon(Icons.drive_file_move_rounded),
+                            label: Text('Move'),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: AppSpacing.sm),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.tonalIcon(
                         onPressed: () => Navigator.of(context)
                             .pushNamed(AppRoutes.adminFolderList),
-                        icon: const Icon(Icons.folder_open_rounded),
-                        label: const Text('Manage Folders'),
+                        icon: Icon(Icons.folder_open_rounded),
+                        label: Text('Manage Folders'),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(height: AppSpacing.xl),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -337,7 +340,10 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? AppColors.textOnDark
-                                  : AppColors.text),
+                                  : (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text)),
                         ),
                         if (hasMoreMedia)
                           TextButton(
@@ -346,12 +352,12 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                               arguments:
                                   MediaSearchArgs(initialAlbumId: album.id),
                             ),
-                            child: const Text('View All',
+                            child: Text('View All',
                                 style: TextStyle(fontWeight: FontWeight.w700)),
                           ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     AlbumMediaGrid(
                       media: previewMedia,
                       onAddMedia: () => _openAddMediaSheet(album),
@@ -388,7 +394,7 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
         heroTag: 'album_details_fab',
         tooltip: 'Add Media',
         onPressed: () => _openAddMediaSheet(album),
-        child: const Icon(Icons.add_rounded),
+        child: Icon(Icons.add_rounded),
       ),
     );
   }

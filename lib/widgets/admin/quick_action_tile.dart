@@ -35,9 +35,12 @@ class _QuickActionTileState extends State<QuickActionTile> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
+            color: isDark
+                ? AppColors.darkSurfaceRaised
+                : AppColors.surfaceElevated,
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+            border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.border),
             boxShadow: AppShadows.soft(widget.data.gradient.last,
                 opacity: 0.08, blur: 18, y: 9),
           ),

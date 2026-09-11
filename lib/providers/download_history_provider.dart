@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/network/api_client.dart';
 import '../models/download_history_model.dart';
 import '../models/user.dart' show AppUserRole;
-import '../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+import '../providers/auth_providers.dart'
+    show apiClientProvider, authStateProvider;
 import '../storage/download_history_local_store.dart';
 
 enum DownloadHistoryFilter {
@@ -121,7 +122,8 @@ class DownloadHistoryController extends ChangeNotifier {
         isClientUser ? '/client/download-history' : '/download-history',
       );
       final fetched = (response as List<dynamic>)
-          .map((e) => DownloadHistoryModel.fromApiJson(e as Map<String, dynamic>))
+          .map((e) =>
+              DownloadHistoryModel.fromApiJson(e as Map<String, dynamic>))
           .toList();
 
       // Mirror the full (undismissed-filtered-out-locally) response for

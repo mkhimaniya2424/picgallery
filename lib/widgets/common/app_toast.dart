@@ -14,7 +14,8 @@ import '../../core/theme/app_theme.dart';
 /// on-brand content: a floating rounded card, colored icon badge, and
 /// transparent stock chrome.
 class AppToast {
-  static void show(BuildContext context, String message, {bool isError = false}) {
+  static void show(BuildContext context, String message,
+      {bool isError = false}) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final messenger = ScaffoldMessenger.of(context);
@@ -26,10 +27,12 @@ class AppToast {
         backgroundColor: Colors.transparent,
         elevation: 0,
         duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+        margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
         padding: EdgeInsets.zero,
         content: Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: 12),
           decoration: BoxDecoration(
             color: theme.brightness == Brightness.dark
                 ? AppColors.darkSurface
@@ -55,12 +58,17 @@ class AppToast {
                 height: 30,
                 decoration: BoxDecoration(
                   gradient: isError
-                      ? LinearGradient(colors: [AppColors.error.withValues(alpha: 0.85), AppColors.error])
+                      ? LinearGradient(colors: [
+                          AppColors.error.withValues(alpha: 0.85),
+                          AppColors.error
+                        ])
                       : AppColors.buttonGradient,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                  isError
+                      ? Icons.error_outline_rounded
+                      : Icons.check_circle_outline_rounded,
                   color: Colors.white,
                   size: 16,
                 ),

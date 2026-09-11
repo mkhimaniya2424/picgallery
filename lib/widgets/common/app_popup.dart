@@ -53,12 +53,16 @@ class AppPopup extends StatelessWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 12)),
           ],
         ),
         child: Column(
@@ -69,12 +73,17 @@ class AppPopup extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 gradient: isError
-                    ? LinearGradient(colors: [AppColors.error.withValues(alpha: 0.85), AppColors.error])
+                    ? LinearGradient(colors: [
+                        AppColors.error.withValues(alpha: 0.85),
+                        AppColors.error
+                      ])
                     : AppColors.buttonGradient,
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isError ? Icons.error_outline_rounded : Icons.mark_email_unread_rounded,
+                isError
+                    ? Icons.error_outline_rounded
+                    : Icons.mark_email_unread_rounded,
                 color: Colors.white,
                 size: 30,
               ),
@@ -89,7 +98,8 @@ class AppPopup extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
+              style:
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
             const SizedBox(height: AppSpacing.lg),
             SizedBox(

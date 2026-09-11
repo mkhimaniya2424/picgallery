@@ -162,7 +162,9 @@ class AlbumModel {
   /// included on every save — the backend only touches keys that are
   /// present (`exclude_unset=True`), so intentionally-null fields must
   /// be signaled via the explicit `clear_*` flags rather than omission.
-  Map<String, dynamic> toUpdateJson({bool clearDescription = false, bool clearFolder = false}) => {
+  Map<String, dynamic> toUpdateJson(
+          {bool clearDescription = false, bool clearFolder = false}) =>
+      {
         'name': name,
         'description': description,
         'clear_description': clearDescription,
@@ -248,7 +250,8 @@ class AlbumModel {
       studioId: studioId ?? this.studioId,
       studioName: studioName ?? this.studioName,
       studioAvatarUrl: studioAvatarUrl ?? this.studioAvatarUrl,
-      hasProtectedShareLink: hasProtectedShareLink ?? this.hasProtectedShareLink,
+      hasProtectedShareLink:
+          hasProtectedShareLink ?? this.hasProtectedShareLink,
     );
   }
 }

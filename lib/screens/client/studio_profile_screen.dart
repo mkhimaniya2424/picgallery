@@ -19,10 +19,12 @@ class StudioProfileScreen extends ConsumerStatefulWidget {
   const StudioProfileScreen({super.key, required this.studioId});
 
   @override
-  ConsumerState<StudioProfileScreen> createState() => _StudioProfileScreenState();
+  ConsumerState<StudioProfileScreen> createState() =>
+      _StudioProfileScreenState();
 }
 
-class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with SingleTickerProviderStateMixin {
+class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isOpeningViewer = false;
 
@@ -50,24 +52,23 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
 
     if (provider.isLoadingDirectory && provider.studios.isEmpty) {
       return Scaffold(
-        
         appBar: AppBar(backgroundColor: AppColors.primary, elevation: 0),
-        body: const Center(child: LoadingWidget(message: 'Loading studio…')),
+        body: Center(child: LoadingWidget(message: 'Loading studio…')),
       );
     }
 
     if (provider.directoryError != null && provider.studios.isEmpty) {
       return Scaffold(
-        
         appBar: AppBar(backgroundColor: AppColors.primary, elevation: 0),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: InlineErrorBanner(
               message: provider.directoryError!,
               action: TextButton(
-                onPressed: () => ref.read(studioProvider.notifier).loadDirectory(),
-                child: const Text('Retry'),
+                onPressed: () =>
+                    ref.read(studioProvider.notifier).loadDirectory(),
+                child: Text('Retry'),
               ),
             ),
           ),
@@ -75,17 +76,17 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
       );
     }
 
-    final studioIndex = provider.studios.indexWhere((s) => s.id == widget.studioId);
+    final studioIndex =
+        provider.studios.indexWhere((s) => s.id == widget.studioId);
     if (studioIndex == -1) {
       return Scaffold(
-        
         appBar: AppBar(backgroundColor: AppColors.primary, elevation: 0),
-        body: const Center(
+        body: Center(
           child: Padding(
             padding: EdgeInsets.all(AppSpacing.md),
             child: Text(
               "This studio couldn't be found.",
-              style: TextStyle(color: AppColors.subtitle, fontSize: 14),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 14),
             ),
           ),
         ),
@@ -94,7 +95,6 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     final studio = provider.studios[studioIndex];
 
     return Scaffold(
-      
       body: NestedScrollView(
         clipBehavior: Clip.none,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -109,17 +109,22 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
               actions: [
                 IconButton(
                   icon: Icon(
-                    studio.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    studio.isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
                     color: studio.isFavorite ? AppColors.error : Colors.white,
                   ),
-                  onPressed: () => ref.read(studioProvider.notifier).toggleFavorite(studio.id),
+                  onPressed: () => ref
+                      .read(studioProvider.notifier)
+                      .toggleFavorite(studio.id),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.share_rounded),
+                  icon: Icon(Icons.share_rounded),
                   onPressed: () {
                     // Create a shareable URL or deep link for the studio
                     // For now, share a descriptive text with a placeholder link
-                    final shareText = 'Check out ${studio.name} on PicGallery!\n\nhttps://picgallery.app/studio/${studio.id}';
+                    final shareText =
+                        'Check out ${studio.name} on PicGallery!\n\nhttps://picgallery.app/studio/${studio.id}';
                     SharePlus.instance.share(
                       ShareParams(text: shareText),
                     );
@@ -162,170 +167,182 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             children: [
               // 1. Studio Info Header Area
               Padding(
-                padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.md, top: 10),
+                padding: EdgeInsets.only(
+                    left: AppSpacing.md, right: AppSpacing.md, top: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                      // Studio Logo
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: SafeNetworkImage(
-                          studio.logoUrl,
-                          placeholderIcon: Icons.business_rounded,
-                          fit: BoxFit.cover,
-                          borderRadius: BorderRadius.circular(1000),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Name and Rating
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              studio.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.text,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star_rounded, color: AppColors.gold, size: 20),
-                              const SizedBox(width: 4),
-                              Text(
-                                studio.rating.toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: AppColors.text,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '(${studio.reviewCount})',
-                                style: const TextStyle(
-                                  color: AppColors.subtitle,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
+                    // Studio Logo
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        border: Border.all(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 16),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              studio.location,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: AppColors.subtitle, fontSize: 13.5),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Icon(Icons.link_rounded, color: AppColors.primary, size: 16),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              studio.website,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: SafeNetworkImage(
+                        studio.logoUrl,
+                        placeholderIcon: Icons.business_rounded,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(1000),
                       ),
-                      const SizedBox(height: 12),
+                    ),
+                    SizedBox(height: 12),
 
-                      // Tags
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: studio.categories.map((cat) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8), 
+                    // Name and Rating
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            studio.name,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                             ),
-                            child: Text(
-                              cat,
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 12,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.star_rounded,
+                                color: AppColors.gold, size: 20),
+                            SizedBox(width: 4),
+                            Text(
+                              studio.rating.toString(),
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                               ),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Connect Button
-                      _buildConnectButton(studio),
-                      const SizedBox(height: 20),
-
-                      // Tab Bar
-                      Container(
-                        decoration: const BoxDecoration(
-                          border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
-                        ),
-                        child: TabBar(
-                          controller: _tabController,
-                          indicatorColor: AppColors.primary,
-                          indicatorWeight: 3,
-                          labelColor: AppColors.primary,
-                          unselectedLabelColor: AppColors.subtitle,
-                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
-                          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14.5),
-                          tabs: const [
-                            Tab(text: 'About'),
-                            Tab(text: 'Portfolio Gallery'),
+                            SizedBox(width: 4),
+                            Text(
+                              '(${studio.reviewCount})',
+                              style: TextStyle(
+                                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_rounded,
+                            color: AppColors.primary, size: 16),
+                        SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            studio.location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 13.5),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Icon(Icons.link_rounded,
+                            color: AppColors.primary, size: 16),
+                        SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            studio.website,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
 
-                      // Tab Contents
-                      const SizedBox(height: 16),
-                      AnimatedBuilder(
-                        animation: _tabController,
-                        builder: (context, child) {
-                          if (_tabController.index == 0) {
-                            return _buildAboutTab(studio);
-                          } else {
-                            return _buildPortfolioTab(studio);
-                          }
-                        },
+                    // Tags
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: studio.categories.map((cat) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            cat,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(height: 20),
+
+                    // Connect Button
+                    _buildConnectButton(studio),
+                    SizedBox(height: 20),
+
+                    // Tab Bar
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                            bottom:
+                                BorderSide(color: AppColors.border, width: 1)),
                       ),
-                    ],
-                  ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicatorColor: AppColors.primary,
+                        indicatorWeight: 3,
+                        labelColor: AppColors.primary,
+                        unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                        labelStyle: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14.5),
+                        unselectedLabelStyle: TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14.5),
+                        tabs: const [
+                          Tab(text: 'About'),
+                          Tab(text: 'Portfolio Gallery'),
+                        ],
+                      ),
+                    ),
+
+                    // Tab Contents
+                    SizedBox(height: 16),
+                    AnimatedBuilder(
+                      animation: _tabController,
+                      builder: (context, child) {
+                        if (_tabController.index == 0) {
+                          return _buildAboutTab(studio);
+                        } else {
+                          return _buildPortfolioTab(studio);
+                        }
+                      },
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
         ),
@@ -341,7 +358,9 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         final success = await notifier.requestConnection(studio.id);
         if (!mounted) return;
         _showConnectSnack(
-          success ? 'Connection request sent to ${studio.name}!' : 'Could not send the request. Try again.',
+          success
+              ? 'Connection request sent to ${studio.name}!'
+              : 'Could not send the request. Try again.',
           isError: !success,
         );
         break;
@@ -350,11 +369,16 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Withdraw request?'),
-            content: Text('Your pending request to ${studio.name} will be withdrawn.'),
+            title: Text('Withdraw request?'),
+            content: Text(
+                'Your pending request to ${studio.name} will be withdrawn.'),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-              TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Withdraw')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Withdraw')),
             ],
           ),
         );
@@ -362,7 +386,9 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         final success = await notifier.withdrawConnectionRequest(studio.id);
         if (!mounted) return;
         _showConnectSnack(
-          success ? 'Request to ${studio.name} withdrawn.' : 'Could not withdraw the request. Try again.',
+          success
+              ? 'Request to ${studio.name} withdrawn.'
+              : 'Could not withdraw the request. Try again.',
           isError: !success,
         );
         break;
@@ -371,36 +397,48 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         final confirmDisconnect = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Disconnect from Studio?'),
-            content: Text('Are you sure you want to disconnect from ${studio.name}? You will lose access to any private galleries they shared with you.'),
+            title: Text('Disconnect from Studio?'),
+            content: Text(
+                'Are you sure you want to disconnect from ${studio.name}? You will lose access to any private galleries they shared with you.'),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel')),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Disconnect', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+                child: Text('Disconnect',
+                    style: TextStyle(
+                        color: AppColors.error, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         );
 
         if (confirmDisconnect != true) return;
-        
+
         final connections = ref.read(connectionsProvider).valueOrNull ?? [];
-        final connection = connections.cast<StudioClientConnection?>().firstWhere(
-              (c) => c?.studioId == studio.id && c?.status == ConnectionStatus.connected,
-              orElse: () => null,
-            );
-            
+        final connection =
+            connections.cast<StudioClientConnection?>().firstWhere(
+                  (c) =>
+                      c?.studioId == studio.id &&
+                      c?.status == ConnectionStatus.connected,
+                  orElse: () => null,
+                );
+
         if (connection != null) {
           try {
-            await ref.read(connectionsProvider.notifier).disconnect(connection.id);
+            await ref
+                .read(connectionsProvider.notifier)
+                .disconnect(connection.id);
             // Revert studio connection status back to not connected
-            notifier.updateConnectionStatus(studio.id, StudioConnectionStatus.notConnected);
+            notifier.updateConnectionStatus(
+                studio.id, StudioConnectionStatus.notConnected);
             if (!mounted) return;
             _showConnectSnack('Disconnected from ${studio.name}.');
           } catch (e) {
             if (!mounted) return;
-            _showConnectSnack('Could not disconnect. Try again: $e', isError: true);
+            _showConnectSnack('Could not disconnect. Try again: $e',
+                isError: true);
           }
         }
         break;
@@ -413,8 +451,12 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
       SnackBar(
         content: Row(
           children: [
-            Icon(isError ? Icons.error_outline_rounded : Icons.check_circle_rounded, color: Colors.white),
-            const SizedBox(width: 8),
+            Icon(
+                isError
+                    ? Icons.error_outline_rounded
+                    : Icons.check_circle_rounded,
+                color: Colors.white),
+            SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
@@ -427,8 +469,8 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
 
   Widget _buildConnectButton(StudioModel studio) {
     final status = studio.connectionStatus;
-    final isPendingCall =
-        ref.watch(studioProvider.select((p) => p.pendingConnectionIds.contains(studio.id)));
+    final isPendingCall = ref.watch(studioProvider
+        .select((p) => p.pendingConnectionIds.contains(studio.id)));
     Color buttonColor;
     Color textColor;
     String label;
@@ -486,12 +528,13 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             ? SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
+                child:
+                    CircularProgressIndicator(strokeWidth: 2, color: textColor),
               )
             : Icon(icon, size: 20),
         label: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14.5,
             fontWeight: FontWeight.bold,
           ),
@@ -520,23 +563,23 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         // Biography Card
         GlassCard(
           borderRadius: 16,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'About the Studio',
                 style: TextStyle(
-                  color: AppColors.text,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 studio.about,
-                style: const TextStyle(
-                  color: AppColors.subtitle,
+                style: TextStyle(
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                   fontSize: 13.5,
                   height: 1.5,
                 ),
@@ -544,24 +587,24 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // Contact details Card
         GlassCard(
           borderRadius: 16,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Contact Information',
                 style: TextStyle(
-                  color: AppColors.text,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
               if (studio.email.isNotEmpty) ...[
                 _buildContactRow(
                   Icons.email_outlined,
@@ -626,17 +669,17 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                   studio.facebookUrl.isEmpty &&
                   studio.youtubeUrl.isEmpty &&
                   studio.pinterestUrl.isEmpty)
-                const Text(
+                Text(
                   'No contact information provided.',
-                  style: TextStyle(color: AppColors.subtitle, fontSize: 13.5),
+                  style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 13.5),
                 ),
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
 
         // Business details
-        const Padding(
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,7 +687,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
               Text(
                 'Operational Hours',
                 style: TextStyle(
-                  color: AppColors.text,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -653,7 +696,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
               Text(
                 'Monday – Saturday: 10:00 AM – 7:30 PM\nSunday: By appointment only',
                 style: TextStyle(
-                  color: AppColors.subtitle,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                   fontSize: 13,
                   height: 1.4,
                 ),
@@ -661,40 +704,41 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             ],
           ),
         ),
-        const SizedBox(height: 30),
+        SizedBox(height: 30),
       ],
     );
   }
 
-  Widget _buildContactRow(IconData icon, String title, String val, {VoidCallback? onTap}) {
+  Widget _buildContactRow(IconData icon, String title, String val,
+      {VoidCallback? onTap}) {
     final row = Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: AppColors.primary, size: 18),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.subtitle,
+                style: TextStyle(
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 val,
-                style: const TextStyle(
-                  color: AppColors.text,
+                style: TextStyle(
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
                 ),
@@ -710,7 +754,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: row,
         ),
       );
@@ -722,14 +766,14 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             'Showcase Portfolio',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
             ),
           ),
         ),
@@ -760,7 +804,7 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
                     if (loadingProgress == null) return child;
                     return Container(
                       color: AppColors.border.withValues(alpha: 0.5),
-                      child: const Center(
+                      child: Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     );
@@ -770,12 +814,13 @@ class _StudioProfileScreenState extends ConsumerState<StudioProfileScreen> with 
             );
           },
         ),
-        const SizedBox(height: 40),
+        SizedBox(height: 40),
       ],
     );
   }
 
-  void _openFullscreenViewer(BuildContext context, List<String> urls, int initialIndex) {
+  void _openFullscreenViewer(
+      BuildContext context, List<String> urls, int initialIndex) {
     // Guard against rapid double-taps pushing this route twice, which would
     // mount two Hero widgets with the same tag at once and crash Flutter's
     // Hero flight matching ("multiple heroes share the same tag" / the
@@ -812,10 +857,12 @@ class FullscreenImageSwipeViewer extends StatefulWidget {
   });
 
   @override
-  State<FullscreenImageSwipeViewer> createState() => _FullscreenImageSwipeViewerState();
+  State<FullscreenImageSwipeViewer> createState() =>
+      _FullscreenImageSwipeViewerState();
 }
 
-class _FullscreenImageSwipeViewerState extends State<FullscreenImageSwipeViewer> {
+class _FullscreenImageSwipeViewerState
+    extends State<FullscreenImageSwipeViewer> {
   late PageController _pageController;
   late int _currentIndex;
 
@@ -876,27 +923,29 @@ class _FullscreenImageSwipeViewerState extends State<FullscreenImageSwipeViewer>
                 CircleAvatar(
                   backgroundColor: Colors.black45,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                    icon: Icon(Icons.arrow_back_rounded,
+                        color: Colors.white),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
                 // Indicator Text
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.black45,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     '${_currentIndex + 1} / ${widget.urls.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(width: 40), // Placeholder to center indicator
+                SizedBox(width: 40), // Placeholder to center indicator
               ],
             ),
           ),

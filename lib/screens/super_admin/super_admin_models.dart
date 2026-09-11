@@ -61,7 +61,8 @@ class PlatformUser {
   final String city;
   final String? studioName; // studio-only
   final SubscriptionStatus subscriptionStatus; // studio-only; .none for clients
-  final String? linkedAccountId; // id of this email's other-role account, if any
+  final String?
+      linkedAccountId; // id of this email's other-role account, if any
 
   const PlatformUser({
     required this.id,
@@ -80,7 +81,8 @@ class PlatformUser {
     final parts = fullName.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
   }
 }
 

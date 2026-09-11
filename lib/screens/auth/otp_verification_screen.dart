@@ -140,7 +140,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.32),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.32),
                                 blurRadius: 32,
                                 offset: const Offset(0, 14),
                               ),
@@ -225,8 +226,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
             ),
           ),
+        ),
       ),
-    ),
-  );
+    );
   }
 }

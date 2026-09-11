@@ -108,9 +108,10 @@ class AlbumCard extends ConsumerWidget {
       required int videoCount,
       required int folderCount}) {
     final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
           ClipRRect(
@@ -125,7 +126,7 @@ class AlbumCard extends ConsumerWidget {
                     ),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -141,7 +142,7 @@ class AlbumCard extends ConsumerWidget {
                     color: titleColor,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   '$photoCount Photos • $videoCount Videos',
                   style: TextStyle(
@@ -156,7 +157,7 @@ class AlbumCard extends ConsumerWidget {
                     color: subtitleColor,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 _BottomRow(
                   isDark: isDark,
                   isFavorite: album.isFavorite,
@@ -180,13 +181,14 @@ class AlbumCard extends ConsumerWidget {
       required int videoCount,
       required int folderCount}) {
     final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     // mainAxisSize.min + a fixed gap (instead of a Spacer) so the
     // bottom row sits right under the text instead of being pushed to
     // the bottom of a tall grid cell, which is what was leaving a big
     // empty gap in the middle of every card.
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +204,7 @@ class AlbumCard extends ConsumerWidget {
                     ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             album.name,
             maxLines: 1,
@@ -213,7 +215,7 @@ class AlbumCard extends ConsumerWidget {
               color: titleColor,
             ),
           ),
-          const SizedBox(height: 3),
+          SizedBox(height: 3),
           Text(
             folderCount > 0
                 ? '$photoCount photos • $videoCount videos • $folderCount folders'
@@ -225,7 +227,7 @@ class AlbumCard extends ConsumerWidget {
               color: subtitleColor,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           _BottomRow(
             isDark: isDark,
             isFavorite: album.isFavorite,

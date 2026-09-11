@@ -50,11 +50,15 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
   }
 
   List<StudioClientConnection> connectionsForClient(String clientId) {
-    return (state.valueOrNull ?? []).where((c) => c.clientId == clientId).toList();
+    return (state.valueOrNull ?? [])
+        .where((c) => c.clientId == clientId)
+        .toList();
   }
 
   List<StudioClientConnection> connectionsForStudio(String studioId) {
-    return (state.valueOrNull ?? []).where((c) => c.studioId == studioId).toList();
+    return (state.valueOrNull ?? [])
+        .where((c) => c.studioId == studioId)
+        .toList();
   }
 
   /// Returns pending requests for a given studio — i.e. connections a
@@ -82,7 +86,8 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
   /// it into [state]), or `null` if it didn't — in that case there's
   /// nothing to add to [state] yet, since the connection only becomes
   /// real once that email signs up.
-  Future<ConnectionInviteByEmailResult> studioInviteByEmail(String email) async {
+  Future<ConnectionInviteByEmailResult> studioInviteByEmail(
+      String email) async {
     final result = await _repo.inviteByEmail(email);
     if (result.connection != null) {
       _upsert(result.connection!);

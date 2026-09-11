@@ -11,7 +11,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/media_format_utils.dart';
 import '../../models/media_model.dart';
 import '../../models/user.dart' show AppUserRole;
-import '../../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+import '../../providers/auth_providers.dart'
+    show apiClientProvider, authStateProvider;
 import '../../providers/media_provider.dart';
 import '../../services/download_service.dart';
 import '../../services/download_service_impl.dart';
@@ -161,11 +162,13 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
           expand: false,
           builder: (context, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
-                color: AppColors.background,
+              decoration: BoxDecoration(
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkBackground
+                    : AppColors.background),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.sm,
                 AppSpacing.md,
@@ -175,7 +178,9 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                 final lc = ref.watch(mediaLikesCommentsProvider);
                 if (!lc.hasFetchedComments(media.id)) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ref.read(mediaLikesCommentsProvider).fetchComments(media.id);
+                    ref
+                        .read(mediaLikesCommentsProvider)
+                        .fetchComments(media.id);
                   });
                 }
                 return MediaCommentsSection(
@@ -329,7 +334,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
           child: Center(
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
+              child: Text(
                 'This media no longer exists',
                 style: TextStyle(color: Colors.white),
               ),
@@ -456,7 +461,8 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
           fileName: result.fileName,
           mediaId: current.id,
           apiClient: ref.read(apiClientProvider),
-          isClientUser: ref.read(authStateProvider).user?.role == AppUserRole.client,
+          isClientUser:
+              ref.read(authStateProvider).user?.role == AppUserRole.client,
         );
       } else {
         final filePath = await _viewerFileCache.localPathFor(current);
@@ -479,7 +485,8 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
           filePath: filePath,
           mediaId: current.id,
           apiClient: ref.read(apiClientProvider),
-          isClientUser: ref.read(authStateProvider).user?.role == AppUserRole.client,
+          isClientUser:
+              ref.read(authStateProvider).user?.role == AppUserRole.client,
         );
       }
 
@@ -499,17 +506,17 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Delete media?'),
-          content: const Text('This removes the media from your library.'),
+          title: Text('Delete media?'),
+          content: Text('This removes the media from your library.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
             ),
             FilledButton.tonal(
               style: FilledButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Delete'),
+              child: Text('Delete'),
             ),
           ],
         ),
@@ -542,7 +549,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
       final newName = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Rename media'),
+          title: Text('Rename media'),
           content: TextField(
             controller: nameController,
             decoration: const InputDecoration(
@@ -552,11 +559,11 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
             ),
             FilledButton.tonal(
               onPressed: () => Navigator.of(ctx).pop(nameController.text),
-              child: const Text('Save'),
+              child: Text('Save'),
             ),
           ],
         ),
@@ -626,10 +633,11 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                       turns: const AlwaysStoppedAnimation(
                                           -25 / 360),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(
+                                        padding: EdgeInsets.symmetric(
                                             horizontal: 16, vertical: 8),
                                         decoration: BoxDecoration(
-                                          color: Colors.black12.withValues(alpha: 0.04),
+                                          color: Colors.black12
+                                              .withValues(alpha: 0.04),
                                           borderRadius:
                                               BorderRadius.circular(8),
                                         ),
@@ -637,7 +645,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                           AppStrings.appName,
                                           style: TextStyle(
                                             color:
-                                                Colors.white.withOpacity(0.24),
+                                                Colors.white.withValues(alpha: 0.24),
                                             fontSize: 28,
                                             fontWeight: FontWeight.w900,
                                             letterSpacing: 2.5,
@@ -666,7 +674,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                       child: Row(
                         children: [
@@ -680,11 +688,11 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                           const Spacer(),
                           Text(
                             '${safeIndex + 1} / ${items.length}',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
+                          SizedBox(width: AppSpacing.sm),
                           _RoundIconButton(
                             icon: current.isFavorite
                                 ? Icons.favorite_rounded
@@ -702,18 +710,18 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                     if (_chromeVisible) const Spacer(),
                     if (_infoVisible && _chromeVisible)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                             AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
                         child: _InfoPanel(media: current),
                       ),
                     Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: BackdropFilter(
                           filter: ui.ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                           child: Container(
-                            padding: const EdgeInsets.fromLTRB(AppSpacing.md,
+                            padding: EdgeInsets.fromLTRB(AppSpacing.md,
                                 AppSpacing.sm, AppSpacing.md, AppSpacing.md),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.65),
@@ -735,14 +743,14 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                             current.fileName,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: Colors.white,
                                               fontWeight: FontWeight.w700,
                                               fontSize: 14,
                                               letterSpacing: 0.2,
                                             ),
                                           ),
-                                          const SizedBox(height: 2),
+                                          SizedBox(height: 2),
                                           Text(
                                             MediaFormatUtils.formatDate(
                                                 current.createdAt),
@@ -772,7 +780,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                     )
                                   ],
                                 ),
-                                const SizedBox(height: AppSpacing.sm),
+                                SizedBox(height: AppSpacing.sm),
                                 Wrap(
                                   spacing: AppSpacing.xs + 2,
                                   runSpacing: AppSpacing.xs + 2,
@@ -791,7 +799,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                       ),
                                     // Allow likes/comments regardless of shareLinkId.
                                     // The user must be authenticated to like/comment, but we handle
-                                    // that by checking if they have an active session (which the 
+                                    // that by checking if they have an active session (which the
                                     // backend requires for /like and /comments).
                                     Consumer(builder: (context, ref, _) {
                                       final lc =
@@ -806,28 +814,33 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                             liked: likeState.liked,
                                             likeCount: likeState.count,
                                             onToggle: () {
-                                              final auth = ref.read(authStateProvider);
+                                              final auth =
+                                                  ref.read(authStateProvider);
                                               if (auth.user == null) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Please log in or create an account to like photos.'))
-                                                );
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            'Please log in or create an account to like photos.')));
                                                 return;
                                               }
                                               lc.toggleLike(current.id);
                                             },
                                           ),
-                                          const SizedBox(width: AppSpacing.sm),
+                                          SizedBox(width: AppSpacing.sm),
                                           _ActionChip(
-                                            icon: Icons.chat_bubble_outline_rounded,
+                                            icon: Icons
+                                                .chat_bubble_outline_rounded,
                                             label: current.commentCount > 0
                                                 ? '${current.commentCount}'
                                                 : 'Comment',
                                             onTap: () {
-                                              final auth = ref.read(authStateProvider);
+                                              final auth =
+                                                  ref.read(authStateProvider);
                                               if (auth.user == null) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Please log in or create an account to comment.'))
-                                                );
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            'Please log in or create an account to comment.')));
                                                 return;
                                               }
                                               _openComments(current);
@@ -840,7 +853,8 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                       _ActionChip(
                                         icon: Icons.drive_file_move_rounded,
                                         label: 'Move',
-                                        onTap: () => MediaBatchWorkflows.openMove(
+                                        onTap: () =>
+                                            MediaBatchWorkflows.openMove(
                                           context: context,
                                           mediaIds: [current.id],
                                         ),
@@ -848,7 +862,8 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                       _ActionChip(
                                         icon: Icons.copy_all_rounded,
                                         label: 'Copy',
-                                        onTap: () => MediaBatchWorkflows.openCopy(
+                                        onTap: () =>
+                                            MediaBatchWorkflows.openCopy(
                                           context: context,
                                           mediaIds: [current.id],
                                         ),
@@ -860,8 +875,8 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                                           onTap: () {
                                             Navigator.of(context).pushNamed(
                                               AppRoutes.photoEditor,
-                                              arguments:
-                                                  PhotoEditorArgs(media: current),
+                                              arguments: PhotoEditorArgs(
+                                                  media: current),
                                             );
                                           },
                                         ),
@@ -978,7 +993,7 @@ class _InfoPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.68),
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -1000,7 +1015,7 @@ class _InfoPanel extends StatelessWidget {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1008,7 +1023,7 @@ class _InfoPanel extends StatelessWidget {
             width: 80,
             child: Text(
               '$label: ',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white70,
                 fontSize: 11.5,
                 fontWeight: FontWeight.bold,
@@ -1018,7 +1033,7 @@ class _InfoPanel extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 11.5,
               ),
@@ -1048,7 +1063,7 @@ class _ActionChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(20),
@@ -1058,10 +1073,10 @@ class _ActionChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: iconColor ?? Colors.white),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,

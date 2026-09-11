@@ -202,5 +202,5 @@ class ChatNotifier extends Notifier<ChatState> {
   }
 }
 
-final chatProvider = NotifierProvider<ChatNotifier, ChatState>(ChatNotifier.new);
-
+final chatProvider =
+    NotifierProvider<ChatNotifier, ChatState>(ChatNotifier.new);

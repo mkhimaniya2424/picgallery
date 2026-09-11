@@ -10,7 +10,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/media_format_utils.dart';
 import '../../models/media_model.dart';
 import '../../models/user.dart' show AppUserRole;
-import '../../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+import '../../providers/auth_providers.dart'
+    show apiClientProvider, authStateProvider;
 import '../../providers/media_provider.dart';
 import '../../providers/media_likes_comments_provider.dart';
 import '../../services/download_service.dart';
@@ -98,7 +99,8 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     await _shareService.shareMedia(context: context, filePath: filePath);
   }
 
-  Future<void> _downloadMedia(BuildContext context, WidgetRef ref, MediaModel media) async {
+  Future<void> _downloadMedia(
+      BuildContext context, WidgetRef ref, MediaModel media) async {
     bool saved = false;
     String? localPath;
     final apiClient = ref.read(apiClientProvider);
@@ -143,7 +145,8 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
   /// mirrors [_downloadMedia]'s web branch and falls back to the same
   /// in-memory "save as" flow. Permission prompts and the success/failure
   /// snackbar are handled inside [DownloadService.saveToGallery] itself.
-  Future<void> _saveMediaToGallery(BuildContext context, WidgetRef ref, MediaModel media) async {
+  Future<void> _saveMediaToGallery(
+      BuildContext context, WidgetRef ref, MediaModel media) async {
     bool saved = false;
     String? localPath;
     final apiClient = ref.read(apiClientProvider);
@@ -190,7 +193,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rename media'),
+        title: Text('Rename media'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(hintText: 'Enter new file name'),
@@ -198,11 +201,11 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton.tonal(
             onPressed: () => Navigator.of(ctx).pop(nameController.text),
-            child: const Text('Save'),
+            child: Text('Save'),
           ),
         ],
       ),
@@ -219,17 +222,17 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete media?'),
-        content: const Text('This removes the media from your library.'),
+        title: Text('Delete media?'),
+        content: Text('This removes the media from your library.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -262,7 +265,9 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
       );
     }
 
-    final ids = widget.mediaIds != null ? widget.mediaIds!.toSet().toList() : [media.id];
+    final ids = widget.mediaIds != null
+        ? widget.mediaIds!.toSet().toList()
+        : [media.id];
     final index = ids.indexOf(media.id);
     final safeIndex = index == -1 ? 0 : index;
 
@@ -278,12 +283,12 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     final videoThumbPath = media.displayThumbnailPath;
     final videoThumbIsNetwork = videoThumbPath.startsWith('http://') ||
         videoThumbPath.startsWith('https://');
-    final videoThumbFile =
-        (!videoThumbIsNetwork && videoThumbPath.isNotEmpty)
-            ? File(videoThumbPath)
-            : null;
-    final hasVideoThumb = (videoThumbFile != null && videoThumbFile.existsSync()) ||
-        (videoThumbIsNetwork && videoThumbPath.isNotEmpty);
+    final videoThumbFile = (!videoThumbIsNetwork && videoThumbPath.isNotEmpty)
+        ? File(videoThumbPath)
+        : null;
+    final hasVideoThumb =
+        (videoThumbFile != null && videoThumbFile.existsSync()) ||
+            (videoThumbIsNetwork && videoThumbPath.isNotEmpty);
 
     void openFullScreen() {
       Navigator.of(context).pushNamed(
@@ -292,7 +297,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
             : AppRoutes.videoPlayer,
         arguments: media.type == MediaType.photo
             ? ImageViewerArgs(
-                mediaIds: ids, 
+                mediaIds: ids,
                 initialIndex: safeIndex,
                 readOnly: isClientUser,
               )
@@ -319,7 +324,11 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
               media.isFavorite
                   ? Icons.favorite_rounded
                   : Icons.favorite_border_rounded,
-              color: media.isFavorite ? AppColors.accent : AppColors.text,
+              color: media.isFavorite
+                  ? AppColors.accent
+                  : (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text),
             ),
           ),
         ],
@@ -334,7 +343,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: EdgeInsets.all(AppSpacing.xl),
           child: Column(
             children: [
               Container(
@@ -405,7 +414,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                                 right: AppSpacing.md,
                                 bottom: AppSpacing.md,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
+                                  padding: EdgeInsets.symmetric(
                                     horizontal: 10,
                                     vertical: 5,
                                   ),
@@ -416,7 +425,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                                   child: Text(
                                     MediaFormatUtils.formatDuration(
                                         media.duration),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
@@ -432,7 +441,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                 ),
               ),
 
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
 
               // Extra actions (Share / Download / Move / Copy / Rename) —
               // previously only available from the full-screen player, now
@@ -483,7 +492,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                 ],
               ),
 
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
 
               // Likes + Comments
               Consumer(builder: (context, ref, _) {
@@ -498,7 +507,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                 final likeState = lc.likeStateFor(media.id);
 
                 // The `initState` already requests fresh comments when this screen opens.
-                
+
                 final likes = lc.likesForMedia(media.id);
 
                 return Column(
@@ -515,10 +524,16 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                     ),
                     if (likes.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                         child: Text(
                           'Liked by: ${likes.map((l) => l.userFullName).join(', ')}',
-                          style: const TextStyle(color: AppColors.subtitle, fontSize: 12),
+                          style: TextStyle(
+                              color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle),
+                              fontSize: 12),
                         ),
                       ),
                     const Divider(height: 24),
@@ -605,14 +620,18 @@ class _DetailsActionChip extends StatelessWidget {
       avatar: Icon(icon, size: 16, color: AppColors.primary),
       label: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.text,
+        style: TextStyle(
+          color: (Theme.of(context).brightness == Brightness.dark
+              ? AppColors.textOnDark
+              : AppColors.text),
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
       ),
       onPressed: onTap,
-      backgroundColor: AppColors.surface,
+      backgroundColor: (Theme.of(context).brightness == Brightness.dark
+          ? AppColors.darkSurface
+          : AppColors.surface),
       side: const BorderSide(color: AppColors.border),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -642,7 +661,7 @@ class _MediaStitchBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.lg,
           AppSpacing.sm,
           AppSpacing.lg,
@@ -663,11 +682,11 @@ class _MediaStitchBottomBar extends StatelessWidget {
                 ),
                 label: Text(
                   isVideo ? 'Play Video' : 'View Full Screen',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: AppSpacing.sm),
             Expanded(
               child: IconButton.filledTonal(
                 onPressed: onFavorite,
@@ -680,11 +699,11 @@ class _MediaStitchBottomBar extends StatelessWidget {
               ),
             ),
             if (showDelete) ...[
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: IconButton.filledTonal(
                   onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline_rounded),
+                  icon: Icon(Icons.delete_outline_rounded),
                   tooltip: 'Delete',
                   style: IconButton.styleFrom(
                     foregroundColor: AppColors.error,

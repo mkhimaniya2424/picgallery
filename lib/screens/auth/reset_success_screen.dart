@@ -18,10 +18,13 @@ class ResetSuccessScreen extends StatefulWidget {
   State<ResetSuccessScreen> createState() => _ResetSuccessScreenState();
 }
 
-class _ResetSuccessScreenState extends State<ResetSuccessScreen> with SingleTickerProviderStateMixin {
+class _ResetSuccessScreenState extends State<ResetSuccessScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-      AnimationController(vsync: this, duration: AppDurations.medium)..forward();
-  late final Animation<double> _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+      AnimationController(vsync: this, duration: AppDurations.medium)
+        ..forward();
+  late final Animation<double> _scale =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
 
   @override
   void dispose() {
@@ -50,24 +53,35 @@ class _ResetSuccessScreenState extends State<ResetSuccessScreen> with SingleTick
                       color: AppColors.success,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: AppColors.success.withValues(alpha: 0.3), blurRadius: 36, offset: const Offset(0, 16)),
+                        BoxShadow(
+                            color: AppColors.success.withValues(alpha: 0.3),
+                            blurRadius: 36,
+                            offset: const Offset(0, 16)),
                       ],
                     ),
-                    child: const Icon(Icons.check_rounded, color: Colors.white, size: 68),
+                    child: const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 68),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text('Password Reset!', style: Theme.of(context).textTheme.headlineLarge, textAlign: TextAlign.center),
+                Text('Password Reset!',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                    textAlign: TextAlign.center),
                 const SizedBox(height: 10),
                 Text(
                   'Your password has been changed successfully.\nYou can now sign in with your new password.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: AppColors.subtitle),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 GradientButton(
                   label: 'Back to Login',
-                  onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false),
+                  onPressed: () => Navigator.of(context)
+                      .pushNamedAndRemoveUntil(
+                          AppRoutes.login, (route) => false),
                 ),
               ],
             ),

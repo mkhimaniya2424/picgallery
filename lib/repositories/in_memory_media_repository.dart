@@ -244,7 +244,8 @@ class InMemoryMediaRepository implements MediaRepository {
     final now = DateTime.now();
     final media = MediaModel(
       id: 'mem-${now.microsecondsSinceEpoch}',
-      type: contentType.startsWith('video/') ? MediaType.video : MediaType.photo,
+      type:
+          contentType.startsWith('video/') ? MediaType.video : MediaType.photo,
       filePath: '',
       thumbnailPath: '',
       fileName: fileName,

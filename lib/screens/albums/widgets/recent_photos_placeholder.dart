@@ -9,7 +9,7 @@ class RecentPhotosPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -18,37 +18,41 @@ class RecentPhotosPlaceholder extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Recent Photos',
             style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: AppColors.text),
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text)),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              _photoThumb(),
-              const SizedBox(width: AppSpacing.sm),
-              _photoThumb(),
-              const SizedBox(width: AppSpacing.sm),
-              _photoThumb(),
+              _photoThumb(context),
+              SizedBox(width: AppSpacing.sm),
+              _photoThumb(context),
+              SizedBox(width: AppSpacing.sm),
+              _photoThumb(context),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          const Text(
+          SizedBox(height: AppSpacing.md),
+          Text(
             'Photo timeline will appear here in later phases.',
             style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.subtitle),
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle)),
           ),
         ],
       ),
     );
   }
 
-  Widget _photoThumb() {
+  Widget _photoThumb(BuildContext context) {
     return Expanded(
       child: AspectRatio(
         aspectRatio: 1,
@@ -59,9 +63,12 @@ class RecentPhotosPlaceholder extends StatelessWidget {
               gradient: AppColors.softWash,
               border: Border.all(color: AppColors.border),
             ),
-            child: const Center(
+            child: Center(
               child: Icon(Icons.image_rounded,
-                  color: AppColors.subtitle, size: 28),
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle),
+                  size: 28),
             ),
           ),
         ),

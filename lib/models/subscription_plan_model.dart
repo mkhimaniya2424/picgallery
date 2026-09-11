@@ -21,8 +21,10 @@ class SubscriptionPlanModel {
   final String backupDuration;
   final bool isPopular;
   final SubscriptionPlan planType;
+
   /// Number of calendar months this plan lasts. 0 = lifetime/trial (uses [trialDays]).
   final int months;
+
   /// Days for a free trial plan (only used when [planType] == SubscriptionPlan.trial).
   final int trialDays;
 
@@ -52,14 +54,18 @@ class SubscriptionPlanModel {
     if (months > 0) {
       // Add calendar months — handles year rollovers automatically.
       int newMonth = activatedAt.month + months;
-      int newYear  = activatedAt.year + (newMonth - 1) ~/ 12;
-      newMonth     = ((newMonth - 1) % 12) + 1;
+      int newYear = activatedAt.year + (newMonth - 1) ~/ 12;
+      newMonth = ((newMonth - 1) % 12) + 1;
       // Clamp day to the last day of the resulting month (e.g. Jan 31 + 1 month → Feb 28/29).
       final maxDay = DateTime(newYear, newMonth + 1, 0).day;
-      final day    = activatedAt.day > maxDay ? maxDay : activatedAt.day;
+      final day = activatedAt.day > maxDay ? maxDay : activatedAt.day;
       return DateTime(
-        newYear, newMonth, day,
-        activatedAt.hour, activatedAt.minute, activatedAt.second,
+        newYear,
+        newMonth,
+        day,
+        activatedAt.hour,
+        activatedAt.minute,
+        activatedAt.second,
       );
     }
     // Free plan — no expiry (set far future).
@@ -168,5 +174,6 @@ class SubscriptionPlanModel {
   /// as an active paid/trial plan.
   static SubscriptionPlanModel forType(SubscriptionPlan type) =>
       plans.firstWhere((p) => p.planType == type,
-          orElse: () => plans.firstWhere((p) => p.planType == SubscriptionPlan.free));
+          orElse: () =>
+              plans.firstWhere((p) => p.planType == SubscriptionPlan.free));
 }

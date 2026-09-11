@@ -56,7 +56,8 @@ class TermsPrivacyScreen extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
                 child: GradientButton(
                   label: 'I Understand',
                   onPressed: () => Navigator.of(context).maybePop(),

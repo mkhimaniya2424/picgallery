@@ -18,13 +18,12 @@ class SuperAdminDashboardScreen extends StatelessWidget {
     final studios = SuperAdminMockData.studios;
     final clients = SuperAdminMockData.clients;
     final leads = SuperAdminMockData.websiteLeads;
-    final activeSubs =
-        studios.where((s) => s.subscriptionStatus == SubscriptionStatus.active).length;
+    final activeSubs = studios
+        .where((s) => s.subscriptionStatus == SubscriptionStatus.active)
+        .length;
 
     return Scaffold(
-      
       appBar: AppBar(
-        
         elevation: 0,
         automaticallyImplyLeading: false,
         titleSpacing: AppSpacing.md,
@@ -97,7 +96,9 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           const Text(
             'Recently joined',
             style: TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.text),
           ),
           const SizedBox(height: AppSpacing.sm),
           ...[...studios, ...clients]
@@ -109,7 +110,9 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           const Text(
             'Dual-role accounts',
             style: TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.text),
           ),
           const SizedBox(height: 4),
           const Text(
@@ -187,7 +190,9 @@ class _Kpi extends StatelessWidget {
             const SizedBox(height: 2),
             Text(label,
                 style: const TextStyle(
-                    fontSize: 12, color: AppColors.subtitle, fontWeight: FontWeight.w500)),
+                    fontSize: 12,
+                    color: AppColors.subtitle,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -216,8 +221,8 @@ class _RecentUserTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 19,
-            backgroundColor:
-                (isStudio ? AppColors.primary : AppColors.accent).withValues(alpha: 0.12),
+            backgroundColor: (isStudio ? AppColors.primary : AppColors.accent)
+                .withValues(alpha: 0.12),
             child: Text(user.initials,
                 style: TextStyle(
                     color: isStudio ? AppColors.primary : AppColors.accent,
@@ -229,9 +234,11 @@ class _RecentUserTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(user.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13.5)),
                 Text(user.email,
-                    style: const TextStyle(fontSize: 11.5, color: AppColors.subtitle)),
+                    style: const TextStyle(
+                        fontSize: 11.5, color: AppColors.subtitle)),
               ],
             ),
           ),
@@ -250,7 +257,8 @@ class _RecentUserTile extends StatelessWidget {
             )
           else
             Text(isStudio ? 'Studio' : 'Client',
-                style: const TextStyle(fontSize: 11, color: AppColors.subtitle)),
+                style:
+                    const TextStyle(fontSize: 11, color: AppColors.subtitle)),
         ],
       ),
     );

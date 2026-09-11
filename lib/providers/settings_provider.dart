@@ -5,7 +5,8 @@ import '../storage/settings_local_store.dart';
 
 final settingsStoreProvider = Provider((ref) => SettingsLocalStore());
 
-final settingsProvider = NotifierProvider<SettingsNotifier, SettingsModel>(SettingsNotifier.new);
+final settingsProvider =
+    NotifierProvider<SettingsNotifier, SettingsModel>(SettingsNotifier.new);
 
 class SettingsNotifier extends Notifier<SettingsModel> {
   SettingsLocalStore get _store => ref.read(settingsStoreProvider);

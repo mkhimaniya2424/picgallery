@@ -97,7 +97,8 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
               return SingleChildScrollView(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight, maxWidth: 520),
+                    constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight, maxWidth: 520),
                     child: IntrinsicHeight(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,13 +106,16 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
                           if (_error != null) ...[
                             Text(
                               _error!,
-                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: AppSpacing.sm),
                           ],
                           TextField(
                             controller: _nameController,
-                            decoration: const InputDecoration(labelText: 'Folder name'),
+                            decoration:
+                                const InputDecoration(labelText: 'Folder name'),
                             textInputAction: TextInputAction.next,
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -129,7 +133,8 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
                                   const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
                                   ),
                                   const SizedBox(width: AppSpacing.sm),
                                   Text(
@@ -168,7 +173,8 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
                             ),
                           const Spacer(),
                           const SizedBox(height: AppSpacing.lg),
-                          GradientButton(label: 'Create Folder', onPressed: _submit),
+                          GradientButton(
+                              label: 'Create Folder', onPressed: _submit),
                         ],
                       ),
                     ),

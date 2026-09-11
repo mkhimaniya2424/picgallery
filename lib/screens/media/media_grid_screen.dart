@@ -56,7 +56,8 @@ Future<void> _shareSingleMedia(BuildContext context, MediaModel m) async {
 
 /// Downloads/saves a single [MediaModel], resolving network/local media
 /// and branching to the bytes-based path on web.
-Future<void> _downloadSingleMedia(BuildContext context, WidgetRef ref, MediaModel m) async {
+Future<void> _downloadSingleMedia(
+    BuildContext context, WidgetRef ref, MediaModel m) async {
   final apiClient = ref.read(apiClientProvider);
   if (kIsWeb) {
     final result = await _gridFileCache.bytesFor(m);
@@ -92,9 +93,9 @@ class _ErrorStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.86),
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -103,28 +104,32 @@ class _ErrorStateCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error),
-            const SizedBox(height: AppSpacing.sm),
+            Icon(Icons.error_outline_rounded, color: AppColors.error),
+            SizedBox(height: AppSpacing.sm),
             Text(
               'Something went wrong',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                     fontWeight: FontWeight.w800,
                   ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             Text(
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                   ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              icon: Icon(Icons.refresh_rounded),
+              label: Text('Retry'),
             ),
           ],
         ),
@@ -182,7 +187,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
   Widget _propRow({required String label, required String value}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -192,7 +197,9 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                   ),
             ),
           ),
@@ -200,7 +207,9 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                   ),
             ),
           ),
@@ -379,18 +388,18 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete media?'),
-        content: const Text(
+        title: Text('Delete media?'),
+        content: Text(
             'This removes the media from your library. Undo is available.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -416,7 +425,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: const Text('Media deleted',
+        content: Text('Media deleted',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         action: SnackBarAction(
           label: 'Undo',
@@ -428,7 +437,6 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
       ),
     );
   }
-
 
   Future<void> _renameSelectedItems() async {
     final c = ref.read(mediaProvider);
@@ -452,7 +460,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
       builder: (ctx) {
         final controller = TextEditingController(text: item.fileName);
         return AlertDialog(
-          title: const Text('Rename'),
+          title: Text('Rename'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -469,13 +477,13 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
             ),
             FilledButton.tonal(
               onPressed: () {
                 Navigator.of(ctx).pop(controller.text);
               },
-              child: const Text('Save'),
+              child: Text('Save'),
             ),
           ],
         );
@@ -527,7 +535,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Properties'),
+          title: Text('Properties'),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,7 +579,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
+              child: Text('Close'),
             ),
           ],
         );
@@ -587,18 +595,18 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete selected media?'),
+        title: Text('Delete selected media?'),
         content:
             Text('This will delete ${ids.length} item(s). Undo is available.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -622,7 +630,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         backgroundColor: AppColors.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         content: Text('${ids.length} item(s) deleted',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         action: SnackBarAction(
           label: 'Undo',
           textColor: Colors.white,
@@ -678,7 +686,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
         return GridView.builder(
           controller: _scrollController,
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             mainAxisSpacing: AppSpacing.sm,
@@ -688,7 +696,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
           itemCount: displayItems.length + (_loadingMore ? 1 : 0),
           itemBuilder: (context, i) {
             if (i == displayItems.length) {
-              return const Center(
+              return Center(
                   child: Padding(
                       padding: EdgeInsets.all(12.0),
                       child: CircularProgressIndicator()));
@@ -718,11 +726,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.symmetric(vertical: 16),
       itemCount: groupKeys.length + (_loadingMore ? 1 : 0),
       itemBuilder: (context, i) {
         if (i == groupKeys.length) {
-          return const Center(
+          return Center(
               child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: CircularProgressIndicator()));
@@ -734,12 +742,14 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 groupKey,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.text,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text),
                     ),
               ),
             ),
@@ -754,8 +764,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       mainAxisSpacing: AppSpacing.sm,
@@ -846,11 +855,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 8),
       itemCount: displayItems.length + (_loadingMore ? 1 : 0),
       itemBuilder: (context, i) {
         if (i == displayItems.length) {
-          return const Center(
+          return Center(
               child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: CircularProgressIndicator()));
@@ -943,7 +952,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(40, 8, 16, 20),
+                padding: EdgeInsets.fromLTRB(40, 8, 16, 20),
                 sliver: _buildTimelineGridSliver(c, grouped[dates[i]]!, media),
               ),
             ],
@@ -1027,14 +1036,13 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     final c = ref.watch(mediaProvider);
     final media = c.filteredMedia;
 
-final errorView = c.lastError == null
-    ? null
-    : mapNetworkError(
-        ApiException(-1, c.lastError!),
-      );  
+    final errorView = c.lastError == null
+        ? null
+        : mapNetworkError(
+            ApiException(-1, c.lastError!),
+          );
     return Scaffold(
       appBar: CustomAppBar(
-
         title: c.isSelectionMode
             ? '${c.selectedIds.length} selected'
             : widget.favoritesOnly
@@ -1049,13 +1057,13 @@ final errorView = c.lastError == null
           if (c.isSelectionMode) ...[
             IconButton(
               tooltip: 'Exit selection',
-              icon: const Icon(Icons.close_rounded),
+              icon: Icon(Icons.close_rounded),
               onPressed: () => c.clearSelection(),
             ),
           ] else ...[
             IconButton(
               tooltip: 'Search',
-              icon: const Icon(Icons.search_rounded),
+              icon: Icon(Icons.search_rounded),
               onPressed: () {
                 Navigator.of(context).pushNamed(
                   AppRoutes.mediaSearch,
@@ -1069,7 +1077,7 @@ final errorView = c.lastError == null
             if (widget.type == null && !widget.favoritesOnly)
               IconButton(
                 tooltip: 'Videos',
-                icon: const Icon(Icons.video_library_rounded),
+                icon: Icon(Icons.video_library_rounded),
                 onPressed: () {
                   Navigator.of(context).pushNamed(
                     AppRoutes.videoGrid,
@@ -1081,7 +1089,7 @@ final errorView = c.lastError == null
               ),
             IconButton(
               tooltip: 'Favorites',
-              icon: const Icon(Icons.favorite_rounded),
+              icon: Icon(Icons.favorite_rounded),
               onPressed: () {
                 Navigator.of(context).pushNamed(
                   AppRoutes.mediaFavorites,
@@ -1094,11 +1102,11 @@ final errorView = c.lastError == null
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: c.isLoading
-            ? const Center(child: LoadingWidget(message: 'Loading media…'))
+            ? Center(child: LoadingWidget(message: 'Loading media…'))
             : c.lastError != null
                 ? Center(
                     child: _ErrorStateCard(
-                     message: errorView ?? c.lastError!,
+                      message: errorView ?? c.lastError!,
                       onRetry: () {
                         ref.read(mediaProvider).load();
                       },
@@ -1109,8 +1117,8 @@ final errorView = c.lastError == null
                       // Options Quick Action Control Toolbar
                       if (!c.isSelectionMode)
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border(
@@ -1124,12 +1132,12 @@ final errorView = c.lastError == null
                                 // Sort selection Dropdown
                                 Row(
                                   children: [
-                                    const Icon(Icons.sort_rounded,
+                                    Icon(Icons.sort_rounded,
                                         size: 16, color: Colors.black45),
-                                    const SizedBox(width: 4),
+                                    SizedBox(width: 4),
                                     DropdownButton<MediaSortOption>(
                                       value: c.sortOption,
-                                      underline: const SizedBox.shrink(),
+                                      underline: SizedBox.shrink(),
                                       iconSize: 16,
                                       style: Theme.of(context)
                                           .textTheme
@@ -1158,16 +1166,16 @@ final errorView = c.lastError == null
                                     ),
                                   ],
                                 ),
-                                const SizedBox(width: 14),
+                                SizedBox(width: 14),
                                 // Filter Type dropdown
                                 Row(
                                   children: [
-                                    const Icon(Icons.filter_list_rounded,
+                                    Icon(Icons.filter_list_rounded,
                                         size: 16, color: Colors.black45),
-                                    const SizedBox(width: 4),
+                                    SizedBox(width: 4),
                                     DropdownButton<MediaType?>(
                                       value: c.type,
-                                      underline: const SizedBox.shrink(),
+                                      underline: SizedBox.shrink(),
                                       iconSize: 16,
                                       style: Theme.of(context)
                                           .textTheme
@@ -1195,16 +1203,16 @@ final errorView = c.lastError == null
                                   ],
                                 ),
                                 if (_viewMode != _GalleryViewMode.timeline) ...[
-                                  const SizedBox(width: 14),
+                                  SizedBox(width: 14),
                                   // Grouping Dropdown
                                   Row(
                                     children: [
-                                      const Icon(Icons.group_work_rounded,
+                                      Icon(Icons.group_work_rounded,
                                           size: 16, color: Colors.black45),
-                                      const SizedBox(width: 4),
+                                      SizedBox(width: 4),
                                       DropdownButton<_GalleryGroupMode>(
                                         value: _groupMode,
-                                        underline: const SizedBox.shrink(),
+                                        underline: SizedBox.shrink(),
                                         iconSize: 16,
                                         style: Theme.of(context)
                                             .textTheme
@@ -1236,7 +1244,7 @@ final errorView = c.lastError == null
                                     ],
                                   ),
                                 ],
-                                const SizedBox(width: 24),
+                                SizedBox(width: 24),
                                 // View mode togglers
                                 IconButton(
                                   padding: EdgeInsets.zero,
@@ -1254,8 +1262,10 @@ final errorView = c.lastError == null
                                   onPressed: () {
                                     if (_viewMode == _GalleryViewMode.grid) {
                                       _changeViewMode(_GalleryViewMode.list);
-                                    } else if (_viewMode == _GalleryViewMode.list) {
-                                      _changeViewMode(_GalleryViewMode.timeline);
+                                    } else if (_viewMode ==
+                                        _GalleryViewMode.list) {
+                                      _changeViewMode(
+                                          _GalleryViewMode.timeline);
                                     } else {
                                       _changeViewMode(_GalleryViewMode.grid);
                                     }
@@ -1278,21 +1288,21 @@ final errorView = c.lastError == null
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                title: const Text('Move selected media?'),
+                                title: Text('Move selected media?'),
                                 content: Text(
                                     'This will move ${ids.length} item(s) to a destination.'),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.of(ctx).pop(false),
-                                    child: const Text('Cancel'),
+                                    child: Text('Cancel'),
                                   ),
                                   FilledButton.tonal(
                                     style: FilledButton.styleFrom(
                                         backgroundColor: AppColors.primary),
                                     onPressed: () =>
                                         Navigator.of(ctx).pop(true),
-                                    child: const Text('Move'),
+                                    child: Text('Move'),
                                   ),
                                 ],
                               ),
@@ -1309,21 +1319,21 @@ final errorView = c.lastError == null
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                title: const Text('Copy selected media?'),
+                                title: Text('Copy selected media?'),
                                 content: Text(
                                     'This will copy ${ids.length} item(s) to a destination.'),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.of(ctx).pop(false),
-                                    child: const Text('Cancel'),
+                                    child: Text('Cancel'),
                                   ),
                                   FilledButton.tonal(
                                     style: FilledButton.styleFrom(
                                         backgroundColor: AppColors.primary),
                                     onPressed: () =>
                                         Navigator.of(ctx).pop(true),
-                                    child: const Text('Copy'),
+                                    child: Text('Copy'),
                                   ),
                                 ],
                               ),
@@ -1413,9 +1423,8 @@ final errorView = c.lastError == null
                                         animation: animation,
                                         child: child,
                                         builder: (context, child) {
-                                          final isOutgoing =
-                                              animation.status ==
-                                                  AnimationStatus.reverse;
+                                          final isOutgoing = animation.status ==
+                                              AnimationStatus.reverse;
                                           return HeroMode(
                                             enabled: !isOutgoing,
                                             child: child!,
@@ -1508,7 +1517,7 @@ class _MediaListRow extends ConsumerWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.primary.withValues(alpha: 0.08)
@@ -1535,7 +1544,7 @@ class _MediaListRow extends ConsumerWidget {
                 child: _MediaThumbnail(media: media, selected: selected),
               ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1544,15 +1553,15 @@ class _MediaListRow extends ConsumerWidget {
                     media.fileName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: Colors.black87,
                         fontSize: 13.5),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     '${media.type == MediaType.photo ? "Photo" : "Video"} • $sizeStr • $dateStr',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11.5,
                         color: Colors.black45,
                         fontWeight: FontWeight.w500),
@@ -1560,7 +1569,7 @@ class _MediaListRow extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             if (isSelectionMode)
               Checkbox(
                 value: selected,
@@ -1583,7 +1592,7 @@ class _MediaListRow extends ConsumerWidget {
                     onPressed: onToggleFavorite,
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded,
+                    icon: Icon(Icons.more_vert_rounded,
                         color: Colors.black38, size: 20),
                     surfaceTintColor: Colors.transparent,
                     onSelected: (value) async {
@@ -1730,9 +1739,9 @@ class _SelectionToolbarState extends State<_SelectionToolbar> {
     final disabled = widget.count == 0 || _isBusy;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(
+      margin: EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.92),
@@ -1742,8 +1751,8 @@ class _SelectionToolbarState extends State<_SelectionToolbar> {
       child: Row(
         children: [
           Text('${widget.count} selected',
-              style: const TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(width: AppSpacing.sm),
+              style: TextStyle(fontWeight: FontWeight.w800)),
+          SizedBox(width: AppSpacing.sm),
           // The six actions can be wider than the toolbar on narrow
           // phones (this used to overflow on the right). Let just the
           // action icons scroll horizontally instead of clipping/
@@ -1861,7 +1870,7 @@ class _ToolbarIcon extends StatelessWidget {
       icon: Icon(icon, color: iconColor),
       iconSize: 22,
       visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.all(6),
+      padding: EdgeInsets.all(6),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       onPressed: onPressed,
     );
@@ -1919,7 +1928,7 @@ class _MediaTileState extends State<_MediaTile> {
                 curve: Curves.easeOutCubic,
               ),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_circle_rounded,
               color: AppColors.primary,
               size: 22,
@@ -1935,7 +1944,7 @@ class _MediaTileState extends State<_MediaTile> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
-        padding: const EdgeInsets.all(0),
+        padding: EdgeInsets.all(0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
@@ -1963,8 +1972,7 @@ class _MediaTileState extends State<_MediaTile> {
                 left: AppSpacing.sm,
                 top: AppSpacing.sm,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  padding: EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.42),
                     borderRadius: BorderRadius.circular(999),
@@ -1981,20 +1989,20 @@ class _MediaTileState extends State<_MediaTile> {
                         size: 14,
                         color: Colors.white.withValues(alpha: 0.92),
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         m.type == MediaType.photo ? 'Photo' : 'Video',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (m.type == MediaType.video && m.duration != null) ...[
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           MediaFormatUtils.formatDuration(m.duration!),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 10.0,
                             fontWeight: FontWeight.w700,
@@ -2015,14 +2023,14 @@ class _MediaTileState extends State<_MediaTile> {
                     duration: const Duration(milliseconds: 180),
                     scale: widget.selected ? 1.05 : 1,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                         border: Border.all(
                             color: Colors.white.withValues(alpha: 0.22)),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.favorite_rounded,
                         color: AppColors.accent,
                         size: 18,
@@ -2062,7 +2070,7 @@ class _MediaTileState extends State<_MediaTile> {
                         padding: EdgeInsets.zero,
                         constraints:
                             const BoxConstraints(minWidth: 36, minHeight: 36),
-                        icon: const Icon(Icons.delete_outline_rounded,
+                        icon: Icon(Icons.delete_outline_rounded,
                             color: Colors.white),
                         onPressed: widget.onDelete,
                       ),
@@ -2094,7 +2102,8 @@ class _MediaThumbnail extends StatelessWidget {
     final path = media.displayPath;
     final isNetwork = media.isDisplayPathNetwork;
     if (media.type == MediaType.photo) {
-      if (isNetwork || (!kIsWeb && path.isNotEmpty && File(path).existsSync())) {
+      if (isNetwork ||
+          (!kIsWeb && path.isNotEmpty && File(path).existsSync())) {
         return EditedImage(
           media: media,
           fit: BoxFit.cover,
@@ -2102,14 +2111,17 @@ class _MediaThumbnail extends StatelessWidget {
       }
     } else {
       final thumbPath = media.displayThumbnailPath;
-      final isThumbNetwork = thumbPath.startsWith('http://') || thumbPath.startsWith('https://');
+      final isThumbNetwork =
+          thumbPath.startsWith('http://') || thumbPath.startsWith('https://');
       if (isThumbNetwork) {
         return Image.network(
           thumbPath,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => _placeholder(),
         );
-      } else if (!kIsWeb && thumbPath.isNotEmpty && File(thumbPath).existsSync()) {
+      } else if (!kIsWeb &&
+          thumbPath.isNotEmpty &&
+          File(thumbPath).existsSync()) {
         return Image.file(
           File(thumbPath),
           fit: BoxFit.cover,
@@ -2175,25 +2187,27 @@ class _TimelineHeaderDelegate extends SliverPersistentHeaderDelegate {
     return Container(
       height: 40,
       color: AppColors.background.withValues(alpha: 0.95),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
           Container(
             width: 10,
             height: 10,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.primary,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Text(
             date,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w900,
-              color: AppColors.text,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textOnDark
+                  : AppColors.text),
             ),
           ),
         ],
@@ -2244,8 +2258,6 @@ String mapNetworkError(ApiException error) {
     case 503:
       return "Service unavailable.";
     default:
-      return error.message.isNotEmpty
-          ? error.message
-          : "Something went wrong.";
+      return error.message.isNotEmpty ? error.message : "Something went wrong.";
   }
 }

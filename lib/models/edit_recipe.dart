@@ -7,13 +7,13 @@ class EditRecipe {
   final int rotation; // 0, 90, 180, 270 degrees
   final bool flipHorizontal;
   final bool flipVertical;
-  final double brightness;   // -1.0 to 1.0 (neutral is 0.0)
-  final double contrast;     // -1.0 to 1.0 (neutral is 0.0)
-  final double saturation;   // -1.0 to 1.0 (neutral is 0.0)
-  final double exposure;     // -1.0 to 1.0 (neutral is 0.0)
-  final double temperature;  // -1.0 to 1.0 (neutral is 0.0)
-  final double sharpen;      // 0.0 to 1.0 (neutral is 0.0)
-  final String? filter;      // null or 'none', 'grayscale', 'sepia', etc.
+  final double brightness; // -1.0 to 1.0 (neutral is 0.0)
+  final double contrast; // -1.0 to 1.0 (neutral is 0.0)
+  final double saturation; // -1.0 to 1.0 (neutral is 0.0)
+  final double exposure; // -1.0 to 1.0 (neutral is 0.0)
+  final double temperature; // -1.0 to 1.0 (neutral is 0.0)
+  final double sharpen; // 0.0 to 1.0 (neutral is 0.0)
+  final String? filter; // null or 'none', 'grayscale', 'sepia', etc.
   final double filterIntensity; // 0.0 to 1.0 (default is 1.0)
 
   const EditRecipe({
@@ -129,10 +129,26 @@ class EditRecipe {
     if (brightness != 0.0) {
       final offset = brightness * 255.0;
       final m = [
-        1.0,0.0,0.0,0.0,offset,
-        0.0,1.0,0.0,0.0,offset,
-        0.0,0.0,1.0,0.0,offset,
-        0.0,0.0,0.0,1.0,0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        offset,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        offset,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        offset,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
       ];
       current = multiplyMatrices(m, current);
     }
@@ -142,10 +158,26 @@ class EditRecipe {
       final c = contrast >= 0 ? 1.0 + contrast * 1.5 : 1.0 + contrast * 0.6;
       final offset = 128.0 * (1.0 - c);
       final m = [
-        c,0.0,0.0,0.0,offset,
-        0.0,c,0.0,0.0,offset,
-        0.0,0.0,c,0.0,offset,
-        0.0,0.0,0.0,1.0,0.0,
+        c,
+        0.0,
+        0.0,
+        0.0,
+        offset,
+        0.0,
+        c,
+        0.0,
+        0.0,
+        offset,
+        0.0,
+        0.0,
+        c,
+        0.0,
+        offset,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
       ];
       current = multiplyMatrices(m, current);
     }
@@ -158,10 +190,26 @@ class EditRecipe {
       final g = 0.7152 * invSat;
       final b = 0.0722 * invSat;
       final m = [
-        r + sat, g, b, 0.0, 0.0,
-        r, g + sat, b, 0.0, 0.0,
-        r, g, b + sat, 0.0, 0.0,
-        0.0, 0.0, 0.0, 1.0, 0.0,
+        r + sat,
+        g,
+        b,
+        0.0,
+        0.0,
+        r,
+        g + sat,
+        b,
+        0.0,
+        0.0,
+        r,
+        g,
+        b + sat,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
       ];
       current = multiplyMatrices(m, current);
     }
@@ -170,10 +218,26 @@ class EditRecipe {
     if (exposure != 0.0) {
       final exp = exposure >= 0 ? 1.0 + exposure * 1.5 : 1.0 + exposure * 0.7;
       final m = [
-        exp,0.0,0.0,0.0,0.0,
-        0.0,exp,0.0,0.0,0.0,
-        0.0,0.0,exp,0.0,0.0,
-        0.0,0.0,0.0,1.0,0.0,
+        exp,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        exp,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        exp,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
       ];
       current = multiplyMatrices(m, current);
     }
@@ -182,10 +246,26 @@ class EditRecipe {
     if (temperature != 0.0) {
       final warmth = temperature * 0.12;
       final m = [
-        1.0 + warmth, 0.0, 0.0, 0.0, 0.0,
-        0.0, 1.0 + warmth * 0.5, 0.0, 0.0, 0.0,
-        0.0, 0.0, 1.0 - warmth, 0.0, 0.0,
-        0.0, 0.0, 0.0, 1.0, 0.0,
+        1.0 + warmth,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 + warmth * 0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 - warmth,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
       ];
       current = multiplyMatrices(m, current);
     }
@@ -199,7 +279,8 @@ class EditRecipe {
           finalM = filterM;
         } else {
           finalM = List<double>.generate(20, (idx) {
-            return _identityMatrix[idx] + (filterM[idx] - _identityMatrix[idx]) * filterIntensity;
+            return _identityMatrix[idx] +
+                (filterM[idx] - _identityMatrix[idx]) * filterIntensity;
           });
         }
         current = multiplyMatrices(finalM, current);
@@ -210,54 +291,182 @@ class EditRecipe {
   }
 
   static const List<double> _identityMatrix = [
-    1.0,0.0,0.0,0.0,0.0,
-    0.0,1.0,0.0,0.0,0.0,
-    0.0,0.0,1.0,0.0,0.0,
-    0.0,0.0,0.0,1.0,0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
   ];
 
   static final Map<String, List<double>> _filterPresets = {
     'grayscale': const [
-      0.2126, 0.7152, 0.0722, 0.0, 0.0,
-      0.2126, 0.7152, 0.0722, 0.0, 0.0,
-      0.2126, 0.7152, 0.0722, 0.0, 0.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      0.2126,
+      0.7152,
+      0.0722,
+      0.0,
+      0.0,
+      0.2126,
+      0.7152,
+      0.0722,
+      0.0,
+      0.0,
+      0.2126,
+      0.7152,
+      0.0722,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
     'sepia': const [
-      0.393, 0.769, 0.189, 0.0, 0.0,
-      0.349, 0.686, 0.168, 0.0, 0.0,
-      0.272, 0.534, 0.131, 0.0, 0.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      0.393,
+      0.769,
+      0.189,
+      0.0,
+      0.0,
+      0.349,
+      0.686,
+      0.168,
+      0.0,
+      0.0,
+      0.272,
+      0.534,
+      0.131,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
     'vintage': const [
-      0.9, 0.1, 0.0, 0.0, 20.0,
-      0.0, 0.8, 0.1, 0.0, 15.0,
-      0.0, 0.0, 0.7, 0.0, 10.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      0.9,
+      0.1,
+      0.0,
+      0.0,
+      20.0,
+      0.0,
+      0.8,
+      0.1,
+      0.0,
+      15.0,
+      0.0,
+      0.0,
+      0.7,
+      0.0,
+      10.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
     'cinematic': const [
-      0.8, 0.0, 0.0, 0.0, 5.0,
-      0.0, 0.9, 0.0, 0.0, 10.0,
-      0.0, 0.0, 1.0, 0.0, 25.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      0.8,
+      0.0,
+      0.0,
+      0.0,
+      5.0,
+      0.0,
+      0.9,
+      0.0,
+      0.0,
+      10.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      25.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
     'dramatic': const [
-      1.3, 0.0, 0.0, 0.0, -25.0,
-      0.0, 1.3, 0.0, 0.0, -25.0,
-      0.0, 0.0, 1.3, 0.0, -25.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      1.3,
+      0.0,
+      0.0,
+      0.0,
+      -25.0,
+      0.0,
+      1.3,
+      0.0,
+      0.0,
+      -25.0,
+      0.0,
+      0.0,
+      1.3,
+      0.0,
+      -25.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
     'cool': const [
-      0.9, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.95, 0.0, 0.0, 5.0,
-      0.0, 0.0, 1.1, 0.0, 15.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      0.9,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.95,
+      0.0,
+      0.0,
+      5.0,
+      0.0,
+      0.0,
+      1.1,
+      0.0,
+      15.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
     'warm': const [
-      1.1, 0.0, 0.0, 0.0, 15.0,
-      0.0, 1.0, 0.0, 0.0, 5.0,
-      0.0, 0.0, 0.9, 0.0, 0.0,
-      0.0, 0.0, 0.0, 1.0, 0.0,
+      1.1,
+      0.0,
+      0.0,
+      0.0,
+      15.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      5.0,
+      0.0,
+      0.0,
+      0.9,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
     ],
   };
 
@@ -269,6 +478,7 @@ class EditRecipe {
       if (r == 4) return c == 4 ? 1.0 : 0.0;
       return a[r * 5 + c];
     }
+
     double getB(int r, int c) {
       if (r == 4) return c == 4 ? 1.0 : 0.0;
       return b[r * 5 + c];

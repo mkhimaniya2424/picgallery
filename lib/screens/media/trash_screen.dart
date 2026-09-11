@@ -20,7 +20,6 @@ class TrashScreen extends ConsumerWidget {
     final deletedMedia = ref.watch(trashProvider);
 
     return Scaffold(
-      
       appBar: CustomAppBar(
         title: 'Trash',
         showBack: true,
@@ -28,7 +27,7 @@ class TrashScreen extends ConsumerWidget {
           if (deletedMedia.isNotEmpty)
             TextButton(
               onPressed: () => _confirmEmptyTrash(context, ref),
-              child: const Text(
+              child: Text(
                 'Empty Trash',
                 style: TextStyle(
                     color: AppColors.error,
@@ -39,13 +38,13 @@ class TrashScreen extends ConsumerWidget {
         ],
       ),
       body: deletedMedia.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(context)
           : LayoutBuilder(
               builder: (context, constraints) {
                 final crossAxisCount =
                     _calculateCrossAxisCount(constraints.maxWidth);
                 return GridView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
@@ -71,37 +70,41 @@ class TrashScreen extends ConsumerWidget {
     return 5;
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.delete_sweep_rounded,
               color: AppColors.primary,
               size: 56,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          const Text(
+          SizedBox(height: AppSpacing.md),
+          Text(
             'Trash is empty',
             style: TextStyle(
-              color: AppColors.text,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textOnDark
+                  : AppColors.text),
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
-          const Text(
+          SizedBox(height: 6),
+          Text(
             'Deleted items will appear here.',
             style: TextStyle(
-              color: AppColors.subtitle,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.subtitleOnDark
+                  : AppColors.subtitle),
               fontSize: 13,
             ),
           ),
@@ -114,7 +117,8 @@ class TrashScreen extends ConsumerWidget {
     final confirmed = await showDeleteConfirmationDialog(
       context: context,
       title: 'Delete item?',
-      message: 'This will permanently delete all items in trash. This action cannot be undone.',
+      message:
+          'This will permanently delete all items in trash. This action cannot be undone.',
       confirmText: 'Empty All',
     );
     if (!context.mounted) return;
@@ -138,7 +142,9 @@ class _TrashItemCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: (Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurfaceRaised
+            : AppColors.surfaceElevated),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
@@ -153,7 +159,7 @@ class _TrashItemCard extends ConsumerWidget {
                 _buildThumbnail(),
                 Positioned.fill(
                   child: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.black26, Colors.black87],
                         begin: Alignment.topCenter,
@@ -166,15 +172,14 @@ class _TrashItemCard extends ConsumerWidget {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
                       color: Colors.black45,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       media.type == MediaType.photo ? 'PHOTO' : 'VIDEO',
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: Colors.white,
                           fontSize: 9,
                           fontWeight: FontWeight.bold),
@@ -194,15 +199,15 @@ class _TrashItemCard extends ConsumerWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: EdgeInsets.symmetric(horizontal: 10),
                           minimumSize: const Size(60, 28),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
                         ),
-                        icon: const Icon(Icons.settings_backup_restore_rounded,
+                        icon: Icon(Icons.settings_backup_restore_rounded,
                             size: 12),
-                        label: const Text('Restore',
+                        label: Text('Restore',
                             style: TextStyle(
                                 fontSize: 10.5, fontWeight: FontWeight.bold)),
                       ),
@@ -217,8 +222,7 @@ class _TrashItemCard extends ConsumerWidget {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                         ),
-                        icon:
-                            const Icon(Icons.delete_forever_rounded, size: 16),
+                        icon: Icon(Icons.delete_forever_rounded, size: 16),
                       ),
                     ],
                   ),
@@ -227,7 +231,7 @@ class _TrashItemCard extends ConsumerWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            padding: EdgeInsets.all(AppSpacing.sm),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -235,16 +239,20 @@ class _TrashItemCard extends ConsumerWidget {
                   media.fileName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: AppColors.text,
+                  style: TextStyle(
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text),
                       fontWeight: FontWeight.bold,
                       fontSize: 12),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   sizeStr,
-                  style: const TextStyle(
-                      color: AppColors.subtitle,
+                  style: TextStyle(
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle),
                       fontSize: 10.5,
                       fontWeight: FontWeight.w500),
                 ),
@@ -298,13 +306,15 @@ class _TrashItemCard extends ConsumerWidget {
     final confirmed = await showDeleteConfirmationDialog(
       context: context,
       title: 'Delete item?',
-      message: 'Do you want to permanently delete "${media.fileName}"? This cannot be undone.',
+      message:
+          'Do you want to permanently delete "${media.fileName}"? This cannot be undone.',
     );
     if (!context.mounted) return;
     if (confirmed) {
       await ref.read(trashProvider.notifier).deletePermanently(media.id);
       if (context.mounted) {
-        SnackBarHelper.showSuccess(context, '"${media.fileName}" permanently deleted');
+        SnackBarHelper.showSuccess(
+            context, '"${media.fileName}" permanently deleted');
       }
     }
   }

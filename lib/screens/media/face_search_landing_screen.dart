@@ -21,7 +21,7 @@ class FaceSearchLandingScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Upload selfie',
-            icon: const Icon(Icons.upload_rounded),
+            icon: Icon(Icons.upload_rounded),
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.faceSearchUpload),
           ),
@@ -29,13 +29,13 @@ class FaceSearchLandingScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
           children: [
-            _buildIllustrationCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildInfoCard(),
-            const SizedBox(height: AppSpacing.lg),
+            _buildIllustrationCard(context),
+            SizedBox(height: AppSpacing.lg),
+            _buildInfoCard(context),
+            SizedBox(height: AppSpacing.lg),
             _buildUploadButtons(context),
           ],
         ),
@@ -43,14 +43,14 @@ class FaceSearchLandingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildIllustrationCard() {
+  Widget _buildIllustrationCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.border),
       ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           Container(
@@ -60,20 +60,22 @@ class FaceSearchLandingScreen extends StatelessWidget {
               gradient: AppColors.buttonGradient,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.face_retouching_natural_rounded,
               size: 22,
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
-          const Expanded(
+          SizedBox(width: 12),
+          Expanded(
             child: Text(
               'Find matching photos with a selfie',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
-                color: AppColors.text,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textOnDark
+                    : AppColors.text),
               ),
             ),
           ),
@@ -82,14 +84,14 @@ class FaceSearchLandingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.border),
       ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -100,11 +102,10 @@ class FaceSearchLandingScreen extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.info_rounded,
-                size: 18, color: AppColors.primary),
+            child: Icon(Icons.info_rounded, size: 18, color: AppColors.primary),
           ),
-          const SizedBox(width: 12),
-          const Expanded(
+          SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -113,7 +114,9 @@ class FaceSearchLandingScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.text,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textOnDark
+                        : AppColors.text),
                   ),
                 ),
                 SizedBox(height: 6),
@@ -122,7 +125,9 @@ class FaceSearchLandingScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle),
                     height: 1.45,
                   ),
                 ),
@@ -143,29 +148,29 @@ class FaceSearchLandingScreen extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.faceSearchUpload);
             },
-            icon: const Icon(Icons.file_upload_outlined),
-            label: const Text('Upload Photo'),
+            icon: Icon(Icons.file_upload_outlined),
+            label: Text('Upload Photo'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md)),
               side: const BorderSide(color: AppColors.border),
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.faceSearchUpload);
             },
-            icon: const Icon(Icons.camera_alt_rounded),
-            label: const Text('Take Photo'),
+            icon: Icon(Icons.camera_alt_rounded),
+            label: Text('Take Photo'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md)),
               elevation: 0,

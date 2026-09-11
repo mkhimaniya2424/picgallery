@@ -50,10 +50,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     final dashboardAsync = ref.watch(adminDashboardProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final onSurfaceColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
 
     return Scaffold(
-      
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
@@ -61,7 +61,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             toolbarHeight: 56,
             elevation: 0,
             scrolledUnderElevation: 1,
-            backgroundColor: isDark ? const Color(0xFF0F0F1A) : AppColors.background,
+            backgroundColor: isDark ? Color(0xFF0F0F1A) : AppColors.background,
             surfaceTintColor: Colors.transparent,
             forceElevated: innerBoxIsScrolled,
             leading: IconButton(
@@ -86,10 +86,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               indicatorWeight: 2.5,
               isScrollable: false,
               tabAlignment: TabAlignment.fill,
-              labelStyle:
-                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              labelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
               unselectedLabelStyle:
-                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                  TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
               tabs: const [
                 Tab(text: 'Overview'),
                 Tab(text: 'Views'),
@@ -129,34 +128,35 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
 
   Widget _buildLoadingState() {
     return _statusScrollView(
-      const Center(child: LoadingWidget(message: 'Loading analytics…')),
+      Center(child: LoadingWidget(message: 'Loading analytics…')),
     );
   }
 
   Widget _buildErrorState(Object error) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     return _statusScrollView(
       Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded,
+              Icon(Icons.error_outline_rounded,
                   color: AppColors.error, size: 40),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               Text(
                 'Could not load your analytics\n$error',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: subtitleColor, fontSize: 13),
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               FilledButton.icon(
                 onPressed: () =>
                     ref.read(adminDashboardProvider.notifier).refresh(),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Retry'),
+                icon: Icon(Icons.refresh_rounded, size: 18),
+                label: Text('Retry'),
               ),
             ],
           ),
@@ -168,11 +168,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   Widget _buildEmptyState({required IconData icon, required String message}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final onSurfaceColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     return _statusScrollView(
       Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -191,7 +192,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                 ),
                 child: Icon(icon, color: Colors.white, size: 32),
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               Text(
                 'No analytics available',
                 style: TextStyle(
@@ -199,7 +200,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                     fontSize: 15,
                     fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 message,
                 textAlign: TextAlign.center,
@@ -208,12 +209,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               FilledButton.icon(
                 onPressed: () =>
                     ref.read(adminDashboardProvider.notifier).refresh(),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Refresh'),
+                icon: Icon(Icons.refresh_rounded, size: 18),
+                label: Text('Refresh'),
               ),
             ],
           ),
@@ -251,7 +252,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
               sliver: snapshot.stats.isEmpty
                   ? const SliverToBoxAdapter(
@@ -273,18 +274,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                     ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                   AppSpacing.md, 0, AppSpacing.md, AppSpacing.xl),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const SectionHeader(
                       title: 'Performance Trends', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   _buildAnalyticsCarousel(snapshot),
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   const SectionHeader(
                       title: 'Gallery Leaderboards', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   _buildClientMetricList(
                     snapshot,
                     metric: _ClientMetric.views,
@@ -319,7 +320,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: snapshot.analytics.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+        separatorBuilder: (_, __) => SizedBox(width: AppSpacing.md),
         itemBuilder: (context, i) =>
             AnalyticsChartCard(series: snapshot.analytics[i]),
       ),
@@ -351,7 +352,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           key: const PageStorageKey('ViewsTab'),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _buildMetricBanner(
@@ -360,7 +361,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                     gradient: const [Color(0xFF7C5CFF), Color(0xFFA855F7)],
                     trendSeries: viewsSeries,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                   Center(
                     child: viewsSeries != null
                         ? AnalyticsChartCard(series: viewsSeries)
@@ -368,17 +369,19 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                             icon: Icons.show_chart_rounded,
                             message: 'No views trend data yet'),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                   Text(
                     'Most Active Clients (Views)',
                     style: TextStyle(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? AppColors.textOnDark
-                            : AppColors.text,
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.textOnDark
+                                : AppColors.text),
                         fontSize: 15,
                         fontWeight: FontWeight.w800),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(height: AppSpacing.sm),
                   _buildClientMetricList(
                     snapshot,
                     metric: _ClientMetric.views,
@@ -417,7 +420,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           key: const PageStorageKey('DownloadsTab'),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _buildMetricBanner(
@@ -425,21 +428,23 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                     value: '$totalDownloads',
                     gradient: const [Color(0xFFEC4899), Color(0xFFF472B6)],
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                   const EmptyStateCard(
                       icon: Icons.show_chart_rounded,
                       message: 'No downloads trend data yet'),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                   Text(
                     'Clients by Downloads',
                     style: TextStyle(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? AppColors.textOnDark
-                            : AppColors.text,
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.textOnDark
+                                : AppColors.text),
                         fontSize: 15,
                         fontWeight: FontWeight.w800),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(height: AppSpacing.sm),
                   _buildClientMetricList(
                     snapshot,
                     metric: _ClientMetric.downloads,
@@ -474,7 +479,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           key: const PageStorageKey('ActivityTab'),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               sliver: SliverToBoxAdapter(
                 child: ActivityTimelineList(entries: snapshot.activityLog),
               ),
@@ -513,7 +518,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
             colors: gradient,
@@ -531,15 +536,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                 Text(title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
                         fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Colors.white,
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
@@ -548,9 +553,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             ),
           ),
           if (deltaPct != null) ...[
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                   color: Colors.white24,
                   borderRadius: BorderRadius.circular(12)),
@@ -563,10 +568,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                           : Icons.trending_down_rounded,
                       color: Colors.white,
                       size: 16),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     '${deltaPct >= 0 ? '+' : ''}${deltaPct.toStringAsFixed(0)}%',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 12),
@@ -616,7 +621,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                 : list[i].totalDownloads,
             valueLabel: metric == _ClientMetric.views ? 'views' : 'downloads',
           ),
-          if (i != list.length - 1) const SizedBox(height: AppSpacing.sm),
+          if (i != list.length - 1) SizedBox(height: AppSpacing.sm),
         ],
       ],
     );
@@ -641,13 +646,15 @@ class _ClientRankTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated;
+    final surfaceColor =
+        isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
     final onSurfaceColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -660,7 +667,7 @@ class _ClientRankTile extends StatelessWidget {
             height: 26,
             decoration: BoxDecoration(
               color: rank == 1
-                  ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                  ? Color(0xFFF59E0B).withValues(alpha: 0.15)
                   : borderColor,
               shape: BoxShape.circle,
             ),
@@ -668,13 +675,13 @@ class _ClientRankTile extends StatelessWidget {
             child: Text(
               '$rank',
               style: TextStyle(
-                color: rank == 1 ? const Color(0xFFD97706) : subtitleColor,
+                color: rank == 1 ? Color(0xFFD97706) : subtitleColor,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Container(
             width: 38,
             height: 38,
@@ -688,13 +695,13 @@ class _ClientRankTile extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               client.initials,
-              style: const TextStyle(
+              style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 12),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,7 +715,7 @@ class _ClientRankTile extends StatelessWidget {
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   client.bookingStatus,
                   maxLines: 1,
@@ -721,10 +728,10 @@ class _ClientRankTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             '$value $valueLabel',
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w800),

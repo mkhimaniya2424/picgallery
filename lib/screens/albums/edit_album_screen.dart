@@ -95,18 +95,18 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Album?'),
+        title: Text('Delete Album?'),
         content: Text(
             'This will permanently remove "${album.name}" and its ${album.photoCount} photos. This can\'t be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -163,24 +163,26 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
             tooltip: 'Delete Album',
             onPressed: busy ? null : () => _confirmDelete(album),
             icon: _isDeleting
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.red),
                   )
-                : const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                : Icon(Icons.delete_outline_rounded, color: Colors.red),
           ),
         ],
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight, maxWidth: 520),
+                    constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight, maxWidth: 520),
                     child: Form(
                       key: _formKey,
                       child: IntrinsicHeight(
@@ -190,43 +192,53 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
                             if (_error != null) ...[
                               Text(
                                 _error!,
-                                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w700),
                               ),
-                              const SizedBox(height: AppSpacing.sm),
+                              SizedBox(height: AppSpacing.sm),
                             ],
                             CustomTextField(
                               label: 'Album name',
                               icon: Icons.photo_album_rounded,
                               controller: _nameController,
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? 'Album name is required' : null,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Album name is required'
+                                  : null,
                             ),
-                            const SizedBox(height: AppSpacing.md),
+                            SizedBox(height: AppSpacing.md),
                             CustomTextField(
                               label: 'Description (optional)',
                               icon: Icons.notes_rounded,
                               controller: _descController,
                               maxLines: 3,
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            if (folderState.isLoading && folderState.folders.isEmpty)
+                            SizedBox(height: AppSpacing.md),
+                            if (folderState.isLoading &&
+                                folderState.folders.isEmpty)
                               InputDecorator(
                                 decoration: const InputDecoration(
                                   labelText: 'Folder',
-                                  prefixIcon: Icon(Icons.folder_outlined, size: 20),
+                                  prefixIcon:
+                                      Icon(Icons.folder_outlined, size: 20),
                                 ),
                                 child: Row(
                                   children: [
-                                    const SizedBox(
-                                      width: 16, height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
                                     ),
-                                    const SizedBox(width: AppSpacing.sm),
+                                    SizedBox(width: AppSpacing.sm),
                                     Text(
                                       'Loading folders…',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: AppColors.subtitle,
+                                        color: (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.subtitleOnDark
+                                            : AppColors.subtitle),
                                       ),
                                     ),
                                   ],
@@ -238,14 +250,17 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
                                 initialValue: _selectedFolderId,
                                 decoration: const InputDecoration(
                                   labelText: 'Folder (tap to assign)',
-                                  prefixIcon: Icon(Icons.folder_outlined, size: 20),
+                                  prefixIcon:
+                                      Icon(Icons.folder_outlined, size: 20),
                                   helperText: 'Move this album into a folder',
                                 ),
                                 items: [
                                   const DropdownMenuItem<String?>(
-                                      value: null, child: Text('No folder — unassigned')),
+                                      value: null,
+                                      child: Text('No folder — unassigned')),
                                   ...folderState.folders.map(
-                                    (FolderModel f) => DropdownMenuItem<String?>(
+                                    (FolderModel f) =>
+                                        DropdownMenuItem<String?>(
                                       value: f.id,
                                       child: Text(
                                         f.name,
@@ -254,25 +269,34 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
                                     ),
                                   ),
                                 ],
-                                onChanged: (v) => setState(() => _selectedFolderId = v),
+                                onChanged: (v) =>
+                                    setState(() => _selectedFolderId = v),
                               ),
-                            const SizedBox(height: AppSpacing.sm),
+                            SizedBox(height: AppSpacing.sm),
                             Text(
                               '${album.photoCount} photos • ${album.folderCount} folders — updated ${_relativeTime(album.updatedAt)}',
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.subtitle),
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.subtitleOnDark
+                                      : AppColors.subtitle)),
                             ),
                             const Spacer(),
-                            const SizedBox(height: AppSpacing.lg),
+                            SizedBox(height: AppSpacing.lg),
                             Row(
                               children: [
                                 Expanded(
                                   child: OutlinedButton(
-                                    onPressed: busy ? null : () => Navigator.of(context).maybePop(),
-                                    child: const Text('Cancel'),
+                                    onPressed: busy
+                                        ? null
+                                        : () =>
+                                            Navigator.of(context).maybePop(),
+                                    child: Text('Cancel'),
                                   ),
                                 ),
-                                const SizedBox(width: AppSpacing.sm),
+                                SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   flex: 2,
                                   child: GradientButton(

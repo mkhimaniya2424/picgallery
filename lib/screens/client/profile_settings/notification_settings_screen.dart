@@ -16,14 +16,15 @@ class NotificationSettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
 
     final pushEnabled = authUser?.pushNotificationsEnabled ?? true;
-    final emailEnabled = authUser?.emailNotificationsEnabled ?? settings.emailNotifications;
+    final emailEnabled =
+        authUser?.emailNotificationsEnabled ?? settings.emailNotifications;
 
     return Scaffold(
       appBar:
           const CustomAppBar(title: 'Notification Settings', showBack: true),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           children: [
             _ToggleTile(
               icon: Icons.notifications_active_rounded,
@@ -35,7 +36,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     .updatePermissions(pushNotificationsEnabled: v);
               },
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _ToggleTile(
               icon: Icons.email_outlined,
               title: 'Email Notifications',
@@ -69,9 +70,11 @@ class _ToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
@@ -87,7 +90,7 @@ class _ToggleTile extends StatelessWidget {
             ),
             child: Icon(icon, color: AppColors.primary),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

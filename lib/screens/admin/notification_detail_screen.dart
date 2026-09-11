@@ -71,7 +71,7 @@ class NotificationDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Notification'),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
             AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,13 +101,13 @@ class NotificationDetailScreen extends ConsumerWidget {
                         ),
                         child: Icon(icon, color: Colors.white, size: 24),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: gradient.first.withValues(alpha: 0.12),
@@ -120,36 +120,44 @@ class NotificationDetailScreen extends ConsumerWidget {
                                       fontWeight: FontWeight.w700,
                                       color: gradient.first)),
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: 6),
                             Text(_fullTimestamp(notification.createdAt),
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.subtitle)),
+                                    color: (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle))),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
                   Text(notification.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.text)),
-                  const SizedBox(height: AppSpacing.sm),
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.textOnDark
+                                  : AppColors.text))),
+                  SizedBox(height: AppSpacing.sm),
                   Text(
                     notification.subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.subtitle,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : AppColors.subtitle),
                         height: 1.5),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
             GradientButton(
               label: 'Delete Notification',
               icon: Icons.delete_outline_rounded,

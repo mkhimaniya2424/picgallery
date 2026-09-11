@@ -11,7 +11,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/media_format_utils.dart';
 import '../../models/media_model.dart';
 import '../../models/user.dart' show AppUserRole;
-import '../../providers/auth_providers.dart' show apiClientProvider, authStateProvider;
+import '../../providers/auth_providers.dart'
+    show apiClientProvider, authStateProvider;
 import '../../providers/media_provider.dart';
 import '../../services/download_service.dart';
 import '../../services/download_service_impl.dart';
@@ -149,11 +150,13 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
           expand: false,
           builder: (context, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
-                color: AppColors.background,
+              decoration: BoxDecoration(
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkBackground
+                    : AppColors.background),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.sm,
                 AppSpacing.md,
@@ -163,7 +166,9 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                 final lc = ref.watch(mediaLikesCommentsProvider);
                 if (!lc.hasFetchedComments(media.id)) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    ref.read(mediaLikesCommentsProvider).fetchComments(media.id);
+                    ref
+                        .read(mediaLikesCommentsProvider)
+                        .fetchComments(media.id);
                   });
                 }
                 return MediaCommentsSection(
@@ -307,7 +312,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
           child: Center(
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
+              child: Text(
                 'This media no longer exists',
                 style: TextStyle(color: Colors.white),
               ),
@@ -461,7 +466,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
       final confirmed = await showDeleteConfirmationDialog(
         context: context,
         title: 'Delete item?',
-        message: 'This will remove "${m.fileName}" from your library. This action cannot be undone.',
+        message:
+            'This will remove "${m.fileName}" from your library. This action cannot be undone.',
       );
       if (!context.mounted) return;
       if (!confirmed) return;
@@ -492,7 +498,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
       final newName = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Rename media'),
+          title: Text('Rename media'),
           content: TextField(
             controller: nameController,
             decoration: const InputDecoration(
@@ -502,11 +508,11 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
             ),
             FilledButton.tonal(
               onPressed: () => Navigator.of(ctx).pop(nameController.text),
-              child: const Text('Save'),
+              child: Text('Save'),
             ),
           ],
         ),
@@ -567,16 +573,18 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                     turns:
                                         const AlwaysStoppedAnimation(-25 / 360),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
+                                      padding: EdgeInsets.symmetric(
                                           horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
-                                        color: Colors.black12.withValues(alpha: 0.2),
+                                        color: Colors.black12
+                                            .withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         AppStrings.appName,
                                         style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
                                           fontSize: 28,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 2.5,
@@ -604,7 +612,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                       child: Row(
                         children: [
@@ -619,11 +627,11 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                           const Spacer(),
                           Text(
                             '${safeIndex + 1} / ${items.length}',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
+                          SizedBox(width: AppSpacing.sm),
                           _RoundIconButton(
                             icon: current.isFavorite
                                 ? Icons.favorite_rounded
@@ -641,14 +649,14 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                     if (_chromeVisible) const Spacer(),
                     if (_infoVisible && _chromeVisible)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                             AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
                         child: _InfoPanel(media: current),
                       ),
                     Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                             horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.48),
@@ -663,7 +671,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                               VideoProgressIndicator(
                                 _activeController!,
                                 allowScrubbing: true,
-                                padding: const EdgeInsets.symmetric(
+                                padding: EdgeInsets.symmetric(
                                     vertical: AppSpacing.sm),
                                 colors: const VideoProgressColors(
                                   playedColor: AppColors.primary,
@@ -672,8 +680,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(
-                                    bottom: AppSpacing.sm),
+                                padding: EdgeInsets.only(bottom: AppSpacing.sm),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -681,7 +688,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                     Text(
                                       MediaFormatUtils.formatDuration(
                                           _activeController!.value.position),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           color: Colors.white70, fontSize: 11),
                                     ),
                                     Builder(builder: (context) {
@@ -737,7 +744,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
 
                                       return Text(
                                         '-${MediaFormatUtils.formatDuration(displayRemaining)}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             color: Colors.white70,
                                             fontSize: 11),
                                       );
@@ -753,7 +760,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                     current.fileName,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,
                                         fontSize: 13),
@@ -773,7 +780,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                 )
                               ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            SizedBox(height: AppSpacing.sm),
                             Wrap(
                               spacing: AppSpacing.sm,
                               runSpacing: AppSpacing.sm,
@@ -819,7 +826,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                           onTap: () =>
                                               lc.toggleLike(current.id),
                                         ),
-                                        const SizedBox(width: AppSpacing.sm),
+                                        SizedBox(width: AppSpacing.sm),
                                         _ActionChip(
                                           icon: Icons.mode_comment_outlined,
                                           label: 'Comments',
@@ -846,7 +853,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                     ),
                                   ),
                                   _ActionChip(
-                                    icon: Icons.drive_file_rename_outline_rounded,
+                                    icon:
+                                        Icons.drive_file_rename_outline_rounded,
                                     label: 'Rename',
                                     onTap: renameCurrent,
                                   ),
@@ -1088,12 +1096,11 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
   @override
   Widget build(BuildContext context) {
     if (!widget.isNearby) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
 
     if (_initializing) {
-      return const Center(
-          child: CircularProgressIndicator(color: Colors.white));
+      return Center(child: CircularProgressIndicator(color: Colors.white));
     }
     if (_initFailed || _controller == null) {
       return _NoVideoPlaceholder(media: widget.media);
@@ -1141,7 +1148,7 @@ class _NoVideoPlaceholder extends StatelessWidget {
         children: [
           Icon(Icons.videocam_off_rounded,
               color: Colors.white.withValues(alpha: 0.92), size: 48),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Text(
             'Video file not available on this device',
             textAlign: TextAlign.center,
@@ -1189,7 +1196,7 @@ class _InfoPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.68),
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -1211,7 +1218,7 @@ class _InfoPanel extends StatelessWidget {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1219,7 +1226,7 @@ class _InfoPanel extends StatelessWidget {
             width: 80,
             child: Text(
               '$label: ',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white70,
                 fontSize: 11.5,
                 fontWeight: FontWeight.bold,
@@ -1229,7 +1236,7 @@ class _InfoPanel extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 11.5,
               ),
@@ -1260,7 +1267,7 @@ class _ActionChip extends StatelessWidget {
       avatar: Icon(icon, size: 16, color: iconColor ?? Colors.white),
       label: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
           fontSize: 11,
           fontWeight: FontWeight.w600,

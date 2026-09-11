@@ -14,7 +14,8 @@ final studioRepositoryProvider = Provider<StudioDirectoryRepository>((ref) {
 /// A studio editing its OWN profile (logo, cover photo, Showcase
 /// Portfolio) — separate from [studioRepositoryProvider] above, which is
 /// for a *client* browsing/favoriting *other* studios' public profiles.
-final studioProfileRepositoryProvider = Provider<StudioProfileRepository>((ref) {
+final studioProfileRepositoryProvider =
+    Provider<StudioProfileRepository>((ref) {
   return StudioProfileRepository(apiClient: ref.watch(apiClientProvider));
 });
 
@@ -39,7 +40,8 @@ class StudioNotifier extends ChangeNotifier {
   /// disable just that studio's button instead of the whole screen
   /// while the optimistic update is unconfirmed.
   final Set<String> _pendingConnectionIds = {};
-  Set<String> get pendingConnectionIds => Set.unmodifiable(_pendingConnectionIds);
+  Set<String> get pendingConnectionIds =>
+      Set.unmodifiable(_pendingConnectionIds);
 
   List<StudioModel> _studios = [];
 
@@ -52,9 +54,12 @@ class StudioNotifier extends ChangeNotifier {
 
   List<StudioModel> get filteredStudios {
     return _studios.where((studio) {
-      final matchesQuery = studio.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesQuery = studio.name
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()) ||
           studio.location.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          studio.categories.any((c) => c.toLowerCase().contains(_searchQuery.toLowerCase()));
+          studio.categories
+              .any((c) => c.toLowerCase().contains(_searchQuery.toLowerCase()));
 
       final matchesCategory = _selectedCategory == 'All' ||
           studio.categories.contains(_selectedCategory);
@@ -179,7 +184,8 @@ class StudioNotifier extends ChangeNotifier {
     } catch (e) {
       final revertIndex = _studios.indexWhere((studio) => studio.id == id);
       if (revertIndex != -1) {
-        _studios[revertIndex] = _studios[revertIndex].copyWith(isFavorite: wasFavorite);
+        _studios[revertIndex] =
+            _studios[revertIndex].copyWith(isFavorite: wasFavorite);
       }
       _favoritesError = wasFavorite
           ? 'Could not remove from favorites. Try again.'
@@ -198,12 +204,15 @@ class StudioNotifier extends ChangeNotifier {
   /// without depending on [directoryError] staying in sync.
   Future<bool> requestConnection(String id) async {
     final index = _studios.indexWhere((studio) => studio.id == id);
-    if (index == -1 || _studios[index].connectionStatus != StudioConnectionStatus.notConnected) {
+    if (index == -1 ||
+        _studios[index].connectionStatus !=
+            StudioConnectionStatus.notConnected) {
       return false;
     }
 
     _pendingConnectionIds.add(id);
-    _studios[index] = _studios[index].copyWith(connectionStatus: StudioConnectionStatus.pending);
+    _studios[index] = _studios[index]
+        .copyWith(connectionStatus: StudioConnectionStatus.pending);
     notifyListeners();
 
     try {
@@ -212,8 +221,8 @@ class StudioNotifier extends ChangeNotifier {
     } catch (e) {
       final revertIndex = _studios.indexWhere((studio) => studio.id == id);
       if (revertIndex != -1) {
-        _studios[revertIndex] =
-            _studios[revertIndex].copyWith(connectionStatus: StudioConnectionStatus.notConnected);
+        _studios[revertIndex] = _studios[revertIndex]
+            .copyWith(connectionStatus: StudioConnectionStatus.notConnected);
       }
       _directoryError = 'Could not send connection request. Try again.';
       if (kDebugMode) debugPrint('requestConnection failed: $e');
@@ -230,12 +239,14 @@ class StudioNotifier extends ChangeNotifier {
   /// same reasoning as [requestConnection].
   Future<bool> withdrawConnectionRequest(String id) async {
     final index = _studios.indexWhere((studio) => studio.id == id);
-    if (index == -1 || _studios[index].connectionStatus != StudioConnectionStatus.pending) {
+    if (index == -1 ||
+        _studios[index].connectionStatus != StudioConnectionStatus.pending) {
       return false;
     }
 
     _pendingConnectionIds.add(id);
-    _studios[index] = _studios[index].copyWith(connectionStatus: StudioConnectionStatus.notConnected);
+    _studios[index] = _studios[index]
+        .copyWith(connectionStatus: StudioConnectionStatus.notConnected);
     notifyListeners();
 
     try {
@@ -244,8 +255,8 @@ class StudioNotifier extends ChangeNotifier {
     } catch (e) {
       final revertIndex = _studios.indexWhere((studio) => studio.id == id);
       if (revertIndex != -1) {
-        _studios[revertIndex] =
-            _studios[revertIndex].copyWith(connectionStatus: StudioConnectionStatus.pending);
+        _studios[revertIndex] = _studios[revertIndex]
+            .copyWith(connectionStatus: StudioConnectionStatus.pending);
       }
       _directoryError = 'Could not withdraw request. Try again.';
       if (kDebugMode) debugPrint('withdrawConnectionRequest failed: $e');
@@ -276,7 +287,8 @@ final studioProvider = ChangeNotifierProvider<StudioNotifier>((ref) {
 /// App Settings screen to show "Last backed up: ...".
 final latestBackupProvider = FutureProvider.autoDispose<DateTime?>((ref) async {
   try {
-    final backup = await ref.watch(studioProfileRepositoryProvider).getLatestBackup();
+    final backup =
+        await ref.watch(studioProfileRepositoryProvider).getLatestBackup();
     return backup.createdAt;
   } on NotFoundException {
     return null;

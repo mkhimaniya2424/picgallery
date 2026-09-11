@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/user.dart';
@@ -37,11 +36,11 @@ class MainNavScreenState extends ConsumerState<MainNavScreen> {
   late final _tabs = [
     const HomeScreen(),
     const GalleryScreen(),
-    const Padding(
+    Padding(
       padding: EdgeInsets.only(top: kToolbarHeight),
       child: AlertsScreen(),
     ),
-    const Padding(
+    Padding(
       padding: EdgeInsets.only(top: kToolbarHeight),
       child: ProfileScreen(),
     ),
@@ -83,7 +82,6 @@ class MainNavScreenState extends ConsumerState<MainNavScreen> {
 
     return Scaffold(
       key: scaffoldKey,
-      
       extendBodyBehindAppBar: true,
       drawer: ClientDrawer(
         currentIndex: _navIndex,
@@ -111,7 +109,7 @@ class MainNavScreenState extends ConsumerState<MainNavScreen> {
       title: title,
       leading: Builder(
         builder: (context) => IconButton(
-          icon: const Icon(Icons.menu_rounded),
+          icon: Icon(Icons.menu_rounded),
           onPressed: () => openDrawer(),
         ),
       ),

@@ -323,7 +323,9 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
   Future<void> renameFolder(String id, String newName) async {
     final current = state.value ?? _empty();
     final folder = folderById(id);
-    if (folder == null) throw NotFoundException('Folder "$id" no longer exists');
+    if (folder == null) {
+      throw NotFoundException('Folder "$id" no longer exists');
+    }
 
     final siblingNames = current.allFolders
         .where((f) => f.parentId == folder.parentId && f.id != id)
@@ -370,7 +372,9 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
   /// Any albums filed directly under it are unfiled (never deleted).
   Future<void> deleteFolder(String id) async {
     final folder = folderById(id);
-    if (folder == null) throw NotFoundException('Folder "$id" no longer exists');
+    if (folder == null) {
+      throw NotFoundException('Folder "$id" no longer exists');
+    }
 
     final current = state.value ?? _empty();
     final children = current.allFolders.where((f) => f.parentId == id).toList();
@@ -387,10 +391,8 @@ class FolderNotifier extends AsyncNotifier<FolderState> {
 
     await _repo.deleteFolder(id);
 
-    final next = (state.value ?? _empty())
-        .allFolders
-        .where((f) => f.id != id)
-        .toList();
+    final next =
+        (state.value ?? _empty()).allFolders.where((f) => f.id != id).toList();
 
     state = AsyncValue.data(
       (state.value ?? _empty()).copyWith(
@@ -519,7 +521,8 @@ class FolderFacade {
 
   void setSearchQuery(String value) => _notifier.setSearchQuery(value);
   void setSortOption(FolderSortOption value) => _notifier.setSortOption(value);
-  void setFilterOption(FolderFilterOption value) => _notifier.setFilterOption(value);
+  void setFilterOption(FolderFilterOption value) =>
+      _notifier.setFilterOption(value);
 
   // -----------------------------------------------------------------------
   // Query methods — implemented directly on _state so they always use the
@@ -590,13 +593,17 @@ class FolderFacade {
   }) =>
       _notifier.createFolder(name: name, parentId: parentId);
 
-  Future<void> renameFolder(String id, String newName) => _notifier.renameFolder(id, newName);
-  Future<void> moveFolder(String id, String? newParentId) => _notifier.moveFolder(id, newParentId);
-  Future<void> setHidden(String id, bool isHidden) => _notifier.setHidden(id, isHidden);
+  Future<void> renameFolder(String id, String newName) =>
+      _notifier.renameFolder(id, newName);
+  Future<void> moveFolder(String id, String? newParentId) =>
+      _notifier.moveFolder(id, newParentId);
+  Future<void> setHidden(String id, bool isHidden) =>
+      _notifier.setHidden(id, isHidden);
   Future<void> toggleFavorite(String id) => _notifier.toggleFavorite(id);
   Future<void> deleteFolder(String id) => _notifier.deleteFolder(id);
 
-  void recomputeAlbumCounts(List<AlbumModel> albums) => _notifier.recomputeAlbumCounts(albums);
+  void recomputeAlbumCounts(List<AlbumModel> albums) =>
+      _notifier.recomputeAlbumCounts(albums);
 }
 
 /// Provider exported to screens.

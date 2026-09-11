@@ -123,7 +123,9 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                               if (v == null || v.trim().isEmpty) {
                                 return 'Enter your admin email';
                               }
-                              if (!v.contains('@')) return 'Enter a valid email';
+                              if (!v.contains('@')) {
+                                return 'Enter a valid email';
+                              }
                               return null;
                             },
                           ),
@@ -172,7 +174,8 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 gradient: AppColors.buttonGradient,
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.sm),
                               ),
                               child: ElevatedButton(
                                 onPressed: _loading ? null : _submit,

@@ -27,7 +27,6 @@ class PrivacyPolicyScreen extends ConsumerWidget {
     final contentAsync = ref.watch(privacyPolicyProvider);
 
     return Scaffold(
-      
       appBar: const CustomAppBar(
         title: 'Privacy Policy',
       ),
@@ -55,7 +54,8 @@ class PrivacyPolicyScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: InlineErrorBanner(
-                message: 'Couldn\'t load the privacy policy. ${_friendlyError(error)}',
+                message:
+                    'Couldn\'t load the privacy policy. ${_friendlyError(error)}',
                 action: TextButton(
                   onPressed: () => ref.invalidate(privacyPolicyProvider),
                   child: const Text('Retry'),
@@ -81,7 +81,9 @@ class _Intro extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white.withValues(alpha: 0.88),
+        color: isDark
+            ? AppColors.darkSurface
+            : Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: isDark
@@ -142,7 +144,9 @@ class _PolicySection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white.withValues(alpha: 0.88),
+        color: isDark
+            ? AppColors.darkSurface
+            : Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: isDark

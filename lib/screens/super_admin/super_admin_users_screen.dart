@@ -27,8 +27,8 @@ class _SuperAdminUsersScreenState extends State<SuperAdminUsersScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-        length: 3, vsync: this, initialIndex: widget.initialTab);
+    _tabController =
+        TabController(length: 3, vsync: this, initialIndex: widget.initialTab);
   }
 
   @override
@@ -41,19 +41,20 @@ class _SuperAdminUsersScreenState extends State<SuperAdminUsersScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: AppBar(
-        
         elevation: 0,
         title: const Text('Users',
             style: TextStyle(
-                color: AppColors.text, fontWeight: FontWeight.w700, fontSize: 18)),
+                color: AppColors.text,
+                fontWeight: FontWeight.w700,
+                fontSize: 18)),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.subtitle,
           indicatorColor: AppColors.primary,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          labelStyle:
+              const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           tabs: const [
             Tab(text: 'Studio'),
             Tab(text: 'Client'),
@@ -71,7 +72,8 @@ class _SuperAdminUsersScreenState extends State<SuperAdminUsersScreen>
               onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
               decoration: InputDecoration(
                 hintText: 'Search by name or email',
-                prefixIcon: const Icon(Icons.search_rounded, color: AppColors.subtitle),
+                prefixIcon:
+                    const Icon(Icons.search_rounded, color: AppColors.subtitle),
                 filled: true,
                 fillColor: AppColors.surfaceElevated,
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -193,7 +195,8 @@ class _WebsiteLeadList extends StatelessWidget {
               ),
               if (lead.convertedToAccount)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -238,7 +241,8 @@ class _UserTile extends StatelessWidget {
               CircleAvatar(
                 radius: 20,
                 backgroundColor:
-                    (isStudio ? AppColors.primary : AppColors.accent).withValues(alpha: 0.12),
+                    (isStudio ? AppColors.primary : AppColors.accent)
+                        .withValues(alpha: 0.12),
                 child: Text(user.initials,
                     style: TextStyle(
                         color: isStudio ? AppColors.primary : AppColors.accent,
@@ -265,9 +269,7 @@ class _UserTile extends StatelessWidget {
                       ],
                     ),
                     Text(
-                        isStudio
-                            ? (user.studioName ?? user.email)
-                            : user.email,
+                        isStudio ? (user.studioName ?? user.email) : user.email,
                         style: const TextStyle(
                             fontSize: 11.5, color: AppColors.subtitle)),
                   ],
@@ -275,9 +277,11 @@ class _UserTile extends StatelessWidget {
               ),
               if (isStudio)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: user.subscriptionStatus.color.withValues(alpha: 0.12),
+                    color:
+                        user.subscriptionStatus.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(user.subscriptionStatus.label,
@@ -287,7 +291,8 @@ class _UserTile extends StatelessWidget {
                           color: user.subscriptionStatus.color)),
                 )
               else
-                const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.subtitle),
             ],
           ),
         ),

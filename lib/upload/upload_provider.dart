@@ -9,7 +9,6 @@ import 'upload_media_prep.dart';
 import 'upload_network_gate.dart';
 import 'upload_state.dart';
 
-
 /// Provider for a single upload job.
 ///
 /// Task 19.9: This is a separate provider from the upload queue.
@@ -24,10 +23,10 @@ final uploadProvider =
   ),
 );
 
-
 /// Riverpod notifier for uploading a single file.
 class UploadController extends StateNotifier<UploadState> {
-  UploadController({required Ref ref, required MediaUploadService mediaUploadService})
+  UploadController(
+      {required Ref ref, required MediaUploadService mediaUploadService})
       : _ref = ref,
         _service = mediaUploadService,
         super(const UploadState.initial());
@@ -130,4 +129,3 @@ class UploadController extends StateNotifier<UploadState> {
     }
   }
 }
-

@@ -58,7 +58,8 @@ class _FolderExplorerScreenState extends ConsumerState<FolderExplorerScreen> {
                       ),
                     )
                   : GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: AppSpacing.md,
                         mainAxisSpacing: AppSpacing.md,

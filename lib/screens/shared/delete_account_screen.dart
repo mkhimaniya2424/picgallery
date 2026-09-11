@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -35,7 +35,8 @@ class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
 
   @override
-  ConsumerState<DeleteAccountScreen> createState() => _DeleteAccountScreenState();
+  ConsumerState<DeleteAccountScreen> createState() =>
+      _DeleteAccountScreenState();
 }
 
 class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
@@ -57,7 +58,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       await AppPopup.show(
         context,
         title: 'One More Thing',
-        message: 'Please confirm you understand this action is permanent before continuing.',
+        message:
+            'Please confirm you understand this action is permanent before continuing.',
         isError: true,
       );
       return;
@@ -69,15 +71,17 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     setState(() => _isDeleting = true);
     try {
       await ref.read(userRepositoryProvider).deleteAccount(
-        password: isLocal ? _passwordController.text : null,
-      );
+            password: isLocal ? _passwordController.text : null,
+          );
       await ref.read(authProvider.notifier).logout();
 
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.roleSelection, (route) => false);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppRoutes.roleSelection, (route) => false);
     } on ApiException catch (e) {
       if (!mounted) return;
-      await AppPopup.show(context, title: 'Couldn\'t Delete Account', message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: 'Couldn\'t Delete Account', message: e.message, isError: true);
     } finally {
       if (mounted) setState(() => _isDeleting = false);
     }
@@ -89,14 +93,18 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.45),
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.surface),
             borderRadius: BorderRadius.circular(AppRadius.lg),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 12)),
             ],
           ),
           child: Column(
@@ -106,20 +114,29 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.error.withValues(alpha: 0.85), AppColors.error]),
+                  gradient: LinearGradient(colors: [
+                    AppColors.error.withValues(alpha: 0.85),
+                    AppColors.error
+                  ]),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 30),
+                child: Icon(Icons.delete_forever_rounded,
+                    color: Colors.white, size: 30),
               ),
-              const SizedBox(height: AppSpacing.md),
-              Text('Delete Your Account?', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.md),
+              Text('Delete Your Account?',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge),
+              SizedBox(height: AppSpacing.sm),
               Text(
                 'This is permanent. You\'ll be signed out immediately and won\'t be able to sign back in with this account.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(height: 1.4),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
                   Expanded(
@@ -130,12 +147,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       onPressed: () => Navigator.of(dialogContext).pop(false),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: GradientButton(
                       label: 'Delete',
                       height: 52,
-                      gradient: LinearGradient(colors: [AppColors.error.withValues(alpha: 0.85), AppColors.error]),
+                      gradient: LinearGradient(colors: [
+                        AppColors.error.withValues(alpha: 0.85),
+                        AppColors.error
+                      ]),
                       onPressed: () => Navigator.of(dialogContext).pop(true),
                     ),
                   ),
@@ -159,7 +179,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
@@ -170,12 +190,14 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     children: [
                       GlassCard(
                         fillColor: AppColors.error.withValues(alpha: 0.08),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.25)),
+                        border: Border.all(
+                            color: AppColors.error.withValues(alpha: 0.25)),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
-                            const SizedBox(width: AppSpacing.md),
+                            Icon(Icons.warning_amber_rounded,
+                                color: AppColors.error, size: 22),
+                            SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Text(
                                 'Deleting your account is permanent. Your profile will no longer be accessible, '
@@ -192,25 +214,29 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                         ),
                       ),
                       if (isLocal) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        Text('Confirm Your Password', style: Theme.of(context).textTheme.titleLarge),
-                        const SizedBox(height: AppSpacing.sm),
+                        SizedBox(height: AppSpacing.xl),
+                        Text('Confirm Your Password',
+                            style: Theme.of(context).textTheme.titleLarge),
+                        SizedBox(height: AppSpacing.sm),
                         Text(
                           'For your security, enter your password to continue.',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const SizedBox(height: AppSpacing.md),
+                        SizedBox(height: AppSpacing.md),
                         CustomTextField(
                           label: 'Password',
                           icon: Icons.lock_outline_rounded,
                           obscureText: true,
                           controller: _passwordController,
-                          validator: (v) => (v == null || v.isEmpty) ? 'Enter your password to continue' : null,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Enter your password to continue'
+                              : null,
                         ),
                       ],
-                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(height: AppSpacing.lg),
                       InkWell(
-                        onTap: () => setState(() => _acknowledged = !_acknowledged),
+                        onTap: () =>
+                            setState(() => _acknowledged = !_acknowledged),
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,30 +247,40 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                               child: Checkbox(
                                 value: _acknowledged,
                                 activeColor: AppColors.error,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                onChanged: (v) => setState(() => _acknowledged = v ?? false),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6)),
+                                onChanged: (v) =>
+                                    setState(() => _acknowledged = v ?? false),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            const Expanded(
+                            SizedBox(width: 10),
+                            Expanded(
                               child: Padding(
                                 padding: EdgeInsets.only(top: 3),
                                 child: Text(
                                   'I understand this action is permanent and cannot be undone.',
-                                  style: TextStyle(fontSize: 13, color: AppColors.subtitle, fontWeight: FontWeight.w500),
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xl),
+                      SizedBox(height: AppSpacing.xl),
                       GradientButton(
                         label: 'Delete My Account',
                         icon: Icons.delete_forever_rounded,
                         isLoading: _isDeleting,
-                        gradient: LinearGradient(colors: [AppColors.error.withValues(alpha: 0.85), AppColors.error]),
-                        onPressed: _isDeleting ? null : () => _handleDeletePressed(isLocal),
+                        gradient: LinearGradient(colors: [
+                          AppColors.error.withValues(alpha: 0.85),
+                          AppColors.error
+                        ]),
+                        onPressed: _isDeleting
+                            ? null
+                            : () => _handleDeletePressed(isLocal),
                       ),
                     ],
                   ),
@@ -257,4 +293,3 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     );
   }
 }
-

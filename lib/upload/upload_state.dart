@@ -72,10 +72,10 @@ class UploadState {
       totalBytes: totalBytes ?? this.totalBytes,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       uploadedMediaId: uploadedMediaId ?? this.uploadedMediaId,
-      uploadedMediaFileName: uploadedMediaFileName ?? this.uploadedMediaFileName,
+      uploadedMediaFileName:
+          uploadedMediaFileName ?? this.uploadedMediaFileName,
       currentJobId: currentJobId ?? this.currentJobId,
       currentFileName: currentFileName ?? this.currentFileName,
     );
   }
 }
-

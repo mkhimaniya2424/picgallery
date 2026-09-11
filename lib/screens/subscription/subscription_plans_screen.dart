@@ -11,20 +11,22 @@ import '../../providers/drawer_provider.dart';
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/common/custom_app_bar.dart';
 
-
 class SubscriptionPlansScreen extends ConsumerStatefulWidget {
   const SubscriptionPlansScreen({super.key});
 
   @override
-  ConsumerState<SubscriptionPlansScreen> createState() => _SubscriptionPlansScreenState();
+  ConsumerState<SubscriptionPlansScreen> createState() =>
+      _SubscriptionPlansScreenState();
 }
 
-class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScreen> {
+class _SubscriptionPlansScreenState
+    extends ConsumerState<SubscriptionPlansScreen> {
   late SubscriptionPlanModel _selectedPlan;
   final ScrollController _scrollController = ScrollController();
 
   // The external website where subscription purchases are completed.
-  static const String _subscriptionWebsiteUrl = 'https://picgallery.in/pricing.php';
+  static const String _subscriptionWebsiteUrl =
+      'https://picgallery.in/pricing.php';
 
   @override
   void initState() {
@@ -57,7 +59,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
         plan: plan,
         onConfirm: () async {
           Navigator.of(context).pop(); // close sheet
-          
+
           if (plan.planType == SubscriptionPlan.trial) {
             try {
               // Show a loading indicator if needed, but the provider handles state
@@ -113,11 +115,12 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
 
     final isSelectedActive = _selectedPlan.planType == currentPlanType;
     // Lock trial button if already used and not currently on trial plan
-    final isSelectedTrialLocked = _selectedPlan.planType == SubscriptionPlan.trial &&
-        trialUsed && currentPlanType != SubscriptionPlan.trial;
+    final isSelectedTrialLocked =
+        _selectedPlan.planType == SubscriptionPlan.trial &&
+            trialUsed &&
+            currentPlanType != SubscriptionPlan.trial;
 
     return Scaffold(
-      
       appBar: const CustomAppBar(
         title: 'Subscription Plans',
         showBack: true,
@@ -127,7 +130,8 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
           SafeArea(
             child: SingleChildScrollView(
               controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: AppSpacing.md),
               physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -138,13 +142,15 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                       children: [
                         // Premium Visual Badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
                             gradient: AppColors.buttonGradient,
                             borderRadius: BorderRadius.circular(AppRadius.pill),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.25),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.25),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -153,7 +159,8 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.star_rounded, color: Colors.white, size: 13),
+                              Icon(Icons.star_rounded,
+                                  color: Colors.white, size: 13),
                               SizedBox(width: 4),
                               Text(
                                 'STUDIO ELITE',
@@ -170,7 +177,10 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                         const SizedBox(height: AppSpacing.md),
                         Text(
                           'Choose Your Plan',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineLarge
+                              ?.copyWith(
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: -0.5,
                                 height: 1.15,
@@ -180,10 +190,13 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           'Unlock the full power of your studio',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                           textAlign: TextAlign.center,
                         ),
                         // Current Plan Indicator — only shown once the user
@@ -199,14 +212,19 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                         if (planActive) ...[
                           const SizedBox(height: AppSpacing.md),
                           Builder(builder: (ctx) {
-                            final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                            final isDark =
+                                Theme.of(ctx).brightness == Brightness.dark;
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Theme.of(ctx).scaffoldBackgroundColor,
-                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
                                 border: Border.all(
-                                  color: isDark ? AppColors.darkBorder : AppColors.border,
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.border,
                                 ),
                                 boxShadow: AppShadows.subtle,
                               ),
@@ -226,7 +244,9 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                                     'Current Plan: ',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                                      color: isDark
+                                          ? AppColors.subtitleOnDark
+                                          : AppColors.subtitle,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -234,7 +254,9 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                                     currentModel.name,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isDark ? AppColors.textOnDark : AppColors.text,
+                                      color: isDark
+                                          ? AppColors.textOnDark
+                                          : AppColors.text,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
@@ -280,7 +302,8 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                     ),
 
                   // ── Active Plan Banner ─────────────────────────────────
-                  if (planActive && !(daysRemaining >= 0 && daysRemaining <= 15))
+                  if (planActive &&
+                      !(daysRemaining >= 0 && daysRemaining <= 15))
                     Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                       padding: const EdgeInsets.symmetric(
@@ -340,8 +363,10 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                       .map((plan) {
                     final isSelected = _selectedPlan.id == plan.id;
                     final isActive = currentPlanType == plan.planType;
-                    final isPlanTrialLocked = plan.planType == SubscriptionPlan.trial &&
-                        trialUsed && !isActive;
+                    final isPlanTrialLocked =
+                        plan.planType == SubscriptionPlan.trial &&
+                            trialUsed &&
+                            !isActive;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
                       child: _PlanCard(
@@ -388,7 +413,9 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                               borderRadius: BorderRadius.circular(AppRadius.md),
                             ),
                           ).copyWith(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                            backgroundColor:
+                                WidgetStateProperty.resolveWith<Color?>(
+                                    (states) {
                               if (states.contains(WidgetState.disabled)) {
                                 return AppColors.border.withValues(alpha: 0.5);
                               }
@@ -396,12 +423,14 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                             }),
                           ),
                           child: Ink(
-                            decoration: (isSelectedActive || isSelectedTrialLocked)
-                                ? null
-                                : BoxDecoration(
-                                    gradient: AppColors.buttonGradient,
-                                    borderRadius: BorderRadius.circular(AppRadius.md),
-                                  ),
+                            decoration:
+                                (isSelectedActive || isSelectedTrialLocked)
+                                    ? null
+                                    : BoxDecoration(
+                                        gradient: AppColors.buttonGradient,
+                                        borderRadius:
+                                            BorderRadius.circular(AppRadius.md),
+                                      ),
                             child: Container(
                               alignment: Alignment.center,
                               child: Text(
@@ -409,15 +438,18 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                                     ? 'Current Plan'
                                     : isSelectedTrialLocked
                                         ? 'Trial Already Used'
-                                        : _selectedPlan.planType == SubscriptionPlan.trial
+                                        : _selectedPlan.planType ==
+                                                SubscriptionPlan.trial
                                             ? 'Get Started Free'
-                                            : currentPlanType == SubscriptionPlan.free
+                                            : currentPlanType ==
+                                                    SubscriptionPlan.free
                                                 ? 'Upgrade to ${_selectedPlan.name}'
                                                 : 'Switch to ${_selectedPlan.name}',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
-                                  color: (isSelectedActive || isSelectedTrialLocked)
+                                  color: (isSelectedActive ||
+                                          isSelectedTrialLocked)
                                       ? AppColors.subtitle
                                       : Colors.white,
                                 ),
@@ -537,7 +569,8 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                   b.desc,
                   style: TextStyle(
                     fontSize: 10,
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                    color:
+                        isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                     height: 1.3,
                     fontWeight: FontWeight.w500,
                   ),
@@ -599,22 +632,23 @@ class _PlanCard extends StatelessWidget {
           offset: const Offset(0, 6),
         );
       } else {
-        cardBorder = Border.all(color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle, width: 2.2);
+        cardBorder = Border.all(
+            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+            width: 2.2);
       }
     } else {
-      cardBorder = Border.all(color: isDark ? AppColors.darkBorder : AppColors.border, width: 1);
+      cardBorder = Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border, width: 1);
     }
 
     if (isActive) {
-      cardBackground = isFree 
-        ? (isDark 
-          ? Colors.grey.shade800 
-          : Colors.grey.shade100)
-        : (isDark ? AppColors.primary.withValues(alpha: 0.15) : const Color(0xFFF9F7FF));
+      cardBackground = isFree
+          ? (isDark ? Colors.grey.shade800 : Colors.grey.shade100)
+          : (isDark
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : const Color(0xFFF9F7FF));
     } else {
-      cardBackground = isDark
-        ? Colors.grey.shade900
-        : Colors.white;
+      cardBackground = isDark ? Colors.grey.shade900 : Colors.white;
     }
 
     return GestureDetector(
@@ -645,9 +679,14 @@ class _PlanCard extends StatelessWidget {
                           children: [
                             Text(
                               plan.name,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w900,
-                                    color: isDark ? AppColors.textOnDark : AppColors.text,
+                                    color: isDark
+                                        ? AppColors.textOnDark
+                                        : AppColors.text,
                                   ),
                             ),
                             const SizedBox(height: 2),
@@ -655,7 +694,9 @@ class _PlanCard extends StatelessWidget {
                               plan.subtitle,
                               style: TextStyle(
                                 fontSize: 11.5,
-                                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                                color: isDark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -675,7 +716,9 @@ class _PlanCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w900,
-                                  color: isDark ? AppColors.textOnDark : AppColors.text,
+                                  color: isDark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text,
                                   letterSpacing: -0.5,
                                 ),
                               ),
@@ -684,7 +727,9 @@ class _PlanCard extends StatelessWidget {
                                   ' / ${plan.billingPeriod}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                                    color: isDark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -694,7 +739,9 @@ class _PlanCard extends StatelessWidget {
                                   ' / ${plan.duration}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                                    color: isDark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -703,10 +750,13 @@ class _PlanCard extends StatelessWidget {
                           if (isActive)
                             Container(
                               margin: const EdgeInsets.only(top: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: plan.planType.color.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                color:
+                                    plan.planType.color.withValues(alpha: 0.15),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.sm),
                               ),
                               child: Text(
                                 'ACTIVE',
@@ -721,10 +771,12 @@ class _PlanCard extends StatelessWidget {
                           else if (isTrialLocked)
                             Container(
                               margin: const EdgeInsets.only(top: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.grey.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.sm),
                               ),
                               child: const Text(
                                 'ALREADY USED',
@@ -742,20 +794,32 @@ class _PlanCard extends StatelessWidget {
                   ),
 
                   const SizedBox(height: AppSpacing.md),
-                  Divider(height: 1, color: isDark ? AppColors.darkBorder : AppColors.border),
+                  Divider(
+                      height: 1,
+                      color: isDark ? AppColors.darkBorder : AppColors.border),
                   const SizedBox(height: AppSpacing.md),
 
                   // Feature List
                   ...plan.features.map((feature) {
-                    final isLimited = isFree && (feature.contains('Limited') || feature.contains('Standard'));
+                    final isLimited = isFree &&
+                        (feature.contains('Limited') ||
+                            feature.contains('Standard'));
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
                           Icon(
-                            isLimited ? Icons.info_outline_rounded : Icons.check_circle_rounded,
+                            isLimited
+                                ? Icons.info_outline_rounded
+                                : Icons.check_circle_rounded,
                             size: 15,
-                            color: isLimited ? Colors.amber.shade700 : (isFree ? (isDark ? AppColors.subtitleOnDark : AppColors.subtitle) : AppColors.primary),
+                            color: isLimited
+                                ? Colors.amber.shade700
+                                : (isFree
+                                    ? (isDark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle)
+                                    : AppColors.primary),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -763,10 +827,17 @@ class _PlanCard extends StatelessWidget {
                               feature,
                               style: TextStyle(
                                 fontSize: 12.5,
-                                fontWeight: isLimited ? FontWeight.w600 : FontWeight.w500,
-                                color: isLimited 
-                                    ? (isDark ? AppColors.textOnDark : AppColors.text) 
-                                    : (isDark ? AppColors.textOnDark : AppColors.text).withValues(alpha: 0.8),
+                                fontWeight: isLimited
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isLimited
+                                    ? (isDark
+                                        ? AppColors.textOnDark
+                                        : AppColors.text)
+                                    : (isDark
+                                            ? AppColors.textOnDark
+                                            : AppColors.text)
+                                        .withValues(alpha: 0.8),
                               ),
                             ),
                           ),
@@ -780,7 +851,8 @@ class _PlanCard extends StatelessWidget {
                   if (plan.planType != SubscriptionPlan.free) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: (plan.planType == SubscriptionPlan.trial
                                 ? AppColors.subtitle
@@ -829,7 +901,8 @@ class _PlanCard extends StatelessWidget {
                 top: -11,
                 left: 20,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.gold,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -843,7 +916,8 @@ class _PlanCard extends StatelessWidget {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 12),
+                      Icon(Icons.workspace_premium_rounded,
+                          color: Colors.white, size: 12),
                       SizedBox(width: 4),
                       Text(
                         'BEST VALUE • YEARLY SAVINGS',
@@ -863,7 +937,8 @@ class _PlanCard extends StatelessWidget {
                 top: -11,
                 left: 20,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -951,7 +1026,8 @@ class _CurrentPlanStatusCard extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: onExploreTap,
                 style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md)),
                   side: const BorderSide(color: AppColors.primary),
                   foregroundColor: AppColors.primary,
                 ),
@@ -964,14 +1040,18 @@ class _CurrentPlanStatusCard extends StatelessWidget {
           ] else ...[
             _buildStatusRow(context, 'Plan Type', currentPlan.name),
             _buildStatusRow(context, 'Status', 'Active', isValueGreen: true),
-            _buildStatusRow(context, 'Renewal Date',
+            _buildStatusRow(
+                context,
+                'Renewal Date',
                 subState?.expiresAt != null
                     // .toLocal() — same fix as the banner above; expiresAt
                     // arrives from the backend as UTC.
-                    ? DateFormat('dd MMM yyyy, hh:mm a').format(subState!.expiresAt!.toLocal())
+                    ? DateFormat('dd MMM yyyy, hh:mm a')
+                        .format(subState!.expiresAt!.toLocal())
                     : 'N/A'),
             if (subState != null && subState!.daysRemaining >= 0)
-              _buildStatusRow(context, 'Days Remaining', '${subState!.daysRemaining} days'),
+              _buildStatusRow(
+                  context, 'Days Remaining', '${subState!.daysRemaining} days'),
             _buildStatusRow(context, 'Backup Type', currentPlan.backupDuration),
             const SizedBox(height: AppSpacing.md),
             const Divider(color: AppColors.darkBorder),
@@ -989,7 +1069,8 @@ class _CurrentPlanStatusCard extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_rounded, color: AppColors.gold, size: 14),
+                      const Icon(Icons.check_rounded,
+                          color: AppColors.gold, size: 14),
                       const SizedBox(width: 6),
                       Text(
                         f,
@@ -1008,7 +1089,8 @@ class _CurrentPlanStatusCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusRow(BuildContext context, String label, String value, {bool isValueGreen = false}) {
+  Widget _buildStatusRow(BuildContext context, String label, String value,
+      {bool isValueGreen = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -1016,7 +1098,10 @@ class _CurrentPlanStatusCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12.5, color: AppColors.subtitleOnDark, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                fontSize: 12.5,
+                color: AppColors.subtitleOnDark,
+                fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: 8),
           Flexible(
@@ -1054,9 +1139,11 @@ class _ConfirmationBottomSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1176,11 +1263,15 @@ class _ConfirmationBottomSheet extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 16),
+                      const Icon(Icons.check_circle_rounded,
+                          color: AppColors.primary, size: 16),
                       const SizedBox(width: 8),
                       Text(
                         f,
-                        style: const TextStyle(fontSize: 13, color: AppColors.text, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.text,
+                            fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -1189,11 +1280,15 @@ class _ConfirmationBottomSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  const Icon(Icons.cloud_done_rounded, color: AppColors.primary, size: 16),
+                  const Icon(Icons.cloud_done_rounded,
+                      color: AppColors.primary, size: 16),
                   const SizedBox(width: 8),
                   Text(
                     plan.backupDuration,
-                    style: const TextStyle(fontSize: 13, color: AppColors.text, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.text,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -1208,11 +1303,14 @@ class _ConfirmationBottomSheet extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-                      side: const BorderSide(color: AppColors.border, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
+                      side:
+                          const BorderSide(color: AppColors.border, width: 1.5),
                       foregroundColor: AppColors.text,
                     ),
-                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w800)),
+                    child: const Text('Cancel',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -1222,11 +1320,13 @@ class _ConfirmationBottomSheet extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     child: const Text(
                       'Proceed to Payment',
-                      style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, color: Colors.white),
                     ),
                   ),
                 ),

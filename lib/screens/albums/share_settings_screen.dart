@@ -21,7 +21,8 @@ class ShareSettingsScreen extends ConsumerStatefulWidget {
   const ShareSettingsScreen({super.key, required this.albumId});
 
   @override
-  ConsumerState<ShareSettingsScreen> createState() => _ShareSettingsScreenState();
+  ConsumerState<ShareSettingsScreen> createState() =>
+      _ShareSettingsScreenState();
 }
 
 class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
@@ -77,7 +78,8 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     );
     if (picked != null) {
       setState(() {
-        _expiryDate = DateTime(picked.year, picked.month, picked.day, 23, 59, 59);
+        _expiryDate =
+            DateTime(picked.year, picked.month, picked.day, 23, 59, 59);
       });
     }
   }
@@ -93,17 +95,25 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     final id = widget.albumId;
     if (id.length != 36) return false;
     // Quick regex check — avoids depending on a UUID package.
-    return RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false)
+    return RegExp(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+            caseSensitive: false)
         .hasMatch(id);
   }
 
   Future<void> _saveSettings(GalleryShareLink? existingLink) async {
-    final hasExistingPassword = existingLink != null && !existingLink.isRevoked && existingLink.hasPassword;
+    final hasExistingPassword = existingLink != null &&
+        !existingLink.isRevoked &&
+        existingLink.hasPassword;
 
-    if (!_isPublic && !hasExistingPassword && !_formKey.currentState!.validate()) {
+    if (!_isPublic &&
+        !hasExistingPassword &&
+        !_formKey.currentState!.validate()) {
       return;
     }
-    if (!_isPublic && hasExistingPassword && _passwordController.text.isNotEmpty) {
+    if (!_isPublic &&
+        hasExistingPassword &&
+        _passwordController.text.isNotEmpty) {
       if (!_formKey.currentState!.validate()) return;
     }
 
@@ -125,13 +135,16 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
         return;
       }
 
-      final controller = ref.read(shareLinkControllerProvider(widget.albumId).notifier);
+      final controller =
+          ref.read(shareLinkControllerProvider(widget.albumId).notifier);
       await controller.createOrUpdate(
         clientId: _isPublic ? null : _selectedClientId,
         clearClient: _isPublic || _selectedClientId == null,
         password: _isPublic
             ? null
-            : (_passwordController.text.isEmpty ? null : _passwordController.text),
+            : (_passwordController.text.isEmpty
+                ? null
+                : _passwordController.text),
         clearPassword: _isPublic,
         expiresAt: _hasExpiry ? _expiryDate : null,
         clearExpiry: !_hasExpiry,
@@ -157,19 +170,19 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Revoke Share Link?'),
-        content: const Text(
+        title: Text('Revoke Share Link?'),
+        content: Text(
           'This will immediately make the link inactive. Clients will no longer be able to access the gallery.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Revoke'),
+            child: Text('Revoke'),
           ),
         ],
       ),
@@ -178,7 +191,9 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(shareLinkControllerProvider(widget.albumId).notifier).revoke();
+      await ref
+          .read(shareLinkControllerProvider(widget.albumId).notifier)
+          .revoke();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Share link revoked.')),
@@ -209,11 +224,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
       ),
       body: SafeArea(
         child: linkState.isLoading && activeLink == null
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            ? Center(child: CircularProgressIndicator(color: AppColors.primary))
             : LayoutBuilder(
                 builder: (context, constraints) {
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 600),
@@ -224,89 +239,110 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                             children: [
                               if (!_isBackendSynced) ...[
                                 Container(
-                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  padding: EdgeInsets.all(AppSpacing.md),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(AppRadius.md),
-                                    border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                                    color:
+                                        Colors.orange.withValues(alpha: 0.12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.md),
+                                    border: Border.all(
+                                        color: Colors.orange
+                                            .withValues(alpha: 0.4)),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.cloud_off_rounded, color: Colors.orange, size: 20),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      const Expanded(
+                                      Icon(Icons.cloud_off_rounded,
+                                          color: Colors.orange, size: 20),
+                                      SizedBox(width: AppSpacing.sm),
+                                      Expanded(
                                         child: Text(
                                           'This album was created offline and hasn\'t been synced to the server. '
                                           'Delete it and recreate it while connected to enable sharing.',
-                                          style: TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.w500),
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.orange,
+                                              fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.lg),
+                                SizedBox(height: AppSpacing.lg),
                               ],
                               _buildSectionHeader(context, 'Gallery Type'),
-                              const SizedBox(height: AppSpacing.sm),
+                              SizedBox(height: AppSpacing.sm),
                               _buildGalleryTypeSelector(),
-                              const SizedBox(height: AppSpacing.lg),
+                              SizedBox(height: AppSpacing.lg),
                               if (!_isPublic) ...[
-                                _buildSectionHeader(context, 'Security Settings'),
-                                const SizedBox(height: AppSpacing.sm),
+                                _buildSectionHeader(
+                                    context, 'Security Settings'),
+                                SizedBox(height: AppSpacing.sm),
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(
                                       child: CustomTextField(
-                                        label: hasActiveLink && activeLink.hasPassword
+                                        label: hasActiveLink &&
+                                                activeLink.hasPassword
                                             ? 'New Passcode (leave blank to keep current)'
                                             : 'Passcode',
                                         icon: Icons.lock_outline_rounded,
                                         controller: _passwordController,
                                         obscureText: false,
                                         validator: (v) {
-                                          if (hasActiveLink && activeLink.hasPassword && (v == null || v.isEmpty)) {
+                                          if (hasActiveLink &&
+                                              activeLink.hasPassword &&
+                                              (v == null || v.isEmpty)) {
                                             return null;
                                           }
-                                          if (v == null || v.trim().length < 4) {
+                                          if (v == null ||
+                                              v.trim().length < 4) {
                                             return 'Passcode must be at least 4 characters';
                                           }
                                           return null;
                                         },
                                       ),
                                     ),
-                                    const SizedBox(width: AppSpacing.sm),
+                                    SizedBox(width: AppSpacing.sm),
                                     Padding(
-                                      padding: const EdgeInsets.only(top: 4),
+                                      padding: EdgeInsets.only(top: 4),
                                       child: OutlinedButton.icon(
                                         onPressed: _generateRandomPasscode,
-                                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                                        label: const Text('Regenerate'),
+                                        icon: Icon(Icons.refresh_rounded,
+                                            size: 16),
+                                        label: Text('Regenerate'),
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: AppSpacing.lg),
+                                SizedBox(height: AppSpacing.lg),
                               ],
-                              _buildSectionHeader(context, 'Link Configuration'),
-                              const SizedBox(height: AppSpacing.sm),
+                              _buildSectionHeader(
+                                  context, 'Link Configuration'),
+                              SizedBox(height: AppSpacing.sm),
                               _buildLinkSettingsCard(),
-                              const SizedBox(height: AppSpacing.xl),
+                              SizedBox(height: AppSpacing.xl),
                               GradientButton(
-                                label: hasActiveLink ? 'Update Settings' : 'Generate Share Link',
+                                label: hasActiveLink
+                                    ? 'Update Settings'
+                                    : 'Generate Share Link',
                                 isLoading: _isSaving,
-                                onPressed: (_isSaving || !_isBackendSynced) ? null : () => _saveSettings(activeLink),
+                                onPressed: (_isSaving || !_isBackendSynced)
+                                    ? null
+                                    : () => _saveSettings(activeLink),
                               ),
                               if (hasActiveLink) ...[
-                                const SizedBox(height: AppSpacing.xxl),
+                                SizedBox(height: AppSpacing.xxl),
                                 const Divider(color: AppColors.border),
-                                const SizedBox(height: AppSpacing.lg),
-                                _buildSectionHeader(context, 'Active Share Link'),
-                                const SizedBox(height: AppSpacing.sm),
+                                SizedBox(height: AppSpacing.lg),
+                                _buildSectionHeader(
+                                    context, 'Active Share Link'),
+                                SizedBox(height: AppSpacing.sm),
                                 _buildActiveLinkCard(activeLink),
-                                const SizedBox(height: AppSpacing.xl),
-                                _buildSectionHeader(context, 'Link Analytics & QR'),
-                                const SizedBox(height: AppSpacing.sm),
+                                SizedBox(height: AppSpacing.xl),
+                                _buildSectionHeader(
+                                    context, 'Link Analytics & QR'),
+                                SizedBox(height: AppSpacing.sm),
                                 _buildAnalyticsAndQrCard(activeLink),
                               ],
                             ],
@@ -345,13 +381,22 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
           RadioListTile<bool>(
             value: true,
             groupValue: _isPublic,
-            title: const Text(
+            title: Text(
               'Public Gallery',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.text),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Anyone with the link can view and browse the photos.',
-              style: TextStyle(fontSize: 12, color: AppColors.subtitle),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
@@ -362,13 +407,22 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
           RadioListTile<bool>(
             value: false,
             groupValue: _isPublic,
-            title: const Text(
+            title: Text(
               'Private Gallery',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.text),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Requires entering a passcode to validate access.',
-              style: TextStyle(fontSize: 12, color: AppColors.subtitle),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
@@ -389,7 +443,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
   Widget _buildLinkSettingsCard() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -399,13 +453,22 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
         children: [
           SwitchListTile(
             value: _hasExpiry,
-            title: const Text(
+            title: Text(
               'Set Expiry Date',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.text),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Link will automatically expire after the date.',
-              style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
+              style: TextStyle(
+                  fontSize: 11.5,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ),
             activeThumbColor: AppColors.primary,
             onChanged: (val) {
@@ -419,21 +482,30 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
           ),
           if (_hasExpiry)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.subtitle),
-                  const SizedBox(width: 8),
+                  Icon(Icons.calendar_today_rounded,
+                      size: 16,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.subtitleOnDark
+                          : AppColors.subtitle)),
+                  SizedBox(width: 8),
                   Text(
                     _expiryDate == null
                         ? 'No date selected'
                         : '${_expiryDate!.day}/${_expiryDate!.month}/${_expiryDate!.year}',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.text),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text)),
                   ),
                   const Spacer(),
                   TextButton(
                     onPressed: () => _selectExpiryDate(context),
-                    child: const Text('Change Date'),
+                    child: Text('Change Date'),
                   ),
                 ],
               ),
@@ -441,13 +513,22 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
           const Divider(height: 1, indent: 16, endIndent: 16),
           SwitchListTile(
             value: _allowDownload,
-            title: const Text(
+            title: Text(
               'Allow Downloads',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.text),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Clients can download high-res original photos.',
-              style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
+              style: TextStyle(
+                  fontSize: 11.5,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ),
             activeThumbColor: AppColors.primary,
             onChanged: (val) => setState(() => _allowDownload = val),
@@ -455,13 +536,22 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
           const Divider(height: 1, indent: 16, endIndent: 16),
           SwitchListTile(
             value: _showWatermark,
-            title: const Text(
+            title: Text(
               'Overlay Watermark',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.text),
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'Display a soft "picgallery" brand watermarking over photos.',
-              style: TextStyle(fontSize: 11.5, color: AppColors.subtitle),
+              style: TextStyle(
+                  fontSize: 11.5,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
             ),
             activeThumbColor: AppColors.primary,
             onChanged: (val) => setState(() => _showWatermark = val),
@@ -478,7 +568,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     debugPrint('[SHARE_DEBUG] QR encoded URL: $primaryUrl');
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -492,7 +582,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
               Expanded(
                 child: Text(
                   primaryUrl,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -502,17 +592,18 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.copy_rounded, color: AppColors.primary),
+                icon: Icon(Icons.copy_rounded, color: AppColors.primary),
                 tooltip: 'Copy Link',
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: primaryUrl));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('HTTPS Share Link copied to clipboard.')),
+                    const SnackBar(
+                        content: Text('HTTPS Share Link copied to clipboard.')),
                   );
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.share_rounded, color: AppColors.primary),
+                icon: Icon(Icons.share_rounded, color: AppColors.primary),
                 tooltip: 'Share',
                 onPressed: () {
                   SharePlus.instance.share(
@@ -525,7 +616,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
@@ -533,14 +624,15 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                   onPressed: () {
                     Navigator.of(context).pushNamed(
                       AppRoutes.sharedGallery,
-                      arguments: SharedGalleryArgs(token: link.token, isPreview: true),
+                      arguments:
+                          SharedGalleryArgs(token: link.token, isPreview: true),
                     );
                   },
-                  icon: const Icon(Icons.remove_red_eye_outlined),
-                  label: const Text('Preview Client View'),
+                  icon: Icon(Icons.remove_red_eye_outlined),
+                  label: Text('Preview Client View'),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
@@ -548,8 +640,8 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                     side: const BorderSide(color: AppColors.error),
                   ),
                   onPressed: _revokeLink,
-                  icon: const Icon(Icons.link_off_rounded),
-                  label: const Text('Revoke Link'),
+                  icon: Icon(Icons.link_off_rounded),
+                  label: Text('Revoke Link'),
                 ),
               ),
             ],
@@ -563,12 +655,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     final statusColor = link.isExpired
         ? Colors.orange
         : (link.isRevoked ? AppColors.error : AppColors.success);
-    final statusText = link.isExpired
-        ? 'Expired'
-        : (link.isRevoked ? 'Revoked' : 'Active');
+    final statusText =
+        link.isExpired ? 'Expired' : (link.isRevoked ? 'Revoked' : 'Active');
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -581,24 +672,33 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Link Analytics',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: AppColors.text),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textOnDark
+                          : AppColors.text)),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                _buildAnalyticRow(Icons.info_outline_rounded, 'Status', statusText, valueColor: statusColor),
-                _buildAnalyticRow(Icons.visibility_outlined, 'Total Views', '${link.viewsCount}'),
-                _buildAnalyticRow(Icons.download_outlined, 'Downloads', '${link.downloadsCount}'),
+                SizedBox(height: AppSpacing.md),
                 _buildAnalyticRow(
-                    Icons.lock_clock_outlined, 'Type', link.hasPassword ? 'Private (Protected)' : 'Public'),
+                    Icons.info_outline_rounded, 'Status', statusText,
+                    valueColor: statusColor),
+                _buildAnalyticRow(Icons.visibility_outlined, 'Total Views',
+                    '${link.viewsCount}'),
+                _buildAnalyticRow(Icons.download_outlined, 'Downloads',
+                    '${link.downloadsCount}'),
+                _buildAnalyticRow(Icons.lock_clock_outlined, 'Type',
+                    link.hasPassword ? 'Private (Protected)' : 'Public'),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: AppColors.border),
@@ -613,10 +713,15 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                   size: 110.0,
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 4),
+              Text(
                 'Scan QR to Share',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.subtitle),
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.subtitleOnDark
+                        : AppColors.subtitle)),
               ),
             ],
           ),
@@ -625,23 +730,36 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     );
   }
 
-  Widget _buildAnalyticRow(IconData icon, String label, String value, {Color? valueColor}) {
+  Widget _buildAnalyticRow(IconData icon, String label, String value,
+      {Color? valueColor}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.subtitle),
-          const SizedBox(width: 6),
+          Icon(icon,
+              size: 16,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.subtitleOnDark
+                  : AppColors.subtitle)),
+          SizedBox(width: 6),
           Text(
             '$label: ',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.subtitle),
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.subtitleOnDark
+                    : AppColors.subtitle)),
           ),
           Text(
             value,
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w800,
-              color: valueColor ?? AppColors.text,
+              color: valueColor ??
+                  (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text),
             ),
           ),
         ],

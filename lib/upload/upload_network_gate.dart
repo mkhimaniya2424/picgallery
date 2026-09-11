@@ -6,8 +6,7 @@ import '../services/network_connectivity_service.dart';
 /// Provides the real, device-level connectivity check used by
 /// [canUploadNow]. Overridable in tests.
 final networkConnectivityServiceProvider =
-    Provider<NetworkConnectivityService>(
-        (ref) => NetworkConnectivityService());
+    Provider<NetworkConnectivityService>((ref) => NetworkConnectivityService());
 
 /// Result of an upload-gate check: whether it's OK to start sending
 /// bytes right now, and if not, a user-facing reason so callers can show
@@ -40,8 +39,7 @@ Future<UploadGateResult> canUploadNow(Ref ref) async {
     return const UploadGateResult.allowed();
   }
 
-  final onWifi =
-      await ref.read(networkConnectivityServiceProvider).isOnWifi();
+  final onWifi = await ref.read(networkConnectivityServiceProvider).isOnWifi();
   if (onWifi) {
     return const UploadGateResult.allowed();
   }

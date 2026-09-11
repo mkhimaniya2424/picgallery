@@ -24,7 +24,8 @@ class StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border, width: 1),
+        border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.border, width: 1),
         boxShadow:
             AppShadows.soft(data.gradient.last, opacity: 0.10, blur: 24, y: 12),
       ),

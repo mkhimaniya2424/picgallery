@@ -21,7 +21,8 @@ class InlineErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -33,12 +34,16 @@ class InlineErrorBanner extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+              const Icon(Icons.error_outline_rounded,
+                  color: AppColors.error, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600, fontSize: 13),
+                  style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13),
                 ),
               ),
             ],

@@ -213,7 +213,8 @@ class ApiConnectionsRepository implements ConnectionsRepository {
 
   @override
   Future<void> clear() {
-    throw UnimplementedError('ApiConnectionsRepository does not support clearing all connections.');
+    throw UnimplementedError(
+        'ApiConnectionsRepository does not support clearing all connections.');
   }
 
   @override
@@ -225,7 +226,8 @@ class ApiConnectionsRepository implements ConnectionsRepository {
       return ClientLookupResult.fromApiJson(json as Map<String, dynamic>);
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw NotFoundException('No PicGallery client account found for "$email"');
+        throw NotFoundException(
+            'No PicGallery client account found for "$email"');
       }
       rethrow;
     }
@@ -233,7 +235,8 @@ class ApiConnectionsRepository implements ConnectionsRepository {
 
   @override
   Future<ConnectionInviteByEmailResult> inviteByEmail(String email) async {
-    final json = await _apiClient.post('/connections/invite-by-email', body: {'email': email});
+    final json = await _apiClient
+        .post('/connections/invite-by-email', body: {'email': email});
     final map = json as Map<String, dynamic>;
     if (map['status'] == 'connected') {
       return ConnectionInviteByEmailResult(
@@ -243,13 +246,15 @@ class ApiConnectionsRepository implements ConnectionsRepository {
         ),
       );
     }
-    return ConnectionInviteByEmailResult(invitedEmail: map['email'] as String? ?? email);
+    return ConnectionInviteByEmailResult(
+        invitedEmail: map['email'] as String? ?? email);
   }
 
   @override
   Future<StudioClientConnection> inviteClient(String clientId) async {
     try {
-      final json = await _apiClient.post('/connections/invite', body: {'client_id': clientId});
+      final json = await _apiClient
+          .post('/connections/invite', body: {'client_id': clientId});
       return StudioClientConnection.fromApiJson(
         json as Map<String, dynamic>,
         currentUserId: _currentUserId(),

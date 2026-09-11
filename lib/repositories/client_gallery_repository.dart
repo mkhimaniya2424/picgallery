@@ -75,7 +75,8 @@ abstract class ClientGalleryRepository {
   /// Shared albums for [studioId] inside [folderId] (null = studio root).
   /// Reuses `AlbumRead` with `cover_thumbnail_url` exactly as the
   /// studio-owner endpoint does.
-  Future<List<AlbumModel>> fetchSharedAlbums(String studioId, {String? folderId});
+  Future<List<AlbumModel>> fetchSharedAlbums(String studioId,
+      {String? folderId});
 
   /// Full media listing for a single shared album — backed by
   /// `GET /client/studios/{studio_id}/albums/{album_id}/media`.
@@ -181,8 +182,10 @@ class ApiClientGalleryRepository implements ClientGalleryRepository {
   }
 
   @override
-  Future<List<MediaModel>> fetchLikedMedia({int skip = 0, int limit = 100}) async {
-    final json = await _apiClient.get('/media/liked-by-me?offset=$skip&limit=$limit');
+  Future<List<MediaModel>> fetchLikedMedia(
+      {int skip = 0, int limit = 100}) async {
+    final json =
+        await _apiClient.get('/media/liked-by-me?offset=$skip&limit=$limit');
     return (json as List<dynamic>)
         .map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>))
         .toList(growable: false);

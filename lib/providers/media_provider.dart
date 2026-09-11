@@ -8,7 +8,8 @@ import '../repositories/api_media_repository.dart';
 import '../repositories/caching_media_repository.dart';
 import '../storage/media_ui_filters_local_store.dart';
 import 'album_provider.dart';
-import 'auth_providers.dart' show apiClientProvider, AuthState, authStateProvider, authProvider;
+import 'auth_providers.dart'
+    show apiClientProvider, AuthState, authStateProvider, authProvider;
 
 enum MediaDateFilterOption {
   all,
@@ -723,11 +724,10 @@ final mediaProvider = ChangeNotifierProvider<MediaListController>((ref) {
   final userId = ref.watch(authProvider.select((a) => a.valueOrNull?.id));
   final repo = ref.watch(mediaRepositoryProvider);
   final controller = MediaListController(repository: repo, ref: ref);
-  
+
   if (userId != null) {
     Future.microtask(controller.load);
   }
-  
+
   return controller;
 });
-

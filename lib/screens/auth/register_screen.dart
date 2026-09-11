@@ -84,7 +84,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _submit() async {
     // TEMP DEBUG — remove once the client/studio role mismatch is
     // confirmed fixed.
-    debugPrint('[ROLE_DEBUG] RegisterScreen._submit, widget.role=${widget.role}, '
+    debugPrint(
+        '[ROLE_DEBUG] RegisterScreen._submit, widget.role=${widget.role}, '
         'sending role=${widget.role == UserRole.photographer ? 'photographer' : 'client'}');
     setState(() => _isSubmitting = true);
     try {
@@ -96,8 +97,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ? AppUserRole.photographer
                 : AppUserRole.client,
             agreedToTerms: _agreedToTerms,
-            studioName: _isPhotographer ? _studioNameController.text.trim() : null,
-            studioAddress: _isPhotographer ? _studioAddressController.text.trim() : null,
+            studioName:
+                _isPhotographer ? _studioNameController.text.trim() : null,
+            studioAddress:
+                _isPhotographer ? _studioAddressController.text.trim() : null,
             businessType: _isPhotographer ? _businessType : null,
           );
     } on ApiException catch (e) {
@@ -106,13 +109,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       // 400 here is most often the backend's "A Client/Studio account
       // already exists for this email" (uq_users_email_role) message —
       // show it as-is rather than a generic failure.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
       return;
     } catch (_) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.')),
+        const SnackBar(
+            content: Text('Something went wrong. Please try again.')),
       );
       return;
     }
@@ -135,8 +140,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // VerificationPendingScreen, not the dummy EmailVerificationScreen,
     // since only the former's Resend Email / Continue buttons actually
     // call the backend.)
-    Navigator.of(context).pushNamed(AppRoutes.verificationPending,
-        arguments: {'email': _emailController.text.trim(), 'role': widget.role});
+    Navigator.of(context).pushNamed(AppRoutes.verificationPending, arguments: {
+      'email': _emailController.text.trim(),
+      'role': widget.role
+    });
   }
 
   Future<void> _handleSocialSignIn(String provider) async {
@@ -149,12 +156,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     try {
       final service = ref.read(socialAuthServiceProvider);
-      final result = provider == 'google' ? await service.signInWithGoogle() : await service.signInWithApple();
+      final result = provider == 'google'
+          ? await service.signInWithGoogle()
+          : await service.signInWithApple();
 
       await ref.read(authProvider.notifier).socialLogin(
             provider: result.provider,
             idToken: result.idToken,
-            role: widget.role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
+            role: widget.role == UserRole.photographer
+                ? AppUserRole.photographer
+                : AppUserRole.client,
             fullName: result.fullName,
           );
     } on SocialAuthCancelled {
@@ -164,7 +175,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _socialLoadingProvider = null);
-      await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: 'Sign-in Failed', message: e.message, isError: true);
       return;
     } catch (e, stack) {
       debugPrint('Social Login Error: $e\n$stack');
@@ -187,7 +199,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     // Social accounts are auto-verified, so skip verification_pending.
     // Go straight to completeProfile if needed, else Home.
-    final legacyRole = user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final legacyRole = user.role == AppUserRole.photographer
+        ? UserRole.photographer
+        : UserRole.client;
     final navigator = Navigator.of(context);
 
     if (!user.hasCompletedProfile) {
@@ -195,7 +209,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    final destination = legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
+    final destination = legacyRole == UserRole.photographer
+        ? AppRoutes.adminHome
+        : AppRoutes.home;
     navigator.pushNamedAndRemoveUntil(destination, (route) => false);
   }
 
@@ -228,57 +244,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: CustomAppBar(
-        title: 'Create Account',
-        onBack: _back,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(30),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, 4, AppSpacing.lg, AppSpacing.md),
-            child: _StepProgress(step: _step, total: _totalSteps),
-          ),
-        ),
-      ),
-      body: ScreenBackdrop(
-        child: SafeArea(
-          top: true,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 86),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: Column(
-                  children: [
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildStep1(),
-                        _buildStep2(),
-                        _buildStep3(),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: GradientButton(
-                      label:
-                          _step == _totalSteps - 1 ? 'Create Account' : 'Next',
-                      isLoading: _isSubmitting,
-                      onPressed: _isSubmitting ? null : _next,
-                    ),
-                  ),
-                ],
-              ),
+        extendBodyBehindAppBar: true,
+        appBar: CustomAppBar(
+          title: 'Create Account',
+          onBack: _back,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(30),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, 4, AppSpacing.lg, AppSpacing.md),
+              child: _StepProgress(step: _step, total: _totalSteps),
             ),
           ),
         ),
-      ),
-      )
-    );
+        body: ScreenBackdrop(
+          child: SafeArea(
+            top: true,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 86),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: PageView(
+                          controller: _pageController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            _buildStep1(),
+                            _buildStep2(),
+                            _buildStep3(),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: GradientButton(
+                          label: _step == _totalSteps - 1
+                              ? 'Create Account'
+                              : 'Next',
+                          isLoading: _isSubmitting,
+                          onPressed: _isSubmitting ? null : _next,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ));
   }
 
   Widget _buildStep1() {
@@ -311,7 +327,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const Expanded(child: Divider(color: AppColors.border)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text('or create account with', style: Theme.of(context).textTheme.bodyMedium),
+                child: Text('or create account with',
+                    style: Theme.of(context).textTheme.bodyMedium),
               ),
               const Expanded(child: Divider(color: AppColors.border)),
             ],
@@ -445,7 +462,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
+                    onChanged: (v) =>
+                        setState(() => _agreedToTerms = v ?? false),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -455,9 +473,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: Text(
                       'I agree to the Terms & Conditions and Privacy Policy',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                   ),
                 ),
@@ -492,8 +511,8 @@ class _StepScaffold extends StatelessWidget {
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: AppSpacing.xl),
           ...children,

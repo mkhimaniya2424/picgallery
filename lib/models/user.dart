@@ -124,12 +124,11 @@ class AppUser {
   final String? currentPlan; // "trial" | "pro" | "premium"
   final DateTime? planStartedAt;
   final DateTime? planExpiry;
+
   /// Whether the user has ever activated the free trial (set to true by the
   /// backend the moment the trial is granted â€” stays true even after it
   /// expires so the user cannot re-claim it).
   final bool trialUsed;
-
-
 
   /// Whether [CompleteProfileScreen] has actually been filled in â€” used
   /// by `login_screen.dart` and `splash_screen.dart` to decide whether
@@ -137,7 +136,8 @@ class AppUser {
   /// bio; photographers must additionally have set a studio name, since
   /// those are the fields that screen actually collects.
   bool get hasCompletedProfile {
-    if (role == AppUserRole.photographer && (studioName == null || studioName!.trim().isEmpty)) {
+    if (role == AppUserRole.photographer &&
+        (studioName == null || studioName!.trim().isEmpty)) {
       return false;
     }
     return bio != null && bio!.trim().isNotEmpty;
@@ -216,32 +216,41 @@ class AppUser {
           .toList(),
       isEmailVerified: json['is_email_verified'] as bool,
       cameraPermissionGranted: json['camera_permission_granted'] as bool,
-      photoLibraryPermissionGranted: json['photo_library_permission_granted'] as bool,
+      photoLibraryPermissionGranted:
+          json['photo_library_permission_granted'] as bool,
       pushNotificationsEnabled: json['push_notifications_enabled'] as bool,
-      emailNotificationsEnabled: json['email_notifications_enabled'] as bool? ?? true,
+      emailNotificationsEnabled:
+          json['email_notifications_enabled'] as bool? ?? true,
       allowDownloads: json['allow_downloads'] as bool,
       privateProfile: json['private_profile'] as bool? ?? false,
       appLanguage: json['app_language'] as String? ?? 'English',
       createdAt: DateTime.parse(json['created_at'] as String),
       yearEstablished: json['year_established'] as int?,
       teamSize: json['team_size'] as int?,
-      serviceAreas: (json['service_areas'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      serviceAreas: (json['service_areas'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       studioType: json['studio_type'] as String?,
       experienceYears: json['experience_years'] as int?,
-      languages: (json['languages'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      languages: (json['languages'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       equipmentHighlights: json['equipment_highlights'] as String?,
       pricingMin: (json['pricing_min'] as num?)?.toDouble(),
       pricingMax: (json['pricing_max'] as num?)?.toDouble(),
       packageDetails: json['package_details'] as String?,
-      availabilityDays: (json['availability_days'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      availabilityDays: (json['availability_days'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       instagramUrl: json['instagram_url'] as String?,
       facebookUrl: json['facebook_url'] as String?,
       youtubeUrl: json['youtube_url'] as String?,
       pinterestUrl: json['pinterest_url'] as String?,
       website: json['website'] as String?,
       profilePhotoUrl: json['profile_photo_url'] as String?,
-      preferredPhotoTypes:
-          (json['preferred_photo_types'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      preferredPhotoTypes: (json['preferred_photo_types'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       subscriptionStatus: json['subscription_status'] as String? ?? 'none',
       currentPlan: json['current_plan'] as String?,
       planStartedAt: _parseUtcTimestamp(json['plan_started_at'] as String?),
@@ -371,11 +380,14 @@ class AppUser {
       bio: bio ?? this.bio,
       specializations: specializations ?? this.specializations,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
-      cameraPermissionGranted: cameraPermissionGranted ?? this.cameraPermissionGranted,
+      cameraPermissionGranted:
+          cameraPermissionGranted ?? this.cameraPermissionGranted,
       photoLibraryPermissionGranted:
           photoLibraryPermissionGranted ?? this.photoLibraryPermissionGranted,
-      pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
-      emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
+      pushNotificationsEnabled:
+          pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      emailNotificationsEnabled:
+          emailNotificationsEnabled ?? this.emailNotificationsEnabled,
       allowDownloads: allowDownloads ?? this.allowDownloads,
       privateProfile: privateProfile ?? this.privateProfile,
       appLanguage: appLanguage ?? this.appLanguage,

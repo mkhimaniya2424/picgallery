@@ -8,7 +8,8 @@ import 'auth_providers.dart';
 /// Provider for the API-backed notifications repository — same
 /// `ApiClient`-wired-repository convention as `chatRepositoryProvider`
 /// / `albumRepositoryProvider`.
-final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
+final notificationsRepositoryProvider =
+    Provider<NotificationsRepository>((ref) {
   return NotificationsRepository(apiClient: ref.watch(apiClientProvider));
 });
 

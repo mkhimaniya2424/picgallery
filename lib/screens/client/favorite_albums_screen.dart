@@ -27,7 +27,6 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
     final isLoading = connectedState.isLoading && connectedState.albums.isEmpty;
 
     return Scaffold(
-      
       appBar: const CustomAppBar(title: 'Saved Galleries'),
       body: RefreshIndicator(
         color: AppColors.primary,
@@ -36,14 +35,14 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: isLoading
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                   child: Center(child: CircularProgressIndicator()),
                 )
               : favorites.isEmpty
-                  ? const Padding(
+                  ? Padding(
                       padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                       child: EmptyStateCard(
                         icon: Icons.bookmark_border_rounded,

@@ -61,13 +61,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           children: [
             _ProfilePhotoTile(
               avatarBytes: _avatarBytes,
               onEdit: _pickAvatar,
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             Form(
               key: _formKey,
               child: Column(
@@ -83,7 +83,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   CustomTextField(
                     label: 'Email',
                     icon: Icons.email_outlined,
@@ -97,9 +97,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   FilledButton.icon(
-                    icon: const Icon(Icons.save_rounded),
+                    icon: Icon(Icons.save_rounded),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -120,7 +120,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       if (!context.mounted) return;
                       Navigator.of(context).pop();
                     },
-                    label: const Text('Save Changes'),
+                    label: Text('Save Changes'),
                   ),
                 ],
               ),
@@ -141,9 +141,11 @@ class _ProfilePhotoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
@@ -163,17 +165,18 @@ class _ProfilePhotoTile extends StatelessWidget {
                   : null,
             ),
             child: avatarBytes == null
-                ? const Icon(Icons.person_rounded, color: Colors.white, size: 28)
+                ? Icon(Icons.person_rounded,
+                    color: Colors.white, size: 28)
                 : null,
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Profile Photo',
                     style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   avatarBytes != null ? 'Photo selected' : 'No photo uploaded',
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -183,7 +186,7 @@ class _ProfilePhotoTile extends StatelessWidget {
           ),
           IconButton(
             onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined),
+            icon: Icon(Icons.edit_outlined),
           )
         ],
       ),

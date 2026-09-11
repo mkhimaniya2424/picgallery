@@ -63,7 +63,8 @@ class ApiCollectionRepository implements CollectionRepository {
   List<GalleryCollectionModel> _mapList(dynamic json) {
     final list = json as List<dynamic>;
     return list
-        .map((e) => GalleryCollectionModel.fromApiJson(e as Map<String, dynamic>))
+        .map((e) =>
+            GalleryCollectionModel.fromApiJson(e as Map<String, dynamic>))
         .toList(growable: false);
   }
 

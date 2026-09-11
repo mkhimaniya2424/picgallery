@@ -33,7 +33,8 @@ class RecentClientTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+        border:
+            Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         boxShadow:
             AppShadows.soft(AppColors.primary, opacity: 0.06, blur: 16, y: 7),
       ),

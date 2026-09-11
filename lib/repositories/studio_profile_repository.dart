@@ -34,9 +34,11 @@ class StudioBackupResult {
 /// profiles — different backend routes (`/studios/me/...` vs
 /// `/studios/{id}/...`), different caller, different concerns.
 class StudioProfileRepository {
-  StudioProfileRepository({required ApiClient apiClient, StudioMediaUploadService? uploadService})
+  StudioProfileRepository(
+      {required ApiClient apiClient, StudioMediaUploadService? uploadService})
       : _apiClient = apiClient,
-        _uploadService = uploadService ?? StudioMediaUploadService(apiClient: apiClient);
+        _uploadService =
+            uploadService ?? StudioMediaUploadService(apiClient: apiClient);
 
   final ApiClient _apiClient;
   final StudioMediaUploadService _uploadService;
@@ -48,7 +50,8 @@ class StudioProfileRepository {
     required String fileName,
     required String contentType,
   }) {
-    return _uploadService.uploadAvatar(bytes: bytes, fileName: fileName, contentType: contentType);
+    return _uploadService.uploadAvatar(
+        bytes: bytes, fileName: fileName, contentType: contentType);
   }
 
   /// Uploads/replaces the studio's cover photo via `POST /studios/me/cover`.
@@ -58,7 +61,8 @@ class StudioProfileRepository {
     required String fileName,
     required String contentType,
   }) {
-    return _uploadService.uploadCover(bytes: bytes, fileName: fileName, contentType: contentType);
+    return _uploadService.uploadCover(
+        bytes: bytes, fileName: fileName, contentType: contentType);
   }
 
   /// Lists the current studio's Showcase Portfolio images, newest first
@@ -78,7 +82,8 @@ class StudioProfileRepository {
     required String fileName,
     required String contentType,
   }) {
-    return _uploadService.uploadPortfolioImage(bytes: bytes, fileName: fileName, contentType: contentType);
+    return _uploadService.uploadPortfolioImage(
+        bytes: bytes, fileName: fileName, contentType: contentType);
   }
 
   /// Removes one image from the Showcase Portfolio grid
@@ -101,8 +106,10 @@ class StudioProfileRepository {
   /// `StudioBackup` docstring), so no shape is enforced here either.
   /// Returns the saved record so callers can show its timestamp
   /// immediately without a second request.
-  Future<StudioBackupResult> createBackup(Map<String, dynamic> settingsJson) async {
-    final json = await _apiClient.post('/studios/me/backup', body: settingsJson);
+  Future<StudioBackupResult> createBackup(
+      Map<String, dynamic> settingsJson) async {
+    final json =
+        await _apiClient.post('/studios/me/backup', body: settingsJson);
     return StudioBackupResult.fromApiJson(json as Map<String, dynamic>);
   }
 
@@ -116,7 +123,8 @@ class StudioProfileRepository {
       return StudioBackupResult.fromApiJson(json as Map<String, dynamic>);
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw const NotFoundException('No backup has been made for this studio yet.');
+        throw const NotFoundException(
+            'No backup has been made for this studio yet.');
       }
       rethrow;
     }

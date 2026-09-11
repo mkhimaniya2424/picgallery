@@ -79,7 +79,6 @@ import '../../screens/legal/terms_conditions/terms_conditions_screen.dart';
 import '../../screens/legal/help_support/help_support_screen.dart';
 import '../../screens/subscription/subscription_plans_screen.dart';
 
-
 /// User-facing role picked on [RoleSelectionScreen]. Carried through
 /// Register / Complete Profile via route arguments so those screens can
 /// tailor themselves (e.g. Studio fields for Photographer).
@@ -106,6 +105,7 @@ class SharedGalleryArgs {
 class PinUnlockArgs {
   final String correctPin;
   final String destinationRoute;
+
   /// Arguments [destinationRoute] itself needs once the PIN is entered
   /// correctly (e.g. the `UserRole` a completeProfile route requires, or
   /// the `{email, role}` map a verificationPending route requires) — see
@@ -150,7 +150,8 @@ class AppRoutes {
   static const String termsPrivacy = '/terms-privacy';
   static const String cameraPermission = '/camera-permission';
   static const String photoLibraryPermission = '/photo-library-permission';
-  static const String pushNotificationPermission = '/push-notification-permission';
+  static const String pushNotificationPermission =
+      '/push-notification-permission';
   static const String home = '/home';
   static const String adminHome = '/admin-home';
   static const String editProfile = '/edit-profile';
@@ -181,7 +182,8 @@ class AppRoutes {
 
   static const String faceSearchLanding = '/face-search';
   static const String faceSearchUpload = '/face-search/upload';
-  static const String faceSearchScanProgressPlaceholder = '/face-search/scan-progress';
+  static const String faceSearchScanProgressPlaceholder =
+      '/face-search/scan-progress';
   static const String faceSearchResults = '/face-search/results';
 
   static const String uploadQueue = '/upload-queue';
@@ -211,8 +213,6 @@ class AppRoutes {
   static const String adminAnalytics = '/admin/analytics';
   static const String adminSettings = '/admin/settings';
   static const String adminTrash = '/admin/trash';
-
-
 
   // Studio management routes
   static const String teamManagement = '/admin/team';
@@ -247,16 +247,23 @@ class AppRoutes {
       // 1. Custom scheme deep links: picgallery://shared/{token}, picgallery://gallery/{token}, picgallery://{token}
       if (uri.scheme == 'picgallery') {
         final host = uri.host.toLowerCase();
-        final tokenFromPath = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+        final tokenFromPath =
+            uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
         String? token;
 
         if (host == 'shared' || host == 'gallery') {
           token = tokenFromPath;
-        } else if (host.isNotEmpty && host != 'admin' && host != 'login' && host != 'role-selection') {
+        } else if (host.isNotEmpty &&
+            host != 'admin' &&
+            host != 'login' &&
+            host != 'role-selection') {
           token = host;
         }
 
-        if (token != null && token.isNotEmpty && token != 'gallery' && token != 'shared') {
+        if (token != null &&
+            token.isNotEmpty &&
+            token != 'gallery' &&
+            token != 'shared') {
           return _fade(SharedGalleryScreen(token: token.trim()));
         }
       }
@@ -270,7 +277,8 @@ class AppRoutes {
           if (prefix == 'shared' || prefix == 'gallery') {
             String? token;
             if (segments.length >= 3 &&
-                (segments[1].toLowerCase() == 'gallery' || segments[1].toLowerCase() == 'shared')) {
+                (segments[1].toLowerCase() == 'gallery' ||
+                    segments[1].toLowerCase() == 'shared')) {
               token = segments[2].trim();
             } else if (segments.length >= 2 &&
                 segments[1].toLowerCase() != 'gallery' &&
@@ -280,7 +288,10 @@ class AppRoutes {
               token = uri.queryParameters['token'] ?? uri.queryParameters['id'];
             }
 
-            if (token != null && token.isNotEmpty && token != 'gallery' && token != 'shared') {
+            if (token != null &&
+                token.isNotEmpty &&
+                token != 'gallery' &&
+                token != 'shared') {
               return _fade(SharedGalleryScreen(token: token));
             }
           }
@@ -303,19 +314,25 @@ class AppRoutes {
       case roleSelection:
         return _fade(const RoleSelectionScreen());
       case login:
-        debugPrint('[ROLE_DEBUG] case login, settings.arguments=${settings.arguments}');
+        debugPrint(
+            '[ROLE_DEBUG] case login, settings.arguments=${settings.arguments}');
         return _fade(LoginScreen(role: settings.arguments as UserRole?));
       case register:
-        debugPrint('[ROLE_DEBUG] case register, settings.arguments=${settings.arguments}');
-        return _slide(RegisterScreen(role: settings.arguments as UserRole? ?? UserRole.client));
+        debugPrint(
+            '[ROLE_DEBUG] case register, settings.arguments=${settings.arguments}');
+        return _slide(RegisterScreen(
+            role: settings.arguments as UserRole? ?? UserRole.client));
       case forgotPassword:
         return _slide(const ForgotPasswordScreen());
       case checkEmail:
-        return _fade(CheckEmailScreen(email: settings.arguments as String? ?? ''));
+        return _fade(
+            CheckEmailScreen(email: settings.arguments as String? ?? ''));
       case resetPassword:
         final args = settings.arguments;
         if (args is Map) {
-          return _fade(ResetPasswordScreen(email: args['email'] as String?, token: args['token'] as String?));
+          return _fade(ResetPasswordScreen(
+              email: args['email'] as String?,
+              token: args['token'] as String?));
         }
         return _fade(ResetPasswordScreen(token: args as String?));
       case resetSuccess:
@@ -342,15 +359,19 @@ class AppRoutes {
         final args = settings.arguments;
         return _fade(OtpVerificationScreen(contact: args as String? ?? ''));
       case completeProfile:
-        return _slide(CompleteProfileScreen(role: settings.arguments as UserRole?));
+        return _slide(
+            CompleteProfileScreen(role: settings.arguments as UserRole?));
       case termsPrivacy:
         return _slide(const TermsPrivacyScreen());
       case cameraPermission:
-        return _slide(CameraPermissionScreen(role: settings.arguments as UserRole?));
+        return _slide(
+            CameraPermissionScreen(role: settings.arguments as UserRole?));
       case photoLibraryPermission:
-        return _slide(PhotoLibraryPermissionScreen(role: settings.arguments as UserRole?));
+        return _slide(PhotoLibraryPermissionScreen(
+            role: settings.arguments as UserRole?));
       case pushNotificationPermission:
-        return _slide(PushNotificationPermissionScreen(role: settings.arguments as UserRole?));
+        return _slide(PushNotificationPermissionScreen(
+            role: settings.arguments as UserRole?));
       case home:
         return _fade(const MainNavScreen());
       case adminHome:
@@ -365,7 +386,8 @@ class AppRoutes {
       case collections:
         return _slide(const CollectionsScreen());
       case collectionsDetails:
-        return _slide(CollectionDetailsScreen(collectionId: settings.arguments as String));
+        return _slide(CollectionDetailsScreen(
+            collectionId: settings.arguments as String));
       case downloadHistory:
         return _slide(const DownloadHistoryScreen());
       case invitations:
@@ -378,12 +400,14 @@ class AppRoutes {
       case notifications:
         return _slide(const NotificationsScreen());
       case notificationDetail:
-        return _slide(NotificationDetailScreen(notification: settings.arguments as NotificationData));
+        return _slide(NotificationDetailScreen(
+            notification: settings.arguments as NotificationData));
       case search:
         return _slide(const GlobalSearchScreen());
       case searchResults:
         final args = settings.arguments as SearchResultsArgs?;
-        return _slide(SearchResultsScreen(initialQuery: args?.query ?? '', initialType: args?.type));
+        return _slide(SearchResultsScreen(
+            initialQuery: args?.query ?? '', initialType: args?.type));
       case storageOverview:
         return _slide(const StorageOverviewScreen());
       case recentActivity:
@@ -396,7 +420,8 @@ class AppRoutes {
       case faceSearchUpload:
         return _slide(const FaceSearchUploadScreen());
       case faceSearchScanProgressPlaceholder:
-        return _slide(FaceSearchScanProgressScreen(file: settings.arguments as File));
+        return _slide(
+            FaceSearchScanProgressScreen(file: settings.arguments as File));
       case faceSearchResults:
         return _slide(const FaceSearchResultsScreen());
 
@@ -404,23 +429,29 @@ class AppRoutes {
         return _fade(const UploadQueueScreen());
 
       case adminAlbumCreate:
-        return _slide(CreateAlbumScreen(folderId: settings.arguments as String?));
+        return _slide(
+            CreateAlbumScreen(folderId: settings.arguments as String?));
       case adminAlbumDetails:
-        return _slide(AlbumDetailsScreen(albumId: settings.arguments as String));
+        return _slide(
+            AlbumDetailsScreen(albumId: settings.arguments as String));
       case adminAlbumEdit:
         return _slide(EditAlbumScreen(albumId: settings.arguments as String));
       case adminFolderList:
         return _slide(const FolderListScreen());
       case adminFolderCreate:
-        return _slide(CreateFolderScreen(parentId: settings.arguments as String?));
+        return _slide(
+            CreateFolderScreen(parentId: settings.arguments as String?));
       case adminFolderDetails:
-        return _slide(FolderDetailsScreen(folderId: settings.arguments as String));
+        return _slide(
+            FolderDetailsScreen(folderId: settings.arguments as String));
       case adminFolderRename:
-        return _slide(RenameFolderScreen(folderId: settings.arguments as String));
+        return _slide(
+            RenameFolderScreen(folderId: settings.arguments as String));
       case adminFolderMove:
         return _slide(MoveFolderScreen(folderId: settings.arguments as String));
       case adminFolderSettings:
-        return _slide(FolderSettingsScreen(folderId: settings.arguments as String));
+        return _slide(
+            FolderSettingsScreen(folderId: settings.arguments as String));
 
       case media:
         final args = settings.arguments as MediaSearchArgs?;
@@ -445,7 +476,8 @@ class AppRoutes {
         ));
       case mediaDetails:
         final args = settings.arguments as MediaDetailsArgs;
-        return _slide(MediaDetailsScreen(mediaId: args.mediaId, mediaIds: args.mediaIds));
+        return _slide(
+            MediaDetailsScreen(mediaId: args.mediaId, mediaIds: args.mediaIds));
       case imageViewer:
         final args = settings.arguments as ImageViewerArgs;
         return _fade(ImageViewerScreen(
@@ -474,16 +506,19 @@ class AppRoutes {
         return _slide(PhotoEditorScreen(media: args.media));
 
       case albumShareSettings:
-        return _slide(ShareSettingsScreen(albumId: settings.arguments as String));
+        return _slide(
+            ShareSettingsScreen(albumId: settings.arguments as String));
       case sharedGallery:
         final rawArgs = settings.arguments;
         if (rawArgs is SharedGalleryArgs) {
-          return _fade(SharedGalleryScreen(token: rawArgs.token, isPreview: rawArgs.isPreview));
+          return _fade(SharedGalleryScreen(
+              token: rawArgs.token, isPreview: rawArgs.isPreview));
         }
         final token = rawArgs as String? ?? '';
         return _fade(SharedGalleryScreen(token: token));
       case adminClientDetails:
-        return _slide(ClientDetailsScreen(clientId: settings.arguments as String? ?? ''));
+        return _slide(
+            ClientDetailsScreen(clientId: settings.arguments as String? ?? ''));
       case adminAnalytics:
         return _slide(const AnalyticsScreen());
       case adminSettings:
@@ -504,7 +539,8 @@ class AppRoutes {
       case discoverStudios:
         return _slide(const DiscoverStudiosScreen());
       case studioProfile:
-        return _slide(StudioProfileScreen(studioId: settings.arguments as String));
+        return _slide(
+            StudioProfileScreen(studioId: settings.arguments as String));
       case favoriteStudios:
         return _slide(const FavoriteStudiosScreen());
       case sharedStudios:
@@ -550,7 +586,8 @@ class AppRoutes {
   static Route<dynamic> _fade(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (_, __, ___) => child,
-      transitionsBuilder: (_, animation, __, c) => FadeTransition(opacity: animation, child: c),
+      transitionsBuilder: (_, animation, __, c) =>
+          FadeTransition(opacity: animation, child: c),
       transitionDuration: const Duration(milliseconds: 350),
     );
   }
@@ -559,7 +596,8 @@ class AppRoutes {
     return PageRouteBuilder(
       pageBuilder: (_, __, ___) => child,
       transitionsBuilder: (_, animation, __, c) {
-        final tween = Tween(begin: const Offset(1, 0), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic));
+        final tween = Tween(begin: const Offset(1, 0), end: Offset.zero)
+            .chain(CurveTween(curve: Curves.easeOutCubic));
         return SlideTransition(position: animation.drive(tween), child: c);
       },
       transitionDuration: const Duration(milliseconds: 350),

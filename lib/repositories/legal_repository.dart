@@ -20,7 +20,8 @@ class LegalRepository {
 
   /// GET /legal/terms-conditions
   Future<TermsContent> fetchTermsConditions() async {
-    final json = await _apiClient.get('/legal/terms-conditions', withAuth: false);
+    final json =
+        await _apiClient.get('/legal/terms-conditions', withAuth: false);
     return TermsContent.fromApiJson(json as Map<String, dynamic>);
   }
 

@@ -38,7 +38,8 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -77,11 +78,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
             _passwordController.text,
             role: widget.role == null
                 ? null
-                : (widget.role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client),
+                : (widget.role == UserRole.photographer
+                    ? AppUserRole.photographer
+                    : AppUserRole.client),
             rememberMe: _rememberMe,
           );
     } on ApiException catch (e) {
-      debugPrint('[Login] ApiException — status: ${e.statusCode}, message: ${e.message}');
+      debugPrint(
+          '[Login] ApiException — status: ${e.statusCode}, message: ${e.message}');
       if (!mounted) return;
       setState(() => _isLoading = false);
       if (e.statusCode == 401 || e.statusCode == 400) {
@@ -93,7 +97,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         _shakeController.forward(from: 0);
         return;
       }
-      await AppPopup.show(context, title: 'Something Went Wrong', message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: 'Something Went Wrong', message: e.message, isError: true);
       return;
     } catch (e, stack) {
       // Anything that isn't an ApiException (e.g. a response-parsing
@@ -134,25 +139,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     debugPrint('[Login] Mapping error — status: $code, raw: ${e.message}');
 
     // ── Backend-reported credential errors (401 / 400) ──────────────────
-    if (msg.contains('not found') || msg.contains('no account') || msg.contains('does not exist')) {
+    if (msg.contains('not found') ||
+        msg.contains('no account') ||
+        msg.contains('does not exist')) {
       return 'No account found with this email.';
     }
-    if (msg.contains('incorrect password') || msg.contains('wrong password') || msg.contains('invalid password')) {
+    if (msg.contains('incorrect password') ||
+        msg.contains('wrong password') ||
+        msg.contains('invalid password')) {
       return 'Incorrect password.';
     }
-    if (msg.contains('invalid credential') || msg.contains('invalid email or password')) {
+    if (msg.contains('invalid credential') ||
+        msg.contains('invalid email or password')) {
       return 'Invalid email or password.';
     }
     if (msg.contains('invalid email') || msg.contains('not a valid email')) {
       return 'Please enter a valid email address.';
     }
-    if (msg.contains('disabled') || msg.contains('suspended') || msg.contains('banned')) {
+    if (msg.contains('disabled') ||
+        msg.contains('suspended') ||
+        msg.contains('banned')) {
       return 'This account has been disabled. Please contact support.';
     }
-    if (msg.contains('too many') || msg.contains('rate limit') || msg.contains('throttl')) {
+    if (msg.contains('too many') ||
+        msg.contains('rate limit') ||
+        msg.contains('throttl')) {
       return 'Too many login attempts. Please try again later.';
     }
-    if (msg.contains('network') || msg.contains('connection') || msg.contains('timeout')) {
+    if (msg.contains('network') ||
+        msg.contains('connection') ||
+        msg.contains('timeout')) {
       return 'Network error. Please check your internet connection.';
     }
     if (msg.contains('not allowed') || msg.contains('not enabled')) {
@@ -180,7 +196,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     await ref.read(authProvider.notifier).socialLogin(
           provider: result.provider,
           idToken: result.idToken,
-          role: role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
+          role: role == UserRole.photographer
+              ? AppUserRole.photographer
+              : AppUserRole.client,
           fullName: result.fullName,
         );
     return true;
@@ -191,7 +209,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     UserRole? role = widget.role;
     if (role == null) {
       role = await Navigator.of(context).push<UserRole>(
-        MaterialPageRoute(builder: (_) => const RoleSelectionScreen(selectOnly: true)),
+        MaterialPageRoute(
+            builder: (_) => const RoleSelectionScreen(selectOnly: true)),
       );
       if (role == null) return; // user backed out of Role Selection
     }
@@ -208,7 +227,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       // [16] Account reauth failed — the service already called disconnect()
       // to clear stale tokens. Retry once: Credential Manager will now show
       // a fresh consent/picker flow without the stale token blocking it.
-      debugPrint('[SocialAuth] SocialAuthReauthNeeded: ${e.message} — retrying with fresh session...');
+      debugPrint(
+          '[SocialAuth] SocialAuthReauthNeeded: ${e.message} — retrying with fresh session...');
       await Future<void>.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       try {
@@ -219,7 +239,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         await AppPopup.show(
           context,
           title: 'Sign-in Failed',
-          message: 'Google account authentication failed. Please go to your phone\'s Google account settings and sign in again.\n\nDetail: ${e2.message}',
+          message:
+              'Google account authentication failed. Please go to your phone\'s Google account settings and sign in again.\n\nDetail: ${e2.message}',
           isError: true,
         );
         return;
@@ -233,7 +254,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       } on ApiException catch (apiErr) {
         if (!mounted) return;
         setState(() => _socialLoadingProvider = null);
-        await AppPopup.show(context, title: 'Sign-in Failed', message: apiErr.message, isError: true);
+        await AppPopup.show(context,
+            title: 'Sign-in Failed', message: apiErr.message, isError: true);
         return;
       } catch (retryErr, retryStack) {
         debugPrint('[SocialAuth] Reauth retry error: $retryErr\n$retryStack');
@@ -253,7 +275,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       // DO NOT call authenticate() again — that would show the picker a 2nd time.
       // Instead, try signInSilently() to retrieve the account the user already
       // selected, with zero UI.
-      debugPrint('[SocialAuth] SocialAuthCancelled — attempting silent recovery (no UI)...');
+      debugPrint(
+          '[SocialAuth] SocialAuthCancelled — attempting silent recovery (no UI)...');
       await Future<void>.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
 
@@ -264,7 +287,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         // For Apple: no silent equivalent — treat as genuine cancel.
         if (provider == 'google') {
           final silentResult = await service.signInWithGoogleSilent();
-          debugPrint('[SocialAuth] Silent recovery result: ${silentResult == null ? "null (genuine cancel)" : "got token ✅"}');
+          debugPrint(
+              '[SocialAuth] Silent recovery result: ${silentResult == null ? "null (genuine cancel)" : "got token ✅"}');
 
           if (silentResult == null) {
             // Silent recovery returned null.
@@ -277,7 +301,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
             // If the retry also fails we show the error; if it succeeds the
             // code below returns early after navigating.
             final debugDetail = service.lastSilentError;
-            debugPrint('[SocialAuth] silent=null (lastSilentError: $debugDetail) — retrying authenticate() once...');
+            debugPrint(
+                '[SocialAuth] silent=null (lastSilentError: $debugDetail) — retrying authenticate() once...');
             await Future<void>.delayed(const Duration(milliseconds: 300));
             if (!mounted) return;
 
@@ -294,7 +319,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
             } on ApiException catch (retryApiErr) {
               if (!mounted) return;
               setState(() => _socialLoadingProvider = null);
-              await AppPopup.show(context, title: 'Sign-in Failed', message: retryApiErr.message, isError: true);
+              await AppPopup.show(context,
+                  title: 'Sign-in Failed',
+                  message: retryApiErr.message,
+                  isError: true);
               return;
             } catch (retryErr, retryStack) {
               debugPrint('[SocialAuth] Retry error: $retryErr\n$retryStack');
@@ -321,7 +349,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
           await ref.read(authProvider.notifier).socialLogin(
                 provider: silentResult.provider,
                 idToken: silentResult.idToken,
-                role: role == UserRole.photographer ? AppUserRole.photographer : AppUserRole.client,
+                role: role == UserRole.photographer
+                    ? AppUserRole.photographer
+                    : AppUserRole.client,
                 fullName: silentResult.fullName,
               );
         } else {
@@ -336,7 +366,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       } on ApiException catch (e) {
         if (!mounted) return;
         setState(() => _socialLoadingProvider = null);
-        await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
+        await AppPopup.show(context,
+            title: 'Sign-in Failed', message: e.message, isError: true);
         return;
       } catch (e, stack) {
         debugPrint('[SocialAuth] Silent recovery error: $e\n$stack');
@@ -351,11 +382,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         );
         return;
       }
-
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _socialLoadingProvider = null);
-      await AppPopup.show(context, title: 'Sign-in Failed', message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: 'Sign-in Failed', message: e.message, isError: true);
       return;
     } catch (e, stack) {
       debugPrint('Social Login Error: $e\n$stack');
@@ -395,7 +426,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   /// destination clears the whole stack, since you shouldn't be able to
   /// back out of Home into Login.
   void _navigateAfterAuth(AppUser user) {
-    final legacyRole = user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final legacyRole = user.role == AppUserRole.photographer
+        ? UserRole.photographer
+        : UserRole.client;
     final navigator = Navigator.of(context);
 
     if (!user.isEmailVerified) {
@@ -414,7 +447,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       return;
     }
 
-    final destination = legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
+    final destination = legacyRole == UserRole.photographer
+        ? AppRoutes.adminHome
+        : AppRoutes.home;
     navigator.pushNamedAndRemoveUntil(destination, (route) => false);
   }
 
@@ -447,147 +482,177 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         extendBodyBehindAppBar: true,
         appBar: CustomAppBar(onBack: handleBack),
         body: ScreenBackdrop(
-        child: SafeArea(
-          top: true,
-          child: AuthContainer(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Center(child: LogoWidget(size: 56)),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text('Welcome Back', style: Theme.of(context).textTheme.headlineLarge),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Continue your creative journey.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  if (_errorMessage != null) ...[
-                    InlineErrorBanner(message: _errorMessage!),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                  AnimatedBuilder(
-                    animation: _shakeAnimation,
-                    builder: (context, child) => Transform.translate(
-                      offset: Offset(_shakeAnimation.value, 0),
-                      child: child,
+          child: SafeArea(
+            top: true,
+            child: AuthContainer(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Center(child: LogoWidget(size: 56)),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text('Welcome Back',
+                        style: Theme.of(context).textTheme.headlineLarge),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Continue your creative journey.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(color: AppColors.subtitle),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: AppSpacing.xl),
+                    if (_errorMessage != null) ...[
+                      InlineErrorBanner(message: _errorMessage!),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                    AnimatedBuilder(
+                      animation: _shakeAnimation,
+                      builder: (context, child) => Transform.translate(
+                        offset: Offset(_shakeAnimation.value, 0),
+                        child: child,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomTextField(
+                            label: 'Email',
+                            icon: Icons.mail_outline_rounded,
+                            keyboardType: TextInputType.emailAddress,
+                            controller: _emailController,
+                            validator: (v) => (v == null || !v.contains('@'))
+                                ? 'Enter a valid email'
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          CustomTextField(
+                            label: 'Password',
+                            icon: Icons.lock_outline_rounded,
+                            obscureText: true,
+                            controller: _passwordController,
+                            validator: (v) => (v == null || v.length < 6)
+                                ? 'Minimum 6 characters'
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        CustomTextField(
-                          label: 'Email',
-                          icon: Icons.mail_outline_rounded,
-                          keyboardType: TextInputType.emailAddress,
-                          controller: _emailController,
-                          validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                activeColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6)),
+                                onChanged: (v) =>
+                                    setState(() => _rememberMe = v ?? false),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Remember me',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.subtitle,
+                                    fontWeight: FontWeight.w500)),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        CustomTextField(
-                          label: 'Password',
-                          icon: Icons.lock_outline_rounded,
-                          obscureText: true,
-                          controller: _passwordController,
-                          validator: (v) => (v == null || v.length < 6) ? 'Minimum 6 characters' : null,
+                        TextButton(
+                          onPressed: () => Navigator.of(context)
+                              .pushNamed(AppRoutes.forgotPassword),
+                          child: const Text('Forgot Password?',
+                              style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13)),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: Checkbox(
-                              value: _rememberMe,
-                              activeColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                              onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                            ),
+                    const SizedBox(height: AppSpacing.md),
+                    GradientButton(
+                      label: 'Sign In',
+                      isLoading: _isLoading,
+                      onPressed:
+                          _socialLoadingProvider != null ? null : _handleSignIn,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: AppColors.border)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('or continue with',
+                              style: Theme.of(context).textTheme.bodyMedium),
+                        ),
+                        const Expanded(child: Divider(color: AppColors.border)),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SocialButton(
+                            icon: Icons.g_mobiledata_rounded,
+                            label: 'Google',
+                            isLoading: _socialLoadingProvider == 'google',
+                            onTap: () => _handleSocialSignIn('google'),
                           ),
-                          const SizedBox(width: 8),
-                          const Text('Remember me', style: TextStyle(fontSize: 13, color: AppColors.subtitle, fontWeight: FontWeight.w500)),
-                        ],
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pushNamed(AppRoutes.forgotPassword),
-                        child: const Text('Forgot Password?',
-                            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  GradientButton(
-                    label: 'Sign In',
-                    isLoading: _isLoading,
-                    onPressed: _socialLoadingProvider != null ? null : _handleSignIn,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Row(
-                    children: [
-                      const Expanded(child: Divider(color: AppColors.border)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('or continue with', style: Theme.of(context).textTheme.bodyMedium),
-                      ),
-                      const Expanded(child: Divider(color: AppColors.border)),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SocialButton(
-                          icon: Icons.g_mobiledata_rounded,
-                          label: 'Google',
-                          isLoading: _socialLoadingProvider == 'google',
-                          onTap: () => _handleSocialSignIn('google'),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: SocialButton(
-                          icon: Icons.apple_rounded,
-                          label: 'Apple',
-                          isLoading: _socialLoadingProvider == 'apple',
-                          onTap: () => _handleSocialSignIn('apple'),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: SocialButton(
+                            icon: Icons.apple_rounded,
+                            label: 'Apple',
+                            isLoading: _socialLoadingProvider == 'apple',
+                            onTap: () => _handleSocialSignIn('apple'),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        // TEMP DEBUG — remove once the client/studio
-                        // role mismatch is confirmed fixed.
-                        debugPrint('[ROLE_DEBUG] LoginScreen Create Account tapped, widget.role=${widget.role}');
-                        Navigator.of(context).pushNamed(AppRoutes.register, arguments: widget.role);
-                      },
-                      child: RichText(
-                        text: const TextSpan(
-                          text: "Don't have an account? ",
-                          style: TextStyle(color: AppColors.subtitle, fontSize: 13.5, fontWeight: FontWeight.w500),
-                          children: [
-                            TextSpan(text: 'Create Account', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
-                          ],
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          // TEMP DEBUG — remove once the client/studio
+                          // role mismatch is confirmed fixed.
+                          debugPrint(
+                              '[ROLE_DEBUG] LoginScreen Create Account tapped, widget.role=${widget.role}');
+                          Navigator.of(context).pushNamed(AppRoutes.register,
+                              arguments: widget.role);
+                        },
+                        child: RichText(
+                          text: const TextSpan(
+                            text: "Don't have an account? ",
+                            style: TextStyle(
+                                color: AppColors.subtitle,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w500),
+                            children: [
+                              TextSpan(
+                                  text: 'Create Account',
+                                  style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );

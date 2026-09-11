@@ -38,17 +38,19 @@ class FolderDetailsScreen extends ConsumerWidget {
     // (AlbumModel.folderId), so this preview always matches what's
     // actually filed here instead of a stand-in approximation.
     final albumState = ref.watch(albumProvider);
-    final relatedAlbums = albumState.allAlbums.where((a) => a.folderId == folderId).toList()
+    final relatedAlbums = albumState.allAlbums
+        .where((a) => a.folderId == folderId)
+        .toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
     return Scaffold(
       appBar: CustomAppBar(title: folder.name, showBack: true),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           children: [
             Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: folder.gradientArgb.map((a) => Color(a)).toList(),
@@ -57,26 +59,25 @@ class FolderDetailsScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.folder_rounded,
-                      color: Colors.white, size: 32),
-                  const SizedBox(width: AppSpacing.md),
+                  Icon(Icons.folder_rounded, color: Colors.white, size: 32),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           folder.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                               color: Colors.white),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           parent != null
                               ? '${folder.albumCount} albums • Inside "${parent.name}"'
                               : '${folder.albumCount} albums • Root level',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.white70),
@@ -85,12 +86,11 @@ class FolderDetailsScreen extends ConsumerWidget {
                     ),
                   ),
                   if (folder.isHidden)
-                    const Icon(Icons.visibility_off_rounded,
-                        color: Colors.white70),
+                    Icon(Icons.visibility_off_rounded, color: Colors.white70),
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             Row(
               children: [
                 Expanded(
@@ -98,43 +98,45 @@ class FolderDetailsScreen extends ConsumerWidget {
                     onPressed: () => Navigator.of(context).pushNamed(
                         AppRoutes.adminFolderRename,
                         arguments: folder.id),
-                    icon: const Icon(Icons.drive_file_rename_outline_rounded),
-                    label: const Text('Rename'),
+                    icon: Icon(Icons.drive_file_rename_outline_rounded),
+                    label: Text('Rename'),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pushNamed(
                         AppRoutes.adminFolderMove,
                         arguments: folder.id),
-                    icon: const Icon(Icons.swap_horiz_rounded),
-                    label: const Text('Move'),
+                    icon: Icon(Icons.swap_horiz_rounded),
+                    label: Text('Move'),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonalIcon(
                 onPressed: () => Navigator.of(context).pushNamed(
                     AppRoutes.adminFolderSettings,
                     arguments: folder.id),
-                icon: const Icon(Icons.settings_rounded),
-                label: const Text('Folder Settings'),
+                icon: Icon(Icons.settings_rounded),
+                label: Text('Folder Settings'),
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.xl),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Albums in this folder',
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.text),
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : AppColors.text)),
                   ),
                 ),
                 TextButton.icon(
@@ -142,19 +144,19 @@ class FolderDetailsScreen extends ConsumerWidget {
                     AppRoutes.adminAlbumCreate,
                     arguments: folder.id,
                   ),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text('Add Album'),
+                  icon: Icon(Icons.add_rounded, size: 18),
+                  label: Text('Add Album'),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             if (relatedAlbums.isEmpty)
               const EmptyStateCard(
                   message: 'No albums filed under this folder yet.')
             else
               ...relatedAlbums.map(
                 (a) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  padding: EdgeInsets.only(bottom: AppSpacing.sm),
                   child: Material(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(AppRadius.md),
@@ -165,7 +167,7 @@ class FolderDetailsScreen extends ConsumerWidget {
                         arguments: a.id,
                       ),
                       child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(color: AppColors.border),
@@ -173,25 +175,32 @@ class FolderDetailsScreen extends ConsumerWidget {
                         child: Row(
                           children: [
                             if (a.isFavorite) ...[
-                              const Icon(Icons.favorite_rounded,
+                              Icon(Icons.favorite_rounded,
                                   size: 14, color: AppColors.accent),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                             ],
                             Expanded(
                               child: Text(a.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w700)),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w700)),
                             ),
                             Text('${a.photoCount} photos',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.subtitle,
+                                    color: (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle),
                                     fontWeight: FontWeight.w600)),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.chevron_right_rounded,
-                                size: 18, color: AppColors.subtitle),
+                            SizedBox(width: 4),
+                            Icon(Icons.chevron_right_rounded,
+                                size: 18,
+                                color: (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle)),
                           ],
                         ),
                       ),

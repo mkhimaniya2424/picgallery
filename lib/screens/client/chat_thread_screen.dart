@@ -90,10 +90,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     final threadMsgs = chatState.messagesForThread(widget.threadId);
 
     // Mark as read on every rebuild (polling may have brought new msgs)
-    Future.microtask(() => ref.read(chatProvider.notifier).markAsRead(widget.threadId));
+    Future.microtask(
+        () => ref.read(chatProvider.notifier).markAsRead(widget.threadId));
 
     return Scaffold(
-      
       extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: widget.otherPartyName,
@@ -102,17 +102,17 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       body: ScreenBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(top: kToolbarHeight),
+            padding: EdgeInsets.only(top: kToolbarHeight),
             child: Column(
               children: [
                 Expanded(
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? Center(child: CircularProgressIndicator())
                       : threadMsgs.isEmpty
                           ? _buildEmptyState()
                           : ListView.builder(
                               controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                   horizontal: AppSpacing.md, vertical: 16),
                               itemCount: threadMsgs.length,
                               itemBuilder: (context, index) {
@@ -144,21 +144,21 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             size: 48,
             color: AppColors.subtitle.withValues(alpha: 0.5),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'Start the Conversation',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Type a message below to chat with the studio.',
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.subtitle,
+              color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
             ),
           ),
         ],
@@ -172,7 +172,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.only(bottom: 12),
         child: Column(
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -181,10 +181,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.75,
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.primary : Colors.white,
+                color: isMe
+                    ? AppColors.primary
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkSurface
+                        : Colors.white),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -205,20 +208,20 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               child: Text(
                 msg.text,
                 style: TextStyle(
-                  color: isMe ? Colors.white : AppColors.text,
+                  color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                   fontSize: 14.5,
                   height: 1.4,
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: EdgeInsets.symmetric(horizontal: 4),
               child: Text(
                 timeStr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.subtitle,
+                  color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -231,9 +234,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkBackground
+            : Colors.white.withValues(alpha: 0.95),
         border: const Border(
           top: BorderSide(color: AppColors.border),
         ),
@@ -244,11 +249,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             child: TextField(
               controller: _textController,
               textCapitalization: TextCapitalization.sentences,
-              style: const TextStyle(color: AppColors.text, fontSize: 14.5),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text), fontSize: 14.5),
               decoration: InputDecoration(
                 hintText: 'Type your message...',
                 hintStyle:
-                    const TextStyle(color: AppColors.subtitle, fontSize: 14.5),
+                    TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 14.5),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: const BorderSide(color: AppColors.border),
@@ -262,21 +267,21 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   borderSide:
                       const BorderSide(color: AppColors.primary, width: 1.5),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 18, vertical: 12),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 fillColor: AppColors.background.withValues(alpha: 0.5),
                 filled: true,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: AppColors.heroGradient,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.send_rounded, color: Colors.white),
+              icon: Icon(Icons.send_rounded, color: Colors.white),
               onPressed: _handleSend,
             ),
           ),
@@ -285,4 +290,3 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     );
   }
 }
-

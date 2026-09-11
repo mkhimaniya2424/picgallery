@@ -13,12 +13,14 @@ class FolderSettingsScreen extends ConsumerWidget {
 
   const FolderSettingsScreen({super.key, required this.folderId});
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, String name) async {
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Folder?'),
-        content: Text('This will remove "$name". Albums inside will be unfiled, not deleted.'),
+        content: Text(
+            'This will remove "$name". Albums inside will be unfiled, not deleted.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -80,12 +82,14 @@ class FolderSettingsScreen extends ConsumerWidget {
                 subtitle: const Text(
                     'Keeps this folder and its albums out of the read-only client view.'),
                 value: folder.isHidden,
-                onChanged: (v) => ref.read(folderProvider).setHidden(folder.id, v),
+                onChanged: (v) =>
+                    ref.read(folderProvider).setHidden(folder.id, v),
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
             const Text('Danger zone',
-                style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.text)),
+                style: TextStyle(
+                    fontWeight: FontWeight.w800, color: AppColors.text)),
             const SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,

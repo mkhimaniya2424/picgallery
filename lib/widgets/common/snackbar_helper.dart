@@ -11,12 +11,16 @@ class SnackBarHelper {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 20),
+            const Icon(Icons.check_circle_outline_rounded,
+                color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14),
               ),
             ),
           ],
@@ -35,12 +39,16 @@ class SnackBarHelper {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const Icon(Icons.error_outline_rounded,
+                color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14),
               ),
             ),
           ],

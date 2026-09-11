@@ -33,7 +33,8 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) {
   return TokenStorage(secureStorage: ref.watch(secureStorageProvider));
 });
 
-final socialAuthServiceProvider = Provider<SocialAuthService>((ref) => SocialAuthService());
+final socialAuthServiceProvider =
+    Provider<SocialAuthService>((ref) => SocialAuthService());
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(
@@ -68,7 +69,8 @@ final authStateProvider = Provider<AuthState>((ref) {
 /// valid session); a non-null [AppUser] means "logged in". Every screen
 /// that needs the current user watches this provider directly, or reads
 /// the simpler [authStateProvider] view above.
-final authProvider = AsyncNotifierProvider<AuthNotifier, AppUser?>(AuthNotifier.new);
+final authProvider =
+    AsyncNotifierProvider<AuthNotifier, AppUser?>(AuthNotifier.new);
 
 class AuthNotifier extends AsyncNotifier<AppUser?> {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
@@ -177,7 +179,8 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     bool rememberMe = true,
   }) async {
     await _mutate(() async {
-      final token = await _repo.login(email, password, role: role, rememberMe: rememberMe);
+      final token = await _repo.login(email, password,
+          role: role, rememberMe: rememberMe);
       // Sync FCM token now that we have a valid session
       _syncFcmToken();
       return token.user;
@@ -194,7 +197,8 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
     String? fullName,
   }) async {
     await _mutate(() async {
-      final token = await _repo.socialLogin(provider: provider, idToken: idToken, role: role, fullName: fullName);
+      final token = await _repo.socialLogin(
+          provider: provider, idToken: idToken, role: role, fullName: fullName);
       // Sync FCM token now that we have a valid session
       _syncFcmToken();
       return token.user;

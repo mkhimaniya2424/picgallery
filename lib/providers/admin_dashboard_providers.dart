@@ -13,7 +13,8 @@ import 'auth_providers.dart';
 /// [studio_client_connections_provider.dart]'s `ApiConnectionsRepository`
 /// already uses, so it always reads whoever is currently logged in
 /// rather than capturing a stale id at provider-creation time.
-final adminDashboardRepositoryProvider = Provider<AdminDashboardRepository>((ref) {
+final adminDashboardRepositoryProvider =
+    Provider<AdminDashboardRepository>((ref) {
   return ApiAdminDashboardRepository(
     apiClient: ref.watch(apiClientProvider),
     currentUserId: () => ref.read(authStateProvider).user?.id ?? '',
@@ -28,17 +29,20 @@ final adminDashboardRepositoryProvider = Provider<AdminDashboardRepository>((ref
 /// the repository, which also persists to on-device storage, so the
 /// dashboard survives an app restart.
 final adminDashboardProvider =
-    AsyncNotifierProvider<AdminDashboardNotifier, AdminDashboardSnapshot>(AdminDashboardNotifier.new);
+    AsyncNotifierProvider<AdminDashboardNotifier, AdminDashboardSnapshot>(
+        AdminDashboardNotifier.new);
 
 class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
-  AdminDashboardRepository get _repo => ref.read(adminDashboardRepositoryProvider);
+  AdminDashboardRepository get _repo =>
+      ref.read(adminDashboardRepositoryProvider);
 
   @override
   Future<AdminDashboardSnapshot> build() => _repo.fetchSnapshot();
 
   /// Pull-to-refresh / retry-after-error.
   Future<void> refresh() async {
-    state = const AsyncLoading<AdminDashboardSnapshot>().copyWithPrevious(state);
+    state =
+        const AsyncLoading<AdminDashboardSnapshot>().copyWithPrevious(state);
     state = await AsyncValue.guard(_repo.fetchSnapshot);
   }
 
@@ -119,9 +123,8 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
     }
   }
 
-
-
-  Future<void> addClient({required String name, required String initials}) async {
+  Future<void> addClient(
+      {required String name, required String initials}) async {
     await _repo.addClient(name: name, initials: initials);
     await refresh();
   }
@@ -131,7 +134,8 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
     await refresh();
   }
 
-  Future<void> assignGalleriesToClient(String clientId, List<String> galleryIds) async {
+  Future<void> assignGalleriesToClient(
+      String clientId, List<String> galleryIds) async {
     await _repo.assignGalleriesToClient(clientId, galleryIds);
     await refresh();
   }
@@ -149,7 +153,8 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
     await refresh();
   }
 
-  Future<void> addUpload({required String albumName, required bool isVideo}) async {
+  Future<void> addUpload(
+      {required String albumName, required bool isVideo}) async {
     await _repo.addUpload(albumName: albumName, isVideo: isVideo);
     await refresh();
   }

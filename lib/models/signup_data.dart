@@ -25,4 +25,3 @@ class SignupData {
     this.businessType,
   });
 }
-

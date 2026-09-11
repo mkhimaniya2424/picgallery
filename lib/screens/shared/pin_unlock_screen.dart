@@ -87,13 +87,14 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
 
     return Scaffold(
       body: ScreenBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Center(
               child: SingleChildScrollView(
                 child: Column(
@@ -113,14 +114,14 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.lock_rounded,
+                      child: Icon(Icons.lock_rounded,
                           color: Colors.white, size: 40),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: AppSpacing.lg),
                     Text('Enter App Lock PIN',
                         style: Theme.of(context).textTheme.headlineLarge,
                         textAlign: TextAlign.center),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       'Enter your 4-digit PIN to continue',
                       textAlign: TextAlign.center,
@@ -129,7 +130,7 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
                           .bodyLarge
                           ?.copyWith(color: subtitleColor),
                     ),
-                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(height: AppSpacing.xl),
                     Form(
                       key: _formKey,
                       child: TextFormField(
@@ -141,9 +142,7 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
                         maxLength: 4,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            fontSize: 24,
-                            letterSpacing: 12,
-                            color: textColor),
+                            fontSize: 24, letterSpacing: 12, color: textColor),
                         decoration: InputDecoration(
                           hintText: '••••',
                           hintStyle: TextStyle(color: subtitleColor),
@@ -162,17 +161,17 @@ class _PinUnlockScreenState extends State<PinUnlockScreen> {
                       ),
                     ),
                     if (_errorText != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(height: AppSpacing.sm),
                       Text(
                         _errorText!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppColors.error,
                             fontWeight: FontWeight.w600,
                             fontSize: 13),
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(height: AppSpacing.xl),
                     GradientButton(
                       label: 'Unlock',
                       icon: Icons.arrow_forward_rounded,

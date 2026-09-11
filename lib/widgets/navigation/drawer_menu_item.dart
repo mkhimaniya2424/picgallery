@@ -93,7 +93,9 @@ class _DrawerMenuItemState extends State<DrawerMenuItem> {
                     child: Icon(
                       widget.icon,
                       size: 21,
-                      color: selected ? Colors.white : colorScheme.onSurfaceVariant,
+                      color: selected
+                          ? Colors.white
+                          : colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -131,7 +133,9 @@ class _DrawerMenuItemState extends State<DrawerMenuItem> {
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white70 : colorScheme.onSurfaceVariant,
+                        color: selected
+                            ? Colors.white70
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ),
                 ],

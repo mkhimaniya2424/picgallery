@@ -132,21 +132,21 @@ class _ClientMediaDetailScreenState
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Storage Permission Denied'),
-        content: const Text(
+        title: Text('Storage Permission Denied'),
+        content: Text(
           'Enable storage access in Settings to download media.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               PermissionService.instance.openAppSettingsPage();
             },
-            child: const Text('Open Settings'),
+            child: Text('Open Settings'),
           ),
         ],
       ),
@@ -326,7 +326,7 @@ class _ClientMediaDetailScreenState
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: Colors.grey[300],
-                          child: const Icon(
+                          child: Icon(
                             Icons.broken_image,
                             size: 50,
                             color: Colors.grey,
@@ -343,7 +343,7 @@ class _ClientMediaDetailScreenState
                             color: Colors.black.withAlpha(180),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.play_arrow,
                             color: Colors.white,
                             size: 32,
@@ -355,7 +355,7 @@ class _ClientMediaDetailScreenState
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -366,7 +366,7 @@ class _ClientMediaDetailScreenState
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
                       Text(
@@ -378,14 +378,14 @@ class _ClientMediaDetailScreenState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     'Uploaded ${MediaFormatUtils.formatDate(media.createdAt)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Action buttons
                   Wrap(
@@ -406,25 +406,25 @@ class _ClientMediaDetailScreenState
                                   ),
                                 ),
                               )
-                            : const Icon(Icons.download),
-                        label: const Text('Download'),
+                            : Icon(Icons.download),
+                        label: Text('Download'),
                       ),
                       if (!kIsWeb)
                         OutlinedButton.icon(
                           onPressed: _isDownloading
                               ? null
                               : () => _saveMediaToGallery(context, ref, media),
-                          icon: const Icon(Icons.photo_library),
-                          label: const Text('Save'),
+                          icon: Icon(Icons.photo_library),
+                          label: Text('Save'),
                         ),
                       OutlinedButton.icon(
                         onPressed: () => _shareMedia(context, media),
-                        icon: const Icon(Icons.share),
-                        label: const Text('Share'),
+                        icon: Icon(Icons.share),
+                        label: Text('Share'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Like and comment counts
                   Row(
@@ -433,14 +433,15 @@ class _ClientMediaDetailScreenState
                         child: MediaLikeButton(
                           liked: likeState.liked,
                           likeCount: likeState.count,
-                          onToggle: () =>
-                              ref.read(mediaLikesCommentsProvider).toggleLike(media.id),
+                          onToggle: () => ref
+                              .read(mediaLikesCommentsProvider)
+                              .toggleLike(media.id),
                         ),
                       ),
                       Text('$commentCount comments'),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Comments section — clients can view and post their own
                   // comments/replies (edit/delete limited to their own by
@@ -449,23 +450,27 @@ class _ClientMediaDetailScreenState
                     comments: likesComments.commentsForMedia(media.id),
                     currentUserId: likesComments.currentUserId,
                     isLoading: likesComments.isLoading,
-                    onAddTopLevel: (text) => ref.read(mediaLikesCommentsProvider).addComment(
-                          mediaId: media.id,
-                          text: text,
-                          parentId: null,
-                        ),
-                    onReply: (parentId, text) => ref.read(mediaLikesCommentsProvider).addComment(
-                          mediaId: media.id,
-                          text: text,
-                          parentId: parentId,
-                        ),
-                    onEdit: (commentId, newText) => ref.read(mediaLikesCommentsProvider).editOwnComment(
-                          commentId: commentId,
-                          newText: newText,
-                        ),
-                    onDelete: (commentId) => ref.read(mediaLikesCommentsProvider).deleteOwnComment(
-                          commentId: commentId,
-                        ),
+                    onAddTopLevel: (text) =>
+                        ref.read(mediaLikesCommentsProvider).addComment(
+                              mediaId: media.id,
+                              text: text,
+                              parentId: null,
+                            ),
+                    onReply: (parentId, text) =>
+                        ref.read(mediaLikesCommentsProvider).addComment(
+                              mediaId: media.id,
+                              text: text,
+                              parentId: parentId,
+                            ),
+                    onEdit: (commentId, newText) =>
+                        ref.read(mediaLikesCommentsProvider).editOwnComment(
+                              commentId: commentId,
+                              newText: newText,
+                            ),
+                    onDelete: (commentId) =>
+                        ref.read(mediaLikesCommentsProvider).deleteOwnComment(
+                              commentId: commentId,
+                            ),
                   ),
                 ],
               ),

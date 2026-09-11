@@ -46,9 +46,8 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
     final descendants = folderController.descendantsOf(folder.id);
     final invalidIds = {folder.id, ...descendants.map((d) => d.id)};
 
-    final candidateParents = folderState.folders
-        .where((f) => !invalidIds.contains(f.id))
-        .toList();
+    final candidateParents =
+        folderState.folders.where((f) => !invalidIds.contains(f.id)).toList();
 
     String folderPath(FolderModel f) {
       final ancestors = folderController.ancestorsOf(f.id);
@@ -66,7 +65,8 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
               return SingleChildScrollView(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight, maxWidth: 520),
+                    constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight, maxWidth: 520),
                     child: IntrinsicHeight(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +78,8 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
                           const SizedBox(height: AppSpacing.md),
                           DropdownButtonFormField<String?>(
                             initialValue: _selectedParentId,
-                            decoration: const InputDecoration(labelText: 'Move into'),
+                            decoration:
+                                const InputDecoration(labelText: 'Move into'),
                             items: [
                               const DropdownMenuItem<String?>(
                                 value: null,
@@ -91,7 +92,8 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
                                 ),
                               ),
                             ],
-                            onChanged: (v) => setState(() => _selectedParentId = v),
+                            onChanged: (v) =>
+                                setState(() => _selectedParentId = v),
                           ),
                           const Spacer(),
                           const SizedBox(height: AppSpacing.lg),
@@ -99,7 +101,8 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
                             label: 'Move Folder',
                             onPressed: () async {
                               try {
-                                await folderController.moveFolder(folder.id, _selectedParentId);
+                                await folderController.moveFolder(
+                                    folder.id, _selectedParentId);
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -110,7 +113,10 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
                                 Navigator.of(context).maybePop();
                               } catch (e) {
                                 if (!context.mounted) return;
-                                final msg = e.toString().replaceFirst(RegExp(r'^(Exception|ValidationException):\s*'), '');
+                                final msg = e.toString().replaceFirst(
+                                    RegExp(
+                                        r'^(Exception|ValidationException):\s*'),
+                                    '');
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(msg),

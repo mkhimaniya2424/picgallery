@@ -37,7 +37,8 @@ class AuthInterceptor extends QueuedInterceptor {
     // share links (the backend's get_optional_current_user returns None,
     // so _assert_client_authorized raised 403 for the gallery's own owner).
     if (withAuth) {
-      final token = authManager.accessToken ?? await secureStorage.getAccessToken();
+      final token =
+          authManager.accessToken ?? await secureStorage.getAccessToken();
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -62,11 +63,15 @@ class AuthInterceptor extends QueuedInterceptor {
     final isRefreshRequest = options.extra['isRefresh'] == true;
 
     // Only handle 401 Unauthorized for studio authenticated requests
-    if (response?.statusCode != 401 || isAuthEndpoint || isPublicClient || isRefreshRequest) {
+    if (response?.statusCode != 401 ||
+        isAuthEndpoint ||
+        isPublicClient ||
+        isRefreshRequest) {
       return handler.next(err);
     }
 
-    final refreshToken = authManager.refreshToken ?? await secureStorage.getRefreshToken();
+    final refreshToken =
+        authManager.refreshToken ?? await secureStorage.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       await authManager.handleSessionExpired();
       return handler.next(err);
@@ -89,7 +94,8 @@ class AuthInterceptor extends QueuedInterceptor {
 
       final data = refreshResponse.data as Map<String, dynamic>;
       final newAccessToken = (data['access_token'] ?? data['access']) as String;
-      final newRefreshToken = (data['refresh_token'] ?? data['refresh']) as String?;
+      final newRefreshToken =
+          (data['refresh_token'] ?? data['refresh']) as String?;
 
       await secureStorage.saveAccessToken(newAccessToken);
       if (newRefreshToken != null) {

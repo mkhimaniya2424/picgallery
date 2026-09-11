@@ -33,13 +33,14 @@ class AlbumMediaGrid extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurface
             : Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+        border:
+            Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 260),
@@ -68,7 +69,7 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Column(
         children: [
           Container(
@@ -77,13 +78,14 @@ class _EmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: AppColors.softWash,
               shape: BoxShape.circle,
-              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+              border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.border),
             ),
-            child: const Center(
+            child: Center(
               child: Text('📷', style: TextStyle(fontSize: 30)),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Text(
             'No photos yet',
             style: TextStyle(
@@ -91,7 +93,7 @@ class _EmptyState extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 color: isDark ? AppColors.textOnDark : AppColors.text),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          SizedBox(height: AppSpacing.xs),
           Text(
             'Upload your first photo or video',
             textAlign: TextAlign.center,
@@ -100,11 +102,11 @@ class _EmptyState extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           FilledButton.icon(
             onPressed: onAddMedia,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Add Media'),
+            icon: Icon(Icons.add_rounded),
+            label: Text('Add Media'),
           ),
         ],
       ),
@@ -189,20 +191,23 @@ class _MediaThumbState extends State<_MediaThumb>
               if (m.displayPath.isNotEmpty || m.displayThumbnailPath.isNotEmpty)
                 Builder(
                   builder: (context) {
-                    final path = isVideo ? m.displayThumbnailPath : m.displayPath;
+                    final path =
+                        isVideo ? m.displayThumbnailPath : m.displayPath;
                     final isNetwork = path.startsWith('http://') ||
                         path.startsWith('https://');
                     if (isNetwork) {
                       return Image.network(
                         path,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _fallback(isVideo: isVideo),
+                        errorBuilder: (_, __, ___) =>
+                            _fallback(isVideo: isVideo),
                       );
                     } else if (path.isNotEmpty && File(path).existsSync()) {
                       return Image.file(
                         File(path),
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _fallback(isVideo: isVideo),
+                        errorBuilder: (_, __, ___) =>
+                            _fallback(isVideo: isVideo),
                       );
                     }
                     return _fallback(isVideo: isVideo);
@@ -224,7 +229,7 @@ class _MediaThumbState extends State<_MediaThumb>
                   ),
                 ),
               if (isVideo)
-                const Center(
+                Center(
                   child: Icon(Icons.play_circle_fill_rounded,
                       color: Colors.white, size: 30),
                 ),
@@ -233,15 +238,14 @@ class _MediaThumbState extends State<_MediaThumb>
                   right: 6,
                   bottom: 6,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.55),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       MediaFormatUtils.formatDuration(m.duration),
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.w700),

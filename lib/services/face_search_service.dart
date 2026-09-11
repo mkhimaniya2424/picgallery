@@ -117,7 +117,9 @@ class FaceSearchService {
       }
     }
 
-    if (statusCode >= 200 && statusCode < 300 && decoded is Map<String, dynamic>) {
+    if (statusCode >= 200 &&
+        statusCode < 300 &&
+        decoded is Map<String, dynamic>) {
       return FaceSearchApiResponse.fromJson(decoded);
     }
 
@@ -130,7 +132,9 @@ class FaceSearchService {
       if (detail is String) return detail;
       if (detail is List) {
         return detail
-            .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
+            .map((e) => e is Map && e['msg'] != null
+                ? e['msg'].toString()
+                : e.toString())
             .join(', ');
       }
       return detail.toString();

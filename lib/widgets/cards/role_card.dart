@@ -35,8 +35,9 @@ class RoleCard extends StatelessWidget {
     final selectedFill = isDark
         ? AppColors.darkSurfaceRaised.withValues(alpha: 0.92)
         : Colors.white.withValues(alpha: 0.75);
-    final unselectedFill =
-        isDark ? AppColors.darkSurfaceRaised.withValues(alpha: 0.72) : AppColors.glassFill;
+    final unselectedFill = isDark
+        ? AppColors.darkSurfaceRaised.withValues(alpha: 0.72)
+        : AppColors.glassFill;
 
     return GestureDetector(
       onTap: onTap,
@@ -103,7 +104,9 @@ class RoleCard extends StatelessWidget {
                     border: Border.all(
                         color: selected
                             ? Colors.transparent
-                            : (isDark ? AppColors.darkBorder : AppColors.border),
+                            : (isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border),
                         width: 1.6),
                   ),
                   child: selected

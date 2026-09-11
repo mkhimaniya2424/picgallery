@@ -30,17 +30,21 @@ class CheckEmailScreen extends ConsumerStatefulWidget {
   ConsumerState<CheckEmailScreen> createState() => _CheckEmailScreenState();
 }
 
-class _CheckEmailScreenState extends ConsumerState<CheckEmailScreen> with SingleTickerProviderStateMixin {
+class _CheckEmailScreenState extends ConsumerState<CheckEmailScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-      AnimationController(vsync: this, duration: AppDurations.medium)..forward();
-  late final Animation<double> _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+      AnimationController(vsync: this, duration: AppDurations.medium)
+        ..forward();
+  late final Animation<double> _scale =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
 
   bool _resending = false;
 
   Future<void> _resend() async {
     setState(() => _resending = true);
     try {
-      final message = await ref.read(authRepositoryProvider).forgotPassword(widget.email);
+      final message =
+          await ref.read(authRepositoryProvider).forgotPassword(widget.email);
       if (!mounted) return;
       AppToast.show(context, message);
     } on ApiException catch (e) {
@@ -58,13 +62,16 @@ class _CheckEmailScreenState extends ConsumerState<CheckEmailScreen> with Single
     // intent across iOS/Android.
     final uri = Uri(scheme: 'mailto');
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && mounted) {
-        AppToast.show(context, 'No mail app found on this device', isError: true);
+        AppToast.show(context, 'No mail app found on this device',
+            isError: true);
       }
     } catch (_) {
       if (mounted) {
-        AppToast.show(context, 'No mail app found on this device', isError: true);
+        AppToast.show(context, 'No mail app found on this device',
+            isError: true);
       }
     }
   }
@@ -96,21 +103,30 @@ class _CheckEmailScreenState extends ConsumerState<CheckEmailScreen> with Single
                       gradient: AppColors.heroGradient,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: AppColors.success.withValues(alpha: 0.3), blurRadius: 36, offset: const Offset(0, 16)),
+                        BoxShadow(
+                            color: AppColors.success.withValues(alpha: 0.3),
+                            blurRadius: 36,
+                            offset: const Offset(0, 16)),
                       ],
                     ),
-                    child: const Icon(Icons.mark_email_unread_rounded, color: Colors.white, size: 58),
+                    child: const Icon(Icons.mark_email_unread_rounded,
+                        color: Colors.white, size: 58),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                Text('Check Your Inbox', style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+                Text('Check Your Inbox',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center),
                 const SizedBox(height: 10),
                 Text(
                   widget.email.isEmpty
                       ? 'We\'ve sent a reset link to your email.'
                       : 'We\'ve sent a reset link to\n${widget.email}',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.subtitle),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: AppColors.subtitle),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 GradientButton(label: 'Open Mail App', onPressed: _openMailApp),
@@ -123,24 +139,37 @@ class _CheckEmailScreenState extends ConsumerState<CheckEmailScreen> with Single
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 52),
                     side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                   child: const Text(
                     'Enter Reset Code',
-                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                        color: AppColors.primary, fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextButton(
                   onPressed: _resending ? null : _resend,
                   child: _resending
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
-                      : const Text('Resend', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AppColors.primary))
+                      : const Text('Resend',
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700)),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (r) => false),
-                  child: const Text('Back to Login', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                  onPressed: () => Navigator.of(context)
+                      .pushNamedAndRemoveUntil(AppRoutes.login, (r) => false),
+                  child: const Text('Back to Login',
+                      style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700)),
                 ),
               ],
             ),

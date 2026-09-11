@@ -8,7 +8,8 @@ abstract class SearchRepository {
   /// Returns every indexed item, optionally filtered by [type] and/or
   /// matched (case-insensitive) against [query]. Starts empty — real
   /// results only appear once Albums/Folders/Photos actually exist.
-  Future<List<SearchResultItem>> search({String query = '', SearchResultType? type});
+  Future<List<SearchResultItem>> search(
+      {String query = '', SearchResultType? type});
 
   /// Short list of suggested terms shown while the search field is
   /// empty or partially typed. Starts empty — no canned suggestions.
@@ -24,7 +25,8 @@ abstract class SearchRepository {
 /// means writing one new class that implements [SearchRepository] and
 /// wiring it into `searchRepositoryProvider` — no screen changes needed.
 class InMemorySearchRepository implements SearchRepository {
-  InMemorySearchRepository({Duration? latency}) : _latency = latency ?? const Duration(milliseconds: 380);
+  InMemorySearchRepository({Duration? latency})
+      : _latency = latency ?? const Duration(milliseconds: 380);
 
   final Duration _latency;
 
@@ -35,12 +37,15 @@ class InMemorySearchRepository implements SearchRepository {
   Future<void> _delay() => Future.delayed(_latency);
 
   @override
-  Future<List<SearchResultItem>> search({String query = '', SearchResultType? type}) async {
+  Future<List<SearchResultItem>> search(
+      {String query = '', SearchResultType? type}) async {
     await _delay();
     final q = query.trim().toLowerCase();
     return _items.where((item) {
       final matchesType = type == null || item.type == type;
-      final matchesQuery = q.isEmpty || item.title.toLowerCase().contains(q) || item.subtitle.toLowerCase().contains(q);
+      final matchesQuery = q.isEmpty ||
+          item.title.toLowerCase().contains(q) ||
+          item.subtitle.toLowerCase().contains(q);
       return matchesType && matchesQuery;
     }).toList();
   }

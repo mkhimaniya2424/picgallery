@@ -195,7 +195,9 @@ class ErrorStateCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.border),
       ),
@@ -266,30 +268,30 @@ class GalleryCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-        onTap: () {
-          final studioId = album.studioId;
-          if (studioId != null) {
-            // Cross-studio "connected" album (from `connectedAlbumsProvider`
-            // / `ConnectedAlbumRead`) — the studio-owner `AlbumDetailsScreen`
-            // expects `albumProvider`/`mediaProvider` data this client was
-            // never going to have, so route to the client-safe read-only
-            // preview instead, same as `GalleryGrid`'s `sharedStudioId` path.
+          onTap: () {
+            final studioId = album.studioId;
+            if (studioId != null) {
+              // Cross-studio "connected" album (from `connectedAlbumsProvider`
+              // / `ConnectedAlbumRead`) — the studio-owner `AlbumDetailsScreen`
+              // expects `albumProvider`/`mediaProvider` data this client was
+              // never going to have, so route to the client-safe read-only
+              // preview instead, same as `GalleryGrid`'s `sharedStudioId` path.
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SharedAlbumPreviewScreen(
+                    studioId: studioId,
+                    album: album,
+                  ),
+                ),
+              );
+              return;
+            }
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => SharedAlbumPreviewScreen(
-                  studioId: studioId,
-                  album: album,
-                ),
+                builder: (_) => AlbumDetailsScreen(albumId: album.id),
               ),
             );
-            return;
-          }
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AlbumDetailsScreen(albumId: album.id),
-            ),
-          );
-        },
+          },
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -516,14 +518,17 @@ class _GalleryGridTile extends StatelessWidget {
                   ),
                 ),
               Align(
-                alignment: coverUrl == null ? Alignment.center : Alignment.bottomLeft,
+                alignment:
+                    coverUrl == null ? Alignment.center : Alignment.bottomLeft,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   child: Text(
                     album.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    textAlign: coverUrl == null ? TextAlign.center : TextAlign.left,
+                    textAlign:
+                        coverUrl == null ? TextAlign.center : TextAlign.left,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12.5,
@@ -541,7 +546,8 @@ class _GalleryGridTile extends StatelessWidget {
                   top: 6,
                   right: 6,
                   child: Tooltip(
-                    message: 'A password-protected link also exists for this gallery',
+                    message:
+                        'A password-protected link also exists for this gallery',
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -578,7 +584,9 @@ class ConnectedStudioCard extends StatelessWidget {
     return Container(
       width: 160,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: AppShadows.subtle,
@@ -602,7 +610,9 @@ class ConnectedStudioCard extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: hasLogo ? null : AppColors.primary.withValues(alpha: 0.1),
+                        color: hasLogo
+                            ? null
+                            : AppColors.primary.withValues(alpha: 0.1),
                         gradient: hasLogo ? null : AppColors.buttonGradient,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -611,11 +621,15 @@ class ConnectedStudioCard extends StatelessWidget {
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(10),
                               child: studio.logoUrl.startsWith('http')
-                                  ? Image.network(studio.logoUrl, fit: BoxFit.cover, width: 36, height: 36)
-                                  : Image.file(File(studio.logoUrl), fit: BoxFit.cover, width: 36, height: 36),
+                                  ? Image.network(studio.logoUrl,
+                                      fit: BoxFit.cover, width: 36, height: 36)
+                                  : Image.file(File(studio.logoUrl),
+                                      fit: BoxFit.cover, width: 36, height: 36),
                             )
                           : Text(
-                              studio.name.isNotEmpty ? studio.name[0].toUpperCase() : 'S',
+                              studio.name.isNotEmpty
+                                  ? studio.name[0].toUpperCase()
+                                  : 'S',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -625,7 +639,8 @@ class ConnectedStudioCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -751,9 +766,8 @@ class ActivityTile extends StatelessWidget {
       // bell icon: this pushed the Studio's NotificationsScreen, which
       // clients can't meaningfully use. Switch to the client's own
       // Alerts tab (index 2) instead.
-      onTap: () => context
-          .findAncestorStateOfType<MainNavScreenState>()
-          ?.goToTab(2),
+      onTap: () =>
+          context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(2),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -852,7 +866,9 @@ class ActivityList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(color: AppColors.border),
       ),
@@ -880,7 +896,9 @@ class DownloadsList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(color: AppColors.border),
       ),
@@ -973,7 +991,9 @@ class CollectionsChips extends StatelessWidget {
         itemBuilder: (_, index) {
           final c = collections[index];
           return Material(
-            color: Colors.white,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkSurface
+                : Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: InkWell(
               borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -1133,10 +1153,12 @@ class ConnectedStudiosSection extends ConsumerStatefulWidget {
   const ConnectedStudiosSection({super.key});
 
   @override
-  ConsumerState<ConnectedStudiosSection> createState() => _ConnectedStudiosSectionState();
+  ConsumerState<ConnectedStudiosSection> createState() =>
+      _ConnectedStudiosSectionState();
 }
 
-class _ConnectedStudiosSectionState extends ConsumerState<ConnectedStudiosSection> {
+class _ConnectedStudiosSectionState
+    extends ConsumerState<ConnectedStudiosSection> {
   @override
   void initState() {
     super.initState();
@@ -1199,7 +1221,9 @@ class _ConnectedStudiosSectionState extends ConsumerState<ConnectedStudiosSectio
               padding: const EdgeInsets.all(AppSpacing.lg),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurface
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(color: AppColors.border),
               ),
@@ -1236,7 +1260,8 @@ class _ConnectedStudiosSectionState extends ConsumerState<ConnectedStudiosSectio
                   const SizedBox(height: AppSpacing.md),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pushNamed(AppRoutes.discoverStudios);
+                      Navigator.of(context)
+                          .pushNamed(AppRoutes.discoverStudios);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -1288,8 +1313,9 @@ class ContinueViewingSection extends ConsumerWidget {
             // same class of bug already fixed on RecentActivitySection's
             // "See All" below. The client-facing equivalent of "all
             // galleries" is just the Gallery bottom-nav tab itself.
-            onSeeAll: () =>
-                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(1),
+            onSeeAll: () => context
+                .findAncestorStateOfType<MainNavScreenState>()
+                ?.goToTab(1),
             showViewToggle: true,
           ),
         ),
@@ -1303,7 +1329,8 @@ class ContinueViewingSection extends ConsumerWidget {
               message: 'No recent galleries yet.',
             ),
           )
-        else if (ref.watch(homeGalleryViewModeProvider) == HomeGalleryViewMode.grid)
+        else if (ref.watch(homeGalleryViewModeProvider) ==
+            HomeGalleryViewMode.grid)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: GalleryGrid(albums: recentGalleries),
@@ -1338,14 +1365,16 @@ class RecentlyViewedSection extends ConsumerWidget {
             // See ContinueViewingSection above — AppRoutes.media 403s
             // for a client account; the Gallery tab is the real
             // client-facing "all galleries" destination.
-            onSeeAll: () =>
-                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(1),
+            onSeeAll: () => context
+                .findAncestorStateOfType<MainNavScreenState>()
+                ?.goToTab(1),
             showViewToggle: true,
           ),
         ),
         if (isLoading)
           const SectionLoadingSkeleton()
-        else if (ref.watch(homeGalleryViewModeProvider) == HomeGalleryViewMode.grid)
+        else if (ref.watch(homeGalleryViewModeProvider) ==
+            HomeGalleryViewMode.grid)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: GalleryGrid(albums: recent),
@@ -1378,8 +1407,9 @@ class TrendingGalleriesSection extends ConsumerWidget {
             // See ContinueViewingSection above — AppRoutes.media 403s
             // for a client account; the Gallery tab is the real
             // client-facing "all galleries" destination.
-            onSeeAll: () =>
-                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(1),
+            onSeeAll: () => context
+                .findAncestorStateOfType<MainNavScreenState>()
+                ?.goToTab(1),
             showViewToggle: true,
           ),
         ),
@@ -1393,7 +1423,8 @@ class TrendingGalleriesSection extends ConsumerWidget {
               message: 'No trending galleries yet.',
             ),
           )
-        else if (ref.watch(homeGalleryViewModeProvider) == HomeGalleryViewMode.grid)
+        else if (ref.watch(homeGalleryViewModeProvider) ==
+            HomeGalleryViewMode.grid)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: GalleryGrid(albums: items),
@@ -1474,8 +1505,9 @@ class RecentActivitySection extends ConsumerWidget {
             // notifications already live on the Alerts bottom-nav tab
             // (index 2 in MainNavScreen), so "See All" should just
             // switch to that tab instead of pushing an unrelated route.
-            onSeeAll: () =>
-                context.findAncestorStateOfType<MainNavScreenState>()?.goToTab(2),
+            onSeeAll: () => context
+                .findAncestorStateOfType<MainNavScreenState>()
+                ?.goToTab(2),
           ),
         ),
         Padding(
@@ -1520,7 +1552,8 @@ class SharedGalleriesSection extends ConsumerWidget {
             title: 'Shared With You',
             onSeeAll: studios.isEmpty
                 ? null
-                : () => Navigator.of(context).pushNamed(AppRoutes.sharedStudios),
+                : () =>
+                    Navigator.of(context).pushNamed(AppRoutes.sharedStudios),
           ),
         ),
         if (state.isLoadingStudios && studios.isEmpty)
@@ -1533,7 +1566,8 @@ class SharedGalleriesSection extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: InkWell(
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              onTap: () => Navigator.of(context).pushNamed(AppRoutes.sharedStudios),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.sharedStudios),
               child: const EmptyStateCard(
                 icon: Icons.ios_share_rounded,
                 message:

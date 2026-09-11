@@ -43,7 +43,8 @@ class AppPermissionsScreen extends ConsumerStatefulWidget {
   const AppPermissionsScreen({super.key});
 
   @override
-  ConsumerState<AppPermissionsScreen> createState() => _AppPermissionsScreenState();
+  ConsumerState<AppPermissionsScreen> createState() =>
+      _AppPermissionsScreenState();
 }
 
 class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
@@ -64,7 +65,9 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
       if (value && requestPermission != null) {
         finalValue = await requestPermission();
         if (!finalValue && mounted) {
-          AppToast.show(context, 'Permission denied in OS settings. Please enable it there first.', isError: true);
+          AppToast.show(context,
+              'Permission denied in OS settings. Please enable it there first.',
+              isError: true);
         }
       }
       final updated = await call(finalValue);
@@ -72,7 +75,10 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
     } on ApiException catch (e) {
       if (mounted) AppToast.show(context, e.message, isError: true);
     } catch (_) {
-      if (mounted) AppToast.show(context, 'Could not update permission. Try again.', isError: true);
+      if (mounted) {
+        AppToast.show(context, 'Could not update permission. Try again.',
+            isError: true);
+      }
     } finally {
       if (mounted) setState(() => _updating = null);
     }
@@ -88,67 +94,84 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
         child: SafeArea(
           top: false,
           child: user == null
-              ? const Center(child: LoadingWidget())
+              ? Center(child: LoadingWidget())
               : ListView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   children: [
                     Text(
                       'What picgallery can access',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontSize: 15),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Device permissions and notification preferences, all in one place.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: AppSpacing.lg),
                     _PermissionCard(
                       icon: Icons.camera_alt_rounded,
                       title: 'Camera',
-                      description: 'Capture and upload photos directly from the app.',
+                      description:
+                          'Capture and upload photos directly from the app.',
                       granted: user.cameraPermissionGranted,
                       isUpdating: _updating == 'camera',
                       onChanged: (v) => _toggle(
                         key: 'camera',
                         value: v,
-                        requestPermission: () => PermissionService.instance.checkAndRequestCameraPermission(),
-                        call: (finalV) => ref.read(authRepositoryProvider).updatePermissions(cameraPermissionGranted: finalV),
+                        requestPermission: () => PermissionService.instance
+                            .checkAndRequestCameraPermission(),
+                        call: (finalV) => ref
+                            .read(authRepositoryProvider)
+                            .updatePermissions(cameraPermissionGranted: finalV),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     _PermissionCard(
                       icon: Icons.photo_library_rounded,
                       title: 'Photo Library',
-                      description: 'Import photos from your device into albums.',
+                      description:
+                          'Import photos from your device into albums.',
                       granted: user.photoLibraryPermissionGranted,
                       isUpdating: _updating == 'photos',
                       onChanged: (v) => _toggle(
                         key: 'photos',
                         value: v,
-                        requestPermission: () => PermissionService.instance.checkAndRequestStoragePermission(),
-                        call: (finalV) =>
-                            ref.read(authRepositoryProvider).updatePermissions(photoLibraryPermissionGranted: finalV),
+                        requestPermission: () => PermissionService.instance
+                            .checkAndRequestStoragePermission(),
+                        call: (finalV) => ref
+                            .read(authRepositoryProvider)
+                            .updatePermissions(
+                                photoLibraryPermissionGranted: finalV),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     _PermissionCard(
                       icon: Icons.notifications_active_rounded,
                       title: 'Push Notifications',
-                      description: 'Get notified about new galleries, downloads and activity.',
+                      description:
+                          'Get notified about new galleries, downloads and activity.',
                       granted: user.pushNotificationsEnabled,
                       isUpdating: _updating == 'push',
                       onChanged: (v) => _toggle(
                         key: 'push',
                         value: v,
-                        requestPermission: () => PermissionService.instance.checkAndRequestNotificationPermission(),
-                        call: (finalV) => ref.read(authRepositoryProvider).updatePermissions(pushNotificationsEnabled: finalV),
+                        requestPermission: () => PermissionService.instance
+                            .checkAndRequestNotificationPermission(),
+                        call: (finalV) => ref
+                            .read(authRepositoryProvider)
+                            .updatePermissions(
+                                pushNotificationsEnabled: finalV),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     _PermissionCard(
                       icon: Icons.email_outlined,
                       title: 'Email Notifications',
-                      description: 'Receive booking, gallery, and account emails.',
+                      description:
+                          'Receive booking, gallery, and account emails.',
                       granted: user.emailNotificationsEnabled,
                       grantedLabel: 'Enabled',
                       notGrantedLabel: 'Disabled',
@@ -160,8 +183,9 @@ class _AppPermissionsScreenState extends ConsumerState<AppPermissionsScreen> {
                         key: 'email',
                         value: v,
                         requestPermission: null,
-                        call: (finalV) =>
-                            ref.read(userRepositoryProvider).updateProfile(emailNotificationsEnabled: finalV),
+                        call: (finalV) => ref
+                            .read(userRepositoryProvider)
+                            .updateProfile(emailNotificationsEnabled: finalV),
                       ),
                     ),
                   ],
@@ -199,7 +223,8 @@ class _PermissionCard extends StatelessWidget {
     final cardFill = isDark ? AppColors.darkSurface : AppColors.surfaceElevated;
     final cardBorder = isDark ? AppColors.darkBorder : AppColors.border;
     final textColor = isDark ? AppColors.textOnDark : AppColors.text;
-    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+    final subtitleColor =
+        isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
     // A flat, low-alpha tint reads as a crisp pastel badge on the light
     // card, but the same 12% alpha over a near-black dark card comes out
     // as a faint, undefined smudge with no visible edge. Bump the fill
@@ -209,7 +234,7 @@ class _PermissionCard extends StatelessWidget {
     final badgeBorderAlpha = isDark ? 0.45 : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: cardFill,
         borderRadius: BorderRadius.circular(16),
@@ -222,18 +247,21 @@ class _PermissionCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: (granted ? AppColors.success : subtitleColor).withValues(alpha: badgeFillAlpha),
+              color: (granted ? AppColors.success : subtitleColor)
+                  .withValues(alpha: badgeFillAlpha),
               shape: BoxShape.circle,
               border: badgeBorderAlpha > 0
                   ? Border.all(
-                      color: (granted ? AppColors.success : subtitleColor).withValues(alpha: badgeBorderAlpha),
+                      color: (granted ? AppColors.success : subtitleColor)
+                          .withValues(alpha: badgeBorderAlpha),
                       width: 1,
                     )
                   : null,
             ),
-            child: Icon(icon, size: 20, color: granted ? AppColors.success : subtitleColor),
+            child: Icon(icon,
+                size: 20, color: granted ? AppColors.success : subtitleColor),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,19 +271,26 @@ class _PermissionCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         title,
-                        style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: textColor),
+                        style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: textColor),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (granted ? AppColors.success : subtitleColor).withValues(alpha: badgeFillAlpha),
+                        color: (granted ? AppColors.success : subtitleColor)
+                            .withValues(alpha: badgeFillAlpha),
                         borderRadius: BorderRadius.circular(AppRadius.pill),
                         border: badgeBorderAlpha > 0
                             ? Border.all(
-                                color: (granted ? AppColors.success : subtitleColor)
+                                color: (granted
+                                        ? AppColors.success
+                                        : subtitleColor)
                                     .withValues(alpha: badgeBorderAlpha),
                                 width: 1,
                               )
@@ -272,14 +307,18 @@ class _PermissionCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(description, style: TextStyle(fontSize: 12, color: subtitleColor, fontWeight: FontWeight.w500)),
+                SizedBox(height: 4),
+                Text(description,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: subtitleColor,
+                        fontWeight: FontWeight.w500)),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
           isUpdating
-              ? const SizedBox(
+              ? SizedBox(
                   width: 24,
                   height: 24,
                   child: Padding(

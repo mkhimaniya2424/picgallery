@@ -24,18 +24,20 @@ class StudioDrawerHeader extends ConsumerWidget {
     final snapshot = ref.watch(adminDashboardProvider).value;
     final authUser = ref.watch(authStateProvider).user;
 
-
     // Use the real logged-in user's profile as the primary source so the
     // hardcoded SettingsModel defaults ("Naman Shrivastava") never show up.
     final studioName = (authUser?.studioName?.isNotEmpty == true)
         ? authUser!.studioName!
-        : (settings.studioName.isNotEmpty ? settings.studioName : (snapshot?.studioName ?? 'Studio'));
+        : (settings.studioName.isNotEmpty
+            ? settings.studioName
+            : (snapshot?.studioName ?? 'Studio'));
     final adminName = (authUser?.fullName.isNotEmpty == true)
         ? authUser!.fullName
-        : (settings.photographerName.isNotEmpty ? settings.photographerName : (snapshot?.photographerName ?? 'Studio Admin'));
-    final adminEmail = (authUser?.email.isNotEmpty == true)
-        ? authUser!.email
-        : settings.email;
+        : (settings.photographerName.isNotEmpty
+            ? settings.photographerName
+            : (snapshot?.photographerName ?? 'Studio Admin'));
+    final adminEmail =
+        (authUser?.email.isNotEmpty == true) ? authUser!.email : settings.email;
     final initial = adminName.isNotEmpty ? adminName[0].toUpperCase() : '?';
 
     final storage = _storageUsage(snapshot);
@@ -93,24 +95,23 @@ class StudioDrawerHeader extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.24),
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      initial,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800),
-                    ),
-                  ),
-
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.24),
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800),
+                ),
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -164,9 +165,9 @@ class StudioDrawerHeader extends ConsumerWidget {
       return const _StorageStat(usedLabel: '—', totalLabel: '', percent: 0);
     }
     final stat = snapshot.stats.cast<StatCardData?>().firstWhere(
-      (s) => s?.label == 'Storage Used',
-      orElse: () => null,
-    );
+          (s) => s?.label == 'Storage Used',
+          orElse: () => null,
+        );
     final usedLabel = stat?.value ?? '0 GB';
     final totalMedia =
         snapshot.recentUploads.fold<int>(0, (sum, u) => sum + u.mediaCount);
@@ -189,8 +190,6 @@ class _StorageStat {
       required this.totalLabel,
       required this.percent});
 }
-
-
 
 class _EditProfileButton extends StatelessWidget {
   const _EditProfileButton({required this.onTap});

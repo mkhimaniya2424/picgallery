@@ -20,9 +20,11 @@ import 'media_repository.dart';
 /// [uploadMedia]. [copyMedia] used to be one of these but now maps to
 /// `POST /media/{id}/copy`, a real server-side file copy.
 class ApiMediaRepository implements MediaRepository {
-  ApiMediaRepository({required ApiClient apiClient, MediaUploadService? uploadService})
+  ApiMediaRepository(
+      {required ApiClient apiClient, MediaUploadService? uploadService})
       : _apiClient = apiClient,
-        _uploadService = uploadService ?? MediaUploadService(apiClient: apiClient);
+        _uploadService =
+            uploadService ?? MediaUploadService(apiClient: apiClient);
 
   final ApiClient _apiClient;
   final MediaUploadService _uploadService;
@@ -63,7 +65,9 @@ class ApiMediaRepository implements MediaRepository {
       if (favoritesOnly) 'favorites_only': 'true',
       if (likedByClientId != null) 'liked_by_client_id': likedByClientId,
     };
-    final path = query.isEmpty ? '/media' : '/media?${Uri(queryParameters: query).query}';
+    final path = query.isEmpty
+        ? '/media'
+        : '/media?${Uri(queryParameters: query).query}';
     final json = await _apiClient.get(path);
     return _mapList(json);
   }
@@ -116,15 +120,16 @@ class ApiMediaRepository implements MediaRepository {
       result = MediaModel.fromApiJson(json as Map<String, dynamic>);
     }
 
-    final recipeChanged =
-        media.editRecipe?.toJson().toString() != result.editRecipe?.toJson().toString();
+    final recipeChanged = media.editRecipe?.toJson().toString() !=
+        result.editRecipe?.toJson().toString();
 
     final body = media.toUpdateJson(
       albumId: media.albumId != result.albumId ? media.albumId : null,
       clearAlbum: media.albumId == null && result.albumId != null,
       folderId: media.folderId != result.folderId ? media.folderId : null,
       clearFolder: media.folderId == null && result.folderId != null,
-      isFavorite: media.isFavorite != result.isFavorite ? media.isFavorite : null,
+      isFavorite:
+          media.isFavorite != result.isFavorite ? media.isFavorite : null,
       fileName: media.fileName != result.fileName ? media.fileName : null,
       editRecipe: recipeChanged ? media.editRecipe : null,
       clearEditRecipe: recipeChanged && media.editRecipe == null,
@@ -182,8 +187,9 @@ class ApiMediaRepository implements MediaRepository {
     final query = <String, String>{
       if (albumId != null) 'album_id': albumId,
       if (folderId != null) 'folder_id': folderId,
-      'duplicate_resolution':
-          duplicateResolution == DuplicateResolution.skip ? 'skip' : 'auto_rename',
+      'duplicate_resolution': duplicateResolution == DuplicateResolution.skip
+          ? 'skip'
+          : 'auto_rename',
     };
     final path = '/media/$id/copy?${Uri(queryParameters: query).query}';
     try {

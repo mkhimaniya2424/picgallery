@@ -123,7 +123,8 @@ class _FaqTileState extends State<_FaqTile> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+                    color:
+                        isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                   ),
                 ],
               ),

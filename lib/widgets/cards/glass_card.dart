@@ -33,17 +33,14 @@ class GlassCard extends StatelessWidget {
         ? AppColors.darkSurfaceRaised.withValues(alpha: 0.72)
         : AppColors.glassFill;
 
-    final defaultBorderColor = isDark
-        ? AppColors.darkBorder
-        : AppColors.glassBorder;
+    final defaultBorderColor =
+        isDark ? AppColors.darkBorder : AppColors.glassBorder;
 
     final topFill = isDark
-        ? Color.alphaBlend(
-            AppColors.textOnDark.withValues(alpha: 0.04),
+        ? Color.alphaBlend(AppColors.textOnDark.withValues(alpha: 0.04),
             fillColor ?? defaultFill)
         : Color.alphaBlend(
-            Colors.white.withValues(alpha: 0.14),
-            fillColor ?? defaultFill);
+            Colors.white.withValues(alpha: 0.14), fillColor ?? defaultFill);
 
     return Container(
       decoration: BoxDecoration(
@@ -61,7 +58,8 @@ class GlassCard extends StatelessWidget {
                   offset: const Offset(0, 6),
                 ),
               ]
-            : AppShadows.soft(AppColors.primary, opacity: 0.10, blur: 32, y: 14),
+            : AppShadows.soft(AppColors.primary,
+                opacity: 0.10, blur: 32, y: 14),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),

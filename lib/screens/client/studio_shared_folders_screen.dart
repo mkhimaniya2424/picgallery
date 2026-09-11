@@ -35,13 +35,16 @@ class StudioSharedFoldersScreen extends ConsumerStatefulWidget {
   /// folder). Non-null drills into that folder within [studioId].
   final String? folderId;
 
-  const StudioSharedFoldersScreen({super.key, required this.studioId, this.folderId});
+  const StudioSharedFoldersScreen(
+      {super.key, required this.studioId, this.folderId});
 
   @override
-  ConsumerState<StudioSharedFoldersScreen> createState() => _StudioSharedFoldersScreenState();
+  ConsumerState<StudioSharedFoldersScreen> createState() =>
+      _StudioSharedFoldersScreenState();
 }
 
-class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersScreen> {
+class _StudioSharedFoldersScreenState
+    extends ConsumerState<StudioSharedFoldersScreen> {
   @override
   void initState() {
     super.initState();
@@ -90,7 +93,6 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
         : 'Shared Gallery';
 
     return Scaffold(
-      
       appBar: CustomAppBar(title: title, showBack: true),
       body: SafeArea(
         child: RefreshIndicator(
@@ -114,44 +116,54 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
 
     if (loadingFolders && loadingAlbums) {
       return _scrollableMessage(
-        const Center(child: LoadingWidget(message: 'Loading shared gallery…')),
+        Center(child: LoadingWidget(message: 'Loading shared gallery…')),
       );
     }
 
     final error = isCurrent ? (state.foldersError ?? state.albumsError) : null;
-    final subfolders =
-        isCurrent ? state.folders.where((f) => f.parentId == widget.folderId).toList() : <FolderModel>[];
+    final subfolders = isCurrent
+        ? state.folders.where((f) => f.parentId == widget.folderId).toList()
+        : <FolderModel>[];
     final albums = isCurrent ? state.albums : const <AlbumModel>[];
 
     if (error != null && subfolders.isEmpty && albums.isEmpty) {
       return _scrollableMessage(
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: InlineErrorBanner(message: error),
           ),
         ),
       );
     }
 
-    if (subfolders.isEmpty && albums.isEmpty && !loadingFolders && !loadingAlbums) {
+    if (subfolders.isEmpty &&
+        albums.isEmpty &&
+        !loadingFolders &&
+        !loadingAlbums) {
       return _scrollableMessage(_buildEmptyState());
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       children: [
         if (subfolders.isNotEmpty) ...[
-          const Text(
+          Text(
             'Folders',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text)),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           ...subfolders.map((folder) {
-            final childCount = state.folders.where((f) => f.parentId == folder.id).length;
+            final childCount =
+                state.folders.where((f) => f.parentId == folder.id).length;
             return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: EdgeInsets.only(bottom: AppSpacing.sm),
               child: FolderTile(
                 folder: folder,
                 childFolderCount: childCount,
@@ -159,19 +171,22 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
               ),
             );
           }),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
         ],
         if (loadingAlbums && albums.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
             child: Center(child: LoadingWidget(message: 'Loading albums…')),
           )
         else if (albums.isNotEmpty) ...[
-          const Text(
+          Text(
             'Shared Albums',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text)),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           GalleryGrid(
             albums: albums,
             maxItems: albums.length,
@@ -189,7 +204,8 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics()),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: child,
@@ -200,7 +216,7 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -215,7 +231,7 @@ class _StudioSharedFoldersScreenState extends ConsumerState<StudioSharedFoldersS
               'This folder has no shared albums or sub-folders right now.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),

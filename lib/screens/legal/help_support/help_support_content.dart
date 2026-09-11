@@ -1,5 +1,3 @@
-
-
 import '../../legal/common/expandable_faq_section.dart';
 
 /// Local, structured Help & Support content.

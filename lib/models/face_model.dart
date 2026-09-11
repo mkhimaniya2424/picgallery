@@ -44,9 +44,11 @@ class DetectedFaceModel {
     required this.confidence,
   });
 
-  factory DetectedFaceModel.fromJson(Map<String, dynamic> json) => DetectedFaceModel(
+  factory DetectedFaceModel.fromJson(Map<String, dynamic> json) =>
+      DetectedFaceModel(
         faceIndex: json['face_index'] as int? ?? 0,
-        box: FaceBoxPixels.fromJson(json['box'] as Map<String, dynamic>? ?? const {}),
+        box: FaceBoxPixels.fromJson(
+            json['box'] as Map<String, dynamic>? ?? const {}),
         confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
       );
 }

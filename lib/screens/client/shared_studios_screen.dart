@@ -29,7 +29,6 @@ class SharedStudiosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      
       appBar: CustomAppBar(title: 'Shared With You', showBack: true),
       body: SafeArea(child: SharedStudiosListView()),
     );
@@ -44,7 +43,8 @@ class SharedStudiosListView extends ConsumerStatefulWidget {
   const SharedStudiosListView({super.key});
 
   @override
-  ConsumerState<SharedStudiosListView> createState() => _SharedStudiosListViewState();
+  ConsumerState<SharedStudiosListView> createState() =>
+      _SharedStudiosListViewState();
 }
 
 class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
@@ -73,7 +73,8 @@ class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
   Widget _buildBody(ClientGalleryState state) {
     if (state.isLoadingStudios && state.studios.isEmpty) {
       return _scrollable(
-        const Center(child: LoadingWidget(message: 'Loading shared galleries…')),
+        Center(
+            child: LoadingWidget(message: 'Loading shared galleries…')),
       );
     }
 
@@ -81,7 +82,7 @@ class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
       return _scrollable(
         Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: InlineErrorBanner(message: state.studiosError!),
           ),
         ),
@@ -90,7 +91,7 @@ class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
 
     if (state.studios.isEmpty) {
       return _scrollable(
-        const Center(
+        Center(
           child: Padding(
             padding: EdgeInsets.all(AppSpacing.xl),
             child: Column(
@@ -105,7 +106,7 @@ class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
                   'Studios you connect with will share galleries here.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: AppColors.subtitle,
+                    color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -118,12 +119,14 @@ class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
     }
 
     return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-      padding: const EdgeInsets.fromLTRB(
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: EdgeInsets.fromLTRB(
           AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
       itemCount: state.studios.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) => SharedStudioCard(studio: state.studios[index]),
+      separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
+      itemBuilder: (context, index) =>
+          SharedStudioCard(studio: state.studios[index]),
     );
   }
 
@@ -131,8 +134,8 @@ class _SharedStudiosListViewState extends ConsumerState<SharedStudiosListView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          physics:
-              const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics()),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: child,
@@ -168,41 +171,41 @@ class SharedStudioCard extends StatelessWidget {
           arguments: {'studioId': studio.id},
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
               // Studio logo or avatar placeholder
               _StudioAvatar(logoUrl: studio.logoUrl, name: studio.name),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       studio.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.text,
+                        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Text(
                       '${studio.sharedCount} shared ${studio.sharedCount == 1 ? 'gallery' : 'galleries'}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.subtitle,
+                        color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.subtitle,
+                color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                 size: 20,
               ),
             ],
@@ -247,7 +250,7 @@ class _StudioAvatar extends StatelessWidget {
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : 'S',
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w800,
             fontSize: 18,

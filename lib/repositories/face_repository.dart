@@ -34,7 +34,8 @@ abstract class FaceRepository {
 }
 
 class ApiFaceRepository implements FaceRepository {
-  ApiFaceRepository({required FaceSearchApiService service}) : _service = service;
+  ApiFaceRepository({required FaceSearchApiService service})
+      : _service = service;
 
   final FaceSearchApiService _service;
 

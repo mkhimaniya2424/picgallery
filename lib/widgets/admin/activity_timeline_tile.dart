@@ -24,7 +24,8 @@ class ActivityTimelineList extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+          border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.border),
         ),
         child: Text(
           'No activity yet — try a Quick Action above',
@@ -41,7 +42,8 @@ class ActivityTimelineList extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+        border:
+            Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         boxShadow: [
           BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.06),
@@ -125,13 +127,17 @@ class _ActivityRow extends StatelessWidget {
                               style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: isDark ? AppColors.textOnDark : AppColors.text)),
+                                  color: isDark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text)),
                         ),
                         Text(entry.time,
                             style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                                color: isDark
+                                    ? AppColors.subtitleOnDark
+                                    : AppColors.subtitle)),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -139,7 +145,9 @@ class _ActivityRow extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                            color: isDark
+                                ? AppColors.subtitleOnDark
+                                : AppColors.subtitle)),
                   ],
                 ),
               ),

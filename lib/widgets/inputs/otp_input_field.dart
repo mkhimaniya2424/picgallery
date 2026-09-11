@@ -104,19 +104,22 @@ class _OtpInputFieldState extends State<OtpInputField> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                    color: widget.hasError ? AppColors.error : colorScheme.outline,
+                    color:
+                        widget.hasError ? AppColors.error : colorScheme.outline,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                    color: widget.hasError ? AppColors.error : colorScheme.outline,
+                    color:
+                        widget.hasError ? AppColors.error : colorScheme.outline,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(
-                    color: widget.hasError ? AppColors.error : colorScheme.primary,
+                    color:
+                        widget.hasError ? AppColors.error : colorScheme.primary,
                     width: 1.6,
                   ),
                 ),

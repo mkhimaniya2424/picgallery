@@ -23,7 +23,12 @@ import '../auth/complete_profile_screen.dart' show kStudioSpecializations;
 /// Fixed option set for the Studio Details "Studio Type" field — no
 /// backend-driven list exists for this yet, so (same convention as
 /// `kStudioSpecializations`) a small hardcoded set is used.
-const List<String> kStudioTypes = ['Solo Photographer', 'Small Studio', 'Large Studio', 'Agency'];
+const List<String> kStudioTypes = [
+  'Solo Photographer',
+  'Small Studio',
+  'Large Studio',
+  'Agency'
+];
 
 /// Fixed weekday set for "Availability Days" — shown as selectable chips.
 const List<String> kWeekDays = [
@@ -164,9 +169,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   String? _emptyToNull(String text) => text.trim().isEmpty ? null : text.trim();
 
-  int? _parseInt(String text) => text.trim().isEmpty ? null : int.tryParse(text.trim());
+  int? _parseInt(String text) =>
+      text.trim().isEmpty ? null : int.tryParse(text.trim());
 
-  double? _parseDouble(String text) => text.trim().isEmpty ? null : double.tryParse(text.trim());
+  double? _parseDouble(String text) =>
+      text.trim().isEmpty ? null : double.tryParse(text.trim());
 
   /// Simple, permissive URL check — the field is optional (can be left
   /// blank per Task 9), so only non-blank input is validated. Accepts
@@ -180,7 +187,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         (uri.isScheme('HTTP') || uri.isScheme('HTTPS')) &&
         uri.host.isNotEmpty &&
         uri.host.contains('.');
-    return looksValid ? null : 'Enter a valid URL, e.g. https://instagram.com/yourstudio';
+    return looksValid
+        ? null
+        : 'Enter a valid URL, e.g. https://instagram.com/yourstudio';
   }
 
   Future<void> _handleSave() async {
@@ -198,23 +207,43 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             city: _city,
             address: _emptyToNull(_addressController.text),
             bio: _emptyToNull(_bioController.text),
-            studioAddress: isPhotographer ? _emptyToNull(_studioAddressController.text) : null,
+            studioAddress: isPhotographer
+                ? _emptyToNull(_studioAddressController.text)
+                : null,
             studioType: isPhotographer ? _studioType : null,
-            yearEstablished: isPhotographer ? _parseInt(_yearEstablishedController.text) : null,
-            teamSize: isPhotographer ? _parseInt(_teamSizeController.text) : null,
-            experienceYears: isPhotographer ? _parseInt(_experienceYearsController.text) : null,
+            yearEstablished: isPhotographer
+                ? _parseInt(_yearEstablishedController.text)
+                : null,
+            teamSize:
+                isPhotographer ? _parseInt(_teamSizeController.text) : null,
+            experienceYears: isPhotographer
+                ? _parseInt(_experienceYearsController.text)
+                : null,
             serviceAreas: isPhotographer ? _serviceAreas : null,
             languages: isPhotographer ? _languages : null,
-            equipmentHighlights: isPhotographer ? _emptyToNull(_equipmentHighlightsController.text) : null,
-            pricingMin: isPhotographer ? _parseDouble(_pricingMinController.text) : null,
-            pricingMax: isPhotographer ? _parseDouble(_pricingMaxController.text) : null,
-            packageDetails: isPhotographer ? _emptyToNull(_packageDetailsController.text) : null,
-            availabilityDays: isPhotographer ? _availabilityDays.toList() : null,
-            instagramUrl: isPhotographer ? _instagramController.text.trim() : null,
-            facebookUrl: isPhotographer ? _facebookController.text.trim() : null,
+            equipmentHighlights: isPhotographer
+                ? _emptyToNull(_equipmentHighlightsController.text)
+                : null,
+            pricingMin: isPhotographer
+                ? _parseDouble(_pricingMinController.text)
+                : null,
+            pricingMax: isPhotographer
+                ? _parseDouble(_pricingMaxController.text)
+                : null,
+            packageDetails: isPhotographer
+                ? _emptyToNull(_packageDetailsController.text)
+                : null,
+            availabilityDays:
+                isPhotographer ? _availabilityDays.toList() : null,
+            instagramUrl:
+                isPhotographer ? _instagramController.text.trim() : null,
+            facebookUrl:
+                isPhotographer ? _facebookController.text.trim() : null,
             youtubeUrl: isPhotographer ? _youtubeController.text.trim() : null,
-            pinterestUrl: isPhotographer ? _pinterestController.text.trim() : null,
-            preferredPhotoTypes: !isPhotographer ? _preferredPhotoTypes.toList() : null,
+            pinterestUrl:
+                isPhotographer ? _pinterestController.text.trim() : null,
+            preferredPhotoTypes:
+                !isPhotographer ? _preferredPhotoTypes.toList() : null,
           );
       ref.read(authProvider.notifier).setUser(updated);
 
@@ -223,7 +252,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      await AppPopup.show(context, title: 'Something Went Wrong', message: e.message, isError: true);
+      await AppPopup.show(context,
+          title: 'Something Went Wrong', message: e.message, isError: true);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -264,7 +294,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           onRetry: _loadCurrentUser,
         );
       } else {
-        body = const Center(child: LoadingWidget(message: 'Loading your profile...'));
+        body = Center(
+            child: LoadingWidget(message: 'Loading your profile...'));
       }
     } else {
       if (!_seeded) _seedControllers(user);
@@ -281,7 +312,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final isPhotographer = user.role == AppUserRole.photographer;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
@@ -290,8 +321,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader(title: 'Personal Details', actionLabel: null),
-                const SizedBox(height: AppSpacing.md),
+                const SectionHeader(
+                    title: 'Personal Details', actionLabel: null),
+                SizedBox(height: AppSpacing.md),
                 GlassCard(
                   child: Column(
                     children: [
@@ -299,18 +331,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         label: 'Full Name',
                         icon: Icons.person_outline_rounded,
                         controller: _fullNameController,
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Name is required'
+                            : null,
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      _ReadOnlyField(label: 'Email', value: user.email, icon: Icons.email_outlined),
-                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(height: AppSpacing.md),
+                      _ReadOnlyField(
+                          label: 'Email',
+                          value: user.email,
+                          icon: Icons.email_outlined),
+                      SizedBox(height: AppSpacing.md),
                       CustomTextField(
                         label: 'Bio',
                         icon: Icons.edit_note_rounded,
                         controller: _bioController,
                         maxLines: 3,
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(height: AppSpacing.md),
                       CustomTextField(
                         label: 'Address',
                         icon: Icons.home_outlined,
@@ -320,9 +357,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
                 const SectionHeader(title: 'Location', actionLabel: null),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 GlassCard(
                   child: CascadingLocationPicker(
                     initialCountry: _country,
@@ -338,23 +375,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
                 if (isPhotographer) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  const SectionHeader(title: 'Studio Details', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.xl),
+                  const SectionHeader(
+                      title: 'Studio Details', actionLabel: null),
+                  SizedBox(height: AppSpacing.md),
                   GlassCard(child: _buildStudioFields(context)),
-                  const SizedBox(height: AppSpacing.xl),
-                  const SectionHeader(title: 'Social Media Links', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.xl),
+                  const SectionHeader(
+                      title: 'Social Media Links', actionLabel: null),
+                  SizedBox(height: AppSpacing.md),
                   GlassCard(child: _buildSocialFields(context)),
                 ] else ...[
-                  const SizedBox(height: AppSpacing.xl),
+                  SizedBox(height: AppSpacing.xl),
                   const SectionHeader(title: 'Preferences', actionLabel: null),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   GlassCard(child: _buildClientFields(context)),
                 ],
-                const SizedBox(height: AppSpacing.xl),
-                GradientButton(label: 'Save Changes', isLoading: _isSaving, onPressed: _handleSave),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.xl),
+                GradientButton(
+                    label: 'Save Changes',
+                    isLoading: _isSaving,
+                    onPressed: _handleSave),
+                SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
@@ -373,15 +415,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           controller: _studioAddressController,
           maxLines: 2,
         ),
-        const SizedBox(height: AppSpacing.lg),
-        Text('Studio Type', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.lg),
+        Text('Studio Type',
+            style:
+                Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
+        SizedBox(height: AppSpacing.sm),
         _SingleChoiceChips(
           options: kStudioTypes,
           selected: _studioType,
           onSelected: (v) => setState(() => _studioType = v),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
         Row(
           children: [
             Expanded(
@@ -392,7 +436,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _yearEstablishedController,
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: CustomTextField(
                 label: 'Team Size',
@@ -403,14 +447,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         CustomTextField(
           label: 'Experience (Years)',
           icon: Icons.workspace_premium_outlined,
           keyboardType: TextInputType.number,
           controller: _experienceYearsController,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         TagInputField(
           label: 'Service Areas',
           hint: 'e.g. Rajkot, add and press enter',
@@ -418,7 +462,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           values: _serviceAreas,
           onChanged: (v) => setState(() => _serviceAreas = v),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         TagInputField(
           label: 'Languages',
           hint: 'e.g. English, add and press enter',
@@ -426,45 +470,49 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           values: _languages,
           onChanged: (v) => setState(() => _languages = v),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         CustomTextField(
           label: 'Equipment Highlights',
           icon: Icons.camera_alt_outlined,
           controller: _equipmentHighlightsController,
           maxLines: 3,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
               child: CustomTextField(
                 label: 'Pricing Min',
                 icon: Icons.currency_rupee,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 controller: _pricingMinController,
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: CustomTextField(
                 label: 'Pricing Max',
                 icon: Icons.currency_rupee,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 controller: _pricingMaxController,
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         CustomTextField(
           label: 'Package Details',
           icon: Icons.card_giftcard_rounded,
           controller: _packageDetailsController,
           maxLines: 3,
         ),
-        const SizedBox(height: AppSpacing.lg),
-        Text('Availability Days', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.lg),
+        Text('Availability Days',
+            style:
+                Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
+        SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -480,13 +528,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               labelStyle: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
               ),
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
               selectedColor: AppColors.primary,
-              side: BorderSide(color: selected ? AppColors.primary : Theme.of(context).colorScheme.outline),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              side: BorderSide(
+                  color: selected
+                      ? AppColors.primary
+                      : Theme.of(context).colorScheme.outline),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.pill)),
+              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             );
           }).toList(),
         ),
@@ -505,7 +560,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           controller: _instagramController,
           validator: _validateOptionalUrl,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         CustomTextField(
           label: 'Facebook',
           hint: 'https://facebook.com/yourstudio',
@@ -514,7 +569,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           controller: _facebookController,
           validator: _validateOptionalUrl,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         CustomTextField(
           label: 'YouTube',
           hint: 'https://youtube.com/@yourstudio',
@@ -523,7 +578,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           controller: _youtubeController,
           validator: _validateOptionalUrl,
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         CustomTextField(
           label: 'Pinterest',
           hint: 'https://pinterest.com/yourstudio',
@@ -540,8 +595,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Preferred Photo Types', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
-        const SizedBox(height: AppSpacing.sm),
+        Text('Preferred Photo Types',
+            style:
+                Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
+        SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -551,19 +608,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               label: Text(type),
               selected: selected,
               onSelected: (v) => setState(() {
-                v ? _preferredPhotoTypes.add(type) : _preferredPhotoTypes.remove(type);
+                v
+                    ? _preferredPhotoTypes.add(type)
+                    : _preferredPhotoTypes.remove(type);
               }),
               showCheckmark: false,
               labelStyle: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
               ),
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
               selectedColor: AppColors.primary,
-              side: BorderSide(color: selected ? AppColors.primary : Theme.of(context).colorScheme.outline),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              side: BorderSide(
+                  color: selected
+                      ? AppColors.primary
+                      : Theme.of(context).colorScheme.outline),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.pill)),
+              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             );
           }).toList(),
         ),
@@ -582,7 +648,10 @@ class _SingleChoiceChips extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onSelected;
 
-  const _SingleChoiceChips({required this.options, required this.selected, required this.onSelected});
+  const _SingleChoiceChips(
+      {required this.options,
+      required this.selected,
+      required this.onSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -599,13 +668,20 @@ class _SingleChoiceChips extends StatelessWidget {
           labelStyle: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 13,
-            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+            color: isSelected
+                ? Colors.white
+                : Theme.of(context).colorScheme.onSurface,
           ),
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          backgroundColor:
+              Theme.of(context).colorScheme.surfaceContainerHighest,
           selectedColor: AppColors.primary,
-          side: BorderSide(color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.outline),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          side: BorderSide(
+              color: isSelected
+                  ? AppColors.primary
+                  : Theme.of(context).colorScheme.outline),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.pill)),
+          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         );
       }).toList(),
     );
@@ -620,7 +696,8 @@ class _ReadOnlyField extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _ReadOnlyField({required this.label, required this.value, required this.icon});
+  const _ReadOnlyField(
+      {required this.label, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -633,7 +710,7 @@ class _ReadOnlyField extends StatelessWidget {
         : AppColors.border.withValues(alpha: 0.35);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(18),
@@ -642,7 +719,7 @@ class _ReadOnlyField extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, color: onSurfaceVariant, size: 20),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -652,7 +729,7 @@ class _ReadOnlyField extends StatelessWidget {
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                         color: onSurfaceVariant)),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   value,
                   style: TextStyle(
@@ -681,14 +758,17 @@ class _LoadErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 40),
-            const SizedBox(height: AppSpacing.md),
-            Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: AppSpacing.lg),
+            Icon(Icons.error_outline_rounded,
+                color: AppColors.error, size: 40),
+            SizedBox(height: AppSpacing.md),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium),
+            SizedBox(height: AppSpacing.lg),
             GradientButton(label: 'Retry', onPressed: onRetry, height: 48),
           ],
         ),

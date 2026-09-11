@@ -13,18 +13,19 @@ abstract class AdminDashboardRepository {
   Future<void> markAllNotificationsRead();
   Future<void> deleteNotification(String notificationId);
 
-
-
-  Future<ClientData> addClient({required String name, required String initials});
+  Future<ClientData> addClient(
+      {required String name, required String initials});
   Future<void> removeClient(String clientId);
-  Future<void> assignGalleriesToClient(String clientId, List<String> galleryIds);
+  Future<void> assignGalleriesToClient(
+      String clientId, List<String> galleryIds);
   Future<ClientData> inviteClient({
     required String name,
     required String email,
     required double bookingValue,
   });
 
-  Future<AlbumUploadData> addUpload({required String albumName, required bool isVideo});
+  Future<AlbumUploadData> addUpload(
+      {required String albumName, required bool isVideo});
 
   Future<NotificationData> pushNotification({
     required NotificationType type,

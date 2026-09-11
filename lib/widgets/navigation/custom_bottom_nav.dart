@@ -50,7 +50,8 @@ class CustomBottomNav extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+          border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.border),
           boxShadow: [
             BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.14),
@@ -78,7 +79,11 @@ class CustomBottomNav extends StatelessWidget {
                   children: [
                     Icon(item.icon,
                         size: 20,
-                        color: selected ? Colors.white : (isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                        color: selected
+                            ? Colors.white
+                            : (isDark
+                                ? AppColors.subtitleOnDark
+                                : AppColors.subtitle)),
                     if (selected) ...[
                       const SizedBox(width: 8),
                       Text(getLabel(i),

@@ -45,12 +45,14 @@ Future<bool> showDeleteConfirmationDialog({
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.error,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           onPressed: () => Navigator.of(ctx).pop(true),
           child: Text(
             confirmText ?? (l10n != null ? l10n.delete : 'Delete'),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
       ],

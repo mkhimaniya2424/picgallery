@@ -9,7 +9,6 @@ import '../models/user.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/common/snackbar_helper.dart';
 
-
 /// Listens for the `picgallery://payment-success` / `picgallery://payment-failed`
 /// links that the picgallery.in website redirects to once a Razorpay checkout
 /// (started from [SubscriptionPlansScreen]) finishes, and for
@@ -52,7 +51,8 @@ class DeepLinkService {
     try {
       final initial = await _appLinks.getInitialLink();
       if (initial != null) {
-        debugPrint('[DEEP_LINK_DEBUG] Cold start initial deep link stored as pending: $initial');
+        debugPrint(
+            '[DEEP_LINK_DEBUG] Cold start initial deep link stored as pending: $initial');
         _pendingInitialUri = initial;
       }
     } catch (_) {
@@ -64,7 +64,8 @@ class DeepLinkService {
     // SplashScreen's pushReplacementNamed doesn't destroy the shared gallery route.
     _sub?.cancel();
     _sub = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('[DEEP_LINK_DEBUG] uriLinkStream received: $uri (splashActive=$_isSplashActive)');
+      debugPrint(
+          '[DEEP_LINK_DEBUG] uriLinkStream received: $uri (splashActive=$_isSplashActive)');
       if (_isSplashActive) {
         _pendingInitialUri = uri;
       } else {
@@ -77,12 +78,14 @@ class DeepLinkService {
   /// pending deep link on top of the root route so the shared gallery (or
   /// passcode gate) is presented immediately as the active screen.
   void onSplashComplete() {
-    debugPrint('[DEEP_LINK_DEBUG] onSplashComplete called (pendingUri: $_pendingInitialUri)');
+    debugPrint(
+        '[DEEP_LINK_DEBUG] onSplashComplete called (pendingUri: $_pendingInitialUri)');
     _isSplashActive = false;
     final uri = _pendingInitialUri;
     _pendingInitialUri = null;
     if (uri != null) {
-      debugPrint('[DEEP_LINK_DEBUG] Processing pending deep link after splash: $uri');
+      debugPrint(
+          '[DEEP_LINK_DEBUG] Processing pending deep link after splash: $uri');
       handleLink(uri);
     }
   }
@@ -99,10 +102,12 @@ class DeepLinkService {
         (parsed.action == 'shared' || parsed.action == 'gallery') &&
         parsed.id != null &&
         parsed.id!.isNotEmpty) {
-      debugPrint('[DEEP_LINK_DEBUG] Consuming initial gallery deep link directly: ${parsed.id}');
+      debugPrint(
+          '[DEEP_LINK_DEBUG] Consuming initial gallery deep link directly: ${parsed.id}');
       _isSplashActive = false;
       _pendingInitialUri = null;
-      navigator.pushReplacementNamed(AppRoutes.sharedGallery, arguments: parsed.id!.trim());
+      navigator.pushReplacementNamed(AppRoutes.sharedGallery,
+          arguments: parsed.id!.trim());
       return true;
     }
     return false;
@@ -138,7 +143,8 @@ class DeepLinkService {
     if (navKey == null) return;
 
     final parsed = _action(uri);
-    debugPrint('[DEEP_LINK_DEBUG] Parsed action: ${parsed?.action}, id: ${parsed?.id}');
+    debugPrint(
+        '[DEEP_LINK_DEBUG] Parsed action: ${parsed?.action}, id: ${parsed?.id}');
     if (parsed == null) return; // Not a picgallery link at all — ignore.
 
     switch (parsed.action) {
@@ -159,7 +165,8 @@ class DeepLinkService {
         _handlePaymentFailed(navKey);
         break;
       default:
-        _reportFailure(navKey, onFailure, "That link isn't recognized by PicGallery.");
+        _reportFailure(
+            navKey, onFailure, "That link isn't recognized by PicGallery.");
     }
   }
 
@@ -182,8 +189,10 @@ class DeepLinkService {
           host == 'email-verified' ||
           host == 'payment-success' ||
           host == 'payment-failed') {
-        final idFromPath = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
-        final idFromQuery = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+        final idFromPath =
+            uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+        final idFromQuery =
+            uri.queryParameters['token'] ?? uri.queryParameters['id'];
         return _ParsedAction(host, idFromPath ?? idFromQuery);
       }
       if (host.isNotEmpty) {
@@ -201,7 +210,8 @@ class DeepLinkService {
           host == 'www.picgallery.app') {
         final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
         if (segments.isEmpty) {
-          final queryToken = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+          final queryToken =
+              uri.queryParameters['token'] ?? uri.queryParameters['id'];
           if (queryToken != null && queryToken.isNotEmpty) {
             return _ParsedAction('gallery', queryToken);
           }
@@ -209,7 +219,8 @@ class DeepLinkService {
         }
         final action = segments.first.toLowerCase();
         final idFromPath = segments.length > 1 ? segments[1] : null;
-        final idFromQuery = uri.queryParameters['token'] ?? uri.queryParameters['id'];
+        final idFromQuery =
+            uri.queryParameters['token'] ?? uri.queryParameters['id'];
         final id = idFromPath ?? idFromQuery;
         if (action == 'gallery' ||
             action == 'shared' ||
@@ -293,7 +304,8 @@ class DeepLinkService {
   /// is otherwise stuck at the stale `false` from register/login) and
   /// then continue exactly where `login_screen.dart`'s `_navigateAfterAuth`
   /// would, minus the now-satisfied verified check.
-  Future<void> _handleEmailVerified(GlobalKey<NavigatorState> navigatorKey) async {
+  Future<void> _handleEmailVerified(
+      GlobalKey<NavigatorState> navigatorKey) async {
     final context = navigatorKey.currentContext;
     final navigator = navigatorKey.currentState;
     if (context == null || navigator == null) return;
@@ -308,7 +320,9 @@ class DeepLinkService {
     final user = container.read(authProvider).valueOrNull;
     if (user == null) return;
 
-    final legacyRole = user.role == AppUserRole.photographer ? UserRole.photographer : UserRole.client;
+    final legacyRole = user.role == AppUserRole.photographer
+        ? UserRole.photographer
+        : UserRole.client;
 
     if (!user.hasCompletedProfile) {
       navigator.pushNamedAndRemoveUntil(
@@ -319,11 +333,14 @@ class DeepLinkService {
       return;
     }
 
-    final destination = legacyRole == UserRole.photographer ? AppRoutes.adminHome : AppRoutes.home;
+    final destination = legacyRole == UserRole.photographer
+        ? AppRoutes.adminHome
+        : AppRoutes.home;
     navigator.pushNamedAndRemoveUntil(destination, (route) => false);
   }
 
-  Future<void> _handlePaymentSuccess(Uri uri, GlobalKey<NavigatorState> navigatorKey) async {
+  Future<void> _handlePaymentSuccess(
+      Uri uri, GlobalKey<NavigatorState> navigatorKey) async {
     final plan = uri.queryParameters['plan'];
     if (plan == null || plan.isEmpty) return;
 
@@ -336,7 +353,8 @@ class DeepLinkService {
       await container.read(authProvider.notifier).activatePlan(plan);
       navigator.pushNamed(AppRoutes.subscriptionPlans);
       if (context.mounted) {
-        SnackBarHelper.showSuccess(context, 'Subscription upgraded successfully!');
+        SnackBarHelper.showSuccess(
+            context, 'Subscription upgraded successfully!');
       }
     } catch (e) {
       if (context.mounted) {

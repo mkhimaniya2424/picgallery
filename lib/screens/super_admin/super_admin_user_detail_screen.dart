@@ -30,13 +30,13 @@ class SuperAdminUserDetailScreen extends StatelessWidget {
         : null;
 
     return Scaffold(
-      
       appBar: AppBar(
-        
         elevation: 0,
         title: Text(isStudio ? 'Studio account' : 'Client account',
             style: const TextStyle(
-                color: AppColors.text, fontWeight: FontWeight.w700, fontSize: 18)),
+                color: AppColors.text,
+                fontWeight: FontWeight.w700,
+                fontSize: 18)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -67,18 +67,22 @@ class SuperAdminUserDetailScreen extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(user.email,
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 13)),
                 if (isStudio) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(user.subscriptionStatus.label,
                         style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12)),
                   ),
                 ],
               ],
@@ -124,7 +128,8 @@ class SuperAdminUserDetailScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppRadius.sm)),
                   ),
                   child: const Text('Suspend account',
-                      style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+                      style: TextStyle(
+                          color: AppColors.error, fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
@@ -160,12 +165,15 @@ class _LinkedAccountCard extends StatelessWidget {
               children: [
                 const Text('Same email, other role',
                     style: TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.text)),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppColors.text)),
                 const SizedBox(height: 2),
                 Text(
                   'This email also has a ${linkedIsStudio ? "Studio" : "Client"} account'
                   '${linkedIsStudio ? " (${linked.studioName})" : ""}.',
-                  style: const TextStyle(fontSize: 12, color: AppColors.subtitle),
+                  style:
+                      const TextStyle(fontSize: 12, color: AppColors.subtitle),
                 ),
               ],
             ),
@@ -177,7 +185,8 @@ class _LinkedAccountCard extends StatelessWidget {
               ));
             },
             child: const Text('View',
-                style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w700)),
+                style: TextStyle(
+                    color: AppColors.secondary, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -204,7 +213,9 @@ class _InfoCard extends StatelessWidget {
         children: [
           Text(title,
               style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.text)),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: AppColors.text)),
           const SizedBox(height: 8),
           ...rows,
         ],
@@ -227,12 +238,15 @@ class _InfoRow extends StatelessWidget {
           SizedBox(
             width: 110,
             child: Text(label,
-                style: const TextStyle(fontSize: 12.5, color: AppColors.subtitle)),
+                style:
+                    const TextStyle(fontSize: 12.5, color: AppColors.subtitle)),
           ),
           Expanded(
             child: Text(value,
                 style: const TextStyle(
-                    fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.text)),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text)),
           ),
         ],
       ),

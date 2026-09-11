@@ -79,7 +79,8 @@ class ClientDrawer extends ConsumerWidget {
 
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
       child: Text(
         title.toUpperCase(),
         style: const TextStyle(
@@ -104,10 +105,13 @@ class ClientDrawer extends ConsumerWidget {
     final connectedStudioCount =
         connections.where((c) => c.status == ConnectionStatus.connected).length;
 
-    final client = clientNotifier.findByEmail(authUser?.email ?? settings.email);
+    final client =
+        clientNotifier.findByEmail(authUser?.email ?? settings.email);
     final clientName = (authUser?.fullName.trim().isNotEmpty ?? false)
         ? authUser!.fullName.trim()
-        : (settings.photographerName.isNotEmpty ? settings.photographerName : 'Client');
+        : (settings.photographerName.isNotEmpty
+            ? settings.photographerName
+            : 'Client');
     final clientEmail = (authUser?.email.trim().isNotEmpty ?? false)
         ? authUser!.email.trim()
         : (settings.email.isNotEmpty ? settings.email : 'No email set');
@@ -169,8 +173,10 @@ class ClientDrawer extends ConsumerWidget {
                     child: avatarUrl.isNotEmpty
                         ? ClipOval(
                             child: avatarUrl.startsWith('http')
-                                ? Image.network(avatarUrl, fit: BoxFit.cover, width: 56, height: 56)
-                                : Image.file(File(avatarUrl), fit: BoxFit.cover, width: 56, height: 56),
+                                ? Image.network(avatarUrl,
+                                    fit: BoxFit.cover, width: 56, height: 56)
+                                : Image.file(File(avatarUrl),
+                                    fit: BoxFit.cover, width: 56, height: 56),
                           )
                         : Text(
                             initial,
@@ -208,7 +214,8 @@ class ClientDrawer extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
@@ -216,7 +223,8 @@ class ClientDrawer extends ConsumerWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.edit_rounded, color: Colors.white, size: 10),
+                              Icon(Icons.edit_rounded,
+                                  color: Colors.white, size: 10),
                               SizedBox(width: 4),
                               Text(
                                 'View Profile',
@@ -268,7 +276,8 @@ class ClientDrawer extends ConsumerWidget {
                   badgeCount: connectedStudioCount,
                   onTap: () {
                     Navigator.of(context).pop();
-                    onNavigateToTab(0); // Switches to Home tab where Connected Studios lives
+                    onNavigateToTab(
+                        0); // Switches to Home tab where Connected Studios lives
                   },
                 ),
                 DrawerMenuItem(
@@ -282,7 +291,10 @@ class ClientDrawer extends ConsumerWidget {
                   },
                 ),
 
-                Divider(height: AppSpacing.md, thickness: 1, color: Theme.of(context).dividerColor),
+                Divider(
+                    height: AppSpacing.md,
+                    thickness: 1,
+                    color: Theme.of(context).dividerColor),
                 _buildSectionHeader(context, 'Media & Galleries'),
                 DrawerMenuItem(
                   icon: Icons.photo_library_rounded,
@@ -319,7 +331,8 @@ class ClientDrawer extends ConsumerWidget {
                   onTap: () {
                     Navigator.of(context).pop();
                     ref.read(faceSearchProvider.notifier).useClientGallery();
-                    Navigator.of(context).pushNamed(AppRoutes.faceSearchLanding);
+                    Navigator.of(context)
+                        .pushNamed(AppRoutes.faceSearchLanding);
                   },
                 ),
                 // "Download History" removed: GET /download-history is
@@ -327,7 +340,10 @@ class ClientDrawer extends ConsumerWidget {
                 // client account — no client-facing download-history route
                 // exists yet. Re-add once one does.
 
-                Divider(height: AppSpacing.md, thickness: 1, color: Theme.of(context).dividerColor),
+                Divider(
+                    height: AppSpacing.md,
+                    thickness: 1,
+                    color: Theme.of(context).dividerColor),
                 _buildSectionHeader(context, 'Account Settings'),
                 DrawerMenuItem(
                   icon: Icons.notifications_rounded,
@@ -361,7 +377,8 @@ class ClientDrawer extends ConsumerWidget {
           ),
 
           // 3. Logout Item at Bottom
-          Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
+          Divider(
+              height: 1, thickness: 1, color: Theme.of(context).dividerColor),
           _BottomSection(
             isDark: settings.themeMode == 'Dark',
             onToggleDark: (value) {

@@ -100,7 +100,8 @@ abstract class StudioSharesRepository {
 }
 
 class ApiStudioSharesRepository implements StudioSharesRepository {
-  ApiStudioSharesRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+  ApiStudioSharesRepository({required ApiClient apiClient})
+      : _apiClient = apiClient;
 
   final ApiClient _apiClient;
 

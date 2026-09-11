@@ -100,7 +100,6 @@ class _ClientSavedGalleriesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: const CustomAppBar(title: 'Favorites'),
       body: SafeArea(
         child: RefreshIndicator(
@@ -114,7 +113,7 @@ class _ClientSavedGalleriesScreenState
 
   Widget _buildBody() {
     if (_isLoading && _media.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
         child: Center(child: CircularProgressIndicator()),
       );
@@ -126,16 +125,16 @@ class _ClientSavedGalleriesScreenState
         child: Container(
           height: MediaQuery.of(context).size.height * 0.7,
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               InlineErrorBanner(message: _error!),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               ElevatedButton.icon(
                 onPressed: _load,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Try Again'),
+                icon: Icon(Icons.refresh_rounded),
+                label: Text('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -153,7 +152,7 @@ class _ClientSavedGalleriesScreenState
         child: Container(
           height: MediaQuery.of(context).size.height * 0.7,
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: EdgeInsets.all(AppSpacing.xl),
           child: const EmptyStateCard(
             icon: Icons.favorite_border_rounded,
             message:
@@ -165,8 +164,9 @@ class _ClientSavedGalleriesScreenState
     }
 
     return GridView.builder(
-      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: EdgeInsets.all(AppSpacing.md),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 6,
@@ -195,27 +195,27 @@ class _ClientSavedGalleriesScreenState
                     Image.network(
                       url,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
+                      errorBuilder: (_, __, ___) => Center(
                         child: Icon(Icons.broken_image_rounded,
-                            color: AppColors.subtitle, size: 24),
+                            color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), size: 24),
                       ),
                     )
                   else
-                    const Center(
+                    Center(
                       child: Icon(Icons.image_outlined,
-                          color: AppColors.subtitle, size: 24),
+                          color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), size: 24),
                     ),
                   if (media.type == MediaType.video)
                     Positioned(
                       right: 6,
                       bottom: 6,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
+                        padding: EdgeInsets.all(3),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.6),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.play_arrow_rounded,
                           color: Colors.white,
                           size: 14,

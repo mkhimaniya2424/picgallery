@@ -1,5 +1,3 @@
-
-
 class TermsSection {
   final String title;
   final List<String> paragraphs;

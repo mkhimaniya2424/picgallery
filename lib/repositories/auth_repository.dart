@@ -4,7 +4,6 @@ import '../core/network/api_client.dart';
 import '../core/storage/token_storage.dart';
 import '../models/user.dart';
 
-
 /// Wires the `/auth/*` FastAPI endpoints (`app/api/routes/auth.py`) up to
 /// [ApiClient], returning typed [AuthToken]/[AppUser] responses. Any
 /// non-2xx response surfaces as an [ApiException] from [ApiClient] —
@@ -111,7 +110,8 @@ class AuthRepository {
     AppUserRole? role,
     bool rememberMe = true,
   }) async {
-    debugPrint('[AuthRepo] login() called | email: $email | role: $role | rememberMe: $rememberMe');
+    debugPrint(
+        '[AuthRepo] login() called | email: $email | role: $role | rememberMe: $rememberMe');
     final json = await _apiClient.post(
       '/auth/login',
       withAuth: false,
@@ -121,9 +121,11 @@ class AuthRepository {
         if (role != null) 'role': role.toJson(),
       },
     );
-    debugPrint('[AuthRepo] login() POST succeeded | raw json keys: ${(json as Map<String, dynamic>).keys.toList()}');
+    debugPrint(
+        '[AuthRepo] login() POST succeeded | raw json keys: ${(json as Map<String, dynamic>).keys.toList()}');
     final token = AuthToken.fromJson(json);
-    debugPrint('[AuthRepo] login() token parsed | user email: ${token.user.email} | role: ${token.user.role}');
+    debugPrint(
+        '[AuthRepo] login() token parsed | user email: ${token.user.email} | role: ${token.user.role}');
     await _persistToken(
       token.accessToken,
       refreshToken: token.refreshToken,
@@ -132,7 +134,6 @@ class AuthRepository {
     debugPrint('[AuthRepo] login() token persisted ✅');
     return token;
   }
-
 
   Future<AuthToken> socialLogin({
     required String provider,
@@ -249,7 +250,8 @@ class AuthRepository {
   /// POST /auth/reset-password — consumes the (dummy) reset-password
   /// token and sets a new password. Not authenticated: the token itself
   /// is the credential.
-  Future<String> resetPassword({required String token, required String newPassword}) async {
+  Future<String> resetPassword(
+      {required String token, required String newPassword}) async {
     final json = await _apiClient.post(
       '/auth/reset-password',
       withAuth: false,

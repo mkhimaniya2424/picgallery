@@ -21,7 +21,6 @@ class AdminBottomNav extends StatelessWidget {
     (icon: Icons.person_rounded, label: 'Profile'),
   ];
 
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -63,7 +62,11 @@ class AdminBottomNav extends StatelessWidget {
                     children: [
                       Icon(item.icon,
                           size: 20,
-                          color: selected ? Colors.white : (isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+                          color: selected
+                              ? Colors.white
+                              : (isDark
+                                  ? AppColors.subtitleOnDark
+                                  : AppColors.subtitle)),
                       if (selected) ...[
                         const SizedBox(height: 3),
                         Text(

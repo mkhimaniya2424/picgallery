@@ -26,27 +26,29 @@ class AboutScreen extends ConsumerWidget {
       appBar: const CustomAppBar(title: 'About', showBack: true),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           children: [
             Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurface
+                    : Colors.white,
                 border: Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded,
+                  Icon(Icons.info_outline_rounded,
                       color: AppColors.primary),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('App Version',
                             style: Theme.of(context).textTheme.titleLarge),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(version,
                             style: Theme.of(context).textTheme.bodyMedium),
                       ],
@@ -55,7 +57,7 @@ class AboutScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             _SectionTile(
               icon: Icons.description_outlined,
               title: 'Terms & Conditions',
@@ -63,7 +65,7 @@ class AboutScreen extends ConsumerWidget {
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.termsConditions),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _SectionTile(
               icon: Icons.privacy_tip_outlined,
               title: 'Privacy Policy',
@@ -71,7 +73,7 @@ class AboutScreen extends ConsumerWidget {
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.privacyPolicy),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _SectionTile(
               icon: Icons.support_agent_outlined,
               title: 'Contact Support',
@@ -105,9 +107,11 @@ class _SectionTile extends StatelessWidget {
       onTap: onTap ?? () {},
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkSurface
+              : Colors.white,
           border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
@@ -123,18 +127,18 @@ class _SectionTile extends StatelessWidget {
               ),
               child: Icon(icon, color: AppColors.primary),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+            Icon(Icons.chevron_right_rounded, color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle)),
           ],
         ),
       ),
