@@ -45,7 +45,7 @@ class SocialAuthService {
   // the web client. Do NOT change unless you know the backend is expecting
   // a different OAuth client.
   static const _webClientId =
-      '198690480208-tbcuoe1ub5c40k3chro4pu9hemstd28h.apps.googleusercontent.com';
+      '608395495309-b4kfrmpr1pc7sea8grjnnkbn7j2gc7gj.apps.googleusercontent.com';
 
   /// Signs in with Google and returns an [SocialAuthResult] containing an
   /// ID token suitable for server-side verification. Throws

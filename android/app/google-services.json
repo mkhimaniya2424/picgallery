@@ -1,44 +1,20 @@
 {
   "project_info": {
-    "project_number": "198690480208",
-    "project_id": "picgallery-aec7a",
-    "storage_bucket": "picgallery-aec7a.firebasestorage.app"
+    "project_number": "608395495309",
+    "project_id": "picgallery-203",
+    "storage_bucket": "picgallery-203.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:198690480208:android:9f60e88856ca94819af155",
+        "mobilesdk_app_id": "1:608395495309:android:57c54bfe02f25b1c109fc4",
         "android_client_info": {
           "package_name": "com.mk.picgallery"
         }
       },
       "oauth_client": [
         {
-          "client_id": "198690480208-9ke8tcqjn38lmkgpi93ks3jqclcb8nvm.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.mk.picgallery",
-            "certificate_hash": "9f23695a58aef37334c8d57b4c72f71f52a2d1f5"
-          }
-        },
-        {
-          "client_id": "198690480208-l7sujuqihklivtkrgio645sp3agjhkc1.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.mk.picgallery",
-            "certificate_hash": "a424a47be421dee0b73621fc96c6906309f687db"
-          }
-        },
-        {
-          "client_id": "198690480208-up7j94v338152p5isqcbprelj3saa08f.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.mk.picgallery",
-            "certificate_hash": "e0bd5584aac2ba66cfba723d175428fa2abaffad"
-          }
-        },
-        {
-          "client_id": "198690480208-vummuftfollbdfv2ifinin539hsl5lcj.apps.googleusercontent.com",
+          "client_id": "608395495309-85ismtv90ga54c9givfvn2l2vlhcv9ek.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.mk.picgallery",
@@ -46,24 +22,40 @@
           }
         },
         {
-          "client_id": "198690480208-tbcuoe1ub5c40k3chro4pu9hemstd28h.apps.googleusercontent.com",
+          "client_id": "608395495309-hlfd6aedfuuje90f58j6b7l20utfhfg4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mk.picgallery",
+            "certificate_hash": "9f23695a58aef37334c8d57b4c72f71f52a2d1f5"
+          }
+        },
+        {
+          "client_id": "608395495309-rti82fnrhk7s345lrdhmnq6j0k5j17f2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mk.picgallery",
+            "certificate_hash": "e0bd5584aac2ba66cfba723d175428fa2abaffad"
+          }
+        },
+        {
+          "client_id": "608395495309-b4kfrmpr1pc7sea8grjnnkbn7j2gc7gj.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDkSD4CxaEhCkoDGS1-M-8AKxFbRjSV2Bg"
+          "current_key": "AIzaSyDgpF9xptwMmow-o4a3071Pg9NS18wA0sQ"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "198690480208-tbcuoe1ub5c40k3chro4pu9hemstd28h.apps.googleusercontent.com",
+              "client_id": "608395495309-b4kfrmpr1pc7sea8grjnnkbn7j2gc7gj.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "198690480208-gsdjbgheu820uc3rs3f9mfqco3ku6pdi.apps.googleusercontent.com",
+              "client_id": "608395495309-l3tv61a947undm9uv344ecmfep8jsmtd.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.mk.picgallery"
