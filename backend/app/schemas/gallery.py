@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.gallery import MediaType
 
@@ -353,7 +353,8 @@ class MediaRead(BaseModel):
 
 
 class ShareLinkCreate(BaseModel):
-    album_id: uuid.UUID
+    album_id: uuid.UUID | None = None
+    collection_id: uuid.UUID | None = None
     client_id: uuid.UUID | None = None
     # Plain-text passcode from the studio, e.g. "1234" — hashed with
     # the same bcrypt helpers as user passwords before it ever touches
@@ -362,6 +363,12 @@ class ShareLinkCreate(BaseModel):
     expires_at: datetime | None = None
     allow_download: bool = True
     show_watermark: bool = False
+
+    @model_validator(mode='after')
+    def check_target(self) -> 'ShareLinkCreate':
+        if (self.album_id is None and self.collection_id is None) or (self.album_id is not None and self.collection_id is not None):
+            raise ValueError('Exactly one of album_id or collection_id must be provided')
+        return self
 
 
 class ShareLinkUpdate(BaseModel):
@@ -384,7 +391,8 @@ class ShareLinkRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    album_id: uuid.UUID
+    album_id: uuid.UUID | None = None
+    collection_id: uuid.UUID | None = None
     token: str
     share_url: str
     client_id: uuid.UUID | None = None
@@ -413,6 +421,7 @@ class ShareLinkRead(BaseModel):
         return cls(
             id=link.id,
             album_id=link.album_id,
+            collection_id=getattr(link, 'collection_id', None),
             token=link.token,
             share_url=build_share_url(link.token),
             client_id=link.client_id,
@@ -455,6 +464,11 @@ class PublicAlbumSummary(BaseModel):
     gradient_argb: list[int] = []
 
 
+class PublicCollectionSummary(BaseModel):
+    id: uuid.UUID
+    name: str
+
+
 class PublicShareLinkRead(BaseModel):
     """What a client sees when viewing a shared gallery — no owner_id,
     no password hash, no internal `id`; the token is the only handle
@@ -462,8 +476,10 @@ class PublicShareLinkRead(BaseModel):
     """
 
     token: str
-    album: PublicAlbumSummary
-    media: list[MediaRead]
+    album: PublicAlbumSummary | None = None
+    collection: PublicCollectionSummary | None = None
+    media: list[MediaRead] | None = None
+    albums: list[PublicAlbumSummary] | None = None
     allow_download: bool
     show_watermark: bool
     requires_password: bool

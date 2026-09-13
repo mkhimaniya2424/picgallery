@@ -40,8 +40,8 @@ class ShareServiceImpl implements ShareService {
     try {
       if (!await _isValidFilePath(context, filePath)) return;
 
-      await SharePlus.instance.share(
-        ShareParams(files: <XFile>[XFile(filePath)]),
+      await Share.shareXFiles(
+        [XFile(filePath)],
       );
     } on UnsupportedError {
       if (context.mounted) {
@@ -67,12 +67,8 @@ class ShareServiceImpl implements ShareService {
     String? mimeType,
   }) async {
     try {
-      await SharePlus.instance.share(
-        ShareParams(
-          files: <XFile>[
-            XFile.fromData(bytes, name: fileName, mimeType: mimeType),
-          ],
-        ),
+      await Share.shareXFiles(
+        [XFile.fromData(bytes, name: fileName, mimeType: mimeType)],
       );
     } on UnsupportedError {
       if (context.mounted) {

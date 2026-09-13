@@ -385,7 +385,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         // Fire-and-forget: real /public/share-links/{token}/download call
         // instead of the old local-only incrementDownloads.
         ref
-            .read(publicGalleryProvider(widget.shareLinkId!).notifier)
+            .read(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.shareLinkId!)).notifier)
             .recordDownload(mediaId: current.id);
       }
       if (saved && context.mounted) {
@@ -447,7 +447,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         // Fire-and-forget: real /public/share-links/{token}/download call
         // instead of the old local-only incrementDownloads.
         ref
-            .read(publicGalleryProvider(widget.shareLinkId!).notifier)
+            .read(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.shareLinkId!)).notifier)
             .recordDownload(mediaId: current.id);
       }
       if (saved && context.mounted) {

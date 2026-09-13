@@ -8,6 +8,11 @@ import '../../models/album_model.dart';
 import '../../models/collection_display_model.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/gallery_collections_provider.dart';
+import '../../providers/media_provider.dart';
+import '../../providers/auth_providers.dart' show apiClientProvider;
+import '../../services/media_file_cache.dart';
+import '../../services/download_service_impl.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
 
 import '../../widgets/buttons/gradient_button.dart';
@@ -132,6 +137,55 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
     SnackBarHelper.showSuccess(context, '"${model.title}" deleted');
   }
 
+  Future<void> _handleDownloadCollection(String collectionId, List<CollectionDisplayModel> allDisplay) async {
+    final c = allDisplay.firstWhere((x) => x.id == collectionId, orElse: () => allDisplay.first);
+    if (c.id != collectionId) return;
+
+    final collectionsCtrl = ref.read(galleryCollectionsProvider);
+    final rawCollection = collectionsCtrl.collections.firstWhere((x) => x.id == collectionId);
+
+    final allMedia = ref.read(mediaProvider).allMedia;
+    
+    // Find all media in any album of this collection
+    final mediaToDownload = allMedia.where((m) => rawCollection.galleryIds.contains(m.albumId)).toList();
+
+    if (mediaToDownload.isEmpty) {
+      AppToast.show(context, 'This collection is empty.');
+      return;
+    }
+
+    if (kIsWeb) {
+      AppToast.show(context, 'Bulk downloading is not currently supported on web.');
+      return;
+    }
+
+    AppToast.show(context, 'Downloading ${mediaToDownload.length} items in background...');
+
+    final apiClient = ref.read(apiClientProvider);
+    final cache = const MediaFileCache();
+    
+    final filePaths = <String>[];
+    final mediaIds = <String>[];
+
+    for (final m in mediaToDownload) {
+      final path = await cache.localPathFor(m);
+      if (path != null) {
+        filePaths.add(path);
+        mediaIds.add(m.id);
+      }
+    }
+
+    if (filePaths.isEmpty || !context.mounted) return;
+
+    final downloadService = const DownloadServiceImpl();
+    await downloadService.downloadBulkOriginals(
+      context: context,
+      filePaths: filePaths,
+      mediaIds: mediaIds,
+      apiClient: apiClient,
+    );
+  }
+
   /// Returns a chosen collection id: straight through when
   /// there's exactly one, via a picker sheet when there's more than one,
   /// or null if there are none (after attempting creation) or the user cancels.
@@ -249,14 +303,14 @@ class _CollectionsScreenState extends ConsumerState<CollectionsScreen> {
                                     if (chosen == null || !context.mounted) return;
                                     final c = allDisplay.firstWhere((x) => x.id == chosen);
                                     Share.share(
-                                      'Check out my photo collection: ${c.title}\nhttps://picgallery.studio/collections/$chosen'
+                                      'Check out my photo collection: ${c.title}\nhttps://api.picgallery.in/gallery/$chosen'
                                     );
                                   },
                                   onDownload: () async {
                                     final chosen = await _pickCollection(
                                         context, allDisplay, 'Download collection');
                                     if (chosen == null || !context.mounted) return;
-                                    AppToast.show(context, 'Collection download started in background');
+                                    await _handleDownloadCollection(chosen, allDisplay);
                                   },
                                   onRename: (m) =>
                                       _openRenameDialog(context, m),

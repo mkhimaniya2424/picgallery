@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -44,7 +45,10 @@ class SharedGalleryScreen extends ConsumerStatefulWidget {
     super.key,
     required this.token,
     this.isPreview = false,
+    this.albumId,
   });
+
+  final String? albumId;
 
   @override
   ConsumerState<SharedGalleryScreen> createState() =>
@@ -82,13 +86,13 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   void _submitPasscode() {
     if (!_formKey.currentState!.validate()) return;
     ref
-        .read(publicGalleryProvider(widget.token).notifier)
+        .read(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.token, albumId: widget.albumId)).notifier)
         .unlock(password: _passwordController.text);
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.watch(publicGalleryProvider(widget.token));
+    final controller = ref.watch(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.token, albumId: widget.albumId)));
 
     switch (controller.status) {
       case PublicGalleryStatus.loading:
@@ -318,7 +322,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   // -------------------------------------------------------------
   Widget _buildGallery(BuildContext context, PublicGalleryData data,
       PublicGalleryController controller) {
-    final albumMedia = List<MediaModel>.from(data.media)
+    final albumMedia = List<MediaModel>.from(data.media ?? [])
       ..sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
     final hasCover = albumMedia.isNotEmpty;
     final coverMedia = hasCover ? albumMedia.first : null;
@@ -352,9 +356,43 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                 ),
               ),
             ),
+            actions: [
+              if (kIsWeb)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Center(
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.black.withValues(alpha: 0.4),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                      icon: Icon(Icons.open_in_new_rounded, size: 16),
+                      label: Text('Open in App', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      onPressed: () async {
+                        final uri = Uri.parse('picgallery://shared/${widget.token}');
+                        final playStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=com.mk.picgallery');
+                        try {
+                          if (!await launchUrl(uri)) {
+                            // If custom scheme fails (app not installed), redirect to Play Store
+                            await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+                          }
+                        } catch (e) {
+                          // Catch any platform exception and redirect to Play Store
+                          await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                data.album.name,
+                data.album?.name ?? data.collection?.name ?? 'Gallery',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -371,7 +409,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildCoverImage(coverMedia, data.album.gradientArgb),
+                  _buildCoverImage(coverMedia, data.album?.gradientArgb ?? []),
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -468,16 +506,36 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               ),
             ),
           ),
-          albumMedia.isEmpty
-              ? const SliverFillRemaining(
-                  child: Center(
-                    child: EmptyStateCard(
-                      icon: Icons.photo_library_outlined,
-                      message: 'This shared gallery contains no photos.',
+          (data.albums != null && data.albums!.isNotEmpty)
+              ? SliverPadding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.8,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) {
+                        final a = data.albums![i];
+                        return _buildAlbumGridItem(context, a, widget.token, widget.isPreview);
+                      },
+                      childCount: data.albums!.length,
                     ),
                   ),
                 )
-              : SliverPadding(
+              : albumMedia.isEmpty
+                  ? const SliverFillRemaining(
+                      child: Center(
+                        child: EmptyStateCard(
+                          icon: Icons.photo_library_outlined,
+                          message: 'This shared gallery contains no photos.',
+                        ),
+                      ),
+                    )
+                  : SliverPadding(
                   padding: EdgeInsets.all(AppSpacing.md),
                   sliver: SliverGrid(
                     gridDelegate:
@@ -643,6 +701,53 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               ? Icons.image_rounded
               : Icons.play_arrow_rounded,
           color: Colors.white60,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlbumGridItem(BuildContext context, PublicAlbumSummary album, String token, bool isPreview) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pushNamed(
+          AppRoutes.sharedGallery,
+          arguments: SharedGalleryArgs(
+            token: token,
+            isPreview: isPreview,
+            albumId: album.id,
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          gradient: LinearGradient(
+            colors: album.gradientArgb.map((c) => Color(c)).toList(),
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Icon(Icons.photo_album_rounded, color: Colors.white, size: 24),
+              SizedBox(height: 8),
+              Text(
+                album.name,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

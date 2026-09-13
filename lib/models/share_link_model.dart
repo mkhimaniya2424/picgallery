@@ -8,7 +8,8 @@ import 'media_model.dart';
 /// only ever know [hasPassword], never what it is.
 class GalleryShareLink {
   final String id;
-  final String albumId;
+  final String? albumId;
+  final String? collectionId;
   final String token;
   final String shareUrl;
   final String? clientId;
@@ -30,7 +31,8 @@ class GalleryShareLink {
 
   const GalleryShareLink({
     required this.id,
-    required this.albumId,
+    this.albumId,
+    this.collectionId,
     required this.token,
     required this.shareUrl,
     this.clientId,
@@ -68,7 +70,8 @@ class GalleryShareLink {
 
     return GalleryShareLink(
       id: json['id'] as String,
-      albumId: json['album_id'] as String,
+      albumId: json['album_id'] as String?,
+      collectionId: json['collection_id'] as String?,
       token: tokenVal,
       shareUrl: shareUrlVal,
       clientId: json['client_id'] as String?,
@@ -107,6 +110,7 @@ class GalleryShareLink {
     return {
       'id': id,
       'album_id': albumId,
+      'collection_id': collectionId,
       'token': token,
       'share_url': shareUrl,
       'client_id': clientId,
@@ -178,35 +182,64 @@ class PublicAlbumSummary {
   }
 }
 
+class PublicCollectionSummary {
+  final String id;
+  final String name;
+
+  const PublicCollectionSummary({
+    required this.id,
+    required this.name,
+  });
+
+  factory PublicCollectionSummary.fromApiJson(Map<String, dynamic> json) {
+    return PublicCollectionSummary(
+      id: json['id'] as String,
+      name: json['name'] as String,
+    );
+  }
+}
+
 /// What a client actually sees when viewing a shared gallery — mirrors
 /// `PublicShareLinkRead`. No owner_id, no password hash, no internal
 /// `id` for the link itself; [token] is the only handle a guest ever
 /// needs.
 class PublicGalleryData {
   final String token;
-  final PublicAlbumSummary album;
-  final List<MediaModel> media;
+  final PublicAlbumSummary? album;
+  final PublicCollectionSummary? collection;
+  final List<MediaModel>? media;
+  final List<PublicAlbumSummary>? albums;
   final bool allowDownload;
   final bool showWatermark;
   final bool requiresPassword;
 
   const PublicGalleryData({
     required this.token,
-    required this.album,
-    required this.media,
+    this.album,
+    this.collection,
+    this.media,
+    this.albums,
     required this.allowDownload,
     required this.showWatermark,
     required this.requiresPassword,
   });
 
   factory PublicGalleryData.fromApiJson(Map<String, dynamic> json) {
-    final mediaJson = json['media'] as List<dynamic>? ?? const [];
+    final mediaJson = json['media'] as List<dynamic>?;
+    final albumsJson = json['albums'] as List<dynamic>?;
     return PublicGalleryData(
       token: json['token'] as String,
-      album:
-          PublicAlbumSummary.fromApiJson(json['album'] as Map<String, dynamic>),
+      album: json['album'] != null
+          ? PublicAlbumSummary.fromApiJson(json['album'] as Map<String, dynamic>)
+          : null,
+      collection: json['collection'] != null
+          ? PublicCollectionSummary.fromApiJson(json['collection'] as Map<String, dynamic>)
+          : null,
       media: mediaJson
-          .map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>))
+          ?.map((e) => MediaModel.fromApiJson(e as Map<String, dynamic>))
+          .toList(),
+      albums: albumsJson
+          ?.map((e) => PublicAlbumSummary.fromApiJson(e as Map<String, dynamic>))
           .toList(),
       allowDownload: json['allow_download'] as bool? ?? true,
       showWatermark: json['show_watermark'] as bool? ?? false,

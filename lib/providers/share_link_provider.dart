@@ -20,13 +20,31 @@ final shareLinkRepositoryProvider = Provider<ShareLinkRepository>((ref) {
 /// Scoped per-album (via `.family`) rather than loading every link for
 /// every album up front — `ShareSettingsScreen` only ever needs the one
 /// album it's showing.
+class ShareTarget {
+  final String? albumId;
+  final String? collectionId;
+
+  const ShareTarget({this.albumId, this.collectionId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ShareTarget &&
+          runtimeType == other.runtimeType &&
+          albumId == other.albumId &&
+          collectionId == other.collectionId;
+
+  @override
+  int get hashCode => Object.hash(albumId, collectionId);
+}
+
 class ShareLinkController extends ChangeNotifier {
   ShareLinkController(
-      {required ShareLinkRepository repository, required this.albumId})
+      {required ShareLinkRepository repository, required this.target})
       : _repo = repository;
 
   final ShareLinkRepository _repo;
-  final String albumId;
+  final ShareTarget target;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -47,7 +65,7 @@ class ShareLinkController extends ChangeNotifier {
       // first non-revoked link is the current one; if every link for
       // this album has been revoked, fall back to the most recent one
       // so its analytics/"Revoked" status still has something to show.
-      final links = await _repo.fetchLinks(albumId: albumId);
+      final links = await _repo.fetchLinks(albumId: target.albumId, collectionId: target.collectionId);
       _activeLink = links.isEmpty
           ? null
           : links.firstWhere((l) => !l.isRevoked, orElse: () => links.first);
@@ -73,7 +91,8 @@ class ShareLinkController extends ChangeNotifier {
     final GalleryShareLink result;
     if (current == null || current.isRevoked) {
       result = await _repo.createLink(
-        albumId: albumId,
+        albumId: target.albumId,
+        collectionId: target.collectionId,
         clientId: clientId,
         password: password,
         expiresAt: expiresAt,
@@ -107,10 +126,10 @@ class ShareLinkController extends ChangeNotifier {
 }
 
 final shareLinkControllerProvider =
-    ChangeNotifierProvider.family<ShareLinkController, String>((ref, albumId) {
+    ChangeNotifierProvider.family<ShareLinkController, ShareTarget>((ref, target) {
   final controller = ShareLinkController(
     repository: ref.watch(shareLinkRepositoryProvider),
-    albumId: albumId,
+    target: target,
   );
   Future.microtask(controller.load);
   return controller;
@@ -139,11 +158,12 @@ enum PublicGalleryStatus {
 /// deep link or "Preview Client View") gets a fresh instance per link.
 class PublicGalleryController extends ChangeNotifier {
   PublicGalleryController(
-      {required ShareLinkRepository repository, required this.token})
+      {required ShareLinkRepository repository, required this.token, this.albumId})
       : _repo = repository;
 
   final ShareLinkRepository _repo;
   final String token;
+  final String? albumId;
 
   PublicGalleryStatus _status = PublicGalleryStatus.loading;
   PublicGalleryStatus get status => _status;
@@ -212,11 +232,11 @@ class PublicGalleryController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _data = await _repo.fetchPublicGallery(token: token, password: password);
+      _data = await _repo.fetchPublicGallery(token: token, password: password, albumId: albumId);
       _status = PublicGalleryStatus.loaded;
       _password = password;
       debugPrint(
-          '[API_LOOKUP_DEBUG] PublicGalleryController successfully loaded album: ${_data?.album.name}');
+          '[API_LOOKUP_DEBUG] PublicGalleryController successfully loaded gallery: ${_data?.album?.name ?? _data?.collection?.name}');
     } catch (e) {
       _handleError(e,
           isPasswordAttempt: password != null && password.isNotEmpty);
@@ -285,12 +305,30 @@ class PublicGalleryController extends ChangeNotifier {
   }
 }
 
-final publicGalleryProvider =
-    ChangeNotifierProvider.family<PublicGalleryController, String>(
-        (ref, token) {
+class PublicGalleryTarget {
+  final String token;
+  final String? albumId;
+
+  const PublicGalleryTarget({required this.token, this.albumId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PublicGalleryTarget &&
+          runtimeType == other.runtimeType &&
+          token == other.token &&
+          albumId == other.albumId;
+
+  @override
+  int get hashCode => Object.hash(token, albumId);
+}
+
+final publicGalleryControllerProvider = ChangeNotifierProvider.family<
+    PublicGalleryController, PublicGalleryTarget>((ref, target) {
   final controller = PublicGalleryController(
     repository: ref.watch(shareLinkRepositoryProvider),
-    token: token,
+    token: target.token,
+    albumId: target.albumId,
   );
   Future.microtask(controller.checkStatus);
   return controller;

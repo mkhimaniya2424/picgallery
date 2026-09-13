@@ -57,6 +57,7 @@ import '../../screens/media/video_player_screen.dart';
 import '../../screens/media/photo_editor_screen.dart';
 import '../../upload/upload_queue_screen.dart';
 import '../../screens/albums/share_settings_screen.dart';
+import '../../screens/collections/collection_share_settings_screen.dart';
 import '../../screens/client/shared_gallery_screen.dart';
 import '../../screens/client/chat_thread_screen.dart';
 import '../../screens/client/discover_studios_screen.dart';
@@ -93,7 +94,8 @@ class PhotoEditorArgs {
 class SharedGalleryArgs {
   final String token;
   final bool isPreview;
-  const SharedGalleryArgs({required this.token, this.isPreview = false});
+  final String? albumId;
+  const SharedGalleryArgs({required this.token, this.isPreview = false, this.albumId});
 }
 
 /// Arguments for [AppRoutes.pinUnlock] — see splash_screen.dart, the only
@@ -208,6 +210,7 @@ class AppRoutes {
   static const String adminFolderMove = '/admin/folders/move';
   static const String adminFolderSettings = '/admin/folders/settings';
   static const String albumShareSettings = '/admin/albums/share-settings';
+  static const String collectionShareSettings = '/admin/collections/share-settings';
   static const String sharedGallery = '/shared/gallery';
   static const String adminClientDetails = '/admin/clients/details';
   static const String adminAnalytics = '/admin/analytics';
@@ -512,7 +515,7 @@ class AppRoutes {
         final rawArgs = settings.arguments;
         if (rawArgs is SharedGalleryArgs) {
           return _fade(SharedGalleryScreen(
-              token: rawArgs.token, isPreview: rawArgs.isPreview));
+              token: rawArgs.token, isPreview: rawArgs.isPreview, albumId: rawArgs.albumId));
         }
         final token = rawArgs as String? ?? '';
         return _fade(SharedGalleryScreen(token: token));

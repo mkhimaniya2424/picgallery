@@ -14,7 +14,7 @@ from app.core.download_log import record_download_event
 from app.core.face_index import extract_query_faces, resolve_query_face, search_faces
 from app.core.security import hash_password, verify_password
 from app.db.session import get_db
-from app.models.gallery import Album, DownloadSource, Media, ShareLink
+from app.models.gallery import Album, DownloadSource, Media, ShareLink, GalleryCollection
 from app.models.user import User
 from app.schemas.face import DetectedFaceRead, FaceBoxRead, FaceMatchRead, FaceSearchResponse
 from app.schemas.gallery import (
@@ -77,13 +77,21 @@ def create_share_link(
     current_user: User = Depends(get_current_studio_user),
     db: Session = Depends(get_db),
 ) -> ShareLinkRead:
-    album = db.get(Album, payload.album_id)
-    if album is None or album.owner_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Album not found")
+    if payload.album_id:
+        album = db.get(Album, payload.album_id)
+        if album is None or album.owner_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Album not found")
+    elif payload.collection_id:
+        # Import Collection model at top of file, or assume it's imported?
+        # Actually GalleryCollection is imported in app.models.gallery
+        collection = db.get(GalleryCollection, payload.collection_id)
+        if collection is None or collection.owner_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Collection not found")
 
     link = ShareLink(
         owner_id=current_user.id,
         album_id=payload.album_id,
+        collection_id=payload.collection_id,
         token=_generate_unique_token(db),
         client_id=payload.client_id,
         password_hash=hash_password(payload.password) if payload.password else None,
@@ -100,6 +108,7 @@ def create_share_link(
 @router.get("", response_model=list[ShareLinkRead])
 def list_share_links(
     album_id: uuid.UUID | None = None,
+    collection_id: uuid.UUID | None = None,
     active_only: bool = False,
     current_user: User = Depends(get_current_studio_user),
     db: Session = Depends(get_db),
@@ -107,6 +116,8 @@ def list_share_links(
     query = select(ShareLink).where(ShareLink.owner_id == current_user.id)
     if album_id is not None:
         query = query.where(ShareLink.album_id == album_id)
+    if collection_id is not None:
+        query = query.where(ShareLink.collection_id == collection_id)
     if active_only:
         query = query.where(ShareLink.is_revoked.is_(False))
     query = query.order_by(ShareLink.created_at.desc())
@@ -221,17 +232,31 @@ def _assert_client_authorized(link: ShareLink, user: User | None) -> None:
         )
 
 
-def _assert_album_exists(db: Session, link: ShareLink) -> Album:
-    logger.info(f"[SHARE_LOOKUP_DEBUG] Album lookup request for albumId='{link.album_id}' (from share token='{link.token}')")
-    album = db.get(Album, link.album_id)
-    if album is None:
-        logger.error(f"[SHARE_LOOKUP_DEBUG] Linked albumId='{link.album_id}' NOT found in database for share token='{link.token}'")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"code": "GALLERY_NOT_FOUND", "message": "This shared gallery is no longer available."},
-        )
-    logger.info(f"[SHARE_LOOKUP_DEBUG] Album found: name='{album.name}', owner_id='{album.owner_id}'")
-    return album
+def _get_share_target(db: Session, link: ShareLink) -> tuple[Album | None, GalleryCollection | None]:
+    if link.album_id:
+        logger.info(f"[SHARE_LOOKUP_DEBUG] Album lookup request for albumId='{link.album_id}' (from share token='{link.token}')")
+        album = db.get(Album, link.album_id)
+        if album is None:
+            logger.error(f"[SHARE_LOOKUP_DEBUG] Linked albumId='{link.album_id}' NOT found in database for share token='{link.token}')")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "GALLERY_NOT_FOUND", "message": "This shared gallery is no longer available."},
+            )
+        logger.info(f"[SHARE_LOOKUP_DEBUG] Album found: name='{album.name}', owner_id='{album.owner_id}')")
+        return album, None
+    elif link.collection_id:
+        logger.info(f"[SHARE_LOOKUP_DEBUG] Collection lookup request for collectionId='{link.collection_id}' (from share token='{link.token}')")
+        collection = db.get(GalleryCollection, link.collection_id)
+        if collection is None:
+            logger.error(f"[SHARE_LOOKUP_DEBUG] Linked collectionId='{link.collection_id}' NOT found in database for share token='{link.token}')")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "COLLECTION_NOT_FOUND", "message": "This shared collection is no longer available."},
+            )
+        logger.info(f"[SHARE_LOOKUP_DEBUG] Collection found: name='{collection.name}', owner_id='{collection.owner_id}')")
+        return None, collection
+    
+    raise HTTPException(status_code=500, detail="Invalid share link target")
 
 
 def _assert_password_ok(link: ShareLink, password: str | None) -> None:
@@ -264,7 +289,7 @@ def get_share_link_status(
     link = _get_link_by_token_or_404(db, token)
     _assert_link_reachable(link)
     _assert_client_authorized(link, user)
-    _assert_album_exists(db, link)
+    _get_share_target(db, link)
     active = not link.is_revoked and not _is_expired(link)
     return ShareLinkStatusRead(requires_password=link.password_hash is not None, is_active=active, client_id=link.client_id)
 
@@ -285,33 +310,67 @@ def view_shared_gallery(
     _assert_link_reachable(link)
     _assert_client_authorized(link, user)
     _assert_password_ok(link, password)
-    album = _assert_album_exists(db, link)
-
-    media = db.execute(
-        select(Media)
-        .where(Media.album_id == album.id, Media.is_deleted.is_(False))
-        .order_by(Media.created_at.desc())
-    ).scalars().all()
+    album, collection = _get_share_target(db, link)
 
     link.views_count += 1
     link.last_viewed_at = datetime.now(timezone.utc)
     db.commit()
+    
+    from app.schemas.gallery import PublicCollectionSummary
 
-    logger.info(f"[SHARE_LOOKUP_DEBUG] Public view gallery success for token='{token}' -> albumId='{album.id}', media count={len(media)}")
-
-    return PublicShareLinkRead(
-        token=link.token,
-        album=PublicAlbumSummary(
-            id=album.id,
-            name=album.name,
-            description=album.description,
-            gradient_argb=_split_csv(album.gradient_argb),
-        ),
-        media=[MediaRead.from_model(m) for m in media],
-        allow_download=link.allow_download,
-        show_watermark=link.show_watermark,
-        requires_password=link.password_hash is not None,
-    )
+    if album:
+        media = db.execute(
+            select(Media)
+            .where(Media.album_id == album.id, Media.is_deleted.is_(False))
+            .order_by(Media.created_at.desc())
+        ).scalars().all()
+    
+        logger.info(f"[SHARE_LOOKUP_DEBUG] Public view gallery success for token='{token}' -> albumId='{album.id}', media count={len(media)}")
+    
+        return PublicShareLinkRead(
+            token=link.token,
+            album=PublicAlbumSummary(
+                id=album.id,
+                name=album.name,
+                description=album.description,
+                gradient_argb=_split_csv(album.gradient_argb),
+            ),
+            media=[MediaRead.from_model(m) for m in media],
+            allow_download=link.allow_download,
+            show_watermark=link.show_watermark,
+            requires_password=link.password_hash is not None,
+        )
+    else:
+        # Collection sharing
+        from app.models.gallery import CollectionItem
+        rows = db.execute(
+            select(Album)
+            .join(CollectionItem, CollectionItem.album_id == Album.id)
+            .where(CollectionItem.collection_id == collection.id)
+            .order_by(CollectionItem.position.asc())
+        ).scalars().all()
+        
+        albums = [
+            PublicAlbumSummary(
+                id=a.id,
+                name=a.name,
+                description=a.description,
+                gradient_argb=_split_csv(a.gradient_argb),
+            )
+            for a in rows
+        ]
+        
+        return PublicShareLinkRead(
+            token=link.token,
+            collection=PublicCollectionSummary(
+                id=collection.id,
+                name=collection.name,
+            ),
+            albums=albums,
+            allow_download=link.allow_download,
+            show_watermark=link.show_watermark,
+            requires_password=link.password_hash is not None,
+        )
 
 
 @public_router.post("/{token}/download", response_model=MessageResponse)
@@ -339,7 +398,25 @@ def record_shared_download(
 
     if payload.media_id is not None:
         media = db.get(Media, payload.media_id)
-        if media is None or media.album_id != link.album_id or media.is_deleted:
+        if media is None or media.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Media not found.",
+            )
+            
+        # Ensure media belongs to the album or a collection's album
+        is_valid_media = False
+        if link.album_id:
+            is_valid_media = media.album_id == link.album_id
+        elif link.collection_id:
+            from app.models.gallery import CollectionItem
+            exists = db.execute(
+                select(CollectionItem.id)
+                .where(CollectionItem.collection_id == link.collection_id, CollectionItem.album_id == media.album_id)
+            ).scalar_one_or_none()
+            is_valid_media = exists is not None
+
+        if not is_valid_media:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Media not found in this shared gallery.",
@@ -395,6 +472,73 @@ async def face_search_shared_gallery(
         ],
         searched_face_index=chosen_index,
         matches=[FaceMatchRead(media=MediaRead.from_model(m), similarity=round(s, 4)) for m, s in matches],
+    )
+
+
+@public_router.get("/{token}/albums/{album_id}", response_model=PublicShareLinkRead)
+def view_shared_collection_album(
+    token: str,
+    album_id: uuid.UUID,
+    password: str | None = Query(default=None),
+    user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> PublicShareLinkRead:
+    """Fetches a specific album within a shared collection.
+    Requires that the token belongs to a collection that contains the album.
+    """
+    logger.info(f"[SHARE_LOOKUP_DEBUG] Public view collection album request for token='{token}', albumId='{album_id}'")
+    link = _get_link_by_token_or_404(db, token)
+    _assert_link_reachable(link)
+    _assert_client_authorized(link, user)
+    _assert_password_ok(link, password)
+    
+    if link.collection_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This token is not a collection share link.",
+        )
+        
+    from app.models.gallery import CollectionItem
+    exists = db.execute(
+        select(CollectionItem.id)
+        .where(CollectionItem.collection_id == link.collection_id, CollectionItem.album_id == album_id)
+    ).scalar_one_or_none()
+    
+    if exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found in this shared collection.",
+        )
+        
+    album = db.get(Album, album_id)
+    if album is None:
+         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found.",
+        )
+        
+    media = db.execute(
+        select(Media)
+        .where(Media.album_id == album.id, Media.is_deleted.is_(False))
+        .order_by(Media.created_at.desc())
+    ).scalars().all()
+
+    link.views_count += 1
+    link.last_viewed_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return PublicShareLinkRead(
+        token=link.token,
+        album=PublicAlbumSummary(
+            id=album.id,
+            name=album.name,
+            description=album.description,
+            gradient_argb=_split_csv(album.gradient_argb),
+        ),
+        media=[MediaRead.from_model(m) for m in media],
+        allow_download=link.allow_download,
+        show_watermark=link.show_watermark,
+        requires_password=link.password_hash is not None,
     )
 
 

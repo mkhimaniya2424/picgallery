@@ -45,6 +45,7 @@ class DownloadServiceImpl implements DownloadService {
   Future<bool> _downloadToUserLocation({
     required BuildContext context,
     required String filePath,
+    bool showSnackbar = true,
   }) async {
     if (!context.mounted) return false;
 
@@ -58,6 +59,7 @@ class DownloadServiceImpl implements DownloadService {
       bytes: bytes,
       fileName: name,
       ext: name.split('.').last,
+      showSnackbar: showSnackbar,
     );
   }
 
@@ -71,6 +73,7 @@ class DownloadServiceImpl implements DownloadService {
     required Uint8List bytes,
     required String fileName,
     required String ext,
+    bool showSnackbar = true,
   }) async {
     if (!context.mounted) return false;
 
@@ -127,7 +130,7 @@ class DownloadServiceImpl implements DownloadService {
         // Temporary cleanup failure should not make a successful save fail.
       }
 
-      if (context.mounted) {
+      if (showSnackbar && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Saved successfully.')),
         );
@@ -366,6 +369,7 @@ class DownloadServiceImpl implements DownloadService {
     String? mediaId,
     ApiClient? apiClient,
     bool isClientUser = false,
+    bool showSnackbar = true,
   }) async {
     try {
       if (!await _validate(context, filePath)) return false;
@@ -373,7 +377,7 @@ class DownloadServiceImpl implements DownloadService {
 
       if (!_hasNativeGallery) {
         final saved =
-            await _downloadToUserLocation(context: context, filePath: filePath);
+            await _downloadToUserLocation(context: context, filePath: filePath, showSnackbar: showSnackbar);
         if (saved) {
           await _recordDownloadHistory(
             filePath: filePath,
@@ -398,7 +402,7 @@ class DownloadServiceImpl implements DownloadService {
         hasAccess = await Gal.requestAccess(toAlbum: isVideo);
       }
       if (!hasAccess) {
-        if (context.mounted) {
+        if (showSnackbar && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Gallery permission was denied.'),
@@ -421,14 +425,14 @@ class DownloadServiceImpl implements DownloadService {
         isClientUser: isClientUser,
       );
 
-      if (context.mounted) {
+      if (showSnackbar && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Saved to gallery.')),
         );
       }
       return true;
     } on GalException catch (e) {
-      if (context.mounted) {
+      if (showSnackbar && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Failed to save to gallery: ${e.type.message}')),
@@ -436,7 +440,7 @@ class DownloadServiceImpl implements DownloadService {
       }
       return false;
     } on UnsupportedError {
-      if (context.mounted) {
+      if (showSnackbar && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Saving is not supported on this platform.'),
@@ -445,7 +449,7 @@ class DownloadServiceImpl implements DownloadService {
       }
       return false;
     } catch (e) {
-      if (context.mounted) {
+      if (showSnackbar && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to save to gallery: $e')),
         );
@@ -676,5 +680,39 @@ class DownloadServiceImpl implements DownloadService {
       }
       return false;
     }
+  }
+
+  @override
+  Future<int> downloadBulkOriginals({
+    required BuildContext context,
+    required List<String> filePaths,
+    required List<String> mediaIds,
+    ApiClient? apiClient,
+    bool isClientUser = false,
+  }) async {
+    if (filePaths.isEmpty || filePaths.length != mediaIds.length) return 0;
+    int successCount = 0;
+
+    for (int i = 0; i < filePaths.length; i++) {
+      if (!context.mounted) break;
+      final success = await saveToGallery(
+        context: context,
+        filePath: filePaths[i],
+        mediaId: mediaIds[i],
+        apiClient: apiClient,
+        isClientUser: isClientUser,
+        showSnackbar: false, // Suppress individual snackbars
+      );
+      if (success) {
+        successCount++;
+      }
+    }
+
+    if (context.mounted && successCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Successfully saved $successCount items to gallery.')),
+      );
+    }
+    return successCount;
   }
 }

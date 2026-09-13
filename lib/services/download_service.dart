@@ -62,5 +62,16 @@ abstract class DownloadService {
     String? mediaId,
     ApiClient? apiClient,
     bool isClientUser = false,
+    bool showSnackbar = true,
+  });
+
+  /// Downloads multiple original items to the native gallery without
+  /// showing individual snackbars for each item.
+  Future<int> downloadBulkOriginals({
+    required BuildContext context,
+    required List<String> filePaths,
+    required List<String> mediaIds,
+    ApiClient? apiClient,
+    bool isClientUser = false,
   });
 }

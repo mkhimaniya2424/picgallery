@@ -27,9 +27,10 @@ class ShareLinkRepository {
   // ---------------------------------------------------------------------
 
   Future<List<GalleryShareLink>> fetchLinks(
-      {String? albumId, bool activeOnly = false}) async {
+      {String? albumId, String? collectionId, bool activeOnly = false}) async {
     final query = <String>[];
     if (albumId != null) query.add('album_id=$albumId');
+    if (collectionId != null) query.add('collection_id=$collectionId');
     if (activeOnly) query.add('active_only=true');
     final path = '/share-links${query.isEmpty ? '' : '?${query.join('&')}'}';
     final json = await _apiClient.get(path);
@@ -37,7 +38,8 @@ class ShareLinkRepository {
   }
 
   Future<GalleryShareLink> createLink({
-    required String albumId,
+    String? albumId,
+    String? collectionId,
     String? clientId,
     String? password,
     DateTime? expiresAt,
@@ -45,7 +47,8 @@ class ShareLinkRepository {
     bool showWatermark = false,
   }) async {
     final body = {
-      'album_id': albumId,
+      if (albumId != null) 'album_id': albumId,
+      if (collectionId != null) 'collection_id': collectionId,
       if (clientId != null && clientId.isNotEmpty) 'client_id': clientId,
       if (password != null && password.isNotEmpty) 'password': password,
       if (expiresAt != null) 'expires_at': expiresAt.toUtc().toIso8601String(),
@@ -113,14 +116,22 @@ class ShareLinkRepository {
   /// one view server-side, so this should only be called once the
   /// passcode gate (if any) has actually been cleared — never
   /// speculatively, or every rebuild would inflate the view counter.
-  Future<PublicGalleryData> fetchPublicGallery(
-      {required String token, String? password}) async {
-    final query = (password != null && password.isNotEmpty)
-        ? '?password=${Uri.encodeQueryComponent(password)}'
-        : '';
-    // withAuth: true — same reason as fetchStatus above.
-    final json = await _apiClient.get('/public/share-links/$token$query',
-        withAuth: true);
+  Future<PublicGalleryData> fetchPublicGallery({
+    required String token,
+    String? password,
+    String? albumId,
+  }) async {
+    final query = <String>[];
+    if (password != null && password.isNotEmpty) {
+      query.add('password=${Uri.encodeComponent(password)}');
+    }
+    
+    final path = albumId != null 
+        ? '/public/galleries/$token/albums/$albumId' 
+        : '/public/galleries/$token';
+        
+    final url = '$path${query.isEmpty ? '' : '?${query.join('&')}'}';
+    final json = await _apiClient.get(url);
     return PublicGalleryData.fromApiJson(json as Map<String, dynamic>);
   }
 

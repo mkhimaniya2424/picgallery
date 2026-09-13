@@ -497,7 +497,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
         // incrementDownloads this replaces, just backed by the server
         // instead of on-device storage.
         ref
-            .read(publicGalleryProvider(widget.shareLinkId!).notifier)
+            .read(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.shareLinkId!)).notifier)
             .recordDownload(mediaId: current.id);
       }
     }

@@ -9,23 +9,23 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/routes/app_routes.dart';
 import '../../models/share_link_model.dart';
-import '../../providers/album_provider.dart';
+import '../../providers/gallery_collections_provider.dart';
 import '../../providers/share_link_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/inputs/custom_text_field.dart';
 
-class ShareSettingsScreen extends ConsumerStatefulWidget {
-  final String albumId;
+class CollectionShareSettingsScreen extends ConsumerStatefulWidget {
+  final String collectionId;
 
-  const ShareSettingsScreen({super.key, required this.albumId});
+  const CollectionShareSettingsScreen({super.key, required this.collectionId});
 
   @override
-  ConsumerState<ShareSettingsScreen> createState() =>
-      _ShareSettingsScreenState();
+  ConsumerState<CollectionShareSettingsScreen> createState() =>
+      _CollectionShareSettingsScreenState();
 }
 
-class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
+class _CollectionShareSettingsScreenState extends ConsumerState<CollectionShareSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
 
@@ -84,7 +84,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     }
   }
 
-  /// Returns true when [widget.albumId] is a real server-side UUID (e.g.
+  /// Returns true when [widget.collectionId] is a real server-side UUID (e.g.
   /// `3fa85f64-5717-4562-b3fc-2c963f66afa6`) rather than a local placeholder
   /// the old in-memory / Hive-only implementation stamped on new albums
   /// (e.g. `al-<microseconds>`). Only backend-synced albums can have share
@@ -92,7 +92,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
   /// placeholder id because no matching row exists in the database.
   bool get _isBackendSynced {
     // UUIDs are exactly 36 chars: 8-4-4-4-12 hex digits + 4 hyphens.
-    final id = widget.albumId;
+    final id = widget.collectionId;
     if (id.length != 36) return false;
     // Quick regex check — avoids depending on a UUID package.
     return RegExp(
@@ -136,7 +136,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
       }
 
       final controller =
-          ref.read(shareLinkControllerProvider(ShareTarget(albumId: widget.albumId)).notifier);
+          ref.read(shareLinkControllerProvider(ShareTarget(collectionId: widget.collectionId)).notifier);
       await controller.createOrUpdate(
         clientId: _isPublic ? null : _selectedClientId,
         clearClient: _isPublic || _selectedClientId == null,
@@ -192,7 +192,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
     try {
       await ref
-          .read(shareLinkControllerProvider(ShareTarget(albumId: widget.albumId)).notifier)
+          .read(shareLinkControllerProvider(ShareTarget(collectionId: widget.collectionId)).notifier)
           .revoke();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -208,10 +208,10 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final albums = ref.watch(albumProvider).allAlbums;
-    final album = albums.firstWhere((a) => a.id == widget.albumId);
+    final collections = ref.watch(galleryCollectionsProvider).collections;
+    final collection = collections.firstWhere((a) => a.id == widget.collectionId);
 
-    final linkState = ref.watch(shareLinkControllerProvider(ShareTarget(albumId: widget.albumId)));
+    final linkState = ref.watch(shareLinkControllerProvider(ShareTarget(collectionId: widget.collectionId)));
     final activeLink = linkState.activeLink;
     final hasActiveLink = activeLink != null && !activeLink.isRevoked;
 
@@ -219,7 +219,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Share "${album.name}"',
+        title: 'Share "${collection.name}"',
         showBack: true,
       ),
       body: SafeArea(

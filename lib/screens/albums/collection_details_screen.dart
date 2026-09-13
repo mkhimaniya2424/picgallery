@@ -132,6 +132,14 @@ class _CollectionDetailsScreenState
             ? null
             : [
                 IconButton(
+                  tooltip: 'Share',
+                  icon: Icon(Icons.share_rounded),
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    AppRoutes.collectionShareSettings,
+                    arguments: collection.id,
+                  ),
+                ),
+                IconButton(
                   tooltip: 'Rename',
                   icon: Icon(Icons.edit_outlined),
                   onPressed: () => _openRenameDialog(context, collection),

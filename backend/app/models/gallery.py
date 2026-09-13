@@ -25,7 +25,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint, CheckConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -138,13 +138,22 @@ class ShareLink(Base):
     viewing without an account (Task 20)."""
 
     __tablename__ = "share_links"
+    __table_args__ = (
+        CheckConstraint(
+            "(album_id IS NOT NULL AND collection_id IS NULL) OR (album_id IS NULL AND collection_id IS NOT NULL)",
+            name="chk_share_link_target",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     owner_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    album_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("albums.id", ondelete="CASCADE"), nullable=False, index=True
+    album_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("albums.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    collection_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gallery_collections.id", ondelete="CASCADE"), nullable=True, index=True
     )
     token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     client_id: Mapped[uuid.UUID | None] = mapped_column(
