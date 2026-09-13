@@ -55,3 +55,15 @@ class ClientStatsRead(BaseModel):
 
 class ClientStatsListRead(BaseModel):
     items: list[ClientStatsRead]
+
+
+class AnalyticsSeriesRead(BaseModel):
+    title: str
+    subtitle: str
+    values: list[float]
+    gradient: list[int]
+    isBar: bool
+
+
+class DashboardAnalyticsRead(BaseModel):
+    series: list[AnalyticsSeriesRead]

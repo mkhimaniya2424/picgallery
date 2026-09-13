@@ -11,7 +11,10 @@ from app.schemas.admin_dashboard import (
     AdminDashboardStatsRead,
     ClientStatsListRead,
     ClientStatsRead,
+    DashboardAnalyticsRead,
+    AnalyticsSeriesRead,
 )
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/admin-dashboard", tags=["admin-dashboard"])
 
@@ -173,12 +176,83 @@ def get_client_stats(
 
 
 
-@router.get("/analytics")
+@router.get("/analytics", response_model=DashboardAnalyticsRead)
 def get_analytics(
     current_user: User = Depends(get_current_studio_user),
-) -> dict:
-    """Placeholder for the analytics carousel endpoint."""
-    return {}
+    db: Session = Depends(get_db),
+) -> DashboardAnalyticsRead:
+    """Returns analytics data for the dashboard carousel."""
+    now = datetime.now(timezone.utc)
+    
+    # 1. Uploads (Last 7 Days)
+    seven_days_ago = now - timedelta(days=6) # 7 days including today
+    seven_days_ago = seven_days_ago.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    media_rows = db.execute(
+        select(Media.created_at)
+        .where(Media.owner_id == current_user.id, Media.created_at >= seven_days_ago, Media.is_deleted.is_(False))
+    ).scalars().all()
+    
+    uploads_by_day = [0] * 7
+    for dt in media_rows:
+        day_diff = (now.date() - dt.date()).days
+        if 0 <= day_diff < 7:
+            uploads_by_day[6 - day_diff] += 1
+
+    # 2. Downloads (Last 7 Days)
+    download_rows = db.execute(
+        select(DownloadEvent.downloaded_at)
+        .where(DownloadEvent.owner_id == current_user.id, DownloadEvent.downloaded_at >= seven_days_ago)
+    ).scalars().all()
+
+    downloads_by_day = [0] * 7
+    for dt in download_rows:
+        day_diff = (now.date() - dt.date()).days
+        if 0 <= day_diff < 7:
+            downloads_by_day[6 - day_diff] += 1
+
+    # 3. Client Growth (Last 6 Months)
+    # Using approx 180 days for the last 6 months
+    six_months_ago = now - timedelta(days=180)
+    client_rows = db.execute(
+        select(StudioClientConnection.created_at)
+        .where(StudioClientConnection.studio_id == current_user.id, 
+               StudioClientConnection.status == ConnectionStatus.accepted,
+               StudioClientConnection.created_at >= six_months_ago)
+    ).scalars().all()
+    
+    clients_by_month = [0] * 6
+    for dt in client_rows:
+        # Calculate month difference
+        month_diff = (now.year - dt.year) * 12 + now.month - dt.month
+        if 0 <= month_diff < 6:
+            clients_by_month[5 - month_diff] += 1
+
+    return DashboardAnalyticsRead(
+        series=[
+            AnalyticsSeriesRead(
+                title="Uploads",
+                subtitle="Last 7 Days",
+                values=uploads_by_day,
+                gradient=[0xFF7C5CFF, 0xFFA855F7], # ARGB
+                isBar=True
+            ),
+            AnalyticsSeriesRead(
+                title="Downloads",
+                subtitle="Last 7 Days",
+                values=downloads_by_day,
+                gradient=[0xFFEC4899, 0xFFF472B6],
+                isBar=True
+            ),
+            AnalyticsSeriesRead(
+                title="Client Growth",
+                subtitle="Last 6 Months",
+                values=clients_by_month,
+                gradient=[0xFFF59E0B, 0xFF7C5CFF],
+                isBar=False
+            )
+        ]
+    )
 
 
 @router.post("/trigger-auto-delete")

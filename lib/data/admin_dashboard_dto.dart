@@ -581,11 +581,26 @@ class DashboardActivityLogDto {
 // ---------------------------------------------------------------------
 
 class DashboardAnalyticsDto {
-  const DashboardAnalyticsDto();
+  final List<AnalyticsSeries> series;
+
+  const DashboardAnalyticsDto({required this.series});
 
   factory DashboardAnalyticsDto.fromApiJson(Map<String, dynamic> json) {
-    return const DashboardAnalyticsDto();
+    final seriesJson = json['series'] as List<dynamic>? ?? [];
+    
+    final parsedSeries = seriesJson.map((e) {
+      final map = e as Map<String, dynamic>;
+      return AnalyticsSeries(
+        title: map['title'] as String? ?? '',
+        subtitle: map['subtitle'] as String? ?? '',
+        values: (map['values'] as List<dynamic>? ?? []).map((v) => (v as num).toDouble()).toList(),
+        gradient: (map['gradient'] as List<dynamic>? ?? []).map((c) => Color(c as int)).toList(),
+        isBar: map['isBar'] as bool? ?? false,
+      );
+    }).toList();
+    
+    return DashboardAnalyticsDto(series: parsedSeries);
   }
 
-  List<AnalyticsSeries> toAnalyticsSeries() => [];
+  List<AnalyticsSeries> toAnalyticsSeries() => series;
 }
