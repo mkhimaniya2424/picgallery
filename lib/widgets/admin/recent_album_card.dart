@@ -16,6 +16,12 @@ class RecentAlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
@@ -23,11 +29,15 @@ class RecentAlbumCard extends StatelessWidget {
         width: 132,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: cardColor,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.border),
-          boxShadow:
-              AppShadows.soft(AppColors.primary, opacity: 0.07, blur: 16, y: 8),
+          border: Border.all(color: borderColor),
+          boxShadow: AppShadows.soft(
+            AppColors.primary,
+            opacity: isDark ? 0.14 : 0.07,
+            blur: 16,
+            y: 8,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,9 +48,10 @@ class RecentAlbumCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                    colors: data.gradient,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight),
+                  colors: data.gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: const Icon(Icons.folder_rounded,
@@ -51,17 +62,21 @@ class RecentAlbumCard extends StatelessWidget {
               data.albumName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.text),
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+              ),
             ),
             const SizedBox(height: 2),
-            Text('${data.mediaCount} items',
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.subtitle)),
+            Text(
+              '${data.mediaCount} items',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: subtitleColor,
+              ),
+            ),
           ],
         ),
       ),

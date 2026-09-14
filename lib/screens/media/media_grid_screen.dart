@@ -1133,7 +1133,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                 Row(
                                   children: [
                                     Icon(Icons.sort_rounded,
-                                        size: 16, color: Colors.black45),
+                                        size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
                                     SizedBox(width: 4),
                                     DropdownButton<MediaSortOption>(
                                       value: c.sortOption,
@@ -1144,7 +1144,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                           .bodySmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: Colors.black87,
+                                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
                                           ),
                                       items: const [
                                         DropdownMenuItem(
@@ -1171,7 +1171,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                 Row(
                                   children: [
                                     Icon(Icons.filter_list_rounded,
-                                        size: 16, color: Colors.black45),
+                                        size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
                                     SizedBox(width: 4),
                                     DropdownButton<MediaType?>(
                                       value: c.type,
@@ -1182,7 +1182,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                           .bodySmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: Colors.black87,
+                                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
                                           ),
                                       items: const [
                                         DropdownMenuItem(
@@ -1208,7 +1208,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                   Row(
                                     children: [
                                       Icon(Icons.group_work_rounded,
-                                          size: 16, color: Colors.black45),
+                                          size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
                                       SizedBox(width: 4),
                                       DropdownButton<_GalleryGroupMode>(
                                         value: _groupMode,
@@ -1219,7 +1219,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                             .bodySmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.w700,
-                                              color: Colors.black87,
+                                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
                                             ),
                                         items: const [
                                           DropdownMenuItem(
@@ -1586,14 +1586,14 @@ class _MediaListRow extends ConsumerWidget {
                           ? Icons.favorite_rounded
                           : Icons.favorite_border_rounded,
                       color:
-                          media.isFavorite ? AppColors.accent : Colors.black38,
+                          media.isFavorite ? AppColors.accent : (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black38),
                       size: 20,
                     ),
                     onPressed: onToggleFavorite,
                   ),
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert_rounded,
-                        color: Colors.black38, size: 20),
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black38, size: 20),
                     surfaceTintColor: Colors.transparent,
                     onSelected: (value) async {
                       switch (value) {
@@ -1619,45 +1619,45 @@ class _MediaListRow extends ConsumerWidget {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'rename',
                         child: Row(
                           children: [
                             Icon(Icons.edit_outlined,
-                                size: 18, color: Colors.black54),
+                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
                             SizedBox(width: 8),
                             Text('Rename'),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'properties',
                         child: Row(
                           children: [
                             Icon(Icons.info_outline_rounded,
-                                size: 18, color: Colors.black54),
+                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
                             SizedBox(width: 8),
                             Text('Properties'),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'share',
                         child: Row(
                           children: [
                             Icon(Icons.share_outlined,
-                                size: 18, color: Colors.black54),
+                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
                             SizedBox(width: 8),
                             Text('Share'),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'download',
                         child: Row(
                           children: [
                             Icon(Icons.download_outlined,
-                                size: 18, color: Colors.black54),
+                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
                             SizedBox(width: 8),
                             Text('Download'),
                           ],

@@ -140,9 +140,11 @@ class _AnchoredDropdownFieldBodyState<T>
   }
 
   Widget _buildMenu(BuildContext context, VoidCallback close) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       elevation: 8,
-      color: AppColors.surface,
+      color: isDark ? AppColors.darkSurfaceRaised : AppColors.surface,
       borderRadius: BorderRadius.circular(AppRadius.sm),
       clipBehavior: Clip.antiAlias,
       child: ListView(
@@ -156,14 +158,19 @@ class _AnchoredDropdownFieldBodyState<T>
               widget.onChanged?.call(item.value);
             },
             child: Container(
-              color:
-                  selected ? AppColors.primary.withValues(alpha: 0.08) : null,
+              color: selected
+                  ? (isDark
+                      ? AppColors.primary.withValues(alpha: 0.2)
+                      : AppColors.primary.withValues(alpha: 0.08))
+                  : null,
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md, vertical: 14),
               child: DefaultTextStyle.merge(
                 style: TextStyle(
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? AppColors.primary : AppColors.text,
+                  color: selected
+                      ? AppColors.primary
+                      : (isDark ? AppColors.textOnDark : AppColors.text),
                 ),
                 child: item.child,
               ),
@@ -176,6 +183,7 @@ class _AnchoredDropdownFieldBodyState<T>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final matches = widget.items.where((i) => i.value == widget.value);
     final display = matches.isNotEmpty ? matches.first.child : widget.hint;
 
@@ -191,13 +199,43 @@ class _AnchoredDropdownFieldBodyState<T>
           decoration: (widget.decoration ?? const InputDecoration()).copyWith(
             enabled: widget.enabled,
             errorText: widget.errorText,
+            filled: true,
+            fillColor: isDark ? AppColors.darkSurfaceRaised : AppColors.surface,
             suffixIcon: Icon(
               _controller.isOpen
                   ? Icons.arrow_drop_up_rounded
                   : Icons.arrow_drop_down_rounded,
+              color: isDark ? AppColors.textOnDark : AppColors.text,
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.border,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.6,
+              ),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.border,
+              ),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           ),
-          child: display,
+          child: DefaultTextStyle(
+            style: TextStyle(
+              color: isDark ? AppColors.textOnDark : AppColors.text,
+              fontWeight: FontWeight.w500,
+            ),
+            child: display ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

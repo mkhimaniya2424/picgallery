@@ -23,18 +23,32 @@ class AnalyticsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final valueColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final labelColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+
     return Container(
       width: 132,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [
-          gradient.first.withValues(alpha: 0.09),
-          gradient.last.withValues(alpha: 0.12)
-        ], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+          colors: [
+            gradient.first.withValues(alpha: isDark ? 0.18 : 0.09),
+            gradient.last.withValues(alpha: isDark ? 0.26 : 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: gradient.last.withValues(alpha: 0.18)),
-        boxShadow:
-            AppShadows.soft(gradient.last, opacity: 0.06, blur: 16, y: 8),
+        border: Border.all(
+          color: gradient.last.withValues(alpha: isDark ? 0.28 : 0.18),
+        ),
+        boxShadow: AppShadows.soft(
+          gradient.last,
+          opacity: isDark ? 0.12 : 0.06,
+          blur: 16,
+          y: 8,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,28 +59,35 @@ class AnalyticsSummaryCard extends StatelessWidget {
             height: 30,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight),
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 15, color: Colors.white),
           ),
           const SizedBox(height: 10),
-          Text(value,
-              style: const TextStyle(
-                  fontSize: 17.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.text,
-                  letterSpacing: -0.2)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 17.5,
+              fontWeight: FontWeight.w700,
+              color: valueColor,
+              letterSpacing: -0.2,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.subtitle)),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: labelColor,
+            ),
+          ),
         ],
       ),
     );

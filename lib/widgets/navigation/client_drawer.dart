@@ -468,7 +468,6 @@ class _BottomSection extends StatelessWidget {
                 ),
                 Switch(
                   value: isDark,
-                  activeTrackColor: AppColors.primary,
                   onChanged: onToggleDark,
                 ),
               ],

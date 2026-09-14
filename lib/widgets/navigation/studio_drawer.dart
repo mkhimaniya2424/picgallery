@@ -618,7 +618,6 @@ class _BottomSection extends StatelessWidget {
                 ),
                 Switch(
                   value: isDark,
-                  activeThumbColor: AppColors.primary,
                   onChanged: onToggleDark,
                 ),
               ],

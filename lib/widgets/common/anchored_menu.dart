@@ -173,7 +173,6 @@ class _AnchoredMenuState extends State<AnchoredMenu> {
 
     // Respect SafeArea / system insets (status bar, notch, keyboard, nav
     // bar) rather than treating the raw screen rect as usable space.
-    final topInset = mediaQuery.padding.top;
     final bottomInset =
         mediaQuery.padding.bottom + mediaQuery.viewInsets.bottom;
 
@@ -181,16 +180,10 @@ class _AnchoredMenuState extends State<AnchoredMenu> {
         bottomInset -
         widget.screenMargin -
         (anchorTopLeft.dy + anchorSize.height);
-    final spaceAbove = anchorTopLeft.dy - topInset - widget.screenMargin;
 
-    // Prefer opening below; flip above only when below doesn't have
-    // reasonable room and above has more room to offer.
-    const minComfortableHeight = 120.0;
-    final openBelow =
-        spaceBelow >= minComfortableHeight || spaceBelow >= spaceAbove;
-
-    final availableHeight = openBelow ? spaceBelow : spaceAbove;
-    final menuHeight = availableHeight.clamp(80.0, widget.maxMenuHeight);
+    // Force every app dropdown to open below its trigger for a consistent,
+    // predictable UX. This is the shared behaviour used across the whole app.
+    final menuHeight = spaceBelow.clamp(80.0, widget.maxMenuHeight);
 
     // Clamp horizontally so the menu never runs off the left/right edge of
     // the screen, regardless of where the trigger sits (e.g. near the end
@@ -220,11 +213,9 @@ class _AnchoredMenuState extends State<AnchoredMenu> {
             CompositedTransformFollower(
               link: _link,
               showWhenUnlinked: false,
-              targetAnchor:
-                  openBelow ? Alignment.bottomLeft : Alignment.topLeft,
-              followerAnchor:
-                  openBelow ? Alignment.topLeft : Alignment.bottomLeft,
-              offset: Offset(dx, openBelow ? widget.gap : -widget.gap),
+              targetAnchor: Alignment.bottomLeft,
+              followerAnchor: Alignment.topLeft,
+              offset: Offset(dx, widget.gap),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: SizedBox(

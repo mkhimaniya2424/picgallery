@@ -15,13 +15,23 @@ class RecentUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.darkSurfaceRaised : AppColors.surfaceElevated;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.border;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.text;
+    final subtitleColor = isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
+        color: cardColor,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
-        boxShadow:
-            AppShadows.soft(AppColors.primary, opacity: 0.07, blur: 18, y: 9),
+        border: Border.all(color: borderColor),
+        boxShadow: AppShadows.soft(
+          AppColors.primary,
+          opacity: isDark ? 0.14 : 0.07,
+          blur: 18,
+          y: 9,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -33,20 +43,21 @@ class RecentUploadCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Gradient + icon placeholder — always present underneath,
-                // so it shows through while the thumbnail loads and stays
-                // as the fallback if there's no thumbnail or it fails.
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                        colors: data.gradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
+                      colors: data.gradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
                   child: Center(
-                    child: Icon(data.icon,
-                        color: Colors.white.withValues(alpha: 0.85), size: 34),
+                    child: Icon(
+                      data.icon,
+                      color: Colors.white.withValues(alpha: 0.85),
+                      size: 34,
+                    ),
                   ),
                 ),
                 if (data.thumbnailUrl != null && data.thumbnailUrl!.isNotEmpty)
@@ -57,13 +68,9 @@ class RecentUploadCard extends StatelessWidget {
                     height: double.infinity,
                     loadingBuilder: (context, child, progress) {
                       if (progress == null) return child;
-                      // Keep the gradient/icon visible underneath while
-                      // the image streams in instead of a spinner.
                       return const SizedBox.shrink();
                     },
                     errorBuilder: (context, error, stackTrace) {
-                      // Thumbnail failed (broken URL, no network, etc.) —
-                      // gradient + icon underneath already covers this.
                       return const SizedBox.shrink();
                     },
                   ),
@@ -71,8 +78,7 @@ class RecentUploadCard extends StatelessWidget {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.32),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -81,17 +87,21 @@ class RecentUploadCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                            data.isVideo
-                                ? Icons.videocam_rounded
-                                : Icons.photo_rounded,
-                            size: 11,
-                            color: Colors.white),
+                          data.isVideo
+                              ? Icons.videocam_rounded
+                              : Icons.photo_rounded,
+                          size: 11,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 4),
-                        Text('${data.mediaCount}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700)),
+                        Text(
+                          '${data.mediaCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -110,20 +120,22 @@ class RecentUploadCard extends StatelessWidget {
                     data.albumName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.text),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     data.uploadedAgo,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.subtitle),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: subtitleColor,
+                    ),
                   ),
                 ],
               ),

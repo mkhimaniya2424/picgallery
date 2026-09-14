@@ -125,6 +125,8 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
       }
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: RefreshIndicator(
         color: AppColors.primary,
@@ -151,10 +153,56 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                       controller: TextEditingController.fromValue(
                         TextEditingValue(text: controller.searchQuery),
                       ),
-                      decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.search_rounded),
-                          labelText: 'Search downloads',
-                          hintText: 'Type a file name...'),
+                      style: TextStyle(
+                        color: isDark ? AppColors.textOnDark : AppColors.text,
+                      ),
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: isDark
+                              ? AppColors.subtitleOnDark
+                              : AppColors.subtitle,
+                        ),
+                        labelText: 'Search downloads',
+                        hintText: 'Type a file name...',
+                        filled: true,
+                        fillColor: isDark
+                            ? AppColors.darkSurfaceRaised
+                            : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.6,
+                          ),
+                        ),
+                        labelStyle: TextStyle(
+                          color: isDark
+                              ? AppColors.subtitleOnDark
+                              : AppColors.subtitle,
+                        ),
+                        hintStyle: TextStyle(
+                          color: isDark
+                              ? AppColors.subtitleOnDark.withValues(alpha: 0.7)
+                              : AppColors.subtitle.withValues(alpha: 0.7),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _FilterChips(
@@ -409,13 +457,17 @@ class _Thumb extends StatelessWidget {
       child = _Placeholder();
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-        border: Border.all(color: AppColors.border),
+        color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
       ),
       clipBehavior: Clip.hardEdge,
       child: child,
@@ -440,10 +492,11 @@ class _NetworkThumb extends StatelessWidget {
 class _Placeholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
       child: Icon(
         Icons.image_not_supported_rounded,
-        color: AppColors.subtitle,
+        color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
         size: 26,
       ),
     );
@@ -498,10 +551,18 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg =
-        selected ? AppColors.primary.withValues(alpha: 0.14) : Colors.white;
-    final border = selected ? AppColors.primary : AppColors.border;
-    final fg = selected ? AppColors.primary : AppColors.subtitle;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = selected
+        ? (isDark
+            ? AppColors.primary.withValues(alpha: 0.2)
+            : AppColors.primary.withValues(alpha: 0.14))
+        : (isDark ? AppColors.darkSurfaceRaised : Colors.white);
+    final border = selected
+        ? AppColors.primary
+        : (isDark ? AppColors.darkBorder : AppColors.border);
+    final fg = selected
+        ? AppColors.primary
+        : (isDark ? AppColors.textOnDark : AppColors.subtitle);
 
     return InkWell(
       borderRadius: BorderRadius.circular(999),
