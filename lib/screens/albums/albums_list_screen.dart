@@ -15,6 +15,7 @@ import '../../widgets/common/custom_app_bar.dart';
 
 import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/common/loading_widget.dart';
+import '../../widgets/common/anchored_dropdown_field.dart';
 
 import 'widgets/album_card.dart';
 import '../media/media_grid_screen.dart' show MediaSearchArgs;
@@ -225,8 +226,8 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: DropdownButtonFormField<AlbumSortOption>(
-                                  initialValue: albumState.sortOption,
+                                child: AnchoredDropdownField<AlbumSortOption>(
+                                  value: albumState.sortOption,
                                   items: const [
                                     DropdownMenuItem(
                                         value: AlbumSortOption.recent,
@@ -267,12 +268,12 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                               Expanded(
                                 child: folderState.isLoading
                                     ? SizedBox.shrink()
-                                    : DropdownButtonFormField<String?>(
+                                    : AnchoredDropdownField<String?>(
                                         // key forces a rebuild when the folder
                                         // list loads so the value stays in sync.
                                         key: ValueKey(
                                             'folder_filter_${folderState.folders.length}'),
-                                        initialValue: albumState.folderId,
+                                        value: albumState.folderId,
                                         items: [
                                           const DropdownMenuItem<String?>(
                                             value: null,

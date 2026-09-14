@@ -7,6 +7,7 @@ import '../../models/folder_model.dart';
 import '../../providers/folder_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/anchored_dropdown_field.dart';
 
 /// Admin-only Move Folder — reached from [FolderDetailsScreen]. Lets the
 /// studio owner re-parent a folder under another one, or send it back
@@ -76,8 +77,8 @@ class _MoveFolderScreenState extends ConsumerState<MoveFolderScreen> {
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          DropdownButtonFormField<String?>(
-                            initialValue: _selectedParentId,
+                          AnchoredDropdownField<String?>(
+                            value: _selectedParentId,
                             decoration:
                                 const InputDecoration(labelText: 'Move into'),
                             items: [

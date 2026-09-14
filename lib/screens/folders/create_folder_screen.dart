@@ -7,6 +7,7 @@ import '../../models/folder_model.dart';
 import '../../providers/folder_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/anchored_dropdown_field.dart';
 
 /// Admin-only Create Folder — reached from [FolderListScreen]'s FAB.
 /// Optionally nests the new folder under an existing one (feeds Move
@@ -148,9 +149,9 @@ class _CreateFolderScreenState extends ConsumerState<CreateFolderScreen> {
                               ),
                             )
                           else
-                            DropdownButtonFormField<String?>(
+                            AnchoredDropdownField<String?>(
                               key: ValueKey(effectiveParentId),
-                              initialValue: effectiveParentId,
+                              value: effectiveParentId,
                               decoration: const InputDecoration(
                                 labelText: 'Parent folder (optional)',
                               ),

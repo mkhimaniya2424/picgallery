@@ -15,6 +15,7 @@ import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/common/inline_error_banner.dart';
 import '../../widgets/common/loading_widget.dart';
 import 'main_nav_screen.dart';
+import '../../widgets/common/anchored_dropdown_field.dart';
 
 /// Client-facing subset of `AlbumsListScreen`'s `AlbumSortOption` — same
 /// Recent/Name axes, plus `mostMedia` standing in for that screen's
@@ -301,8 +302,8 @@ class _ClientGalleryGridViewState
           SizedBox(height: AppSpacing.sm),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: DropdownButtonFormField<_GallerySortOption>(
-              initialValue: _sortOption,
+            child: AnchoredDropdownField<_GallerySortOption>(
+              value: _sortOption,
               items: const [
                 DropdownMenuItem(
                   value: _GallerySortOption.recent,

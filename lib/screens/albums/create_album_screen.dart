@@ -7,6 +7,7 @@ import '../../models/folder_model.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/folder_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/common/anchored_dropdown_field.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/inputs/custom_text_field.dart';
@@ -145,8 +146,8 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
                                     maxLines: 3,
                                   ),
                                   SizedBox(height: AppSpacing.md),
-                                  DropdownButtonFormField<String?>(
-                                    initialValue: _selectedFolderId,
+                                  AnchoredDropdownField<String?>(
+                                    value: _selectedFolderId,
                                     decoration: const InputDecoration(
                                       labelText: 'Folder (optional)',
                                       prefixIcon:

@@ -12,6 +12,7 @@ import 'upload_job_model.dart';
 import 'upload_queue_provider.dart';
 import 'upload_queue_state.dart';
 import 'widgets/upload_queue_tile.dart';
+import '../widgets/common/anchored_dropdown_field.dart';
 
 /// The primary Screen for the Studio Upload Module.
 ///
@@ -485,8 +486,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String?>(
-                    initialValue: state.selectedAlbumId,
+                  child: AnchoredDropdownField<String?>(
+                    value: state.selectedAlbumId,
                     decoration:
                         const InputDecoration(labelText: 'Select Album'),
                     items: [
@@ -511,8 +512,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String?>(
-                    initialValue: state.selectedFolderId,
+                  child: AnchoredDropdownField<String?>(
+                    value: state.selectedFolderId,
                     decoration:
                         const InputDecoration(labelText: 'Select Folder'),
                     items: [

@@ -9,6 +9,7 @@ import '../../providers/album_provider.dart';
 import '../../providers/folder_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/anchored_dropdown_field.dart';
 import '../../widgets/inputs/custom_text_field.dart';
 
 /// Admin-only Edit Album — reached from [AlbumDetailsScreen]. Mirrors
@@ -245,9 +246,9 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
                                 ),
                               )
                             else
-                              DropdownButtonFormField<String?>(
+                              AnchoredDropdownField<String?>(
                                 key: ValueKey(_selectedFolderId),
-                                initialValue: _selectedFolderId,
+                                value: _selectedFolderId,
                                 decoration: const InputDecoration(
                                   labelText: 'Folder (tap to assign)',
                                   prefixIcon:

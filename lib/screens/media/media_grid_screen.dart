@@ -27,6 +27,7 @@ import 'media_details_screen.dart';
 import '../../widgets/media/edited_image.dart';
 import 'media_batch_workflows.dart';
 import '../../widgets/admin/fade_slide_in.dart';
+import '../../widgets/common/compact_anchored_dropdown.dart';
 
 const _gridFileCache = MediaFileCache();
 const _gridShareService = ShareServiceImpl();
@@ -1135,9 +1136,8 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                     Icon(Icons.sort_rounded,
                                         size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
                                     SizedBox(width: 4),
-                                    DropdownButton<MediaSortOption>(
+                                    CompactAnchoredDropdown<MediaSortOption>(
                                       value: c.sortOption,
-                                      underline: SizedBox.shrink(),
                                       iconSize: 16,
                                       style: Theme.of(context)
                                           .textTheme
@@ -1173,9 +1173,8 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                     Icon(Icons.filter_list_rounded,
                                         size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
                                     SizedBox(width: 4),
-                                    DropdownButton<MediaType?>(
+                                    CompactAnchoredDropdown<MediaType?>(
                                       value: c.type,
-                                      underline: SizedBox.shrink(),
                                       iconSize: 16,
                                       style: Theme.of(context)
                                           .textTheme
@@ -1210,9 +1209,8 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                       Icon(Icons.group_work_rounded,
                                           size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
                                       SizedBox(width: 4),
-                                      DropdownButton<_GalleryGroupMode>(
+                                      CompactAnchoredDropdown<_GalleryGroupMode>(
                                         value: _groupMode,
-                                        underline: SizedBox.shrink(),
                                         iconSize: 16,
                                         style: Theme.of(context)
                                             .textTheme
