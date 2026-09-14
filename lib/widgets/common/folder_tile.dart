@@ -44,15 +44,16 @@ class FolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: isDark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
         ),
         child: Row(
           children: [
@@ -83,31 +84,31 @@ class FolderTile extends StatelessWidget {
                 children: [
                   Text(
                     folder.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.text),
+                        color: isDark ? AppColors.textOnDark : AppColors.text),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _subtitle(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.subtitle),
+                        color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
                   ),
                 ],
               ),
             ),
             if (folder.isHidden)
-              const Padding(
-                padding: EdgeInsets.only(right: 6),
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
                 child: Icon(Icons.visibility_off_rounded,
-                    size: 18, color: AppColors.subtitle),
+                    size: 18, color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
               ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+            Icon(Icons.chevron_right_rounded, color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
           ],
         ),
       ),

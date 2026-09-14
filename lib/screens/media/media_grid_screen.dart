@@ -97,9 +97,9 @@ class _ErrorStateCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.86),
+          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.86),
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1120,10 +1120,10 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                           padding:
                               EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : Colors.white,
                             border: Border(
                                 bottom:
-                                    BorderSide(color: Colors.grey.shade100)),
+                                    BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : Colors.grey.shade100)),
                           ),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -1521,8 +1521,8 @@ class _MediaListRow extends ConsumerWidget {
         decoration: BoxDecoration(
           color: selected
               ? AppColors.primary.withValues(alpha: 0.08)
-              : Colors.white,
-          border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+              : (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : Colors.white),
+          border: Border(bottom: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : Colors.grey.shade100)),
         ),
         child: Row(
           children: [
@@ -1555,7 +1555,7 @@ class _MediaListRow extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
                         fontSize: 13.5),
                   ),
                   SizedBox(height: 4),
@@ -1563,7 +1563,7 @@ class _MediaListRow extends ConsumerWidget {
                     '${media.type == MediaType.photo ? "Photo" : "Video"} • $sizeStr • $dateStr',
                     style: TextStyle(
                         fontSize: 11.5,
-                        color: Colors.black45,
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45,
                         fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -1744,9 +1744,9 @@ class _SelectionToolbarState extends State<_SelectionToolbar> {
       padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
       ),
       child: Row(
         children: [
@@ -1948,10 +1948,10 @@ class _MediaTileState extends State<_MediaTile> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
-            color: widget.selected ? AppColors.primary : AppColors.border,
+            color: widget.selected ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
             width: widget.selected ? 2 : 1,
           ),
-          color: Colors.white.withValues(alpha: 0.92),
+          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.92),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(radius),

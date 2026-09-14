@@ -396,10 +396,10 @@ class _SearchAndFilters extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : Colors.white,
+                    color: isSelected ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     border:
-                        isSelected ? null : Border.all(color: AppColors.border),
+                        isSelected ? null : Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
                   ),
                   child: Text(
                     label,
@@ -889,7 +889,7 @@ class _ActionGrid extends StatelessWidget {
           itemBuilder: (context, index) {
             final a = actions[index];
             return Material(
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white,
               borderRadius: BorderRadius.circular(AppRadius.md),
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.md),
@@ -898,7 +898,7 @@ class _ActionGrid extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
                   ),
                   child: Row(
                     children: [
@@ -976,7 +976,7 @@ class _RecentCollectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -988,7 +988,7 @@ class _RecentCollectionTile extends StatelessWidget {
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
           ),
           child: Row(
             children: [

@@ -761,6 +761,7 @@ class ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       // Same fix as RecentActivitySection.onSeeAll and the Home header
       // bell icon: this pushed the Studio's NotificationsScreen, which
@@ -803,17 +804,17 @@ class ActivityTile extends StatelessWidget {
                             fontWeight: alert.isRead
                                 ? FontWeight.w600
                                 : FontWeight.w800,
-                            color: AppColors.text,
+                            color: isDark ? AppColors.textOnDark : AppColors.text,
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         _timeAgo(alert.timestamp),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.subtitle,
+                          color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                         ),
                       ),
                     ],
@@ -823,10 +824,10 @@ class ActivityTile extends StatelessWidget {
                     alert.message,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.subtitle,
+                      color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                       height: 1.3,
                     ),
                   ),
@@ -921,6 +922,7 @@ class _DownloadTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: () => Navigator.of(context).pushNamed(AppRoutes.downloadHistory),
       child: Padding(
@@ -946,17 +948,17 @@ class _DownloadTile extends StatelessWidget {
                     download.fileName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.text,
+                      color: isDark ? AppColors.textOnDark : AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     '${download.downloadedAt.month}/${download.downloadedAt.day} ${download.downloadedAt.hour.toString().padLeft(2, '0')}:${download.downloadedAt.minute.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      color: AppColors.subtitle,
+                    style: TextStyle(
+                      color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -964,7 +966,7 @@ class _DownloadTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.subtitle),
+            Icon(Icons.chevron_right_rounded, color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle),
           ],
         ),
       ),
