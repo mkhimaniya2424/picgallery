@@ -93,8 +93,11 @@ class ApiClient {
     // On desktop/web without a dart-define, fall back to localhost for
     // local development only. Mobile (Android/iOS) without a dart-define
     // defaults to the production URL.
-    if (kIsWeb ||
-        defaultTargetPlatform == TargetPlatform.windows ||
+    if (kIsWeb) {
+      // Web uses the production API directly (no local backend needed).
+      return baseUrlForHost('https://api.picgallery.in');
+    }
+    if (defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.linux) {
       return baseUrlForHost('localhost');
