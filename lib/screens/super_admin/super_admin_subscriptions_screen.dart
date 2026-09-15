@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api/admin_api_client.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
-import 'super_admin_models.dart';
 import 'super_admin_user_detail_screen.dart';
 
 /// Cross-cutting view of "which studios currently pay a platform
-/// subscription" — pulled from the same Studio Users data but
-/// filtered/sorted around `subscriptionStatus` instead of profile
-/// info. Maps to `Transaction` rows in the backend where
-/// `payment_type == subscription` (studio -> platform payments).
+/// subscription" — pulled from the same GET /admin/users data as the
+/// Studio Users tab, filtered/sorted around `subscriptionStatus`
+/// instead of profile info.
 class SuperAdminSubscriptionsScreen extends StatefulWidget {
   const SuperAdminSubscriptionsScreen({super.key});
 
@@ -18,73 +17,135 @@ class SuperAdminSubscriptionsScreen extends StatefulWidget {
       _SuperAdminSubscriptionsScreenState();
 }
 
+// Order/labels/colors for the filter chips — mirrors the backend's
+// `subscription_status` values (see SubscriptionStatusX on String in
+// admin_api_client.dart).
+const _statuses = ['active', 'trial', 'expired', 'none'];
+
 class _SuperAdminSubscriptionsScreenState
     extends State<SuperAdminSubscriptionsScreen> {
-  SubscriptionStatus? _filter;
+  String? _filter;
+  late Future<PlatformUsers> _usersFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _usersFuture = AdminApiClient.instance.fetchUsers();
+  }
+
+  Future<void> _refresh() async {
+    final future = AdminApiClient.instance.fetchUsers();
+    setState(() {
+      _usersFuture = future;
+    });
+    await future;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final studios = SuperAdminMockData.studios
-        .where((s) => _filter == null || s.subscriptionStatus == _filter)
-        .toList();
-
-    final counts = {
-      for (final status in SubscriptionStatus.values)
-        status: SuperAdminMockData.studios
-            .where((s) => s.subscriptionStatus == status)
-            .length,
-    };
-
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
         elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.text),
         title: const Text('Subscriptions',
             style: TextStyle(
-                color: AppColors.text,
-                fontWeight: FontWeight.w700,
-                fontSize: 18)),
+                color: AppColors.text, fontWeight: FontWeight.w700, fontSize: 18)),
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              children: [
-                _FilterChip(
-                  label: 'All',
-                  count: SuperAdminMockData.studios.length,
-                  selected: _filter == null,
-                  color: AppColors.text,
-                  onTap: () => setState(() => _filter = null),
+      body: FutureBuilder<PlatformUsers>(
+        future: _usersFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${snapshot.error}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.subtitle)),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton(onPressed: _refresh, child: const Text('Retry')),
+                  ],
                 ),
-                for (final status in SubscriptionStatus.values)
-                  _FilterChip(
-                    label: status.label,
-                    count: counts[status] ?? 0,
-                    selected: _filter == status,
-                    color: status.color,
-                    onTap: () => setState(() => _filter = status),
+              ),
+            );
+          }
+
+          final allStudios = snapshot.data!.studios;
+          final studios = allStudios
+              .where((s) => _filter == null || s.subscriptionStatus == _filter)
+              .toList();
+          final counts = {
+            for (final status in _statuses)
+              status: allStudios.where((s) => s.subscriptionStatus == status).length,
+          };
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 44,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    children: [
+                      _FilterChip(
+                        label: 'All',
+                        count: allStudios.length,
+                        selected: _filter == null,
+                        color: AppColors.text,
+                        onTap: () => setState(() {
+                          _filter = null;
+                        }),
+                      ),
+                      for (final status in _statuses)
+                        _FilterChip(
+                          label: status.subscriptionLabel,
+                          count: counts[status] ?? 0,
+                          selected: _filter == status,
+                          color: status.subscriptionColor,
+                          onTap: () => setState(() {
+                            _filter = status;
+                          }),
+                        ),
+                    ],
                   ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Expanded(
+                  child: studios.isEmpty
+                      ? ListView(
+                          // Wrapped in a ListView (not a bare Center) so
+                          // pull-to-refresh still works on an empty filter.
+                          children: const [
+                            SizedBox(height: 120),
+                            Center(
+                              child: Text('No studios in this filter',
+                                  style: TextStyle(color: AppColors.subtitle)),
+                            ),
+                          ],
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
+                          itemCount: studios.length,
+                          itemBuilder: (context, i) => _SubscriptionTile(
+                            studio: studios[i],
+                            onChanged: _refresh,
+                          ),
+                        ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Expanded(
-            child: studios.isEmpty
-                ? const Center(
-                    child: Text('No studios in this filter',
-                        style: TextStyle(color: AppColors.subtitle)))
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
-                    itemCount: studios.length,
-                    itemBuilder: (context, i) =>
-                        _SubscriptionTile(studio: studios[i]),
-                  ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -115,9 +176,7 @@ class _FilterChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: selected
-                ? color.withValues(alpha: 0.12)
-                : AppColors.surfaceElevated,
+            color: selected ? color.withValues(alpha: 0.12) : AppColors.surfaceElevated,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             border: Border.all(color: selected ? color : AppColors.border),
           ),
@@ -134,7 +193,8 @@ class _FilterChip extends StatelessWidget {
 
 class _SubscriptionTile extends StatelessWidget {
   final PlatformUser studio;
-  const _SubscriptionTile({required this.studio});
+  final VoidCallback? onChanged;
+  const _SubscriptionTile({required this.studio, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -147,9 +207,14 @@ class _SubscriptionTile extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => SuperAdminUserDetailScreen(userId: studio.id),
-        )),
+        onTap: () async {
+          final changed = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => SuperAdminUserDetailScreen(user: studio),
+            ),
+          );
+          if (changed == true) onChanged?.call();
+        },
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
@@ -158,41 +223,87 @@ class _SubscriptionTile extends StatelessWidget {
                 width: 4,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: studio.subscriptionStatus.color,
+                  color: studio.subscriptionStatus.subscriptionColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(studio.studioName ?? studio.fullName,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13.5)),
-                    Text(studio.email,
-                        style: const TextStyle(
-                            fontSize: 11.5, color: AppColors.subtitle)),
-                  ],
-                ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(studio.studioName ?? studio.fullName,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13.5)),
+                      Text(
+                        _buildSubtitle(studio),
+                        style: const TextStyle(fontSize: 11.5, color: AppColors.subtitle),
+                      ),
+                    ],
+                  ),
               ),
+              if (!studio.isActive) ...[
+                const Padding(
+                  padding: EdgeInsets.only(right: 6),
+                  child: Icon(Icons.block_rounded, size: 15, color: AppColors.error),
+                ),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color:
-                      studio.subscriptionStatus.color.withValues(alpha: 0.12),
+                  color: studio.subscriptionStatus.subscriptionColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
-                child: Text(studio.subscriptionStatus.label,
+                child: Text(studio.subscriptionStatus.subscriptionLabel,
                     style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: studio.subscriptionStatus.color)),
+                        color: studio.subscriptionStatus.subscriptionColor)),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  String _planLabel(String plan) => switch (plan) {
+        'trial' => 'Trial',
+        'pro' => 'Pro',
+        'premium' => 'Premium',
+        _ => plan,
+      };
+
+  String _buildSubtitle(PlatformUser studio) {
+    if (studio.currentPlan != null) {
+      final planName = _planLabel(studio.currentPlan!);
+      
+      String? startStr;
+      if (studio.planStartedAt != null) {
+        final st = studio.planStartedAt!;
+        final min = st.minute.toString().padLeft(2, '0');
+        final hr = st.hour.toString().padLeft(2, '0');
+        startStr = '${st.day}/${st.month}/${st.year} $hr:$min';
+      }
+
+      if (studio.planExpiry != null) {
+        final d = studio.planExpiry!;
+        final min = d.minute.toString().padLeft(2, '0');
+        final hr = d.hour.toString().padLeft(2, '0');
+        final dateStr = '${d.day}/${d.month}/${d.year} $hr:$min';
+        
+        final base = startStr != null 
+            ? '${studio.email}\n$planName (Taken: $startStr)'
+            : '${studio.email}\n$planName';
+
+        return studio.subscriptionStatus == 'expired'
+            ? '$base, expired $dateStr'
+            : '$base, until $dateStr';
+      }
+      return startStr != null 
+          ? '${studio.email}\n$planName (Taken: $startStr)'
+          : '${studio.email}\n$planName';
+    }
+    return studio.email;
   }
 }

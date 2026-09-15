@@ -1,3 +1,19 @@
+/// ⚠️ DEPRECATED / UNUSED — no file in `lib/` imports this anymore.
+///
+/// This was the original mock-data version of the Super Admin panel,
+/// written before it was rewired to talk to Supabase directly. It
+/// defines its OWN separate `PlatformUser` class (enum-based `type`,
+/// no `fromJson`, no `usedBytes`) that is now a DIFFERENT, INCOMPATIBLE
+/// shape from the real `PlatformUser` in
+/// `core/api/admin_api_client.dart` (String-based `type`, `fromJson`,
+/// `usedBytes`) that every screen actually uses today.
+///
+/// It's safe to delete this file. It's kept only so nothing breaks if
+/// something outside this zip still imports it — if you confirm
+/// nothing does, remove it to avoid a future contributor (or an AI
+/// assistant) accidentally importing the wrong `PlatformUser` and
+/// hitting confusing type-mismatch errors across the two classes.
+///
 /// Data shapes + mock/demo data for the platform-wide Super Admin panel.
 ///
 /// IMPORTANT: this is a brand-new surface, separate from
@@ -61,8 +77,7 @@ class PlatformUser {
   final String city;
   final String? studioName; // studio-only
   final SubscriptionStatus subscriptionStatus; // studio-only; .none for clients
-  final String?
-      linkedAccountId; // id of this email's other-role account, if any
+  final String? linkedAccountId; // id of this email's other-role account, if any
 
   const PlatformUser({
     required this.id,
@@ -81,8 +96,7 @@ class PlatformUser {
     final parts = fullName.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
-        .toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
 }
 

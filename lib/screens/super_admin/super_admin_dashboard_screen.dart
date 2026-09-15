@@ -1,30 +1,66 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api/admin_api_client.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
-import 'super_admin_models.dart';
+import '../../core/utils/format_utils.dart';
+import 'super_admin_profile_screen.dart';
+import 'super_admin_storage_screen.dart';
 import 'super_admin_subscriptions_screen.dart';
 import 'super_admin_users_screen.dart';
 
-/// Home screen of the Super Admin panel — platform-wide numbers across
-/// every studio and every client, not scoped to one studio the way
-/// `screens/admin/admin_dashboard_screen.dart` (Studio Owner's own
-/// dashboard) is.
-class SuperAdminDashboardScreen extends StatelessWidget {
+class _DashboardData {
+  final PlatformUsers users;
+  final StorageSummary storage;
+  _DashboardData(this.users, this.storage);
+}
+
+const double kStorageWarningThreshold = 80.0; // %
+const double kStorageCriticalThreshold = 95.0; // %
+
+class SuperAdminDashboardScreen extends StatefulWidget {
   const SuperAdminDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final studios = SuperAdminMockData.studios;
-    final clients = SuperAdminMockData.clients;
-    final leads = SuperAdminMockData.websiteLeads;
-    final activeSubs = studios
-        .where((s) => s.subscriptionStatus == SubscriptionStatus.active)
-        .length;
+  State<SuperAdminDashboardScreen> createState() => _SuperAdminDashboardScreenState();
+}
 
+class _SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
+  late Future<_DashboardData> _dashboardFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dashboardFuture = _loadData();
+  }
+
+  Future<_DashboardData> _loadData() async {
+    final results = await Future.wait([
+      AdminApiClient.instance.fetchUsers(),
+      AdminApiClient.instance.fetchStorageSummary(),
+    ]);
+    return _DashboardData(
+      results[0] as PlatformUsers,
+      results[1] as StorageSummary,
+    );
+  }
+
+  Future<void> _refresh() async {
+    final future = _loadData();
+    setState(() {
+      _dashboardFuture = future;
+    });
+    await future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
         elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.text),
         automaticallyImplyLeading: false,
         titleSpacing: AppSpacing.md,
         title: const Text(
@@ -37,102 +73,204 @@ class SuperAdminDashboardScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.subtitle),
-            onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            icon: const Icon(Icons.account_circle_rounded, color: AppColors.subtitle),
+            tooltip: 'Profile',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SuperAdminProfileScreen()),
+            ),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
-            childAspectRatio: 1.35,
-            children: [
-              _Kpi(
-                icon: Icons.photo_camera_back_rounded,
-                gradient: const [AppColors.primary, AppColors.secondary],
-                label: 'Studio users',
-                value: '${studios.length}',
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const SuperAdminUsersScreen(initialTab: 0),
-                )),
+      body: FutureBuilder<_DashboardData>(
+        future: _dashboardFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline_rounded, color: AppColors.subtitle, size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      snapshot.error is AdminApiException
+                          ? (snapshot.error as AdminApiException).message
+                          : 'Could not load dashboard data.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.subtitle),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(onPressed: _refresh, child: const Text('Retry')),
+                  ],
+                ),
               ),
-              _Kpi(
-                icon: Icons.people_alt_rounded,
-                gradient: const [AppColors.secondary, AppColors.accent],
-                label: 'Client users',
-                value: '${clients.length}',
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const SuperAdminUsersScreen(initialTab: 1),
-                )),
-              ),
-              _Kpi(
-                icon: Icons.travel_explore_rounded,
-                gradient: const [AppColors.accent, AppColors.gold],
-                label: 'Website leads',
-                value: '${leads.length}',
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const SuperAdminUsersScreen(initialTab: 2),
-                )),
-              ),
-              _Kpi(
-                icon: Icons.workspace_premium_rounded,
-                gradient: const [AppColors.success, AppColors.primary],
-                label: 'Active subscriptions',
-                value: '$activeSubs',
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const SuperAdminSubscriptionsScreen(),
-                )),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          const Text(
-            'Recently joined',
-            style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.text),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          ...[...studios, ...clients]
+            );
+          }
+
+          final data = snapshot.data!;
+          final users = data.users;
+          final storage = data.storage;
+          final studios = users.studios;
+          final clients = users.clients;
+          final activeSubs = studios
+              .where((s) =>
+                  s.subscriptionStatus == 'active' ||
+                  s.subscriptionStatus == 'trial')
+              .length;
+          final recentlyJoined = [...studios, ...clients]
               .toList()
-              .also((l) => l.sort((a, b) => b.joinedAt.compareTo(a.joinedAt)))
-              .take(4)
-              .map((u) => _RecentUserTile(user: u)),
-          const SizedBox(height: AppSpacing.lg),
-          const Text(
-            'Dual-role accounts',
-            style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.text),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Same email registered as both a Studio and a Client account.',
-            style: TextStyle(fontSize: 12.5, color: AppColors.subtitle),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          ...SuperAdminMockData.allUsers
-              .where((u) => u.linkedAccountId != null)
-              .map((u) => _RecentUserTile(user: u, showLinkedBadge: true)),
-        ],
+            ..sort((a, b) => b.joinedAt.compareTo(a.joinedAt));
+          final suspended =
+              [...studios, ...clients].where((u) => !u.isActive).toList();
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              children: [
+                if (storage.usedPercentage >= kStorageWarningThreshold) ...[
+                  _StorageWarningBanner(
+                    usedPercentage: storage.usedPercentage,
+                    usedBytes: storage.totalUsedBytes,
+                    totalBytes: storage.totalCapacityBytes,
+                    critical: storage.usedPercentage >= kStorageCriticalThreshold,
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => SuperAdminStorageScreen(
+                        storageSummary: storage,
+                        allUsers: [...studios, ...clients],
+                      ),
+                    )),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: AppSpacing.sm,
+                  crossAxisSpacing: AppSpacing.sm,
+                  childAspectRatio: 1.25,
+                  children: [
+                    _Kpi(
+                      icon: Icons.photo_camera_back_rounded,
+                      gradient: const [AppColors.primary, AppColors.secondary],
+                      label: 'Studio users',
+                      value: '${studios.length}',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SuperAdminUsersScreen(initialTab: 0),
+                      )),
+                    ),
+                    _Kpi(
+                      icon: Icons.people_alt_rounded,
+                      gradient: const [AppColors.secondary, AppColors.accent],
+                      label: 'Client users',
+                      value: '${clients.length}',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SuperAdminUsersScreen(initialTab: 1),
+                      )),
+                    ),
+                    _Kpi(
+                      icon: Icons.cloud_queue_rounded,
+                      gradient: const [AppColors.secondary, AppColors.primary],
+                      label: 'Storage Used',
+                      value: '${formatBytes(storage.totalUsedBytes)} / ${formatBytes(storage.totalCapacityBytes)}',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => SuperAdminStorageScreen(
+                          storageSummary: storage,
+                          allUsers: [...studios, ...clients],
+                        ),
+                      )),
+                    ),
+                    _Kpi(
+                      icon: Icons.workspace_premium_rounded,
+                      gradient: const [AppColors.success, AppColors.primary],
+                      label: 'Active subscriptions',
+                      value: '$activeSubs',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SuperAdminSubscriptionsScreen(),
+                      )),
+                    ),
+
+                    _Kpi(
+                      icon: Icons.block_rounded,
+                      gradient: const [AppColors.error, AppColors.secondary],
+                      label: 'Suspended accounts',
+                      value: '${suspended.length}',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SuperAdminUsersScreen(
+                          initialTab: 0,
+                          suspendedOnly: true,
+                        ),
+                      )),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const Text(
+                  'Recently joined',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                if (recentlyJoined.isEmpty)
+                  const _EmptySection(label: 'No users yet')
+                else
+                  ...recentlyJoined.take(4).map((u) => _RecentUserTile(user: u)),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Suspended accounts',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text),
+                    ),
+                    if (suspended.length > 4)
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const SuperAdminUsersScreen(
+                            initialTab: 0,
+                            suspendedOnly: true,
+                          ),
+                        )),
+                        child: const Text('View all', style: TextStyle(fontSize: 12.5)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Accounts a Super Admin has suspended.',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.subtitle),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                if (suspended.isEmpty)
+                  const _EmptySection(label: 'None found')
+                else
+                  ...suspended.take(4).map((u) => _RecentUserTile(user: u, showSuspendedBadge: true)),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-extension _Also<T> on T {
-  T also(void Function(T) f) {
-    f(this);
-    return this;
+class _EmptySection extends StatelessWidget {
+  final String label;
+  const _EmptySection({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(label, style: const TextStyle(color: AppColors.subtitle, fontSize: 12.5)),
+    );
   }
 }
 
@@ -182,17 +320,30 @@ class _Kpi extends StatelessWidget {
               child: Icon(icon, color: Colors.white, size: 19),
             ),
             const Spacer(),
-            Text(value,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                maxLines: 1,
                 style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.text)),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.text,
+                ),
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.subtitle,
-                    fontWeight: FontWeight.w500)),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.subtitle,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),
@@ -202,20 +353,25 @@ class _Kpi extends StatelessWidget {
 
 class _RecentUserTile extends StatelessWidget {
   final PlatformUser user;
-  final bool showLinkedBadge;
-
-  const _RecentUserTile({required this.user, this.showLinkedBadge = false});
+  final bool showSuspendedBadge;
+  const _RecentUserTile({
+    required this.user,
+    this.showSuspendedBadge = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isStudio = user.type == PlatformUserType.studio;
+    final isStudio = user.isStudio;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+            color: showSuspendedBadge
+                ? AppColors.error.withValues(alpha: 0.4)
+                : AppColors.border),
       ),
       child: Row(
         children: [
@@ -226,7 +382,8 @@ class _RecentUserTile extends StatelessWidget {
             child: Text(user.initials,
                 style: TextStyle(
                     color: isStudio ? AppColors.primary : AppColors.accent,
-                    fontWeight: FontWeight.w700)),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5)),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -234,33 +391,99 @@ class _RecentUserTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(user.fullName,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13.5)),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
                 Text(user.email,
-                    style: const TextStyle(
-                        fontSize: 11.5, color: AppColors.subtitle)),
+                    style: const TextStyle(fontSize: 11.5, color: AppColors.subtitle)),
               ],
             ),
           ),
-          if (showLinkedBadge)
+          if (showSuspendedBadge)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withValues(alpha: 0.12),
+                color: AppColors.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
-              child: const Text('linked',
+              child: const Text('Suspended',
                   style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.secondary)),
+                      fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.error)),
             )
           else
             Text(isStudio ? 'Studio' : 'Client',
-                style:
-                    const TextStyle(fontSize: 11, color: AppColors.subtitle)),
+                style: const TextStyle(fontSize: 11, color: AppColors.subtitle)),
         ],
       ),
     );
+  }
+}
+
+class _StorageWarningBanner extends StatelessWidget {
+  final double usedPercentage;
+  final int usedBytes;
+  final int totalBytes;
+  final bool critical;
+  final VoidCallback? onTap;
+
+  const _StorageWarningBanner({
+    required this.usedPercentage,
+    required this.usedBytes,
+    required this.totalBytes,
+    required this.critical,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = critical ? AppColors.error : AppColors.warning;
+    final pctStr = usedPercentage.toStringAsFixed(1);
+    final text = critical
+        ? 'Storage critically full — $pctStr% used. Uploads may start failing.'
+        : 'Storage nearly full — $pctStr% used (${formatBytes(usedBytes)} of ${formatBytes(totalBytes)})';
+
+    final content = Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            critical ? Icons.error_rounded : Icons.warning_amber_rounded,
+            color: color,
+            size: 24,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.text,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (onTap != null) ...[
+            const SizedBox(width: AppSpacing.xs),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: color,
+              size: 20,
+            ),
+          ],
+        ],
+      ),
+    );
+
+    if (onTap != null) {
+      return InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        onTap: onTap,
+        child: content,
+      );
+    }
+    return content;
   }
 }

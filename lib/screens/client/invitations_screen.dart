@@ -314,7 +314,7 @@ class _InvitationCard extends StatelessWidget {
                         studioName,
                         style: TextStyle(
                           color: (Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : AppColors.text),
-                          fontSize: 14.5,
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -358,7 +358,7 @@ class _InvitationCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.lg),
             // Action buttons
             Row(
               children: [

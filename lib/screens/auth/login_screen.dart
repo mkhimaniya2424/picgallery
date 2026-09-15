@@ -17,6 +17,8 @@ import '../../widgets/common/inline_error_banner.dart';
 import '../../widgets/common/logo_widget.dart';
 import '../../widgets/common/screen_backdrop.dart';
 import '../../widgets/inputs/custom_text_field.dart';
+import '../super_admin/super_admin_dashboard_screen.dart';
+import '../../core/api/admin_api_client.dart';
 import 'role_selection_screen.dart';
 
 /// Floating login layout (no big white card) — logo + heading up top,
@@ -88,7 +90,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           '[Login] ApiException — status: ${e.statusCode}, message: ${e.message}');
       if (!mounted) return;
       setState(() => _isLoading = false);
-      if (e.statusCode == 401 || e.statusCode == 400) {
+      if (e.statusCode == 401 || e.statusCode == 400 || e.statusCode == 0) {
+        // Fallback: Try Super Admin login before showing error
+        try {
+          await AdminApiClient.instance.login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const SuperAdminDashboardScreen()),
+          );
+          return; // Stop the regular error flow!
+        } on AdminApiException catch (adminErr) {
+          if (!mounted) return;
+          // If Supabase says "Invalid login credentials", we'll just fall through to the FastAPI generic error.
+          // But if it says "This account is not a Super Admin." (meaning the UUIDs don't match), we MUST show it!
+          if (adminErr.statusCode == 403) {
+            setState(() => _errorMessage = adminErr.message);
+            _shakeController.forward(from: 0);
+            return;
+          }
+        } catch (_) {
+          // If it fails for another reason, fall through to show the original client-login error
+        }
+
+        if (e.statusCode == 0) {
+          await AppPopup.show(context,
+              title: 'Something Went Wrong', message: e.message, isError: true);
+          return;
+        }
+
         // 401 = wrong credentials; 400 = this email is registered under
         // both a Client and a Studio account and widget.role wasn't
         // enough to disambiguate (e.g. Login reached without a

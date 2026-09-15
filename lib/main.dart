@@ -10,6 +10,8 @@ import 'providers/settings_provider.dart';
 import 'services/deep_link_service.dart';
 import 'services/push_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/constants/supabase_constants.dart';
 
 /// Lets DeepLinkService navigate / show SnackBars after a
 /// picgallery://payment-success|payment-failed link arrives, without
@@ -39,6 +41,15 @@ Future<void> main() async {
   // Initialize DeepLinkService before runApp so initial cold-start deep links
   // are captured before the splash screen timer evaluates navigation.
   await DeepLinkService.instance.init(navigatorKey);
+
+  // Initialize Supabase for the Super Admin flow
+  await Supabase.initialize(
+    url: SupabaseConstants.url,
+    anonKey: SupabaseConstants.anonKey,
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+    ),
+  );
 
   runApp(
     ProviderScope(
