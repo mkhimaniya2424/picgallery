@@ -30,8 +30,11 @@ class AuthContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return Container(
+      width: double.infinity,
+      alignment: Alignment.topCenter,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
         // Fallback for the (now rare, after the ScreenBackdrop fix)
         // case where an ancestor still hands this an unbounded height
         // — without this, minHeight could resolve to infinity and
@@ -63,20 +66,24 @@ class AuthContainer extends StatelessWidget {
             // "RenderFlex overflowed by N pixels" hazard-stripe warning.
             // It's redundant anyway once minHeight + mainAxisSize.max are
             // already in place, so it's removed rather than patched.
-            child: Column(
-              mainAxisAlignment: mainAxisAlignment,
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: child,
-                ),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                mainAxisAlignment: mainAxisAlignment,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    child: child,
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
+    ),
     );
   }
 }

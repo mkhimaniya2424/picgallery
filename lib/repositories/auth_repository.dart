@@ -138,7 +138,7 @@ class AuthRepository {
   Future<AuthToken> socialLogin({
     required String provider,
     required String idToken,
-    required AppUserRole role,
+    AppUserRole? role,
     String? fullName,
   }) async {
     final json = await _apiClient.post(
@@ -147,7 +147,7 @@ class AuthRepository {
       body: {
         'provider': provider,
         'id_token': idToken,
-        'role': role.toJson(),
+        if (role != null) 'role': role.toJson(),
         if (fullName != null) 'full_name': fullName,
       },
     );

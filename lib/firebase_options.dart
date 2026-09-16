@@ -45,7 +45,7 @@ class DefaultFirebaseOptions {
     appId: '1:608395495309:web:5512a3195c0bab9c109fc4',
     messagingSenderId: '608395495309',
     projectId: 'picgallery-203',
-    authDomain: 'picgallery-203.firebaseapp.com',
+    authDomain: 'app.picgallery.in',
     storageBucket: 'picgallery-203.firebasestorage.app',
     measurementId: 'G-5PC8FM9B5D',
   );

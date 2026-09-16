@@ -193,7 +193,7 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   Future<void> socialLogin({
     required String provider,
     required String idToken,
-    required AppUserRole role,
+    AppUserRole? role,
     String? fullName,
   }) async {
     await _mutate(() async {
@@ -211,15 +211,17 @@ class AuthNotifier extends AsyncNotifier<AppUser?> {
   /// shows the account picker again instead of silently re-using
   /// whichever account was last used.
   Future<void> logout() async {
-    await _repo.logout();
-    try {
-      await ref.read(socialAuthServiceProvider).signOutGoogle();
-    } catch (_) {
-      // Best-effort only — e.g. no Google Play Services on this device,
-      // or the user never signed in with Google in the first place.
-      // Local token/state clearing above is what actually matters.
-    }
+    // 1. Immediately update state so navigation doesn't bounce back due to stale auth.
     state = const AsyncData<AppUser?>(null);
+
+    // 2. Fire and forget backend/local cleanup in the background.
+    // This prevents the UI from freezing if the network is slow or unreachable.
+    Future.microtask(() async {
+      await _repo.logout();
+      try {
+        await ref.read(socialAuthServiceProvider).signOutGoogle();
+      } catch (_) {}
+    });
   }
 
   /// GET /auth/me — re-fetches the current user (e.g. pull-to-refresh

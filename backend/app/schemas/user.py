@@ -70,7 +70,7 @@ class SocialLoginRequest(BaseModel):
 
     provider: AuthProvider
     id_token: str
-    role: UserRole
+    role: UserRole | None = None
     full_name: str | None = Field(default=None, max_length=150)
 
     @field_validator("provider")

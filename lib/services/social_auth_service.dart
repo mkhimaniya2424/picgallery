@@ -3,9 +3,17 @@
 // lib/providers/auth_providers.dart (signInWithGoogle, signOutGoogle, signInWithApple)
 // and the SocialAuthResult/SocialAuthCancelled types used by callers.
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart' as gsign;
+import 'package:firebase_auth/firebase_auth.dart' as fauth;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+// Conditional import: dart:html sessionStorage on web, no-op stub on mobile.
+import 'web_storage_stub.dart'
+    if (dart.library.html) 'web_storage_web.dart';
+
+/// Key used to persist the selected role across the Google web redirect.
+const String _kPendingWebRole = '_pg_pending_google_role';
 
 /// Result returned by SocialAuthService.signInWithGoogle / signInWithApple
 /// — callers expect `.provider`, `.idToken` and `.fullName`.
@@ -47,14 +55,53 @@ class SocialAuthService {
   static const _webClientId =
       '608395495309-b4kfrmpr1pc7sea8grjnnkbn7j2gc7gj.apps.googleusercontent.com';
 
-  /// Signs in with Google and returns an [SocialAuthResult] containing an
-  /// ID token suitable for server-side verification. Throws
-  /// [SocialAuthCancelled] when the user cancels the flow.
-  Future<SocialAuthResult> signInWithGoogle() async {
-    final gsign.GoogleSignIn gsInstance = gsign.GoogleSignIn.instance;
-    await gsInstance.initialize(
+  // Guard: GoogleSignIn.instance.initialize() must only be called once.
+  // Calling it a second time throws "Bad state: init() has already been called".
+  // Only used on mobile — web uses Firebase Auth directly.
+  static bool _gsInitialized = false;
+
+  static Future<void> _ensureInitialized() async {
+    if (_gsInitialized) return;
+    await gsign.GoogleSignIn.instance.initialize(
       serverClientId: _webClientId,
     );
+    _gsInitialized = true;
+  }
+
+  /// Signs in with Google.
+  /// On web, this uses signInWithPopup. On mobile, it uses the Credential Manager.
+  Future<SocialAuthResult> signInWithGoogle() async {
+    if (kIsWeb) {
+      try {
+        final fauth.GoogleAuthProvider googleProvider =
+            fauth.GoogleAuthProvider()
+              ..addScope('email')
+              ..addScope('profile');
+        final fauth.UserCredential result =
+            await fauth.FirebaseAuth.instance.signInWithPopup(googleProvider);
+        
+        final fauth.OAuthCredential? oauthCred =
+            result.credential as fauth.OAuthCredential?;
+        final String? idToken = oauthCred?.idToken;
+        if (idToken == null || idToken.isEmpty) {
+          throw Exception('Google Sign-In returned no ID token');
+        }
+
+        return SocialAuthResult(
+          provider: 'google',
+          idToken: idToken,
+          fullName: result.user?.displayName,
+        );
+      } catch (e) {
+        if (e.toString().toLowerCase().contains('popup-closed-by-user')) {
+          throw SocialAuthCancelled();
+        }
+        rethrow;
+      }
+    }
+    // ── Mobile (Android / iOS): use google_sign_in Credential Manager ──────
+    final gsign.GoogleSignIn gsInstance = gsign.GoogleSignIn.instance;
+    await _ensureInitialized();
 
     gsign.GoogleSignInAccount account;
     try {
@@ -68,11 +115,6 @@ class SocialAuthService {
         debugPrint('[SocialAuth] GoogleSignInException code: ${e.code}');
 
         // ── [16] Account reauth failed ───────────────────────────────────
-        // Credential Manager has stale/expired tokens and can't silently
-        // refresh them. Clear cached state so the next attempt forces a
-        // fresh consent flow, then signal the caller to retry.
-        // NOTE: the field is 'description', not 'message' (google_sign_in v7).
-        // We also check toString() as a safe fallback since description is nullable.
         final String errStr = e.description ?? e.toString();
         if (errStr.contains('reauth') || errStr.contains('[16]')) {
           debugPrint(
@@ -130,9 +172,11 @@ class SocialAuthService {
 
   Future<SocialAuthResult?> signInWithGoogleSilent() async {
     lastSilentError = null; // reset each attempt
+    // Silent sign-in is not meaningful on web (no cached credential flow).
+    if (kIsWeb) return null;
     try {
       final gsign.GoogleSignIn gsInstance = gsign.GoogleSignIn.instance;
-      await gsInstance.initialize(serverClientId: _webClientId);
+      await _ensureInitialized();
 
       // attemptLightweightAuthentication() is the v7 no-UI equivalent of
       // the removed signInSilently(). It returns null if there is no
@@ -172,6 +216,36 @@ class SocialAuthService {
 
   /// Throws [SocialAuthCancelled] when the user cancels the flow.
   Future<SocialAuthResult> signInWithApple() async {
+    if (kIsWeb) {
+      try {
+        final fauth.OAuthProvider appleProvider = fauth.OAuthProvider('apple.com')
+          ..addScope('email')
+          ..addScope('name');
+          
+        final fauth.UserCredential result =
+            await fauth.FirebaseAuth.instance.signInWithPopup(appleProvider);
+        
+        final fauth.OAuthCredential? oauthCred =
+            result.credential as fauth.OAuthCredential?;
+        final String? idToken = oauthCred?.idToken;
+        if (idToken == null || idToken.isEmpty) {
+          throw Exception('Apple Sign-In returned no ID token');
+        }
+
+        return SocialAuthResult(
+          provider: 'apple',
+          idToken: idToken,
+          fullName: result.user?.displayName,
+        );
+      } catch (e) {
+        if (e.toString().toLowerCase().contains('popup-closed-by-user') ||
+            e.toString().toLowerCase().contains('cancel')) {
+          throw SocialAuthCancelled();
+        }
+        rethrow;
+      }
+    }
+
     try {
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [

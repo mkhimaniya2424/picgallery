@@ -11,6 +11,7 @@ import 'services/deep_link_service.dart';
 import 'services/push_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'firebase_options.dart';
 import 'core/constants/supabase_constants.dart';
 
 /// Lets DeepLinkService navigate / show SnackBars after a
@@ -30,12 +31,16 @@ Future<void> main() async {
   // needed anymore.
   final apiClient = ApiClient();
 
-  // Initialize Firebase (the user needs to provide google-services.json / GoogleService-Info.plist)
+  // Initialize Firebase with platform-specific options.
+  // options: is required on web (no google-services.json on web);
+  // it also works fine on Android/iOS so we always pass it.
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     await PushNotificationService.instance.init(apiClient, navigatorKey);
   } catch (e) {
-    debugPrint('Firebase initialization failed (missing config?): $e');
+    debugPrint('Firebase initialization failed: $e');
   }
 
   // Initialize DeepLinkService before runApp so initial cold-start deep links

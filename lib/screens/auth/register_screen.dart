@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -53,6 +54,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool get _isPhotographer => widget.role == UserRole.photographer;
   int get _totalSteps => 3;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+
 
   Future<void> _next() async {
     if (_step == 0 && !_step1Key.currentState!.validate()) return;

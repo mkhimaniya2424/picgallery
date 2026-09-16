@@ -26,6 +26,7 @@ class ScreenBackdrop extends StatelessWidget {
 
     return Container(
       decoration: bg,
+      constraints: const BoxConstraints.expand(),
       child: child,
     );
   }

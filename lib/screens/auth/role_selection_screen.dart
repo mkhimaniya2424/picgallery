@@ -5,6 +5,8 @@ import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/cards/role_card.dart';
+import '../../widgets/common/auth_container.dart';
+import '../../widgets/common/logo_widget.dart';
 import '../../widgets/common/screen_backdrop.dart';
 
 /// The most important screen per the brief: two large, glass, gradient-
@@ -29,75 +31,69 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       resizeToAvoidBottomInset: true,
       body: ScreenBackdrop(
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: ConstrainedBox(
-              // Ensure the column still fills the screen height when the
-              // keyboard is closed, so the Continue button stays at the bottom.
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top -
-                    MediaQuery.of(context).padding.bottom,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppSpacing.xl),
-                    Text('Choose Your Role',
-                        style: Theme.of(context).textTheme.headlineLarge),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Tell us how you\'ll use PicGallery so we can tailor your experience.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(color: AppColors.subtitle),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    RoleCard(
-                      icon: Icons.photo_camera_rounded,
-                      title: 'Photographer',
-                      features: const [
-                        'Manage studio',
-                        'Upload albums',
-                        'Client management'
-                      ],
-                      selected: _selected == UserRole.photographer,
-                      onTap: () =>
-                          setState(() => _selected = UserRole.photographer),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    RoleCard(
-                      icon: Icons.photo_library_rounded,
-                      title: 'Client',
-                      features: const [
-                        'View galleries',
-                        'Download memories',
-                        'Favorites'
-                      ],
-                      selected: _selected == UserRole.client,
-                      onTap: () => setState(() => _selected = UserRole.client),
-                    ),
-                    const Spacer(),
-                    GradientButton(
-                      label: 'Continue',
-                      icon: Icons.arrow_forward_rounded,
-                      onPressed: _selected == null
-                          ? null
-                          : () {
-                              // TEMP DEBUG — remove once the client/studio
-                              // role mismatch is confirmed fixed.
-                              debugPrint(
-                                  '[ROLE_DEBUG] RoleSelection Continue tapped, _selected=$_selected');
-                              Navigator.of(context).pushNamed(AppRoutes.login,
-                                  arguments: _selected);
-                            },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
+          child: AuthContainer(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Center(child: LogoWidget(size: 56)),
+                const SizedBox(height: AppSpacing.lg),
+                Text('Choose Your Role',
+                    style: Theme.of(context).textTheme.headlineLarge),
+                const SizedBox(height: 6),
+                Text(
+                  'Tell us how you\'ll use PicGallery so we can tailor your experience.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: AppColors.subtitle),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.xl),
+                RoleCard(
+                  icon: Icons.photo_camera_rounded,
+                  title: 'Photographer',
+                  features: const [
+                    'Manage studio',
+                    'Upload albums',
+                    'Client management'
+                  ],
+                  selected: _selected == UserRole.photographer,
+                  onTap: () =>
+                      setState(() => _selected = UserRole.photographer),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                RoleCard(
+                  icon: Icons.photo_library_rounded,
+                  title: 'Client',
+                  features: const [
+                    'View galleries',
+                    'Download memories',
+                    'Favorites'
+                  ],
+                  selected: _selected == UserRole.client,
+                  onTap: () => setState(() => _selected = UserRole.client),
+                ),
+                const SizedBox(height: 48), // Spacing before continue button
+                GradientButton(
+                  label: 'Continue',
+                  icon: Icons.arrow_forward_rounded,
+                  onPressed: _selected == null
+                      ? null
+                      : () {
+                          // TEMP DEBUG — remove once the client/studio
+                          // role mismatch is confirmed fixed.
+                          debugPrint(
+                              '[ROLE_DEBUG] RoleSelection Continue tapped, _selected=$_selected');
+                          if (widget.selectOnly) {
+                            Navigator.of(context).pop(_selected);
+                          } else {
+                            Navigator.of(context).pushNamed(AppRoutes.login,
+                                arguments: _selected);
+                          }
+                        },
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
             ),
           ),
         ),

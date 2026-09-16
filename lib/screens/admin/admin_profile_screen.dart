@@ -9,6 +9,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/cards/glass_card.dart';
+import '../../main.dart'; // For navigatorKey
 
 /// Studio owner profile tab — account summary + settings menu + Log Out.
 /// The name/studio header reads from [authProvider] — the real,
@@ -134,20 +135,18 @@ class AdminProfileScreen extends ConsumerWidget {
                   iconColor: AppColors.error,
                   labelColor: AppColors.error,
                   showDivider: false,
-                  onTap: () async {
-                    await ref.read(authProvider.notifier).logout();
+                  onTap: () {
+                    ref.read(authProvider.notifier).logout();
                     final currentSettings = ref.read(settingsProvider);
-                    await ref.read(settingsProvider.notifier).updateSettings(
+                    ref.read(settingsProvider.notifier).updateSettings(
                           currentSettings.copyWith(
                             photographerName: '',
                             email: '',
                             clientId: '',
                           ),
                         );
-                    if (context.mounted) {
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                          AppRoutes.roleSelection, (route) => false);
-                    }
+                    navigatorKey.currentState!.pushNamedAndRemoveUntil(
+                        AppRoutes.roleSelection, (route) => false);
                   },
                 ),
               ),

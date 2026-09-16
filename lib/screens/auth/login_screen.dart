@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -65,6 +66,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0), weight: 2),
     TweenSequenceItem(tween: Tween(begin: 6.0, end: 0.0), weight: 1),
   ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.linear));
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+
 
   Future<void> _handleSignIn() async {
     if (_socialLoadingProvider != null) return;
@@ -219,7 +227,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   /// role is confirmed. Returns true if sign-in succeeded, false if the
   /// user genuinely cancelled, and rethrows on any other error so the
   /// outer handler can show an appropriate message.
-  Future<bool> _attemptSocialSignIn(String provider, UserRole role) async {
+  Future<bool> _attemptSocialSignIn(String provider, UserRole? role) async {
     final service = ref.read(socialAuthServiceProvider);
     final result = provider == 'google'
         ? await service.signInWithGoogle()
@@ -228,9 +236,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     await ref.read(authProvider.notifier).socialLogin(
           provider: result.provider,
           idToken: result.idToken,
-          role: role == UserRole.photographer
+          role: role == null ? null : (role == UserRole.photographer
               ? AppUserRole.photographer
-              : AppUserRole.client,
+              : AppUserRole.client),
           fullName: result.fullName,
         );
     return true;
@@ -238,14 +246,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleSocialSignIn(String provider) async {
     if (_isLoading) return;
-    UserRole? role = widget.role;
-    if (role == null) {
-      role = await Navigator.of(context).push<UserRole>(
-        MaterialPageRoute(
-            builder: (_) => const RoleSelectionScreen(selectOnly: true)),
-      );
-      if (role == null) return; // user backed out of Role Selection
-    }
     if (!mounted) return;
 
     setState(() {
@@ -253,8 +253,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       _errorMessage = null;
     });
 
+
+
+    // ── Mobile or Apple: use standard async flow ────────────────────────────
     try {
-      await _attemptSocialSignIn(provider, role);
+      await _attemptSocialSignIn(provider, widget.role);
     } on SocialAuthReauthNeeded catch (e) {
       // [16] Account reauth failed — the service already called disconnect()
       // to clear stale tokens. Retry once: Credential Manager will now show
@@ -264,7 +267,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       await Future<void>.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       try {
-        await _attemptSocialSignIn(provider, role);
+        await _attemptSocialSignIn(provider, widget.role);
       } on SocialAuthReauthNeeded catch (e2) {
         if (!mounted) return;
         setState(() => _socialLoadingProvider = null);
@@ -285,6 +288,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         return;
       } on ApiException catch (apiErr) {
         if (!mounted) return;
+        if (apiErr.statusCode == 400 && apiErr.message.toLowerCase().contains('create an account')) {
+          // No account exists, and we didn't provide a role.
+          // Prompt for role now, and retry using silent sign-in so we don't show the popup again!
+          final selectedRole = await Navigator.of(context).push<UserRole>(
+            MaterialPageRoute(
+                builder: (_) => const RoleSelectionScreen(selectOnly: true)),
+          );
+          if (selectedRole == null) {
+            setState(() => _socialLoadingProvider = null);
+            return;
+          }
+          if (!mounted) return;
+          try {
+            await _attemptSocialSignIn(provider, selectedRole);
+            final retryUser = ref.read(authProvider).valueOrNull;
+            setState(() => _socialLoadingProvider = null);
+            if (retryUser != null) _navigateAfterAuth(retryUser);
+            return;
+          } catch (e) {
+            if (!mounted) return;
+            setState(() => _socialLoadingProvider = null);
+            await AppPopup.show(context,
+                title: 'Sign-in Failed', message: e.toString(), isError: true);
+            return;
+          }
+        }
         setState(() => _socialLoadingProvider = null);
         await AppPopup.show(context,
             title: 'Sign-in Failed', message: apiErr.message, isError: true);
@@ -339,7 +368,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             if (!mounted) return;
 
             try {
-              await _attemptSocialSignIn(provider, role);
+              await _attemptSocialSignIn(provider, widget.role);
             } on SocialAuthCancelled {
               // Still cancelling after retry — genuine cancel.
               if (!mounted) return;
@@ -350,6 +379,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               return;
             } on ApiException catch (retryApiErr) {
               if (!mounted) return;
+              if (retryApiErr.statusCode == 400 && retryApiErr.message.toLowerCase().contains('create an account')) {
+                 final selectedRole = await Navigator.of(context).push<UserRole>(
+                    MaterialPageRoute(
+                        builder: (_) => const RoleSelectionScreen(selectOnly: true)),
+                  );
+                  if (selectedRole == null) {
+                    setState(() => _socialLoadingProvider = null);
+                    return;
+                  }
+                  if (!mounted) return;
+                  try {
+                    await _attemptSocialSignIn(provider, selectedRole);
+                    final retryUser = ref.read(authProvider).valueOrNull;
+                    setState(() => _socialLoadingProvider = null);
+                    if (retryUser != null) _navigateAfterAuth(retryUser);
+                    return;
+                  } catch (e) {
+                    if (!mounted) return;
+                    setState(() => _socialLoadingProvider = null);
+                    await AppPopup.show(context,
+                        title: 'Sign-in Failed', message: e.toString(), isError: true);
+                    return;
+                  }
+              }
               setState(() => _socialLoadingProvider = null);
               await AppPopup.show(context,
                   title: 'Sign-in Failed',
@@ -381,9 +434,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           await ref.read(authProvider.notifier).socialLogin(
                 provider: silentResult.provider,
                 idToken: silentResult.idToken,
-                role: role == UserRole.photographer
+                role: widget.role == null ? null : (widget.role == UserRole.photographer
                     ? AppUserRole.photographer
-                    : AppUserRole.client,
+                    : AppUserRole.client),
                 fullName: silentResult.fullName,
               );
         } else {
@@ -416,6 +469,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       }
     } on ApiException catch (e) {
       if (!mounted) return;
+      if (e.statusCode == 400 && e.message.toLowerCase().contains('create an account')) {
+        final selectedRole = await Navigator.of(context).push<UserRole>(
+          MaterialPageRoute(
+              builder: (_) => const RoleSelectionScreen(selectOnly: true)),
+        );
+        if (selectedRole == null) {
+          setState(() => _socialLoadingProvider = null);
+          return;
+        }
+        if (!mounted) return;
+        try {
+          await _attemptSocialSignIn(provider, selectedRole);
+          final retryUser = ref.read(authProvider).valueOrNull;
+          setState(() => _socialLoadingProvider = null);
+          if (retryUser != null) _navigateAfterAuth(retryUser);
+          return;
+        } catch (e) {
+          if (!mounted) return;
+          setState(() => _socialLoadingProvider = null);
+          await AppPopup.show(context,
+              title: 'Sign-in Failed', message: e.toString(), isError: true);
+          return;
+        }
+      }
       setState(() => _socialLoadingProvider = null);
       await AppPopup.show(context,
           title: 'Sign-in Failed', message: e.message, isError: true);

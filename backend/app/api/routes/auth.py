@@ -282,25 +282,27 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
             detail="Your Google/Apple account has no email address we can use to sign you in.",
         )
 
-    user = (
-        db.query(User)
-        .filter(
-            User.provider_user_id == identity.provider_user_id,
-            User.auth_provider == payload.provider,
-            User.role == payload.role,
-            User.is_deleted == False,  # noqa: E712
-        )
-        .first()
+    query = db.query(User).filter(
+        User.provider_user_id == identity.provider_user_id,
+        User.auth_provider == payload.provider,
+        User.is_deleted == False,
     )
+    if payload.role is not None:
+        query = query.filter(User.role == payload.role)
+    candidates = query.all()
 
-    if user is None:
-        user = (
-            db.query(User)
-            .filter(User.email == identity.email, User.role == payload.role, User.is_deleted == False)  # noqa: E712
-            .first()
-        )
+    if not candidates:
+        query_email = db.query(User).filter(User.email == identity.email, User.is_deleted == False)
+        if payload.role is not None:
+            query_email = query_email.filter(User.role == payload.role)
+        candidates = query_email.all()
 
-    if user is None:
+    if not candidates:
+        if payload.role is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No account found. Please create an account first.",
+            )
         full_name = payload.full_name or identity.full_name or identity.email.split("@")[0]
         user = User(
             full_name=full_name,
@@ -314,7 +316,13 @@ def social_login(payload: SocialLoginRequest, db: Session = Depends(get_db)) -> 
             plan_status="inactive",
         )
         db.add(user)
+    elif len(candidates) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This email is used by both a Client and a Studio account. Please choose which one you're signing in as.",
+        )
     else:
+        user = candidates[0]
         user.auth_provider = payload.provider
         user.provider_user_id = identity.provider_user_id
         if identity.email_verified:

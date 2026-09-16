@@ -13,6 +13,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/studio_client_connections_provider.dart';
 import '../../providers/face_search_provider.dart';
 import '../../screens/client/client_saved_galleries_screen.dart';
+import '../../main.dart'; // For navigatorKey
 import 'drawer_menu_item.dart';
 
 class ClientDrawer extends ConsumerWidget {
@@ -48,19 +49,11 @@ class ClientDrawer extends ConsumerWidget {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      // Clear the real session (token + cached AppUser) *and* the
-      // locally-persisted settings cache — the settings cache holds
-      // whatever name/email was last saved via Edit Profile and, unlike
-      // `authProvider`, was never cleared here before. Leaving it
-      // behind is exactly what let a stale identity from a previous
-      // account bleed into the next account's session on the same
-      // device (drawer shows old cached name/email while the real,
-      // server-fetched Profile screen shows the actual logged-in user).
+    if (confirmed == true) {
       final container = ProviderScope.containerOf(context, listen: false);
-      await container.read(authProvider.notifier).logout();
+      container.read(authProvider.notifier).logout();
       final currentSettings = container.read(settingsProvider);
-      await container.read(settingsProvider.notifier).updateSettings(
+      container.read(settingsProvider.notifier).updateSettings(
             currentSettings.copyWith(
               photographerName: '',
               email: '',
@@ -68,12 +61,10 @@ class ClientDrawer extends ConsumerWidget {
             ),
           );
 
-      if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.roleSelection,
-          (route) => false,
-        );
-      }
+      navigatorKey.currentState!.pushNamedAndRemoveUntil(
+        AppRoutes.roleSelection,
+        (route) => false,
+      );
     }
   }
 
