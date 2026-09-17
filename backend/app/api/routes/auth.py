@@ -132,51 +132,6 @@ def _consume_email_invitations(db: Session, client: User) -> None:
         invite.consumed_at = datetime.now(timezone.utc)
 
 
-@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
-def register(payload: UserRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)) -> Token:
-    existing = (
-        db.query(User)
-        .filter(User.email == payload.email, User.role == payload.role, User.is_deleted == False)  # noqa: E712
-        .first()
-    )
-    if existing:
-        role_label = "Studio" if payload.role == UserRole.photographer else "Client"
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"A {role_label} account already exists for this email",
-        )
-
-    verification_token = _generate_verification_token()
-    user = User(
-        full_name=payload.full_name,
-        email=payload.email,
-        hashed_password=hash_password(payload.password),
-        role=payload.role,
-        studio_name=payload.studio_name,
-        studio_address=payload.studio_address,
-        business_type=payload.business_type,
-        agreed_to_terms=payload.agreed_to_terms,
-        email_verification_token=verification_token,
-        email_verification_sent_at=datetime.now(timezone.utc),
-        # The `plan_status` column has a NOT NULL constraint at the
-        # database level; every new account must get an explicit value
-        # or the INSERT fails. "inactive" means "no active paid plan yet".
-        plan_status="inactive",
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    if user.role == UserRole.client:
-        # Any studio that ran "Invite New Client" against this email
-        # before the account existed (`POST /connections/invite-by-email`)
-        # gets turned into a real pending connection now.
-        _consume_email_invitations(db, user)
-        db.commit()
-
-    # Actual SMTP send happens after the response is returned, so
-    # registration never waits on (or fails because of) mail delivery.
-    background_tasks.add_task(deliver_verification_email, to_email=user.email, token=verification_token)
 
 def _make_token_response(user: User) -> Token:
     access_token = create_access_token(subject=str(user.id))
