@@ -7,12 +7,14 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'download_service.dart';
 import 'media_picker_service.dart' show MediaContentType;
 import '../core/network/api_client.dart';
 import '../core/storage/token_storage.dart';
 import '../storage/media_local_store.dart';
+import '../core/utils/web_downloader.dart';
 import '../models/media_model.dart';
 import '../models/edit_recipe.dart';
 
@@ -78,56 +80,37 @@ class DownloadServiceImpl implements DownloadService {
     if (!context.mounted) return false;
 
     try {
-      if (!_hasNativeGallery) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Saving files is currently supported on Android and iOS.',
-              ),
-            ),
-          );
-        }
-        return false;
-      }
-
-      final tempDir = await getTemporaryDirectory();
       final safeName =
           fileName.trim().isEmpty ? 'picgallery_download.$ext' : fileName;
 
-      final file = File('${tempDir.path}/$safeName');
-      await file.writeAsBytes(bytes, flush: true);
-
-      final mimeType = MediaContentType.forFileName(safeName);
-      final isVideo = mimeType.startsWith('video/');
-
-      var hasAccess = await Gal.hasAccess(toAlbum: isVideo);
-
-      if (!hasAccess) {
-        hasAccess = await Gal.requestAccess(toAlbum: isVideo);
-      }
-
-      if (!hasAccess) {
-        if (context.mounted) {
+      if (kIsWeb) {
+        downloadBytesOnWeb(bytes, safeName);
+        if (showSnackbar && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gallery permission was denied.'),
-            ),
+            const SnackBar(content: Text('Download started.')),
           );
         }
-        return false;
+        return true;
       }
 
-      if (isVideo) {
-        await Gal.putVideo(file.path);
-      } else {
-        await Gal.putImage(file.path);
-      }
-
+      // This is a "Save As" / "Download" operation (not Save to Gallery).
+      // On platforms where this is supported (Android/iOS/Desktop), we use
+      // FilePicker to let the user choose a location, which defaults to Downloads.
+      Uri? outputUri;
       try {
-        await file.delete();
-      } catch (_) {
-        // Temporary cleanup failure should not make a successful save fail.
+        outputUri = await FilePicker.saveFile(
+          dialogTitle: 'Save As',
+          fileName: safeName,
+          bytes: bytes,
+        );
+      } catch (e) {
+        // file_picker might throw if the platform isn't fully supported
+        // or user cancels in a weird way, fallback safely.
+      }
+
+      if (outputUri == null) {
+        // User cancelled the save dialog.
+        return false;
       }
 
       if (showSnackbar && context.mounted) {

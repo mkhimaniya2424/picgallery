@@ -407,6 +407,7 @@ class DashboardUploadsDto {
         id: 'album-$key',
         albumName: (albumId != null ? nameById[albumId] : null) ??
             _placeholderAlbumName(albumId),
+        albumId: albumId,
         uploadedAgo: relativeTime(latest),
         mediaCount: items.length,
         icon: allVideo

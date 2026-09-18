@@ -341,11 +341,10 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
         onFavorite: () => ref.read(mediaProvider).toggleFavorite(media.id),
         onDelete: () => _confirmDelete(context, ref, media),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            children: [
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          children: [
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
@@ -360,80 +359,85 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                   onTap: openFullScreen,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: AspectRatio(
-                      aspectRatio: media.width > 0 && media.height > 0
-                          ? media.width / media.height
-                          : 1,
-                      child: Hero(
-                        tag: widget.heroTag ?? 'hero-media-${media.id}',
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            if (hasRealFile && media.type == MediaType.photo)
-                              isNetwork
-                                  ? Image.network(path,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          _MediaGradientPlaceholder(
-                                              media: media))
-                                  : Image.file(file!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          _MediaGradientPlaceholder(
-                                              media: media))
-                            else if (media.type == MediaType.video &&
-                                hasVideoThumb)
-                              videoThumbIsNetwork
-                                  ? Image.network(videoThumbPath,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          _MediaGradientPlaceholder(
-                                              media: media))
-                                  : Image.file(videoThumbFile!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          _MediaGradientPlaceholder(
-                                              media: media))
-                            else
-                              _MediaGradientPlaceholder(media: media),
-                            // Play affordance sits on top of whatever's
-                            // behind it (real poster frame or the
-                            // gradient fallback) — a video is always
-                            // tappable-to-play here, whether or not a
-                            // thumbnail was available to generate.
-                            if (media.type == MediaType.video)
-                              Center(
-                                child: Icon(
-                                  Icons.play_circle_fill_rounded,
-                                  color: Colors.white.withValues(alpha: 0.92),
-                                  size: 56,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.65,
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: media.width > 0 && media.height > 0
+                            ? media.width / media.height
+                            : 1,
+                        child: Hero(
+                          tag: widget.heroTag ?? 'hero-media-${media.id}',
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (hasRealFile && media.type == MediaType.photo)
+                                isNetwork
+                                    ? Image.network(path,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) =>
+                                            _MediaGradientPlaceholder(
+                                                media: media))
+                                    : Image.file(file!,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) =>
+                                            _MediaGradientPlaceholder(
+                                                media: media))
+                              else if (media.type == MediaType.video &&
+                                  hasVideoThumb)
+                                videoThumbIsNetwork
+                                    ? Image.network(videoThumbPath,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) =>
+                                            _MediaGradientPlaceholder(
+                                                media: media))
+                                    : Image.file(videoThumbFile!,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) =>
+                                            _MediaGradientPlaceholder(
+                                                media: media))
+                              else
+                                _MediaGradientPlaceholder(media: media),
+                              // Play affordance sits on top of whatever's
+                              // behind it (real poster frame or the
+                              // gradient fallback) — a video is always
+                              // tappable-to-play here, whether or not a
+                              // thumbnail was available to generate.
+                              if (media.type == MediaType.video)
+                                Center(
+                                  child: Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: Colors.white.withValues(alpha: 0.92),
+                                    size: 56,
+                                  ),
                                 ),
-                              ),
-                            if (media.type == MediaType.video)
-                              Positioned(
-                                right: AppSpacing.md,
-                                bottom: AppSpacing.md,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.65),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    MediaFormatUtils.formatDuration(
-                                        media.duration),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
+                              if (media.type == MediaType.video)
+                                Positioned(
+                                  right: AppSpacing.md,
+                                  bottom: AppSpacing.md,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.65),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      MediaFormatUtils.formatDuration(
+                                          media.duration),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -565,8 +569,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -661,56 +664,66 @@ class _MediaStitchBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.lg,
-          AppSpacing.sm,
-        ),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.78),
           border: const Border(top: BorderSide(color: AppColors.border)),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              flex: 3,
-              child: FilledButton.icon(
-                onPressed: onPrimary,
-                icon: Icon(
-                  isVideo ? Icons.play_arrow_rounded : Icons.zoom_in_rounded,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
                 ),
-                label: Text(
-                  isVideo ? 'Play Video' : 'View Full Screen',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: FilledButton.icon(
+                        onPressed: onPrimary,
+                        icon: Icon(
+                          isVideo ? Icons.play_arrow_rounded : Icons.zoom_in_rounded,
+                        ),
+                        label: Text(
+                          isVideo ? 'Play Video' : 'View Full Screen',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: IconButton.filledTonal(
+                        onPressed: onFavorite,
+                        icon: Icon(
+                          isFavorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                        ),
+                        tooltip: isFavorite ? 'Unfavorite' : 'Favorite',
+                      ),
+                    ),
+                    if (showDelete) ...[
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: IconButton.filledTonal(
+                          onPressed: onDelete,
+                          icon: Icon(Icons.delete_outline_rounded),
+                          tooltip: 'Delete',
+                          style: IconButton.styleFrom(
+                            foregroundColor: AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
-            SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: IconButton.filledTonal(
-                onPressed: onFavorite,
-                icon: Icon(
-                  isFavorite
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                ),
-                tooltip: isFavorite ? 'Unfavorite' : 'Favorite',
-              ),
-            ),
-            if (showDelete) ...[
-              SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: IconButton.filledTonal(
-                  onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline_rounded),
-                  tooltip: 'Delete',
-                  style: IconButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

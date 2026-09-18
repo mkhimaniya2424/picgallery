@@ -37,7 +37,12 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
       ref.read(adminDashboardRepositoryProvider);
 
   @override
-  Future<AdminDashboardSnapshot> build() => _repo.fetchSnapshot();
+  Future<AdminDashboardSnapshot> build() async {
+    // Watch authStateProvider so the dashboard invalidates and fetches
+    // fresh data when switching accounts.
+    ref.watch(authStateProvider);
+    return _repo.fetchSnapshot();
+  }
 
   /// Pull-to-refresh / retry-after-error.
   Future<void> refresh() async {

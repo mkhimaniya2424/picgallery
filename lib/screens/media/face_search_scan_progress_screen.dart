@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +10,7 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../providers/face_search_provider.dart';
 
 class FaceSearchScanProgressScreen extends ConsumerStatefulWidget {
-  final File file;
+  final XFile file;
 
   const FaceSearchScanProgressScreen({super.key, required this.file});
 

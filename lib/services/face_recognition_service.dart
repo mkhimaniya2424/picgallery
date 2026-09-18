@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' as http_parser;
@@ -55,7 +55,7 @@ class FaceSearchApiService {
   /// backend's auto-picked largest one. [threshold] overrides the
   /// backend's default `FACE_MATCH_THRESHOLD` for this one call.
   Future<FaceSearchApiResponse> searchMyLibrary({
-    required File selfie,
+    required XFile selfie,
     String? albumId,
     String? folderId,
     int? faceIndex,
@@ -78,7 +78,7 @@ class FaceSearchApiService {
   /// if the studio protected the link with one.
   Future<FaceSearchApiResponse> searchSharedGallery({
     required String token,
-    required File selfie,
+    required XFile selfie,
     String? password,
     int? faceIndex,
   }) {
@@ -93,7 +93,7 @@ class FaceSearchApiService {
 
   /// "Find my photos" for a client searching across all their active shared albums.
   Future<FaceSearchApiResponse> searchClientGallery({
-    required File selfie,
+    required XFile selfie,
     int? faceIndex,
     double? threshold,
   }) {
@@ -106,7 +106,7 @@ class FaceSearchApiService {
     return _post(path, selfie, withAuth: true);
   }
 
-  Future<FaceSearchApiResponse> _post(String path, File selfie,
+  Future<FaceSearchApiResponse> _post(String path, XFile selfie,
       {required bool withAuth}) async {
     final uri = Uri.parse('${_apiClient.baseUrl}$path');
     final request = http.MultipartRequest('POST', uri);
@@ -119,8 +119,8 @@ class FaceSearchApiService {
     }
 
     final bytes = await selfie.readAsBytes();
-    final fileName = selfie.uri.pathSegments.isNotEmpty
-        ? selfie.uri.pathSegments.last
+    final fileName = selfie.name.isNotEmpty
+        ? selfie.name
         : 'selfie.jpg';
     request.files.add(
       http.MultipartFile.fromBytes(

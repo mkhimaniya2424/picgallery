@@ -336,6 +336,7 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
+                                          duration: const Duration(seconds: 4),
                                           content: const Text('Item deleted'),
                                           backgroundColor: AppColors.success,
                                           behavior: SnackBarBehavior.floating,
@@ -387,6 +388,7 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                               ScaffoldMessenger.of(context).clearSnackBars();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
+                                  duration: const Duration(seconds: 4),
                                   content: const Text('History cleared'),
                                   backgroundColor: AppColors.success,
                                   behavior: SnackBarBehavior.floating,

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/face_search_result_model.dart';
 import '../services/face_recognition_service.dart';
@@ -12,7 +12,7 @@ import '../services/face_recognition_service.dart';
 abstract class FaceRepository {
   /// Searches the current studio's own library.
   Future<FaceSearchApiResponse> searchMyLibrary({
-    required File selfie,
+    required XFile selfie,
     String? albumId,
     String? folderId,
     int? faceIndex,
@@ -21,14 +21,14 @@ abstract class FaceRepository {
   /// "Find my photos" within one publicly shared album — no login.
   Future<FaceSearchApiResponse> searchSharedGallery({
     required String token,
-    required File selfie,
+    required XFile selfie,
     String? password,
     int? faceIndex,
   });
 
   /// "Find my photos" across all active shared albums for the logged-in client.
   Future<FaceSearchApiResponse> searchClientGallery({
-    required File selfie,
+    required XFile selfie,
     int? faceIndex,
   });
 }
@@ -41,7 +41,7 @@ class ApiFaceRepository implements FaceRepository {
 
   @override
   Future<FaceSearchApiResponse> searchMyLibrary({
-    required File selfie,
+    required XFile selfie,
     String? albumId,
     String? folderId,
     int? faceIndex,
@@ -57,7 +57,7 @@ class ApiFaceRepository implements FaceRepository {
   @override
   Future<FaceSearchApiResponse> searchSharedGallery({
     required String token,
-    required File selfie,
+    required XFile selfie,
     String? password,
     int? faceIndex,
   }) {
@@ -71,7 +71,7 @@ class ApiFaceRepository implements FaceRepository {
 
   @override
   Future<FaceSearchApiResponse> searchClientGallery({
-    required File selfie,
+    required XFile selfie,
     int? faceIndex,
   }) {
     return _service.searchClientGallery(

@@ -25,68 +25,78 @@ class AdminBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.14),
-                blurRadius: 24,
-                offset: const Offset(0, 10)),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(_items.length, (i) {
-            final selected = i == currentIndex;
-            final item = _items[i];
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => onTap(i),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: AppDurations.fast,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    gradient: selected ? AppColors.buttonGradient : null,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(item.icon,
-                          size: 20,
-                          color: selected
-                              ? Colors.white
-                              : (isDark
-                                  ? AppColors.subtitleOnDark
-                                  : AppColors.subtitle)),
-                      if (selected) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          item.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10.5),
+    return SafeArea(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  boxShadow: [
+                    BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.14),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(_items.length, (i) {
+                    final selected = i == currentIndex;
+                    final item = _items[i];
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => onTap(i),
+                        behavior: HitTestBehavior.opaque,
+                        child: AnimatedContainer(
+                          duration: AppDurations.fast,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: selected ? AppColors.buttonGradient : null,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(item.icon,
+                                  size: 20,
+                                  color: selected
+                                      ? Colors.white
+                                      : (isDark
+                                          ? AppColors.subtitleOnDark
+                                          : AppColors.subtitle)),
+                              if (selected) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  item.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10.5),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
-                      ],
-                    ],
-                  ),
+                      ),
+                    );
+                  }),
                 ),
               ),
-            );
-          }),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

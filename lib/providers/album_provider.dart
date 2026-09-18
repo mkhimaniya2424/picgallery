@@ -6,7 +6,9 @@ import '../core/utils/validators.dart';
 import '../models/album_model.dart';
 import '../models/stats_models.dart';
 import '../repositories/album_repository.dart';
-import 'auth_providers.dart';
+import 'auth_providers.dart'
+    show apiClientProvider, AuthState, authStateProvider;
+import 'admin_dashboard_providers.dart';
 import 'folder_provider.dart';
 import 'media_provider.dart';
 
@@ -295,6 +297,9 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
     final next = current.copyWith(allAlbums: nextAlbums, lastError: null);
     state = AsyncValue.data(next);
     _syncFolderCounts(nextAlbums);
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
     return created;
   }
 
@@ -366,6 +371,9 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
     state = AsyncValue.data(next);
     _syncFolderCounts(nextAlbums);
     _syncMedia();
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   void _syncMedia() {

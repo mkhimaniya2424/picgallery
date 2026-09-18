@@ -5,9 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
 import '../repositories/media_repository.dart';
-import '../providers/auth_providers.dart';
 import '../providers/album_provider.dart';
+import '../providers/auth_providers.dart';
 import '../providers/media_provider.dart';
+import '../providers/admin_dashboard_providers.dart';
 import '../services/media_picker_service.dart' show MediaContentType;
 import '../storage/upload_queue_local_store.dart';
 
@@ -168,6 +169,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     } catch (_) {
       // albumProvider not ready (e.g. isolated tests) — safe to ignore.
     }
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   // Wizard transitions

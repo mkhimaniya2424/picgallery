@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -58,17 +59,30 @@ class _EditedImageState extends State<EditedImage> {
 
   Future<void> _loadImage() async {
     final filePath = widget.media.displayPath;
-    if (widget.media.isDisplayPathNetwork) {
+    
+    // For network paths (or if compiling for web), use NetworkImage which is cross-platform.
+    if (kIsWeb || widget.media.isDisplayPathNetwork) {
       try {
-        final client = HttpClient();
-        final request = await client.getUrl(Uri.parse(filePath));
-        final response = await request.close();
-        final bytes = await consolidateHttpClientResponseBytes(response);
-        final codec = await ui.instantiateImageCodec(bytes);
-        final frame = await codec.getNextFrame();
+        final ImageStream stream =
+            NetworkImage(filePath).resolve(ImageConfiguration.empty);
+        final Completer<ui.Image> completer = Completer<ui.Image>();
+        late ImageStreamListener listener;
+        listener = ImageStreamListener(
+          (ImageInfo info, bool _) {
+            if (!completer.isCompleted) completer.complete(info.image);
+            stream.removeListener(listener);
+          },
+          onError: (Object error, StackTrace? stackTrace) {
+            if (!completer.isCompleted) completer.completeError(error);
+            stream.removeListener(listener);
+          },
+        );
+        stream.addListener(listener);
+        final image = await completer.future;
+
         if (mounted) {
           setState(() {
-            _image = frame.image;
+            _image = image;
             _error = false;
             _loading = false;
           });
@@ -86,34 +100,37 @@ class _EditedImageState extends State<EditedImage> {
       }
     }
 
-    final file = _getSourceFile();
-    if (!file.existsSync()) {
-      if (mounted) {
-        setState(() {
-          _error = true;
-          _loading = false;
-        });
+    // Only hit dart:io on non-web platforms with local paths
+    if (!kIsWeb) {
+      final file = _getSourceFile();
+      if (!file.existsSync()) {
+        if (mounted) {
+          setState(() {
+            _error = true;
+            _loading = false;
+          });
+        }
+        return;
       }
-      return;
-    }
-    try {
-      final bytes = await file.readAsBytes();
-      final codec = await ui.instantiateImageCodec(bytes);
-      final frame = await codec.getNextFrame();
-      if (mounted) {
-        setState(() {
-          _image = frame.image;
-          _error = false;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading image in EditedImage: $e');
-      if (mounted) {
-        setState(() {
-          _error = true;
-          _loading = false;
-        });
+      try {
+        final bytes = await file.readAsBytes();
+        final codec = await ui.instantiateImageCodec(bytes);
+        final frame = await codec.getNextFrame();
+        if (mounted) {
+          setState(() {
+            _image = frame.image;
+            _error = false;
+            _loading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading image in EditedImage: $e');
+        if (mounted) {
+          setState(() {
+            _error = true;
+            _loading = false;
+          });
+        }
       }
     }
   }
@@ -131,6 +148,24 @@ class _EditedImageState extends State<EditedImage> {
     }
 
     if (_error || _image == null) {
+      if (kIsWeb && widget.media.isDisplayPathNetwork) {
+        return Image.network(
+          widget.media.displayPath,
+          width: widget.width,
+          height: widget.height,
+          fit: widget.fit,
+          errorBuilder: (context, error, stackTrace) {
+            return SizedBox(
+              width: widget.width,
+              height: widget.height,
+              child: const Center(
+                child: Icon(Icons.image_not_supported_rounded,
+                    size: 48, color: Colors.white60),
+              ),
+            );
+          },
+        );
+      }
       return SizedBox(
         width: widget.width,
         height: widget.height,

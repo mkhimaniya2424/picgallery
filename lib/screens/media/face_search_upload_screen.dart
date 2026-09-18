@@ -56,7 +56,7 @@ class _FaceSearchUploadScreenState extends State<FaceSearchUploadScreen> {
     if (_pickedFile == null) return;
     Navigator.of(context).pushNamed(
       AppRoutes.faceSearchScanProgressPlaceholder,
-      arguments: File(_pickedFile!.path),
+      arguments: _pickedFile,
     );
   }
 

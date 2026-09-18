@@ -409,7 +409,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildCoverImage(coverMedia, data.album?.gradientArgb ?? []),
+                  _buildCoverImage(coverMedia, data.album?.gradientArgb ?? const [0xFF7C5CFF, 0xFFA855F7, 0xFFEC4899]),
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -485,7 +485,9 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          '${albumMedia.length} Photos & Videos',
+                          (data.albums != null && data.albums!.isNotEmpty)
+                              ? '${data.albums!.length} Albums'
+                              : '${albumMedia.length} Photos & Videos',
                           style: TextStyle(
                               color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle),
                               fontSize: 10,
@@ -496,7 +498,9 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Welcome to your proofing gallery. Tap any image to review details, zoom, or playback video.',
+                    (data.albums != null && data.albums!.isNotEmpty)
+                        ? 'Welcome to your collection. Tap any album to view its gallery.'
+                        : 'Welcome to your proofing gallery. Tap any image to review details, zoom, or playback video.',
                     style: TextStyle(
                         color: (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : AppColors.subtitle), fontSize: 12, height: 1.4),
                   ),
@@ -526,16 +530,25 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                     ),
                   ),
                 )
-              : albumMedia.isEmpty
+              : (data.collection != null)
                   ? const SliverFillRemaining(
                       child: Center(
                         child: EmptyStateCard(
-                          icon: Icons.photo_library_outlined,
-                          message: 'This shared gallery contains no photos.',
+                          icon: Icons.photo_album_outlined,
+                          message: 'This collection contains no albums.',
                         ),
                       ),
                     )
-                  : SliverPadding(
+                  : albumMedia.isEmpty
+                      ? const SliverFillRemaining(
+                          child: Center(
+                            child: EmptyStateCard(
+                              icon: Icons.photo_library_outlined,
+                              message: 'This shared gallery contains no photos.',
+                            ),
+                          ),
+                        )
+                      : SliverPadding(
                   padding: EdgeInsets.all(AppSpacing.md),
                   sliver: SliverGrid(
                     gridDelegate:
@@ -627,10 +640,13 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
 
   Widget _buildCoverImage(MediaModel? media, List<int> fallbackGradient) {
     if (media == null) {
+      final colors = fallbackGradient.length >= 2 
+          ? fallbackGradient.map((c) => Color(c)).toList()
+          : const [Color(0xFF2C3E50), Color(0xFF000000)];
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF2C3E50), Color(0xFF000000)],
+            colors: colors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -820,7 +836,16 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
           );
         }
       },
-      onLongPress: () => _toggleSelection(m.id),
+      behavior: HitTestBehavior.opaque,
+      onLongPress: () {
+        if (!allowDownload) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Downloads are disabled for this gallery.')),
+          );
+          return;
+        }
+        _toggleSelection(m.id);
+      },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: Stack(

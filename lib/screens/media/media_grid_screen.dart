@@ -423,6 +423,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
+        duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -627,6 +628,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
+        duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

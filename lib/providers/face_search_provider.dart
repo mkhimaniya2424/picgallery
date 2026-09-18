@@ -27,7 +27,7 @@ enum FaceSearchMode { myLibrary, sharedGallery, clientGallery }
 
 class FaceSearchState {
   final FaceSearchMode mode;
-  final File? selectedSelfie;
+  final XFile? selectedSelfie;
   final bool isProcessing;
   final String statusMessage;
 
@@ -68,7 +68,7 @@ class FaceSearchState {
 
   FaceSearchState copyWith({
     FaceSearchMode? mode,
-    File? selectedSelfie,
+    XFile? selectedSelfie,
     bool? isProcessing,
     String? statusMessage,
     List<DetectedFaceModel>? detectedFaces,
@@ -164,7 +164,7 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
         return false;
       }
 
-      return await selectSelfieFile(File(file.path));
+      return await selectSelfieFile(file);
     } catch (e) {
       state = state.copyWith(
           isProcessing: false, error: 'Failed to pick image: ${e.toString()}');
@@ -176,7 +176,7 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
   /// immediately searches using the largest one. Sets
   /// [FaceSearchState.detectedFaces] so the UI can offer
   /// [searchWithFaceIndex] when more than one face was found.
-  Future<bool> selectSelfieFile(File file) async {
+  Future<bool> selectSelfieFile(XFile file) async {
     state = state.copyWith(
       selectedSelfie: file,
       isProcessing: true,
@@ -201,7 +201,7 @@ class FaceSearchNotifier extends Notifier<FaceSearchState> {
     return _runSearch(selfie, faceIndex: faceIndex);
   }
 
-  Future<bool> _runSearch(File selfie, {required int? faceIndex}) async {
+  Future<bool> _runSearch(XFile selfie, {required int? faceIndex}) async {
     try {
       final FaceSearchApiResponse response;
       if (state.mode == FaceSearchMode.sharedGallery) {

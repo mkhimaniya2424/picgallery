@@ -445,8 +445,8 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: albumState.filteredAlbums.length,
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 300,
                           mainAxisSpacing: AppSpacing.md,
                           crossAxisSpacing: AppSpacing.md,
                           childAspectRatio: 0.68,

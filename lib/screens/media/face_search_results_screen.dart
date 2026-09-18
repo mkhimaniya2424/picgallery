@@ -88,8 +88,8 @@ class FaceSearchResultsScreen extends ConsumerWidget {
   Widget _buildGrid(BuildContext context, List<MediaModel> mediaList) {
     return GridView.builder(
       padding: EdgeInsets.all(4),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 250,
         crossAxisSpacing: 4,
         mainAxisSpacing: 4,
         childAspectRatio: 1.0,

@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../screens/splash/splash_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
@@ -424,7 +424,7 @@ class AppRoutes {
         return _slide(const FaceSearchUploadScreen());
       case faceSearchScanProgressPlaceholder:
         return _slide(
-            FaceSearchScanProgressScreen(file: settings.arguments as File));
+            FaceSearchScanProgressScreen(file: settings.arguments as XFile));
       case faceSearchResults:
         return _slide(const FaceSearchResultsScreen());
 

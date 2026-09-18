@@ -16,6 +16,10 @@ import '../../widgets/common/inline_error_banner.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/media/media_comments_section.dart';
 import '../../widgets/media/media_thumb_badges.dart';
+import '../../services/download_service_impl.dart';
+import '../../services/media_file_cache.dart';
+import '../../providers/auth_providers.dart' show apiClientProvider;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Full photo-by-photo browser for a single album inside a studio's Shared
 /// Gallery.
@@ -43,6 +47,24 @@ class _SharedAlbumPreviewScreenState
   List<MediaModel> _mediaList = [];
   bool _isLoading = true;
   String? _error;
+
+  final Set<String> _selectedIds = {};
+
+  bool get _isSelectionMode => _selectedIds.isNotEmpty;
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() => _selectedIds.clear());
+  }
 
   @override
   void initState() {
@@ -180,6 +202,53 @@ class _SharedAlbumPreviewScreenState
           child: _buildBody(),
         ),
       ),
+      floatingActionButton: _isSelectionMode
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final ids = _selectedIds.toList(growable: false);
+                _clearSelection();
+                if (ids.isEmpty) return;
+
+                final apiClient = ref.read(apiClientProvider);
+                const cache = MediaFileCache();
+                const downloadService = DownloadServiceImpl();
+
+                for (final id in ids) {
+                  final m = _mediaList.firstWhere((x) => x.id == id,
+                      orElse: () => _mediaList.first);
+                  if (m.id != id) continue;
+
+                  if (kIsWeb) {
+                    final result = await cache.bytesFor(m);
+                    if (result == null) continue;
+                    if (!context.mounted) continue;
+                    await downloadService.downloadBytes(
+                      context: context,
+                      bytes: result.bytes,
+                      fileName: result.fileName,
+                      mediaId: m.id,
+                      apiClient: apiClient,
+                      isClientUser: true,
+                    );
+                  } else {
+                    final filePath = await cache.localPathFor(m);
+                    if (filePath == null) continue;
+                    if (!context.mounted) continue;
+                    await downloadService.downloadOriginal(
+                      context: context,
+                      filePath: filePath,
+                      mediaId: m.id,
+                      apiClient: apiClient,
+                      isClientUser: true,
+                    );
+                  }
+                }
+              },
+              icon: Icon(Icons.download_rounded),
+              label: Text('Download ${_selectedIds.length} items'),
+              backgroundColor: AppColors.primary,
+            )
+          : null,
     );
   }
 
@@ -256,7 +325,15 @@ class _SharedAlbumPreviewScreenState
         final likeState =
             ref.watch(mediaLikesCommentsProvider).likeStateFor(media.id);
         return GestureDetector(
-          onTap: () => _openMedia(index),
+          behavior: HitTestBehavior.opaque,
+          onLongPress: () => _toggleSelection(media.id),
+          onTap: () {
+            if (_isSelectionMode) {
+              _toggleSelection(media.id);
+              return;
+            }
+            _openMedia(index);
+          },
           child: Hero(
             tag: 'shared_media_${media.id}',
             child: Container(
@@ -351,6 +428,16 @@ class _SharedAlbumPreviewScreenState
                       ],
                     ),
                   ),
+                  if (_selectedIds.contains(media.id))
+                    Positioned.fill(
+                      child: Container(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        alignment: Alignment.topLeft,
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.check_circle_rounded,
+                            color: Colors.white),
+                      ),
+                    ),
                 ],
               ),
             ),
