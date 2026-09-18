@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/gallery_collection_model.dart';
 import '../repositories/collection_repository.dart';
+import 'admin_dashboard_providers.dart';
 import 'auth_providers.dart' show apiClientProvider;
 
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
@@ -24,16 +25,19 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 final galleryCollectionsProvider =
     ChangeNotifierProvider<GalleryCollectionsController>((ref) {
   final controller = GalleryCollectionsController(
-      repo: ref.watch(collectionRepositoryProvider));
+      repo: ref.watch(collectionRepositoryProvider), ref: ref);
   controller.load();
   return controller;
 });
 
 class GalleryCollectionsController extends ChangeNotifier {
-  GalleryCollectionsController({required CollectionRepository repo})
-      : _repo = repo;
+  GalleryCollectionsController(
+      {required CollectionRepository repo, required Ref ref})
+      : _repo = repo,
+        _ref = ref;
 
   final CollectionRepository _repo;
+  final Ref _ref;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -91,6 +95,9 @@ class GalleryCollectionsController extends ChangeNotifier {
         ..addAll(_sortCollections(refreshed));
       _lastError = null;
       notifyListeners();
+      try {
+        _ref.read(adminDashboardProvider.notifier).refresh();
+      } catch (_) {}
     } catch (e) {
       _lastError = e.toString();
       notifyListeners();
@@ -127,6 +134,9 @@ class GalleryCollectionsController extends ChangeNotifier {
       _collections.removeWhere((c) => c.id == collectionId);
       _lastError = null;
       notifyListeners();
+      try {
+        _ref.read(adminDashboardProvider.notifier).refresh();
+      } catch (_) {}
     } catch (e) {
       _lastError = e.toString();
       notifyListeners();

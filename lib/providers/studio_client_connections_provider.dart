@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/studio_client_connection_model.dart';
 import '../repositories/connections_repository.dart';
+import 'admin_dashboard_providers.dart';
 import 'auth_providers.dart';
 
 /// Talks to the real backend (`app/api/routes/connections.py`) via
@@ -102,6 +103,9 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
   Future<void> studioInviteClient(String clientId) async {
     final connection = await _repo.inviteClient(clientId);
     _upsert(connection);
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   /// Accepts a pending connection — works for either direction (a
@@ -112,6 +116,9 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
   Future<void> _accept(String id) async {
     final connection = await _repo.acceptConnection(id);
     _upsert(connection);
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   /// Declines a pending connection — same "works for either direction"
@@ -119,6 +126,9 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
   Future<void> _decline(String id) async {
     final connection = await _repo.declineConnection(id);
     _upsert(connection);
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   /// Removes an accepted connection from the server and local state.
@@ -126,6 +136,9 @@ class ConnectionsNotifier extends AsyncNotifier<List<StudioClientConnection>> {
     await _repo.removeConnection(id);
     final current = state.valueOrNull ?? [];
     state = AsyncData(current.where((c) => c.id != id).toList());
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   /// Studio approves a client-initiated connection request.

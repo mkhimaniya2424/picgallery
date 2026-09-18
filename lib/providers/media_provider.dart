@@ -8,6 +8,7 @@ import '../repositories/api_media_repository.dart';
 import '../repositories/caching_media_repository.dart';
 import '../storage/media_ui_filters_local_store.dart';
 import 'album_provider.dart';
+import 'admin_dashboard_providers.dart';
 import 'auth_providers.dart'
     show apiClientProvider, AuthState, authStateProvider, authProvider;
 
@@ -234,12 +235,16 @@ class MediaListController extends ChangeNotifier {
     if (_isLoading) return;
     _isLoading = true;
     _lastError = null;
-    notifyListeners();
+    // We intentionally do not call notifyListeners() here to avoid
+    // flashing the screen to a loading state when a background refresh
+    // happens (e.g. from the upload queue).
+    // The UI will still show the old data until the new data arrives.
     try {
       await _loadUiStateIfNeeded();
       final media = await _repo.fetchMedia(
         likedByClientId: _likedByClientId,
       );
+
       _allMedia
         ..clear()
         ..addAll(media);
@@ -398,8 +403,23 @@ class MediaListController extends ChangeNotifier {
     }
   }
 
+  /// Locally inserts or updates a media model into the in-memory list and notifies
+  /// listeners without making an API request. This is used by the upload queue
+  /// to instantly show new media without waiting for a full [load] round trip or
+  /// risking the request being dropped due to `_isLoading`.
+  void insertMediaLocally(MediaModel media) {
+    final idx = _allMedia.indexWhere((m) => m.id == media.id);
+    if (idx == -1) {
+      _allMedia.insert(0, media);
+    } else {
+      _allMedia[idx] = media;
+    }
+    notifyListeners();
+  }
+
   // ---------------------------------------------------------------------
   // Photo editor (Task 21) — API-aware save/overwrite/revert.
+
   //
   // Unlike [addMedia] (which goes through [MediaRepository.createMedia],
   // unsupported for API-backed media), these three go through
@@ -500,6 +520,9 @@ class MediaListController extends ChangeNotifier {
     }
     clearSelection();
     notifyListeners();
+    try {
+      _ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   /// Restores previously soft-deleted items.
@@ -528,6 +551,9 @@ class MediaListController extends ChangeNotifier {
     // Ensure selection doesn't remain from the delete action.
     clearSelection();
     notifyListeners();
+    try {
+      _ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   /// Renames a media item by id while preserving its extension.

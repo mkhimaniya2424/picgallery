@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/app_exceptions.dart';
 import '../core/utils/validators.dart';
 import '../models/album_model.dart';
+
 import '../models/stats_models.dart';
 import '../repositories/album_repository.dart';
-import 'auth_providers.dart'
-    show apiClientProvider, AuthState, authStateProvider;
 import 'admin_dashboard_providers.dart';
+import 'auth_providers.dart'
+    show apiClientProvider, AuthState, authStateProvider, authProvider;
 import 'folder_provider.dart';
 import 'media_provider.dart';
 
@@ -355,6 +356,10 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
     if (folderId != null || clearFolder) {
       _syncFolderCounts(nextAlbums);
     }
+
+    try {
+      ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
 
     return saved;
   }

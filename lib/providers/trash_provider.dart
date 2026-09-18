@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/media_model.dart';
 import '../repositories/media_repository.dart';
+import 'admin_dashboard_providers.dart';
 import 'media_provider.dart';
 
 final trashProvider =
@@ -30,15 +31,24 @@ class TrashNotifier extends StateNotifier<List<MediaModel>> {
     await _repo.updateMedia(restored);
     await load();
     await _ref.read(mediaProvider).load();
+    try {
+      _ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   Future<void> deletePermanently(String id) async {
     await _repo.permanentlyDeleteMedia(id);
     await load();
+    try {
+      _ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 
   Future<void> emptyTrash() async {
     await _repo.emptyTrash();
-    state = [];
+    await load();
+    try {
+      _ref.read(adminDashboardProvider.notifier).refresh();
+    } catch (_) {}
   }
 }

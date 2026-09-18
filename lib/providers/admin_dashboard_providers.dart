@@ -46,9 +46,18 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboardSnapshot> {
 
   /// Pull-to-refresh / retry-after-error.
   Future<void> refresh() async {
-    state =
-        const AsyncLoading<AdminDashboardSnapshot>().copyWithPrevious(state);
-    state = await AsyncValue.guard(_repo.fetchSnapshot);
+    final current = state.valueOrNull;
+    if (current != null) {
+      try {
+        final newData = await _repo.fetchSnapshot();
+        state = AsyncData(newData);
+      } catch (e, st) {
+        state = AsyncError(e, st);
+      }
+    } else {
+      state = const AsyncLoading<AdminDashboardSnapshot>().copyWithPrevious(state);
+      state = await AsyncValue.guard(_repo.fetchSnapshot);
+    }
   }
 
   /// These three mutations update `state` in place (optimistic, rolled

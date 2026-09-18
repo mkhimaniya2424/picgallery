@@ -375,7 +375,6 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
                 if (upload.albumId == null) {
                   Navigator.of(context).pushNamed(
                     AppRoutes.media,
-                    arguments: const MediaSearchArgs(unfiledOnly: true),
                   );
                 } else {
                   Navigator.of(context).pushNamed(

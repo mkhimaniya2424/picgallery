@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
 import '../repositories/media_repository.dart';
+import '../models/media_model.dart';
+import '../models/user.dart';
 import '../providers/album_provider.dart';
 import '../providers/auth_providers.dart';
 import '../providers/media_provider.dart';
@@ -153,10 +155,10 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     }
   }
 
-  Future<void> _refreshMediaGrid() async {
+  Future<void> _refreshMediaGrid(MediaModel media) async {
     try {
       final controller = ref.read(mediaProvider);
-      await controller.load();
+      controller.insertMediaLocally(media);
     } catch (_) {
       // ignore if provider not fully setup in test
     }
@@ -529,7 +531,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         forceCompress: forceCompress,
       );
 
-      await _mediaRepo.uploadMedia(
+      final media = await _mediaRepo.uploadMedia(
         bytes: preparedBytes,
         fileName: job.fileName,
         contentType: contentType,
@@ -537,7 +539,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         folderId: job.folderId,
         onSendProgress: (sent, total) => _onRealProgress(job.id, sent, total),
       );
-      await _onRealSuccess(job.id);
+      await _onRealSuccess(job.id, media);
     } on ApiException catch (e) {
       // `MediaUploadService`/`ApiClient` both use statusCode 0 specifically
       // for "never reached the server" — DNS failure, connection refused,
@@ -581,7 +583,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
   }
 
-  Future<void> _onRealSuccess(String jobId) async {
+  Future<void> _onRealSuccess(String jobId, MediaModel media) async {
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
@@ -615,7 +617,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
     // Auto-refresh the Gallery provider — a real row now exists
     // server-side for this job.
-    await _refreshMediaGrid();
+    await _refreshMediaGrid(media);
   }
 
   Future<void> _onRealFailure(String jobId, String message,
