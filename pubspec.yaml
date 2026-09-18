@@ -67,9 +67,9 @@ dependencies:
   # wired into services/permission_service.dart and the onboarding
   # permission screens.
   permission_handler: ^13.0.1
-  firebase_core: ^4.14.0
+  firebase_core: ^4.15.0
   firebase_auth: ^6.7.0
-  firebase_messaging: ^16.5.0
+  firebase_messaging: ^16.7.0
   # Reads the real installed app version + build number from the
   # platform at runtime (used by providers/app_info_provider.dart so
   # About screens/drawers never show a stale hardcoded version string).
