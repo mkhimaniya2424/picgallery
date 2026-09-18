@@ -42,62 +42,74 @@ class CustomBottomNav extends StatelessWidget {
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(
-              color: isDark ? AppColors.darkBorder : AppColors.border),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.14),
-                blurRadius: 24,
-                offset: const Offset(0, 10)),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(_items.length, (i) {
-            final selected = i == currentIndex;
-            final item = _items[i];
-            return GestureDetector(
-              onTap: () => onTap(i),
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: AppDurations.fast,
-                padding: EdgeInsets.symmetric(
-                    horizontal: selected ? 18 : 12, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: selected ? AppColors.buttonGradient : null,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                ),
-                child: Row(
-                  children: [
-                    Icon(item.icon,
-                        size: 20,
-                        color: selected
-                            ? Colors.white
-                            : (isDark
-                                ? AppColors.subtitleOnDark
-                                : AppColors.subtitle)),
-                    if (selected) ...[
-                      const SizedBox(width: 8),
-                      Text(getLabel(i),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13)),
+    return SafeArea(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurfaceRaised : Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(
+                        color: isDark ? AppColors.darkBorder : AppColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.14),
+                          blurRadius: 24,
+                          offset: const Offset(0, 10)),
                     ],
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(_items.length, (i) {
+                      final selected = i == currentIndex;
+                      final item = _items[i];
+                      return GestureDetector(
+                        onTap: () => onTap(i),
+                        behavior: HitTestBehavior.opaque,
+                        child: AnimatedContainer(
+                          duration: AppDurations.fast,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: selected ? 18 : 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: selected ? AppColors.buttonGradient : null,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(item.icon,
+                                  size: 20,
+                                  color: selected
+                                      ? Colors.white
+                                      : (isDark
+                                          ? AppColors.subtitleOnDark
+                                          : AppColors.subtitle)),
+                              if (selected) ...[
+                                const SizedBox(width: 8),
+                                Text(getLabel(i),
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13)),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ),
               ),
-            );
-          }),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
