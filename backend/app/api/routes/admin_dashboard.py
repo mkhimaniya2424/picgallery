@@ -250,6 +250,13 @@ def get_analytics(
                 values=clients_by_month,
                 gradient=[0xFFF59E0B, 0xFF7C5CFF],
                 isBar=False
+            ),
+            AnalyticsSeriesRead(
+                title="Gallery Views",
+                subtitle="Trend unavailable",
+                values=[0, 0, 0, 0, 0, 0, 0],
+                gradient=[0xFF10B981, 0xFF34D399],
+                isBar=False
             )
         ]
     )

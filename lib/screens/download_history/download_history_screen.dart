@@ -333,10 +333,10 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                                       if (!context.mounted) return;
                                       ScaffoldMessenger.of(context)
                                           .clearSnackBars();
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      final messenger = ScaffoldMessenger.of(context);
+                                      messenger.showSnackBar(
                                         SnackBar(
-                                          duration: const Duration(seconds: 4),
+                                          duration: const Duration(seconds: 3),
                                           content: const Text('Item deleted'),
                                           backgroundColor: AppColors.success,
                                           behavior: SnackBarBehavior.floating,
@@ -349,6 +349,9 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                                           ),
                                         ),
                                       );
+                                      Future.delayed(const Duration(seconds: 3), () {
+                                        messenger.hideCurrentSnackBar();
+                                      });
                                     }
                                   },
                                 ),
@@ -386,9 +389,10 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                               await controller.clearAll();
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).clearSnackBars();
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              final messenger = ScaffoldMessenger.of(context);
+                              messenger.showSnackBar(
                                 SnackBar(
-                                  duration: const Duration(seconds: 4),
+                                  duration: const Duration(seconds: 3),
                                   content: const Text('History cleared'),
                                   backgroundColor: AppColors.success,
                                   behavior: SnackBarBehavior.floating,
@@ -399,6 +403,9 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                                   ),
                                 ),
                               );
+                              Future.delayed(const Duration(seconds: 3), () {
+                                messenger.hideCurrentSnackBar();
+                              });
                             }
                           },
                     icon: const Icon(Icons.delete_sweep_rounded),

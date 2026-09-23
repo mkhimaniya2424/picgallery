@@ -416,6 +416,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         // attribution that the DownloadEvent table does support per connected client.
         final totalDownloads = snapshot.totalGalleryDownloads;
 
+        final downloadsSeries = _findSeries(snapshot, 'Downloads');
+
         return CustomScrollView(
           key: const PageStorageKey('DownloadsTab'),
           slivers: [
@@ -427,11 +429,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                     title: 'Total Downloads',
                     value: '$totalDownloads',
                     gradient: const [Color(0xFFEC4899), Color(0xFFF472B6)],
+                    trendSeries: downloadsSeries,
                   ),
                   SizedBox(height: AppSpacing.lg),
-                  const EmptyStateCard(
-                      icon: Icons.show_chart_rounded,
-                      message: 'No downloads trend data yet'),
+                  Center(
+                    child: downloadsSeries != null
+                        ? AnalyticsChartCard(series: downloadsSeries)
+                        : const EmptyStateCard(
+                            icon: Icons.show_chart_rounded,
+                            message: 'No downloads trend data yet'),
+                  ),
                   SizedBox(height: AppSpacing.lg),
                   Text(
                     'Clients by Downloads',
