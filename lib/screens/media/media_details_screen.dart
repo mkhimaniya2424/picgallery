@@ -220,31 +220,109 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, MediaModel media) async {
-    final confirmed = await showDialog<bool>(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Delete media?'),
-        content: Text('This removes the media from your library.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel'),
-          ),
-          FilledButton.tonal(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Delete'),
-          ),
-        ],
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            Container(
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.delete_rounded, color: AppColors.error, size: 30),
+            ),
+            const SizedBox(height: 16),
+            Text('Delete Photo?',
+                style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.textOnDark : AppColors.text)),
+            const SizedBox(height: 8),
+            Text('This photo will be moved to trash.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.delete_rounded, color: Colors.white),
+                label: const Text('Delete',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                onPressed: () => Navigator.of(ctx).pop(true),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.border),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text('Cancel',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.textOnDark : AppColors.text)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
     if (confirmed != true) return;
 
     final controller = ref.read(mediaProvider);
+    final backup = [media];
     controller.toggleSelected(media.id);
     await controller.batchDelete();
 
-    if (context.mounted) Navigator.of(context).pop();
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.success,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        content: const Text('Moved to trash',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: Colors.white,
+          onPressed: () async => controller.restoreDeletedMedia(backup),
+        ),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 3), () {
+      messenger.hideCurrentSnackBar();
+    });
   }
 
   @override

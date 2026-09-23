@@ -438,26 +438,10 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   }
 
   Future<void> _confirmDeleteOne(String id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Delete media?'),
-        content: Text(
-            'This removes the media from your library. Undo is available.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel'),
-          ),
-          FilledButton.tonal(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await _showDeleteBottomSheet(
+      count: 1,
+      subtitle: 'This photo will be moved to trash.',
     );
-
     if (confirmed != true || !mounted) return;
 
     final controller = ref.read(mediaProvider);
@@ -470,16 +454,15 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     await controller.batchDelete();
 
     if (!mounted) return;
-
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: Text('Media deleted',
+        content: const Text('Moved to trash',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         action: SnackBarAction(
           label: 'Undo',
@@ -490,6 +473,9 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         ),
       ),
     );
+    Future.delayed(const Duration(seconds: 3), () {
+      messenger.hideCurrentSnackBar();
+    });
   }
 
   Future<void> _renameSelectedItems() async {
@@ -646,24 +632,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     final ids = controller.selectedIds.toList(growable: false);
     if (ids.isEmpty) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Delete selected media?'),
-        content:
-            Text('This will delete ${ids.length} item(s). Undo is available.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel'),
-          ),
-          FilledButton.tonal(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await _showDeleteBottomSheet(
+      count: ids.length,
+      subtitle: ids.length == 1
+          ? 'This photo will be moved to trash.'
+          : '${ids.length} items will be moved to trash.',
     );
 
     if (confirmed != true || !mounted) return;
@@ -680,18 +653,130 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: Text('${ids.length} item(s) deleted',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+            ids.length == 1
+                ? 'Moved to trash'
+                : '${ids.length} items moved to trash',
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
         action: SnackBarAction(
           label: 'Undo',
           textColor: Colors.white,
           onPressed: () async {
             await controller.restoreDeletedMedia(deletedBackup);
           },
+        ),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 3), () {
+      messenger.hideCurrentSnackBar();
+    });
+  }
+
+  /// Shows a modern bottom-sheet delete confirmation.
+  Future<bool?> _showDeleteBottomSheet({
+    required int count,
+    required String subtitle,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            // Red delete icon
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_rounded,
+                  color: AppColors.error, size: 30),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              count == 1 ? 'Delete Photo?' : 'Delete $count Items?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.textOnDark : AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? AppColors.subtitleOnDark : AppColors.subtitle,
+              ),
+            ),
+            const SizedBox(height: 28),
+            // Delete button
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.delete_rounded, color: Colors.white),
+                label: Text(
+                  count == 1 ? 'Delete' : 'Delete $count Items',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(true),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Cancel button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  side: BorderSide(
+                      color: isDark ? AppColors.darkBorder : AppColors.border),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text('Cancel',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDark ? AppColors.textOnDark : AppColors.text)),
+              ),
+            ),
+          ],
         ),
       ),
     );

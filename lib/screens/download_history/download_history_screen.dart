@@ -246,116 +246,132 @@ class _DownloadHistoryScreenState extends ConsumerState<DownloadHistoryScreen> {
                             : 'Video';
 
                         final resolvedMedia = findMedia(item.mediaId);
-
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => openItem(item),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _Thumb(
-                                  thumbnailPath: item.thumbnailPath,
-                                  networkThumbnailUrl:
-                                      item.thumbnailUrl ?? item.fileUrl,
-                                  media: resolvedMedia,
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              item.fileName,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleLarge,
-                                            ),
-                                          ),
-                                          const SizedBox(width: AppSpacing.sm),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: AppSpacing.sm,
-                                              vertical: AppSpacing.xs,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: badgeColor.withValues(
-                                                  alpha: 0.15),
-                                              border:
-                                                  Border.all(color: badgeColor),
-                                              borderRadius:
-                                                  BorderRadius.circular(999),
-                                            ),
-                                            child: Text(
-                                              badgeText,
-                                              style: TextStyle(
-                                                color: badgeColor,
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 12.5,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '${_formatBytes(item.size)} • ${_formatDateTime(item.downloadedAt)}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  icon:
-                                      const Icon(Icons.delete_outline_rounded),
-                                  color: AppColors.error,
+                        return Dismissible(
+                          key: ValueKey(item.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            decoration: BoxDecoration(
+                              color: AppColors.error,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.delete_rounded,
+                                    color: Colors.white, size: 26),
+                                SizedBox(height: 4),
+                                Text('Delete',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                          onDismissed: (_) async {
+                            await controller.deleteOne(item.id);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.showSnackBar(
+                              SnackBar(
+                                duration: const Duration(seconds: 3),
+                                content: const Text('Item deleted'),
+                                backgroundColor: AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                                action: SnackBarAction(
+                                  label: 'Undo',
+                                  textColor: Colors.white,
                                   onPressed: () async {
-                                    final confirmed =
-                                        await showDeleteConfirmationDialog(
-                                      context: context,
-                                      title: 'Delete item?',
-                                      message:
-                                          'Remove "${item.fileName}" from your download history? This cannot be undone.',
-                                    );
-                                    if (!context.mounted) return;
-                                    if (confirmed) {
-                                      await controller.deleteOne(item.id);
-                                      if (!context.mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .clearSnackBars();
-                                      final messenger = ScaffoldMessenger.of(context);
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          duration: const Duration(seconds: 3),
-                                          content: const Text('Item deleted'),
-                                          backgroundColor: AppColors.success,
-                                          behavior: SnackBarBehavior.floating,
-                                          action: SnackBarAction(
-                                            label: 'Undo',
-                                            textColor: Colors.white,
-                                            onPressed: () async {
-                                              await controller.undo();
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                      Future.delayed(const Duration(seconds: 3), () {
-                                        messenger.hideCurrentSnackBar();
-                                      });
-                                    }
+                                    await controller.undo();
                                   },
                                 ),
-                              ],
+                              ),
+                            );
+                            Future.delayed(const Duration(seconds: 3), () {
+                              messenger.hideCurrentSnackBar();
+                            });
+                          },
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => openItem(item),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _Thumb(
+                                    thumbnailPath: item.thumbnailPath,
+                                    networkThumbnailUrl:
+                                        item.thumbnailUrl ?? item.fileUrl,
+                                    media: resolvedMedia,
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                item.fileName,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge,
+                                              ),
+                                            ),
+                                            const SizedBox(width: AppSpacing.sm),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: AppSpacing.sm,
+                                                vertical: AppSpacing.xs,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: badgeColor.withValues(
+                                                    alpha: 0.15),
+                                                border:
+                                                    Border.all(color: badgeColor),
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                badgeText,
+                                                style: TextStyle(
+                                                  color: badgeColor,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 12.5,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '${_formatBytes(item.size)} • ${_formatDateTime(item.downloadedAt)}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Swipe hint icon
+                                  Icon(
+                                    Icons.chevron_left_rounded,
+                                    color: isDark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
