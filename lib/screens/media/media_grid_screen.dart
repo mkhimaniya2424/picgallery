@@ -189,7 +189,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   // the content is already scoped to a single album.
   late _GalleryGroupMode _groupMode;
   final ScrollController _scrollController = ScrollController();
-  int _visibleLimit = 24;
+  int _visibleLimit = 120;
   bool _loadingMore = false;
   int _gridColumns = 4;
 
@@ -348,7 +348,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
   void _resetPagination() {
     setState(() {
-      _visibleLimit = 24;
+      _visibleLimit = 120;
       _loadingMore = false;
     });
   }
@@ -364,7 +364,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     Future.delayed(const Duration(milliseconds: 700), () {
       if (!mounted) return;
       setState(() {
-        _visibleLimit += 24;
+        _visibleLimit += 120;
         _loadingMore = false;
       });
     });
