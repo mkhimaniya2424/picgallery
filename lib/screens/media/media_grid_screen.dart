@@ -183,7 +183,11 @@ enum _GalleryGroupMode { none, date, folder, album }
 class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   _GalleryViewMode _viewMode = _GalleryViewMode.grid;
-  _GalleryGroupMode _groupMode = _GalleryGroupMode.none;
+  // Default to album grouping when no album filter is set — so all
+  // photos appear organized by album. When an albumId IS set (i.e.
+  // "Manage Photos" opened from a specific album), use flat grid since
+  // the content is already scoped to a single album.
+  late _GalleryGroupMode _groupMode;
   final ScrollController _scrollController = ScrollController();
   int _visibleLimit = 24;
   bool _loadingMore = false;
@@ -265,6 +269,13 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   @override
   void initState() {
     super.initState();
+    // When scoped to a specific album, show a date-grouped grid (content is
+    // already album-filtered). When showing all media, default to
+    // album grouping so photos appear organized by album.
+    _groupMode = widget.albumId != null
+        ? _GalleryGroupMode.date
+        : _GalleryGroupMode.album;
+
     _favoriteAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
@@ -1076,17 +1087,28 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         : mapNetworkError(
             ApiException(-1, c.lastError!),
           );
+    // Resolve album name for the title when this screen is scoped to one
+    final scopedAlbumName = widget.albumId == null
+        ? null
+        : ref
+            .read(albumProvider)
+            .allAlbums
+            .cast<AlbumModel?>()
+            .firstWhere((a) => a?.id == widget.albumId, orElse: () => null)
+            ?.name;
+
     return Scaffold(
       appBar: CustomAppBar(
         title: c.isSelectionMode
             ? '${c.selectedIds.length} selected'
             : widget.favoritesOnly
                 ? 'Favorites'
-                : widget.type == MediaType.video
-                    ? 'Videos'
-                    : widget.type == MediaType.photo
-                        ? 'Photos'
-                        : 'Media',
+                : scopedAlbumName ??
+                    (widget.type == MediaType.video
+                        ? 'Videos'
+                        : widget.type == MediaType.photo
+                            ? 'Photos'
+                            : 'All Media'),
         showBack: widget.showBack,
         actions: [
           if (c.isSelectionMode) ...[
@@ -1206,7 +1228,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                             child: Text('Duration')),
                                       ],
                                       onChanged: (val) {
-                                        if (val != null) c.setSortOption(val);
+                                        c.setSortOption(val);
                                       },
                                     ),
                                   ],
@@ -1279,9 +1301,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                               child: Text('Group Album')),
                                         ],
                                         onChanged: (val) {
-                                          if (val != null) {
-                                            setState(() => _groupMode = val);
-                                          }
+                                          setState(() => _groupMode = val);
                                         },
                                       ),
                                     ],
