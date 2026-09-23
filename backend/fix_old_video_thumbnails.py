@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from app.core.database import SessionLocal
+from app.db.session import SessionLocal
 from app.models.media import Media
 from app.core.config import settings
 
