@@ -1,11 +1,11 @@
-"""Generate missing poster-frame thumbnails for previously uploaded videos.
+"""Generate missing poster-frame thumbnails for existing video records.
 
-Run this from the backend directory after installing the backend dependencies:
+Run from the backend directory:
 
-    python fix_old_video_thumbnails.py
+    python -m app.scripts.backfill_video_thumbnails
 
-The script updates only non-deleted video records whose thumbnail is missing
-from the database. It is safe to run more than once.
+The operation is safe to repeat. It processes non-deleted videos whose
+thumbnail is missing from the database or from local storage.
 """
 
 from __future__ import annotations
@@ -13,26 +13,25 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+import app.models  # noqa: F401
 from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.storage import make_video_thumbnail
 from app.db.session import SessionLocal
-# Register all model tables before SQLAlchemy resolves Media's foreign keys.
-import app.models  # noqa: F401
 from app.models.gallery import Media, MediaType
 
-logger = logging.getLogger("fix_old_video_thumbnails")
+logger = logging.getLogger(__name__)
 
 
 def _local_thumbnail_exists(thumbnail_path: str | None) -> bool:
-    if not thumbnail_path:
-        return False
-    return (Path(settings.MEDIA_STORAGE_DIR) / thumbnail_path).is_file()
+    return bool(
+        thumbnail_path
+        and (Path(settings.MEDIA_STORAGE_DIR) / thumbnail_path).is_file()
+    )
 
 
-def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+def backfill() -> int:
     repaired = 0
     skipped = 0
     failed = 0
@@ -40,14 +39,14 @@ def main() -> int:
     with SessionLocal() as db:
         videos = db.execute(
             select(Media)
-            .where(Media.media_type == MediaType.video, Media.is_deleted.is_(False))
+            .where(
+                Media.media_type == MediaType.video,
+                Media.is_deleted.is_(False),
+            )
             .order_by(Media.created_at, Media.id)
         ).scalars()
 
         for media in videos:
-            # R2 objects are addressed by their database key, so a recorded
-            # thumbnail is considered present there. Local storage can verify
-            # the file directly and will repair orphaned database references.
             if media.thumbnail_path and (
                 settings.STORAGE_BACKEND != "local"
                 or _local_thumbnail_exists(media.thumbnail_path)
@@ -63,15 +62,26 @@ def main() -> int:
             )
             if thumbnail_path is None:
                 failed += 1
-                logger.error("Could not generate thumbnail for %s (%s)", media.file_name, media.id)
+                logger.error("Failed to generate thumbnail for %s", media.file_name)
                 continue
 
             media.thumbnail_path = thumbnail_path
             db.commit()
             repaired += 1
+            logger.info("Created %s", thumbnail_path)
 
-    logger.info("Finished: repaired=%d skipped=%d failed=%d", repaired, skipped, failed)
+    logger.info(
+        "Finished video thumbnail backfill: repaired=%d skipped=%d failed=%d",
+        repaired,
+        skipped,
+        failed,
+    )
     return 1 if failed else 0
+
+
+def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    return backfill()
 
 
 if __name__ == "__main__":
