@@ -13,13 +13,13 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import app.models  # noqa: F401
 from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.storage import make_video_thumbnail
 from app.db.session import SessionLocal
 from app.models.gallery import Media, MediaType
+from app.models.user import User  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
