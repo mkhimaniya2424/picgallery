@@ -182,11 +182,31 @@ class MediaModel {
 
   /// Same idea for the thumbnail: local thumbnail path if present,
   /// otherwise the backend's `thumbnail_url`, otherwise falls back to
-  /// [displayPath] itself (full image) since not all media has a
-  /// generated thumbnail (e.g. videos).
-  String get displayThumbnailPath => thumbnailPath.isNotEmpty
-      ? thumbnailPath
-      : (remoteThumbnailUrl ?? displayPath);
+  /// [displayPath] itself (full image). For videos, we only fall back
+  /// to displayPath if it is a network URL (some backends return video URLs that can generate thumbs).
+  /// But actually, Image.network can't render mp4s. So for videos without thumbs, this returns empty.
+  String get displayThumbnailPath {
+    if (thumbnailPath.isNotEmpty) return thumbnailPath;
+    if (remoteThumbnailUrl != null && remoteThumbnailUrl!.isNotEmpty) {
+      return remoteThumbnailUrl!;
+    }
+    
+    // If the API forgets to send thumbnail_url for videos, we can guess it from the original file_url!
+    // e.g. .../original.mp4 -> .../thumbnail.jpg
+    if (type == MediaType.video && remoteUrl != null && remoteUrl!.isNotEmpty) {
+      final url = remoteUrl!;
+      if (url.contains('/original.')) {
+        final dir = url.substring(0, url.lastIndexOf('/'));
+        return '$dir/thumbnail.jpg';
+      }
+    }
+
+    // If we have no valid thumbnail:
+    // For photos, fall back to the original file path.
+    // For videos, do NOT fall back to the .mp4 file because Flutter Image widgets crash on .mp4s.
+    if (type == MediaType.video) return '';
+    return displayPath;
+  }
 
   /// True if [displayPath] is a fetchable `http(s)://` URL rather than a
   /// local on-device file path.

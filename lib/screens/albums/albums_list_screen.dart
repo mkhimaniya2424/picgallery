@@ -238,9 +238,6 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
                                     DropdownMenuItem(
                                         value: AlbumSortOption.photoCount,
                                         child: Text('Photo count')),
-                                    DropdownMenuItem(
-                                        value: AlbumSortOption.folderCount,
-                                        child: Text('Folder count')),
                                   ],
                                   onChanged: (v) {
                                     if (v == null) return;

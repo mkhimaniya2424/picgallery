@@ -21,7 +21,7 @@ class SettingsModel {
   final String language; // "English", "Hindi", "Spanish"
   final String website;
 
-  final String galleryViewMode; // "Grid", "List", "Timeline"
+  final String galleryViewMode; // "Grid", "Compact", "List", "Details", "Timeline"
 
   const SettingsModel({
     this.studioName = '',
@@ -36,7 +36,7 @@ class SettingsModel {
     this.requirePinOnLaunch = false,
     this.privateProfile = false,
     this.wifiOnlyUploads = false,
-    this.uploadQuality = 'High',
+    this.uploadQuality = 'Original',
     this.themeMode = 'System',
     this.language = 'English',
     this.website = '',
@@ -116,7 +116,7 @@ class SettingsModel {
         requirePinOnLaunch: json['requirePinOnLaunch'] as bool? ?? false,
         privateProfile: json['privateProfile'] as bool? ?? false,
         wifiOnlyUploads: json['wifiOnlyUploads'] as bool? ?? false,
-        uploadQuality: json['uploadQuality'] as String? ?? 'High',
+        uploadQuality: json['uploadQuality'] as String? ?? 'Original',
         themeMode: json['themeMode'] as String? ?? 'System',
         language: json['language'] as String? ?? 'English',
         website: json['website'] as String? ?? '',

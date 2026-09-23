@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -266,14 +268,14 @@ class _TrashItemCard extends ConsumerWidget {
 
   Widget _buildThumbnail() {
     final file = media.filePath.isEmpty ? null : File(media.filePath);
-    final hasRealFile = file != null && file.existsSync();
+    final hasRealFile = !kIsWeb && file != null && file.existsSync();
 
     if (hasRealFile) {
       if (media.type == MediaType.photo) {
         return Image.file(file, fit: BoxFit.cover);
       } else {
         final thumbFile = File(media.thumbnailPath);
-        if (media.thumbnailPath.isNotEmpty && thumbFile.existsSync()) {
+        if (!kIsWeb && media.thumbnailPath.isNotEmpty && thumbFile.existsSync()) {
           return Image.file(thumbFile, fit: BoxFit.cover);
         }
       }

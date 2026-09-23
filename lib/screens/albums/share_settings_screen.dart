@@ -11,9 +11,14 @@ import '../../core/routes/app_routes.dart';
 import '../../models/share_link_model.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/share_link_provider.dart';
+import '../../providers/studio_client_connections_provider.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../providers/auth_providers.dart';
+import '../../models/studio_client_connection_model.dart';
 import '../../widgets/inputs/custom_text_field.dart';
+
+enum ShareMode { public, client, private }
 
 class ShareSettingsScreen extends ConsumerStatefulWidget {
   final String albumId;
@@ -30,7 +35,7 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
   final _passwordController = TextEditingController();
 
   bool _initialized = false;
-  bool _isPublic = true;
+  ShareMode _shareMode = ShareMode.public;
   String? _selectedClientId;
   bool _hasExpiry = false;
   DateTime? _expiryDate;
@@ -58,7 +63,13 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     _initialized = true;
 
     if (link != null && !link.isRevoked) {
-      _isPublic = !link.hasPassword;
+      if (link.hasPassword) {
+        _shareMode = ShareMode.private;
+      } else if (link.clientId != null) {
+        _shareMode = ShareMode.client;
+      } else {
+        _shareMode = ShareMode.public;
+      }
       _selectedClientId = link.clientId;
       _hasExpiry = link.expiresAt != null;
       _expiryDate = link.expiresAt;
@@ -106,15 +117,21 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
         !existingLink.isRevoked &&
         existingLink.hasPassword;
 
-    if (!_isPublic &&
+    if (_shareMode == ShareMode.private &&
         !hasExistingPassword &&
         !_formKey.currentState!.validate()) {
       return;
     }
-    if (!_isPublic &&
+    if (_shareMode == ShareMode.private &&
         hasExistingPassword &&
         _passwordController.text.isNotEmpty) {
       if (!_formKey.currentState!.validate()) return;
+    }
+    if (_shareMode == ShareMode.client && _selectedClientId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a client.')),
+      );
+      return;
     }
 
     setState(() => _isSaving = true);
@@ -138,14 +155,14 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
       final controller =
           ref.read(shareLinkControllerProvider(ShareTarget(albumId: widget.albumId)).notifier);
       await controller.createOrUpdate(
-        clientId: _isPublic ? null : _selectedClientId,
-        clearClient: _isPublic || _selectedClientId == null,
-        password: _isPublic
-            ? null
-            : (_passwordController.text.isEmpty
+        clientId: _shareMode == ShareMode.client ? _selectedClientId : null,
+        clearClient: _shareMode != ShareMode.client,
+        password: _shareMode == ShareMode.private
+            ? (_passwordController.text.isEmpty
                 ? null
-                : _passwordController.text),
-        clearPassword: _isPublic,
+                : _passwordController.text)
+            : null,
+        clearPassword: _shareMode != ShareMode.private,
         expiresAt: _hasExpiry ? _expiryDate : null,
         clearExpiry: !_hasExpiry,
         allowDownload: _allowDownload,
@@ -271,9 +288,9 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                               ],
                               _buildSectionHeader(context, 'Gallery Type'),
                               SizedBox(height: AppSpacing.sm),
-                              _buildGalleryTypeSelector(),
+                              _buildGalleryTypeSelector(context),
                               SizedBox(height: AppSpacing.lg),
-                              if (!_isPublic) ...[
+                              if (_shareMode == ShareMode.private) ...[
                                 _buildSectionHeader(
                                     context, 'Security Settings'),
                                 SizedBox(height: AppSpacing.sm),
@@ -369,7 +386,17 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
     );
   }
 
-  Widget _buildGalleryTypeSelector() {
+  Widget _buildGalleryTypeSelector(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final studioId = authState.valueOrNull?.id ?? '';
+    final connections = ref.watch(connectionsProvider);
+    final connectedClients = connections.valueOrNull
+            ?.where((c) =>
+                c.studioId == studioId &&
+                c.status == ConnectionStatus.connected)
+            .toList() ??
+        [];
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -378,9 +405,9 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
       ),
       child: Column(
         children: [
-          RadioListTile<bool>(
-            value: true,
-            groupValue: _isPublic,
+          RadioListTile<ShareMode>(
+            value: ShareMode.public,
+            groupValue: _shareMode,
             title: Text(
               'Public Gallery',
               style: TextStyle(
@@ -400,13 +427,61 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             ),
             activeColor: AppColors.primary,
             onChanged: (val) {
-              if (val != null) setState(() => _isPublic = val);
+              if (val != null) setState(() => _shareMode = val);
             },
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
-          RadioListTile<bool>(
-            value: false,
-            groupValue: _isPublic,
+          RadioListTile<ShareMode>(
+            value: ShareMode.client,
+            groupValue: _shareMode,
+            title: Text(
+              'Specific Client',
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textOnDark
+                      : AppColors.text)),
+            ),
+            subtitle: Text(
+              'Assign directly to a connected client\'s account.',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.subtitleOnDark
+                      : AppColors.subtitle)),
+            ),
+            activeColor: AppColors.primary,
+            onChanged: (val) {
+              if (val != null) setState(() => _shareMode = val);
+            },
+          ),
+          if (_shareMode == ShareMode.client)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Select Client',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+                initialValue: _selectedClientId,
+                items: connectedClients.map((c) {
+                  return DropdownMenuItem(
+                    value: c.clientId,
+                    child: Text(c.clientData?.name ?? 'Unknown Client'),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() => _selectedClientId = val);
+                },
+              ),
+            ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          RadioListTile<ShareMode>(
+            value: ShareMode.private,
+            groupValue: _shareMode,
             title: Text(
               'Private Gallery',
               style: TextStyle(
@@ -428,8 +503,9 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
             onChanged: (val) {
               if (val != null) {
                 setState(() {
-                  _isPublic = val;
-                  if (!_isPublic && _passwordController.text.isEmpty) {
+                  _shareMode = val;
+                  if (_shareMode == ShareMode.private &&
+                      _passwordController.text.isEmpty) {
                     _generateRandomPasscode();
                   }
                 });
@@ -606,9 +682,11 @@ class _ShareSettingsScreenState extends ConsumerState<ShareSettingsScreen> {
                 icon: Icon(Icons.share_rounded, color: AppColors.primary),
                 tooltip: 'Share',
                 onPressed: () {
-                  Share.share(
-                    primaryUrl,
-                    subject: 'Check out this shared gallery!',
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: primaryUrl,
+                      subject: 'Check out this shared gallery!',
+                    ),
                   );
                 },
               ),

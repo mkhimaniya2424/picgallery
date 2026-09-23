@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
@@ -6,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../auth/auth_manager.dart';
 import '../storage/secure_storage.dart';
 import 'auth_interceptor.dart';
+import 'web_upload_helper.dart';
 
 /// Thrown whenever the backend responds with a non-2xx status code.
 class ApiException implements Exception {
@@ -49,9 +52,9 @@ class ApiClient {
         _secureStorage = secureStorage,
         _inMemoryToken = authToken,
         _dio = Dio(BaseOptions(
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 15),
-          sendTimeout: const Duration(seconds: 15),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(minutes: 10),
+          sendTimeout: const Duration(minutes: 10),
         )) {
     if (authToken != null && authManager != null) {
       authManager.setTokens(accessToken: authToken, refreshToken: null);
@@ -167,6 +170,82 @@ class ApiClient {
             headers: {'Content-Type': 'application/json'},
           ),
         ));
+  }
+
+  Future<dynamic> postMultipart(String path,
+      {required FormData data,
+      bool withAuth = true,
+      void Function(int, int)? onSendProgress}) async {
+    debugPrint('[ApiClient] POST MULTIPART ${_url(path)}');
+    return _guarded(() => _dio.post(
+          _url(path),
+          data: data,
+          onSendProgress: onSendProgress,
+          options: Options(
+            extra: {'withAuth': withAuth},
+            sendTimeout: const Duration(hours: 12),
+            receiveTimeout: const Duration(hours: 12),
+          ),
+        ));
+  }
+
+  Future<dynamic> putMultipart(String path,
+      {required FormData data,
+      bool withAuth = true,
+      void Function(int, int)? onSendProgress}) async {
+    debugPrint('[ApiClient] PUT MULTIPART ${_url(path)}');
+    return _guarded(() => _dio.put(
+          _url(path),
+          data: data,
+          onSendProgress: onSendProgress,
+          options: Options(
+            extra: {'withAuth': withAuth},
+            sendTimeout: const Duration(hours: 12),
+            receiveTimeout: const Duration(hours: 12),
+          ),
+        ));
+  }
+
+  /// Bypass Dio for large web files using native XMLHttpRequest.
+  Future<dynamic> uploadLargeFileWeb(
+    String path, {
+    required String blobUrl,
+    required String fileName,
+    required String contentType,
+    bool withAuth = true,
+    void Function(int, int)? onSendProgress,
+  }) async {
+    debugPrint('[ApiClient] NATIVE WEB UPLOAD ${_url(path)}');
+    final headers = <String, String>{};
+    if (withAuth) {
+      final token = authToken;
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+    
+    // Attempt the upload via XHR bypass
+    try {
+      final responseBody = await uploadFileWeb(
+        blobUrl: blobUrl,
+        uploadUrl: _url(path),
+        fileName: fileName,
+        contentType: contentType,
+        headers: headers,
+        onSendProgress: onSendProgress,
+      );
+      debugPrint('[ApiClient] ✅ NATIVE WEB UPLOAD SUCCESS');
+      
+      // We expect the server to return JSON
+      if (responseBody is String) {
+        if (responseBody.isEmpty) return {};
+        return jsonDecode(responseBody);
+      }
+      return responseBody;
+    } catch (e) {
+      debugPrint('[ApiClient] ❌ NATIVE WEB UPLOAD FAILED: $e');
+      throw ApiException(0, 'Upload failed: $e');
+    }
   }
 
   Future<dynamic> _guarded(Future<Response> Function() send) async {

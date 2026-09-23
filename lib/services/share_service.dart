@@ -11,6 +11,11 @@ abstract class ShareService {
     required String filePath,
   });
 
+  Future<void> shareMultipleMedia({
+    required BuildContext context,
+    required List<String> filePaths,
+  });
+
   /// Web-safe variant: shares raw [bytes] directly instead of a
   /// filesystem path (web has no `dart:io` File to share).
   Future<void> shareMediaBytes({
@@ -18,5 +23,12 @@ abstract class ShareService {
     required Uint8List bytes,
     required String fileName,
     String? mimeType,
+  });
+
+  Future<void> shareMultipleMediaBytes({
+    required BuildContext context,
+    required List<Uint8List> bytesList,
+    required List<String> fileNames,
+    List<String?>? mimeTypes,
   });
 }

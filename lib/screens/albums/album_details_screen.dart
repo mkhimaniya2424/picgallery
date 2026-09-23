@@ -171,7 +171,6 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
     const int previewLimit = 12;
     final previewMedia =
         allAlbumMedia.take(previewLimit).toList(growable: false);
-    final hasMoreMedia = allAlbumMedia.length > previewMedia.length;
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -345,14 +344,14 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                                       ? AppColors.textOnDark
                                       : AppColors.text)),
                         ),
-                        if (hasMoreMedia)
+                        if (allAlbumMedia.isNotEmpty)
                           TextButton(
                             onPressed: () => Navigator.of(context).pushNamed(
                               AppRoutes.media,
                               arguments:
                                   MediaSearchArgs(initialAlbumId: album.id),
                             ),
-                            child: Text('View All',
+                            child: Text('Manage Photos',
                                 style: TextStyle(fontWeight: FontWeight.w700)),
                           ),
                       ],

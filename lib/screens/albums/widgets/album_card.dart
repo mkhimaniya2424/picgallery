@@ -4,9 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/album_model.dart';
-import '../../../providers/media_provider.dart';
-import '../../../models/media_model.dart';
-import '../../../widgets/media/media_thumb.dart';
 import 'album_cover_placeholder.dart';
 
 class AlbumCard extends ConsumerWidget {
@@ -31,30 +28,9 @@ class AlbumCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mediaState = ref.watch(mediaProvider);
-    final albumMedia = mediaState.allMedia
-        .where((m) => !m.isDeleted)
-        .where((m) => m.albumId == album.id)
-        .toList(growable: false);
-
-    final photoCount =
-        albumMedia.where((m) => m.type == MediaType.photo).length;
-    final videoCount =
-        albumMedia.where((m) => m.type == MediaType.video).length;
-    final folderCount =
-        albumMedia.map((m) => m.folderId).whereType<String>().toSet().length;
-
-    // Real cover photo for this album, preferring a photo over a video
-    // thumbnail so the card shows something crisp; falls back to the
-    // gradient placeholder only when the album truly has no media yet.
-    MediaModel? cover;
-    for (final m in albumMedia) {
-      if (m.type == MediaType.photo) {
-        cover = m;
-        break;
-      }
-    }
-    cover ??= albumMedia.isNotEmpty ? albumMedia.first : null;
+    final photoCount = album.photoCount;
+    final videoCount = album.videoCount;
+    final coverUrl = album.coverThumbnailUrl;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -84,17 +60,15 @@ class AlbumCard extends ConsumerWidget {
           child: compact
               ? _buildCompactCard(
                   isDark: isDark,
-                  cover: cover,
+                  coverUrl: coverUrl,
                   photoCount: photoCount,
                   videoCount: videoCount,
-                  folderCount: folderCount,
                 )
               : _buildGridCard(
                   isDark: isDark,
-                  cover: cover,
+                  coverUrl: coverUrl,
                   photoCount: photoCount,
                   videoCount: videoCount,
-                  folderCount: folderCount,
                 ),
         ),
       ),
@@ -103,10 +77,9 @@ class AlbumCard extends ConsumerWidget {
 
   Widget _buildCompactCard(
       {required bool isDark,
-      MediaModel? cover,
+      String? coverUrl,
       required int photoCount,
-      required int videoCount,
-      required int folderCount}) {
+      required int videoCount}) {
     final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
     final subtitleColor =
         isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
@@ -119,8 +92,13 @@ class AlbumCard extends ConsumerWidget {
             child: SizedBox(
               width: 90,
               height: 90,
-              child: cover != null
-                  ? MediaThumb(media: cover)
+              child: coverUrl != null
+                  ? Image.network(
+                      coverUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          AlbumCoverPlaceholder(gradient: album.gradient),
+                    )
                   : AlbumCoverPlaceholder(
                       gradient: album.gradient,
                     ),
@@ -150,13 +128,7 @@ class AlbumCard extends ConsumerWidget {
                     color: subtitleColor,
                   ),
                 ),
-                Text(
-                  '$folderCount Folders',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: subtitleColor,
-                  ),
-                ),
+
                 SizedBox(height: 6),
                 _BottomRow(
                   isDark: isDark,
@@ -176,10 +148,9 @@ class AlbumCard extends ConsumerWidget {
 
   Widget _buildGridCard(
       {required bool isDark,
-      MediaModel? cover,
+      String? coverUrl,
       required int photoCount,
-      required int videoCount,
-      required int folderCount}) {
+      required int videoCount}) {
     final titleColor = isDark ? AppColors.textOnDark : AppColors.text;
     final subtitleColor =
         isDark ? AppColors.subtitleOnDark : AppColors.subtitle;
@@ -197,8 +168,13 @@ class AlbumCard extends ConsumerWidget {
             aspectRatio: 4 / 3,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              child: cover != null
-                  ? MediaThumb(media: cover)
+              child: coverUrl != null
+                  ? Image.network(
+                      coverUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          AlbumCoverPlaceholder(gradient: album.gradient),
+                    )
                   : AlbumCoverPlaceholder(
                       gradient: album.gradient,
                     ),
@@ -217,9 +193,7 @@ class AlbumCard extends ConsumerWidget {
           ),
           SizedBox(height: 3),
           Text(
-            folderCount > 0
-                ? '$photoCount photos • $videoCount videos • $folderCount folders'
-                : '$photoCount photos • $videoCount videos',
+            '$photoCount photos • $videoCount videos',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

@@ -1028,30 +1028,44 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
     var path = widget.media.displayPath;
     var isNetwork = widget.media.isDisplayPathNetwork;
 
-    // A locally-cached filePath can go stale (cache cleared, app
-    // reinstalled, cached on a different device, etc). Rather than
-    // failing outright, fall back to streaming from remoteUrl if it's
-    // available — same as photos already do.
-    if (!isNetwork && path.isNotEmpty && !File(path).existsSync()) {
-      final fallback = widget.media.remoteUrl ?? '';
-      if (fallback.isNotEmpty) {
-        path = fallback;
-        isNetwork = true;
+    // On web, dart:io File is unavailable — always use the network URL.
+    if (kIsWeb) {
+      // Prefer remoteUrl as the streaming source on web.
+      final webPath = widget.media.remoteUrl ?? path;
+      if (webPath.isEmpty) {
+        setState(() {
+          _initializing = false;
+          _initFailed = true;
+        });
+        return;
       }
-    }
+      path = webPath;
+      isNetwork = true;
+    } else {
+      // A locally-cached filePath can go stale (cache cleared, app
+      // reinstalled, cached on a different device, etc). Rather than
+      // failing outright, fall back to streaming from remoteUrl if it's
+      // available — same as photos already do.
+      if (!isNetwork && path.isNotEmpty && !File(path).existsSync()) {
+        final fallback = widget.media.remoteUrl ?? '';
+        if (fallback.isNotEmpty) {
+          path = fallback;
+          isNetwork = true;
+        }
+      }
 
-    final file = File(path);
-    if (path.isEmpty || (!isNetwork && !file.existsSync())) {
-      setState(() {
-        _initializing = false;
-        _initFailed = true;
-      });
-      return;
+      if (path.isEmpty || (!isNetwork && !File(path).existsSync())) {
+        setState(() {
+          _initializing = false;
+          _initFailed = true;
+        });
+        return;
+      }
     }
 
     final controller = isNetwork
         ? VideoPlayerController.networkUrl(Uri.parse(path))
-        : VideoPlayerController.file(file);
+        : VideoPlayerController.file(File(path));
     try {
       await controller.initialize();
       if (!mounted) {

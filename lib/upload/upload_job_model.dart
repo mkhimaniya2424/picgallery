@@ -25,11 +25,20 @@ class UploadJobModel {
   final String filePath;
 
   /// Web's substitute for [filePath]: the file's bytes captured once, at
-  /// pick time, since a browser gives no way to re-read a file from a
-  /// path later. Not persisted (see [toJson]) — a page reload invalidates
-  /// them anyway, same as it would any blob URL, so a job still `queued`/
-  /// `paused` across a reload needs the user to re-pick it.
+  /// pick time for small files. Not persisted (see [toJson]) — a page reload
+  /// invalidates them anyway.
   final Uint8List? webBytes;
+
+  /// Alternative to [webBytes] for large web files — a factory that opens
+  /// a fresh byte stream. Using a stream avoids loading the entire file into
+  /// memory at once, preventing OOM crashes on large videos. Like [webBytes],
+  /// this is not persisted and is invalidated on page reload.
+  final Stream<Uint8List> Function()? webStreamFactory;
+
+  /// Object URL for large web files (e.g. `blob:http://...`). This allows
+  /// us to bypass Dio completely and use native XMLHttpRequest to stream the 
+  /// file from disk on Flutter Web. Like [webBytes], not persisted.
+  final String? webBlobUrl;
 
   /// Intended target album/folder.
   final String? albumId;
@@ -78,6 +87,8 @@ class UploadJobModel {
     required this.fileName,
     required this.filePath,
     this.webBytes,
+    this.webStreamFactory,
+    this.webBlobUrl,
     this.albumId,
     this.folderId,
     required this.totalBytes,
@@ -111,6 +122,8 @@ class UploadJobModel {
     String? fileName,
     String? filePath,
     Uint8List? webBytes,
+    Stream<Uint8List> Function()? webStreamFactory,
+    String? webBlobUrl,
     String? albumId,
     String? folderId,
     int? totalBytes,
@@ -135,6 +148,8 @@ class UploadJobModel {
       fileName: fileName ?? this.fileName,
       filePath: filePath ?? this.filePath,
       webBytes: webBytes ?? this.webBytes,
+      webStreamFactory: webStreamFactory ?? this.webStreamFactory,
+      webBlobUrl: webBlobUrl ?? this.webBlobUrl,
       albumId: albumId ?? this.albumId,
       folderId: folderId ?? this.folderId,
       totalBytes: totalBytes ?? this.totalBytes,

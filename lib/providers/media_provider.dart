@@ -53,6 +53,9 @@ class MediaListController extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String _loadingMessage = 'Loading media…';
+  String get loadingMessage => _loadingMessage;
+
   String? _lastError;
   String? get lastError => _lastError;
 
@@ -460,6 +463,7 @@ class MediaListController extends ChangeNotifier {
       bytes: bytes,
       fileName: fileName,
       contentType: contentType,
+      sizeBytes: bytes.length,
       albumId: source.albumId,
       folderId: source.folderId,
     );
@@ -509,20 +513,47 @@ class MediaListController extends ChangeNotifier {
     final ids = _selectedIds.toList(growable: false);
     if (ids.isEmpty) return;
 
-    for (final id in ids) {
-      final idx = _allMedia.indexWhere((m) => m.id == id);
-      final albumId = idx == -1 ? null : _allMedia[idx].albumId;
-
-      await _repo.deleteMedia(id);
-      _allMedia.removeWhere((m) => m.id == id);
-
-      await _adjustAlbumPhotoCount(albumId, -1);
-    }
-    clearSelection();
+    _loadingMessage = 'Deleting…';
+    _isLoading = true;
     notifyListeners();
+
     try {
-      _ref.read(adminDashboardProvider.notifier).refresh();
-    } catch (_) {}
+      final Map<String, int> albumDeltas = {};
+      
+      for (final id in ids) {
+        final idx = _allMedia.indexWhere((m) => m.id == id);
+        if (idx != -1) {
+          final albumId = _allMedia[idx].albumId;
+          if (albumId != null) {
+            albumDeltas.update(albumId, (val) => val - 1, ifAbsent: () => -1);
+          }
+        }
+      }
+
+      const chunkSize = 5;
+      for (int i = 0; i < ids.length; i += chunkSize) {
+        final end = (i + chunkSize) > ids.length ? ids.length : i + chunkSize;
+        final chunk = ids.sublist(i, end);
+        
+        await Future.wait(chunk.map((id) => _repo.deleteMedia(id)));
+        
+        for (final id in chunk) {
+          _allMedia.removeWhere((m) => m.id == id);
+        }
+      }
+
+      for (final entry in albumDeltas.entries) {
+        await _adjustAlbumPhotoCount(entry.key, entry.value);
+      }
+    } finally {
+      _isLoading = false;
+      _loadingMessage = 'Loading media…';
+      clearSelection();
+      notifyListeners();
+      try {
+        _ref.read(adminDashboardProvider.notifier).refresh();
+      } catch (_) {}
+    }
   }
 
   /// Restores previously soft-deleted items.

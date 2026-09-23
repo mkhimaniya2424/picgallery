@@ -343,7 +343,7 @@ def list_shared_album_media(
     current_user: User = Depends(get_current_client_user),
     db: Session = Depends(get_db),
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=500),
+    limit: int = Query(default=50000, ge=1),
     media_type: MediaType | None = Query(
         default=None, description="Restrict to 'photo' or 'video'. Omit for both."
     ),
@@ -460,7 +460,7 @@ def log_client_download(
 @router.get("/download-history", response_model=list[DownloadEventRead])
 def list_my_download_history(
     media_id: uuid.UUID | None = None,
-    limit: int = Query(default=100, le=500),
+    limit: int = Query(default=50000),
     offset: int = 0,
     current_user: User = Depends(get_current_client_user),
     db: Session = Depends(get_db),
@@ -507,7 +507,7 @@ def list_shared_download_history(
         description="Restrict to a single shared album. Omit to see every album this studio has shared with you.",
     ),
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=500),
+    limit: int = Query(default=50000, ge=1),
     current_user: User = Depends(get_current_client_user),
     db: Session = Depends(get_db),
 ) -> list[DownloadEventRead]:

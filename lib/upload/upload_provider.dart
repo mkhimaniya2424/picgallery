@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/media_model.dart';
 import '../providers/auth_providers.dart';
 import '../services/media_upload_service.dart';
-import 'upload_media_prep.dart';
 import 'upload_network_gate.dart';
 import 'upload_state.dart';
 
@@ -34,6 +33,8 @@ class UploadController extends StateNotifier<UploadState> {
   final Ref _ref;
   final MediaUploadService _service;
 
+  DateTime? _lastProgressUpdate;
+
   /// Uploads the given file bytes to the backend.
   ///
   /// Notes:
@@ -50,6 +51,7 @@ class UploadController extends StateNotifier<UploadState> {
     void Function(int sentBytes, int totalBytes)? onProgress,
   }) async {
     // reset
+    _lastProgressUpdate = null;
     state = state.copyWith(
       status: UploadStatus.uploading,
       progress: 0.0,
@@ -78,35 +80,43 @@ class UploadController extends StateNotifier<UploadState> {
       throw StateError(message);
     }
 
-    final bytes = await File(filePath).readAsBytes();
-
-    // Task 5: honor the global "Upload Resolution" setting — same
-    // [prepareMediaBytesForUpload] helper the batch queue uses, so
-    // "High" vs "Original" behaves identically no matter which upload
-    // path the file went through.
-    final preparedBytes = await prepareMediaBytesForUpload(
-      _ref,
-      bytes: bytes,
-      contentType: contentType,
-    );
+    // Compression is permanently disabled — always stream the file at its
+    // original quality, regardless of the global uploadQuality setting.
+    // Using filePath directly lets Dio stream the file in chunks so large
+    // videos never cause an OOM.
+    final fileLength = await File(filePath).length();
 
     try {
       MediaModel created = await _service.upload(
-        bytes: preparedBytes,
+        bytes: null,
+        filePath: filePath,
         fileName: fileName,
         contentType: contentType,
+        sizeBytes: fileLength,
         albumId: albumId,
         folderId: folderId,
         onSendProgress: (sent, total) {
-          final prog = total <= 0 ? 0.0 : (sent / total).clamp(0.0, 1.0);
+          final resolvedTotal = total > 0 ? total : fileLength;
+          final cappedSent = sent > resolvedTotal ? resolvedTotal : sent;
+          final isComplete = cappedSent >= resolvedTotal;
+
+          final now = DateTime.now();
+          if (!isComplete &&
+              _lastProgressUpdate != null &&
+              now.difference(_lastProgressUpdate!).inMilliseconds < 150) {
+            return;
+          }
+          _lastProgressUpdate = now;
+
+          final prog = resolvedTotal <= 0 ? 0.0 : (cappedSent / resolvedTotal).clamp(0.0, 1.0);
           state = state.copyWith(
             status: UploadStatus.uploading,
             progress: prog,
-            sentBytes: sent,
-            totalBytes: total,
+            sentBytes: cappedSent,
+            totalBytes: resolvedTotal,
             clearError: true,
           );
-          onProgress?.call(sent, total);
+          onProgress?.call(cappedSent, resolvedTotal);
         },
       );
 

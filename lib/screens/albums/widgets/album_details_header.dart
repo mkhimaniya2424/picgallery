@@ -62,7 +62,17 @@ class AlbumDetailsHeader extends StatelessWidget {
                 ),
                 SizedBox(height: AppSpacing.sm),
                 Text(
-                  '${album.photoCount} photos • ${album.folderCount} folders',
+                  () {
+                    final parts = <String>[];
+                    if (album.photoCount > 0 || album.videoCount == 0) {
+                      parts.add('${album.photoCount} photo${album.photoCount == 1 ? '' : 's'}');
+                    }
+                    if (album.videoCount > 0) {
+                      parts.add('${album.videoCount} video${album.videoCount == 1 ? '' : 's'}');
+                    }
+                    // Removed folderCount display as albums only contain media, not folders.
+                    return parts.join(' • ');
+                  }(),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: subtitleColor,
                         fontWeight: FontWeight.w600,

@@ -275,7 +275,7 @@ class _EditAlbumScreenState extends ConsumerState<EditAlbumScreen> {
                               ),
                             SizedBox(height: AppSpacing.sm),
                             Text(
-                              '${album.photoCount} photos • ${album.folderCount} folders — updated ${_relativeTime(album.updatedAt)}',
+                              '${album.photoCount} photos • ${album.videoCount} videos — updated ${_relativeTime(album.updatedAt)}',
                               style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,

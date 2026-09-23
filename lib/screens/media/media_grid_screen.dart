@@ -19,12 +19,14 @@ import '../../providers/settings_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/common/loading_widget.dart';
+import '../../widgets/common/pinch_zoom_handler.dart';
 import '../../services/share_service_impl.dart';
 import '../../services/download_service_impl.dart';
 import '../../services/media_file_cache.dart';
 
 import 'media_details_screen.dart';
 import '../../widgets/media/edited_image.dart';
+import '../../widgets/media/video_fallback_thumbnail.dart';
 import 'media_batch_workflows.dart';
 import '../../widgets/admin/fade_slide_in.dart';
 import '../../widgets/common/compact_anchored_dropdown.dart';
@@ -185,6 +187,34 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   final ScrollController _scrollController = ScrollController();
   int _visibleLimit = 24;
   bool _loadingMore = false;
+
+  // GestureDetector-based scale tracking – works for both touch pinch
+  // and trackpad pinch-to-zoom on Flutter Web.
+  double _scaleStartModeIndex = 2.0;
+
+  int get _currentModeIndex => _viewMode == _GalleryViewMode.timeline
+      ? 3
+      : _viewMode == _GalleryViewMode.grid
+          ? 2
+          : 1;
+  
+
+
+  void _zoomIn() {
+    if (_viewMode == _GalleryViewMode.timeline) {
+      _changeViewMode(_GalleryViewMode.grid);
+    } else if (_viewMode == _GalleryViewMode.grid) {
+      _changeViewMode(_GalleryViewMode.list);
+    }
+  }
+
+  void _zoomOut() {
+    if (_viewMode == _GalleryViewMode.list) {
+      _changeViewMode(_GalleryViewMode.grid);
+    } else if (_viewMode == _GalleryViewMode.grid) {
+      _changeViewMode(_GalleryViewMode.timeline);
+    }
+  }
 
   Widget _propRow({required String label, required String value}) {
     return Padding(
@@ -977,9 +1007,9 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   Widget _buildTimelineGridSliver(MediaListController c, List<MediaModel> items,
       List<MediaModel> mediaList) {
     final width = MediaQuery.of(context).size.width - 56;
-    const double tileMinWidth = 100;
+    const double tileMinWidth = 45;
     final crossAxisCount =
-        width < 300 ? 2 : (width ~/ tileMinWidth).clamp(2, 5);
+        width < 300 ? 2 : (width ~/ tileMinWidth).clamp(2, 8);
 
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1059,6 +1089,17 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         actions: [
           if (c.isSelectionMode) ...[
             IconButton(
+              tooltip: c.selectedIds.length == media.length ? 'Deselect All' : 'Select All',
+              icon: Icon(c.selectedIds.length == media.length ? Icons.deselect_rounded : Icons.select_all_rounded),
+              onPressed: () {
+                if (c.selectedIds.length == media.length) {
+                  c.clearSelection();
+                } else {
+                  c.selectAll();
+                }
+              },
+            ),
+            IconButton(
               tooltip: 'Exit selection',
               icon: Icon(Icons.close_rounded),
               onPressed: () => c.clearSelection(),
@@ -1105,7 +1146,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: c.isLoading
-            ? Center(child: LoadingWidget(message: 'Loading media…'))
+            ? Center(child: LoadingWidget(message: c.loadingMessage))
             : c.lastError != null
                 ? Center(
                     child: _ErrorStateCard(
@@ -1392,8 +1433,30 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                       'No media found for the current filters.',
                                 ),
                               )
-                            : RefreshIndicator(
-                                onRefresh: () async {
+                            : PinchZoomHandler(
+                                onZoomIn: _zoomIn,
+                                onZoomOut: _zoomOut,
+                                child: GestureDetector(
+                                // GestureDetector onScaleUpdate works for both
+                                // two-finger touch pinch AND trackpad pinch on web.
+                                onScaleStart: (_) {
+                                  _scaleStartModeIndex = _currentModeIndex.toDouble();
+                                },
+                                onScaleUpdate: (details) {
+                                  if (details.scale == 1.0) return;
+                                  final newLevel = (_scaleStartModeIndex / details.scale).round().clamp(1, 3);
+                                  if (newLevel != _currentModeIndex) {
+                                    if (newLevel == 3) {
+                                      _changeViewMode(_GalleryViewMode.timeline);
+                                    } else if (newLevel == 2) {
+                                      _changeViewMode(_GalleryViewMode.grid);
+                                    } else if (newLevel == 1) {
+                                      _changeViewMode(_GalleryViewMode.list);
+                                    }
+                                  }
+                                },
+                                child: RefreshIndicator(
+                                  onRefresh: () async {
                                   await ref.read(mediaProvider).load();
                                   _resetPagination();
                                 },
@@ -1463,6 +1526,8 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                   ),
                                 ),
                               ),
+                            ),
+                            ),
                       ),
                     ],
                   ),
@@ -2117,7 +2182,8 @@ class _MediaThumbnail extends StatelessWidget {
         return Image.network(
           thumbPath,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _placeholder(),
+          errorBuilder: (context, error, stackTrace) =>
+              kIsWeb ? VideoFallbackThumbnail(media: media, fit: BoxFit.cover) : _placeholder(),
         );
       } else if (!kIsWeb &&
           thumbPath.isNotEmpty &&
@@ -2129,7 +2195,9 @@ class _MediaThumbnail extends StatelessWidget {
         );
       }
     }
-    return _placeholder();
+    return kIsWeb && media.type == MediaType.video
+        ? VideoFallbackThumbnail(media: media, fit: BoxFit.cover)
+        : _placeholder();
   }
 
   Widget _placeholder() {

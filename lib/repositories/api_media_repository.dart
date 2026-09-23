@@ -87,17 +87,25 @@ class ApiMediaRepository implements MediaRepository {
 
   @override
   Future<MediaModel> uploadMedia({
-    required List<int> bytes,
+    List<int>? bytes,
+    String? filePath,
+    Stream<List<int>> Function()? streamData,
+    String? webBlobUrl,
     required String fileName,
     required String contentType,
+    int sizeBytes = 0,
     String? albumId,
     String? folderId,
     void Function(int sent, int total)? onSendProgress,
   }) {
     return _uploadService.upload(
       bytes: bytes,
+      filePath: filePath,
+      streamData: streamData,
+      webBlobUrl: webBlobUrl,
       fileName: fileName,
       contentType: contentType,
+      sizeBytes: sizeBytes,
       albumId: albumId,
       folderId: folderId,
       onSendProgress: onSendProgress,
@@ -222,7 +230,8 @@ class ApiMediaRepository implements MediaRepository {
   @override
   Future<MediaModel> replaceMediaFile({
     required String id,
-    required List<int> bytes,
+    List<int>? bytes,
+    String? filePath,
     required String fileName,
     required String contentType,
   }) async {
@@ -230,6 +239,7 @@ class ApiMediaRepository implements MediaRepository {
       return await _uploadService.replaceFile(
         mediaId: id,
         bytes: bytes,
+        filePath: filePath,
         fileName: fileName,
         contentType: contentType,
       );

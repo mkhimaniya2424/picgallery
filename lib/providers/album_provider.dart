@@ -216,6 +216,26 @@ class AlbumNotifier extends AsyncNotifier<AlbumState> {
     }
   }
 
+  /// Like [load] but does NOT transition through [AsyncValue.loading].
+  ///
+  /// Use this for background refreshes (e.g. triggered after an upload
+  /// completes) where the UI should keep showing existing data while the
+  /// network request is in-flight, rather than flashing a loading spinner
+  /// or rebuilding the whole screen.
+  Future<void> refreshSilently() async {
+    final current = state.valueOrNull ?? _empty();
+    try {
+      final albums = await _repo.fetchAlbums();
+      final next =
+          current.copyWith(isLoading: false, lastError: null, allAlbums: albums);
+      _syncFolderCounts(next.allAlbums);
+      state = AsyncValue.data(next);
+    } catch (_) {
+      // Ignore errors during silent refreshes — the UI keeps the
+      // stale-but-valid data rather than showing an error banner.
+    }
+  }
+
   AlbumState _empty() {
     return const AlbumState(
       isLoading: false,
@@ -557,6 +577,7 @@ class AlbumFacade {
 
   // Actions (compat)
   Future<void> load() => _notifier.load();
+  Future<void> refreshSilently() => _notifier.refreshSilently();
 
   void setSearchQuery(String value) => _notifier.setSearchQuery(value);
   void setSortOption(AlbumSortOption value) => _notifier.setSortOption(value);

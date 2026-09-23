@@ -615,6 +615,7 @@ class _ImageViewerScreenState extends ConsumerState<ImageViewerScreen> {
                       maxScale: 3,
                       panEnabled: true,
                       scaleEnabled: true,
+                      trackpadScrollCausesScale: true,
                       // Improved pinch: reset offset when at fit.
                       onInteractionEnd: (_) =>
                           _applyCurrentTransformToState(m.id),
@@ -930,7 +931,7 @@ class _MediaPreview extends StatelessWidget {
     final path = media.displayPath;
     final isNetwork = media.isDisplayPathNetwork;
     final file = (!isNetwork && path.isNotEmpty) ? File(path) : null;
-    final hasRealFile = (file != null && file.existsSync()) || isNetwork;
+    final hasRealFile = isNetwork || (!kIsWeb && file != null && file.existsSync());
 
     if (hasRealFile && media.type == MediaType.photo) {
       return EditedImage(media: media, fit: BoxFit.contain);

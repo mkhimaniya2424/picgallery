@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/media/video_fallback_thumbnail.dart';
 import '../../core/utils/media_format_utils.dart';
 import '../../models/media_model.dart';
 import '../../models/user.dart' show AppUserRole;
@@ -274,7 +275,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     final path = media.displayPath;
     final isNetwork = media.isDisplayPathNetwork;
     final file = (!isNetwork && path.isNotEmpty) ? File(path) : null;
-    final hasRealFile = (file != null && file.existsSync()) || isNetwork;
+    final hasRealFile = isNetwork || (!kIsWeb && file != null && file.existsSync());
 
     // Video poster frame: separate from [path]/[file] above, since a
     // video's `displayPath` points at the video file itself (which
@@ -286,9 +287,8 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     final videoThumbFile = (!videoThumbIsNetwork && videoThumbPath.isNotEmpty)
         ? File(videoThumbPath)
         : null;
-    final hasVideoThumb =
-        (videoThumbFile != null && videoThumbFile.existsSync()) ||
-            (videoThumbIsNetwork && videoThumbPath.isNotEmpty);
+    final hasVideoThumb = (videoThumbIsNetwork && videoThumbPath.isNotEmpty) ||
+        (!kIsWeb && videoThumbFile != null && videoThumbFile.existsSync());
 
     void openFullScreen() {
       Navigator.of(context).pushNamed(
@@ -389,16 +389,18 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                                 videoThumbIsNetwork
                                     ? Image.network(videoThumbPath,
                                         fit: BoxFit.contain,
-                                        errorBuilder: (_, __, ___) =>
-                                            _MediaGradientPlaceholder(
-                                                media: media))
+                                        errorBuilder: (_, __, ___) => kIsWeb
+                                            ? VideoFallbackThumbnail(media: media, fit: BoxFit.contain)
+                                            : _MediaGradientPlaceholder(media: media))
                                     : Image.file(videoThumbFile!,
                                         fit: BoxFit.contain,
                                         errorBuilder: (_, __, ___) =>
                                             _MediaGradientPlaceholder(
                                                 media: media))
                               else
-                                _MediaGradientPlaceholder(media: media),
+                                kIsWeb && media.type == MediaType.video
+                                    ? VideoFallbackThumbnail(media: media, fit: BoxFit.contain)
+                                    : _MediaGradientPlaceholder(media: media),
                               // Play affordance sits on top of whatever's
                               // behind it (real poster frame or the
                               // gradient fallback) — a video is always
@@ -412,7 +414,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                                     size: 56,
                                   ),
                                 ),
-                              if (media.type == MediaType.video)
+                              if (media.type == MediaType.video && media.duration != null)
                                 Positioned(
                                   right: AppSpacing.md,
                                   bottom: AppSpacing.md,
@@ -662,26 +664,32 @@ class _MediaStitchBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.78),
-          border: const Border(top: BorderSide(color: AppColors.border)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                ),
-                child: Row(
-                  children: [
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurface.withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95),
+        border: Border(
+            top: BorderSide(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkBorder
+                    : AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          heightFactor: 1.0,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Row(
+                children: [
                     Expanded(
                       flex: 3,
                       child: FilledButton.icon(
@@ -724,7 +732,6 @@ class _MediaStitchBottomBar extends StatelessWidget {
                 ),
               ),
             ),
-          ],
         ),
       ),
     );

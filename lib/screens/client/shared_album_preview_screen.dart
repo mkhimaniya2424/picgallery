@@ -195,7 +195,29 @@ class _SharedAlbumPreviewScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: widget.album.name, showBack: true),
+      appBar: CustomAppBar(
+        title: widget.album.name, 
+        showBack: true,
+        actions: _isSelectionMode
+            ? [
+                IconButton(
+                  tooltip: _selectedIds.length == _mediaList.length ? 'Deselect All' : 'Select All',
+                  icon: Icon(_selectedIds.length == _mediaList.length
+                      ? Icons.deselect_rounded
+                      : Icons.select_all_rounded),
+                  onPressed: () {
+                    setState(() {
+                      if (_selectedIds.length == _mediaList.length) {
+                        _selectedIds.clear();
+                      } else {
+                        _selectedIds.addAll(_mediaList.map((m) => m.id));
+                      }
+                    });
+                  },
+                ),
+              ]
+            : null,
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadMedia,

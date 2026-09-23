@@ -17,8 +17,9 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="PicGallery - Studio & Client Workspace">
+  <meta name="description" content="PicGallery - Studio &amp; Client Workspace">
 
   <!-- Google Sign-In: required for google_sign_in web plugin -->
   <meta name="google-signin-client_id"
@@ -35,6 +36,19 @@
 
   <title>picgallery</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    // Prevent the browser from zooming the page on trackpad pinch.
+    // On Windows Chrome/Edge, a two-finger trackpad pinch fires 'wheel' events
+    // with ctrlKey=true. We preventDefault() to stop the entire browser UI
+    // from zooming, but we DO NOT stop propagation so Flutter still receives
+    // the event as a PointerScrollEvent.
+    document.addEventListener('wheel', function (e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

@@ -404,7 +404,7 @@ def list_media(
     favorites_only: bool = False,
     liked_by_client_id: uuid.UUID | None = None,
     trashed: bool = False,
-    limit: int = Query(default=100, le=500),
+    limit: int = Query(default=50000),
     offset: int = 0,
     current_user: User = Depends(get_current_studio_user),
     db: Session = Depends(get_db),
@@ -442,7 +442,7 @@ def list_media(
 
 @router.get("/liked-by-me", response_model=list[MediaRead])
 def list_liked_media(
-    limit: int = Query(default=100, le=500),
+    limit: int = Query(default=50000),
     offset: int = 0,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

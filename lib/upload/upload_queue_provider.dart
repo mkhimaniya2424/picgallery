@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
 import '../repositories/media_repository.dart';
 import '../models/media_model.dart';
-import '../models/user.dart';
 import '../providers/album_provider.dart';
 import '../providers/auth_providers.dart';
 import '../providers/media_provider.dart';
@@ -16,7 +14,6 @@ import '../storage/upload_queue_local_store.dart';
 
 import 'upload_job_model.dart';
 import 'picked_file_info.dart';
-import 'upload_media_prep.dart';
 import 'upload_network_gate.dart';
 import 'upload_queue_state.dart';
 
@@ -44,13 +41,27 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
   final UploadQueueLocalStore _localStore = UploadQueueLocalStore();
 
-  /// Id of the job whose real upload (file read + network request) is
-  /// currently in flight. Only one real upload runs at a time — this guards
-  /// against the ticker starting a second one for the same slot while the
-  /// first is still awaiting bytes on the wire, including in the moment a
-  /// job goes from `uploading` to `paused`/`canceled` (which can't actually
-  /// abort an in-flight `package:http` request — see [_beginRealUpload]).
-  String? _inFlightJobId;
+  /// How many uploads may run in parallel. 2 is a good balance between
+  /// throughput and avoiding server rate-limiting / OOM on web.
+  static const int _maxConcurrentUploads = 2;
+
+  /// Ids of jobs whose real upload (file read + network request) is currently
+  /// in flight. Up to [_maxConcurrentUploads] may be active at once.
+  final Set<String> _inFlightJobIds = {};
+
+  /// Cached result of [canUploadNow] — rechecked every 5 s to avoid a
+  /// slow async connectivity check on every 250 ms tick.
+  UploadGateResult _cachedGate = const UploadGateResult.allowed();
+  DateTime _gateCheckedAt = DateTime.fromMillisecondsSinceEpoch(0);
+  static const Duration _gateCheckInterval = Duration(seconds: 5);
+
+  /// Timer used to debounce [_saveQueue] calls so we don't hammer Hive
+  /// with a write on every progress event (which can be dozens per second).
+  Timer? _saveDebounce;
+
+  /// Throttles Riverpod state updates during high-frequency upload progress events
+  /// to prevent UI freezes.
+  final Map<String, DateTime> _lastProgressUpdate = {};
 
   /// Snapshot of total uploaded bytes across all jobs as of the last tick,
   /// used only to derive a real bytes/sec speed reading for display.
@@ -65,7 +76,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// by [UploadJobModel.offlineRetryCount] (clamped to the last entry) so
   /// a genuinely offline device isn't hammered with requests every few
   /// seconds.
-  static const List<int> _offlineBackoffSeconds = [5, 15, 30, 60, 120];
+  static const List<int> _offlineBackoffSeconds = [2, 5, 10, 20, 30];
 
   Timer? _offlineRetryTicker;
 
@@ -98,6 +109,8 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       _ticker = null;
       _offlineRetryTicker?.cancel();
       _offlineRetryTicker = null;
+      _saveDebounce?.cancel();
+      _saveDebounce = null;
     });
 
     ref.listen<AuthState>(authStateProvider, (previous, next) {
@@ -164,10 +177,12 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     }
     // Also refresh albumProvider so that photoCount / folderCount shown in
     // the Album Details header ("X photos • Y folders") reflect the newly
-    // uploaded media immediately — without this the counts stay 0 until
-    // the user manually navigates away and back.
+    // uploaded media immediately.
+    // Use refreshSilently() so the album list does NOT flash a loading
+    // spinner or rebuild the whole screen — existing data stays visible
+    // while the network fetch happens in the background.
     try {
-      await ref.read(albumProvider).load();
+      await ref.read(albumProvider).refreshSilently();
     } catch (_) {
       // albumProvider not ready (e.g. isolated tests) — safe to ignore.
     }
@@ -242,6 +257,14 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     await _localStore.saveAll(current.jobs);
   }
 
+  /// Debounced version of [_saveQueue] — coalesces rapid successive calls
+  /// (e.g. from progress events firing dozens of times per second) into
+  /// a single write 500 ms after the last call.
+  void _debouncedSave() {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 500), _saveQueue);
+  }
+
   /// Add picked files to the persistent queue and start the uploading process
   Future<void> startUpload() async {
     final current = state.value;
@@ -266,13 +289,15 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
       // `f.path` isn't just null on web — touching the getter itself
       // throws — so it has to stay behind a `kIsWeb` check rather than
-      // a `?? ''`. Web instead carries its bytes through [webBytes],
-      // captured once here since a browser can't re-read a path later.
+      // a `?? ''`. Web instead carries its bytes through [webBytes] for
+      // small files, or [webStreamFactory] for large files (>10 MB).
       newJobs.add(UploadJobModel(
         id: '${DateTime.now().microsecondsSinceEpoch}_$i',
         fileName: finalName,
         filePath: kIsWeb ? '' : (f.path ?? ''),
         webBytes: kIsWeb ? f.bytes : null,
+        webStreamFactory: kIsWeb ? f.streamFactory : null,
+        webBlobUrl: kIsWeb ? f.webBlobUrl : null,
         albumId: current.selectedAlbumId,
         folderId: current.selectedFolderId,
         totalBytes:
@@ -317,78 +342,71 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     _lastTickTotalUploadedBytes =
         current.jobs.fold<int>(0, (sum, j) => sum + j.uploadedBytes);
 
-    // Ticks every 250ms. It no longer invents progress — its job is now
-    // just to (a) pick the next queued file and hand it to
-    // [_beginRealUpload], which drives that job's bytes off the real
-    // `onSendProgress` callback, and (b) derive a speed/ETA reading from
-    // how those real bytes moved between ticks, for display only.
+    // Ticks every 250ms — its job is to:
+    //  (a) fill up to [_maxConcurrentUploads] upload slots with queued jobs,
+    //  (b) derive a speed/ETA reading from bytes moved since the last tick.
     _ticker = Timer.periodic(const Duration(milliseconds: 250), (_) async {
       final s = state.value;
       if (s == null) return;
 
-      // Task 4: real, device-level Wi-Fi-only enforcement driven by the
-      // global `settings.wifiOnlyUploads` toggle — checked once per tick
-      // and reused below for both "start the next queued job" and
-      // "pause anything already uploading" so a network drop mid-upload
-      // is caught too, not just at start time.
-      final gate = await canUploadNow(ref);
+      final now = DateTime.now();
+      final needsGateRefresh =
+          now.difference(_gateCheckedAt) >= _gateCheckInterval;
+      if (needsGateRefresh) {
+        _cachedGate = await canUploadNow(ref);
+        _gateCheckedAt = now;
+      }
+      final gate = _cachedGate;
 
       // The per-batch "Upload using WiFi only" option (`job.wifiOnly`,
       // set on the upload wizard's options step) is a separate opt-in
       // from the global Settings toggle above, and needs its own real
-      // connectivity check — it used to only ever get enforced via the
-      // dev-only `_simulateCellular` debug switch, which meant a user
-      // who enabled it while the global setting was off (and wasn't
-      // simulating) would upload over cellular anyway despite the
-      // toggle's own "Pauses uploads on cellular data networks"
-      // subtitle. Only bother calling the platform channel when some
-      // job actually has the option on and we're not already faking
-      // the answer via simulation.
+      // connectivity check (also cached here).
       final anyJobWantsWifiOnly = s.jobs.any((j) =>
           j.wifiOnly &&
           (j.status == UploadJobStatus.uploading ||
               j.status == UploadJobStatus.queued));
-      final realOnWifi = (anyJobWantsWifiOnly && !_simulateCellular)
+      final realOnWifi = (anyJobWantsWifiOnly && !_simulateCellular && needsGateRefresh)
           ? await ref.read(networkConnectivityServiceProvider).isOnWifi()
           : true;
 
-      final anyUploading =
-          s.jobs.any((j) => j.status == UploadJobStatus.uploading);
+      final inFlightCount = _inFlightJobIds.length;
+      final slotsAvailable = _maxConcurrentUploads - inFlightCount;
       final hasQueued = s.jobs.any((j) => j.status == UploadJobStatus.queued);
 
-      // Only ever one real upload in flight at a time.
-      if (_inFlightJobId == null && !anyUploading && hasQueued) {
-        final idx =
-            s.jobs.indexWhere((j) => j.status == UploadJobStatus.queued);
-        if (idx != -1) {
-          final job = s.jobs[idx];
+      // Fill all available concurrency slots with queued jobs.
+      if (slotsAvailable > 0 && hasQueued) {
+        // Collect all queued jobs (up to the number of open slots).
+        final queuedJobs = s.jobs
+            .where((j) =>
+                j.status == UploadJobStatus.queued &&
+                !_inFlightJobIds.contains(j.id))
+            .take(slotsAvailable)
+            .toList();
 
+        for (final job in queuedJobs) {
           final blockedBySimulation = job.wifiOnly && _simulateCellular;
           final blockedByRealGate = !gate.canUpload;
           final blockedByJobWifiOnly =
               job.wifiOnly && !_simulateCellular && !realOnWifi;
 
-          if (blockedBySimulation ||
-              blockedByRealGate ||
-              blockedByJobWifiOnly) {
-            // Block and queue the job instead of silently uploading over
-            // mobile data — either the per-batch WiFi-only option was
-            // tripped (by the dev "simulate cellular" toggle, or by a
-            // real absence of Wi-Fi), or the global Settings > Wi-Fi
-            // Only Uploads gate found no real Wi-Fi connection right now.
-            final updatedJobs = [...s.jobs];
-            updatedJobs[idx] = job.copyWith(
-              status: UploadJobStatus.paused,
-              errorMessage: (blockedBySimulation || blockedByJobWifiOnly)
-                  ? "Paused: WiFi required (on Cellular Network)"
-                  : (gate.reason ?? "Waiting for Wi-Fi to upload"),
-            );
-            state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
-            await _saveQueue();
+          if (blockedBySimulation || blockedByRealGate || blockedByJobWifiOnly) {
+            // Pause this job — it can't upload right now.
+            final idx = s.jobs.indexWhere((j) => j.id == job.id);
+            if (idx != -1) {
+              final updatedJobs = [...s.jobs];
+              updatedJobs[idx] = job.copyWith(
+                status: UploadJobStatus.paused,
+                errorMessage: (blockedBySimulation || blockedByJobWifiOnly)
+                    ? "Paused: WiFi required (on Cellular Network)"
+                    : (gate.reason ?? "Waiting for Wi-Fi to upload"),
+              );
+              state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
+              _debouncedSave();
+            }
           } else {
-            // Fire-and-forget: this runs the real file read + network
-            // request and updates state itself via onSendProgress as it
-            // goes, independently of this timer tick.
+            // Fire-and-forget: runs the real file read + network request,
+            // updates state itself via onSendProgress as it goes.
             unawaited(_beginRealUpload(job));
           }
         }
@@ -418,7 +436,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
             return j;
           }).toList();
           state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
-          await _saveQueue();
+          _debouncedSave();
         }
       }
 
@@ -470,11 +488,11 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// `uploadedBytes`/`totalBytes` (Task 19.11) so [UploadQueueTile]'s
   /// progress bar reflects bytes actually on the wire — not a guess.
   Future<void> _beginRealUpload(UploadJobModel job) async {
-    _inFlightJobId = job.id;
+    _inFlightJobIds.add(job.id);
 
     final started = state.value;
     if (started == null) {
-      _inFlightJobId = null;
+      _inFlightJobIds.remove(job.id);
       return;
     }
     final startedJobs = started.jobs.map((j) {
@@ -486,75 +504,70 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       );
     }).toList();
     state = AsyncValue.data(started.copyWith(jobs: startedJobs));
-    await _saveQueue();
+    _debouncedSave(); // non-blocking — don't delay the actual upload
 
     try {
-      // `dart:io.File` doesn't exist on web at all, so a stored path is
-      // useless there — read from the bytes captured at pick time
-      // instead (see `UploadJobModel.webBytes`). If they're gone (e.g.
-      // the job survived a page reload, which drops in-memory state),
-      // that's the same "can't get at this file anymore" situation as a
-      // moved/deleted file on mobile — surface it the same way below.
-      final bytes =
-          kIsWeb ? job.webBytes : await File(job.filePath).readAsBytes();
-      if (bytes == null) {
-        throw StateError('No bytes available for this file');
-      }
-
       final contentType = MediaContentType.forFileName(job.fileName);
 
-      // Task 5: honor the global "Upload Resolution" setting (Settings >
-      // Original/High) — same [prepareMediaBytesForUpload] helper the
-      // single-file uploader uses, so "High" compresses photos to
-      // ~2048px long edge / JPEG quality 85 consistently regardless of
-      // which upload path a file went through.
-      //
-      // The wizard's per-batch "Compress Media" / "Keep Original
-      // Quality" toggles used to be stored on the job and never
-      // actually read anywhere — picking either had no effect and the
-      // batch silently followed the global setting regardless. They
-      // now override the global setting for this job specifically:
-      // explicitly turning on "Compress Media", or explicitly turning
-      // off "Keep Original Quality" (both mean the same thing — the
-      // user is opting this batch into compression), forces
-      // compression even if the global default is "Original". Leaving
-      // both at their defaults (compress=false, keepOriginalQuality=
-      // true — i.e. the user didn't touch either switch) falls through
-      // to the global setting unchanged, same as before this fix.
-      final forceCompress =
-          (job.compress || !job.keepOriginalQuality) ? true : null;
+      // Compression is permanently disabled — files are always uploaded at
+      // their original quality regardless of per-job options or global
+      // upload quality settings. This ensures photos and videos are never
+      // degraded during upload.
+      List<int>? finalBytes;
+      String? finalFilePath;
 
-      final preparedBytes = await prepareMediaBytesForUpload(
-        ref,
-        bytes: bytes,
-        contentType: contentType,
-        forceCompress: forceCompress,
-      );
+      if (kIsWeb) {
+        if (job.webStreamFactory != null) {
+          // Large web file: stream directly to avoid OOM.
+        } else if (job.webBytes == null) {
+          throw StateError('No bytes available for this file');
+        } else {
+          finalBytes = job.webBytes;
+        }
+      } else {
+        finalFilePath = job.filePath;
+      }
+
+      // On native platforms, if there's no filePath and no bytes, the file
+      // cannot be sent — surface a clear message rather than crashing.
+      if (!kIsWeb && finalFilePath != null && finalFilePath.isEmpty) {
+        throw StateError('File path is empty — this file cannot be uploaded.');
+      }
 
       final media = await _mediaRepo.uploadMedia(
-        bytes: preparedBytes,
+        bytes: finalBytes,
+        filePath: finalFilePath,
+        // Stream<Uint8List> is not assignable to Stream<List<int>> directly
+        // in Dart due to invariant generics, so cast via .cast<List<int>>().
+        streamData: kIsWeb && job.webStreamFactory != null
+            ? () => job.webStreamFactory!().cast<List<int>>()
+            : null,
+        webBlobUrl: job.webBlobUrl,
         fileName: job.fileName,
         contentType: contentType,
+        sizeBytes: job.totalBytes,
         albumId: job.albumId,
         folderId: job.folderId,
         onSendProgress: (sent, total) => _onRealProgress(job.id, sent, total),
       );
       await _onRealSuccess(job.id, media);
     } on ApiException catch (e) {
-      // `MediaUploadService`/`ApiClient` both use statusCode 0 specifically
-      // for "never reached the server" — DNS failure, connection refused,
-      // timeout — as opposed to a real HTTP response the server sent back
-      // (400/401/413/etc). That's exactly the "offline" case Task 19.12
-      // covers; anything else is a genuine rejection retrying won't fix.
+      // statusCode 0 → never reached the server (DNS / connection refused / timeout).
+      // 5xx or 429 → server-side transient error (overloaded / rate-limited).
+      // Both are worth auto-retrying with backoff.
+      // Any other 4xx (400/401/413/etc.) is a real rejection that retrying
+      // blindly won't fix — keep those as manual-retry failures.
+      final isRetriable = e.statusCode == 0 ||
+          e.statusCode == 429 ||
+          (e.statusCode >= 500 && e.statusCode < 600);
       await _onRealFailure(job.id, e.message,
-          isConnectivityIssue: e.statusCode == 0);
-    } catch (_) {
-      // File missing/moved, permission error, etc. — not connectivity, so
-      // don't auto-retry; the file itself needs the user's attention.
+          isConnectivityIssue: isRetriable);
+    } catch (e) {
+      // File missing/moved, empty path, permission error, etc.
       await _onRealFailure(job.id,
           "Couldn't read this file to upload it — it may have been moved or deleted.");
     } finally {
-      _inFlightJobId = null;
+      _inFlightJobIds.remove(job.id);
     }
   }
 
@@ -575,10 +588,23 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     // once the request actually finishes.
     if (job.status != UploadJobStatus.uploading) return;
 
+    final resolvedTotal = total > 0 ? total : job.totalBytes;
+    final cappedSent = sent > resolvedTotal ? resolvedTotal : sent;
+    final isComplete = cappedSent >= resolvedTotal;
+
+    final now = DateTime.now();
+    final lastUpdate = _lastProgressUpdate[jobId];
+    if (!isComplete &&
+        lastUpdate != null &&
+        now.difference(lastUpdate).inMilliseconds < 150) {
+      return; // Throttle UI updates to prevent freezing on large files
+    }
+    _lastProgressUpdate[jobId] = now;
+
     final updatedJobs = [...s.jobs];
     updatedJobs[idx] = job.copyWith(
-      uploadedBytes: sent,
-      totalBytes: total > 0 ? total : job.totalBytes,
+      uploadedBytes: cappedSent,
+      totalBytes: resolvedTotal,
     );
     state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
   }
@@ -613,7 +639,11 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       // left uploading or queued.
       wizardStep: (!stillActive && s.wizardStep == 2) ? 3 : s.wizardStep,
     ));
-    await _saveQueue();
+    _debouncedSave();
+
+    // Immediately fill freed-up slot with the next queued job instead of
+    // waiting up to 250 ms for the next ticker tick.
+    if (stillActive) _ensureProcessing();
 
     // Auto-refresh the Gallery provider — a real row now exists
     // server-side for this job.
@@ -636,10 +666,15 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
           ? job.offlineRetryCount
           : _offlineBackoffSeconds.length - 1;
       final backoff = _offlineBackoffSeconds[backoffIdx];
+      // Distinguish "server side error" from "truly offline" to give the
+      // user a more accurate message. Both use the same auto-retry path.
+      final friendlyMsg = message.isNotEmpty &&
+              !message.contains("Couldn't reach the server")
+          ? 'Server error — retrying automatically...'
+          : "No connection — will retry automatically once you're back online.";
       updatedJobs[idx] = job.copyWith(
         status: UploadJobStatus.failed,
-        errorMessage:
-            "No connection — will retry automatically once you're back online.",
+        errorMessage: friendlyMsg,
         offlinePending: true,
         offlineRetryCount: job.offlineRetryCount + 1,
         nextRetryAt: DateTime.now().add(Duration(seconds: backoff)),
@@ -657,7 +692,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       );
     }
     state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
-    await _saveQueue();
+    _debouncedSave();
+    // A slot just freed up — try to start the next queued job immediately.
+    _ensureProcessing();
   }
 
   /// Task 19.12: requeues any job whose last failure looked like a

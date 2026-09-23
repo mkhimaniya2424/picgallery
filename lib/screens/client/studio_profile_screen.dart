@@ -899,6 +899,7 @@ class _FullscreenImageSwipeViewerState
                 child: InteractiveViewer(
                   minScale: 0.5,
                   maxScale: 4.0,
+                  trackpadScrollCausesScale: true,
                   child: SafeNetworkImage(
                     widget.urls[index],
                     placeholderIcon: Icons.image_rounded,

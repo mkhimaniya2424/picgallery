@@ -43,6 +43,7 @@ class PickedMediaFile {
       bytes: bytes,
       fileName: fileName,
       contentType: contentType,
+      sizeBytes: sizeBytes,
       albumId: albumId,
       folderId: folderId,
       onSendProgress: onSendProgress,
@@ -134,13 +135,18 @@ class MediaPickerService {
     if (allowMultiple) {
       result = await FilePicker.pickFiles(
         type: type,
+        withData: false,
+        allowMultiple: true,
         allowedExtensions: allowedExtensions,
       );
     } else {
-      final f = await FilePicker.pickFile(
+      final resultList = await FilePicker.pickFiles(
         type: type,
+        withData: false,
+        allowMultiple: false,
         allowedExtensions: allowedExtensions,
       );
+      final f = resultList?.isNotEmpty == true ? resultList!.first : null;
       result = f != null ? [f] : [];
     }
     if (result.isEmpty) return [];

@@ -232,15 +232,20 @@ class InMemoryMediaRepository implements MediaRepository {
 
   @override
   Future<MediaModel> uploadMedia({
-    required List<int> bytes,
+    List<int>? bytes,
+    String? filePath,
+    Stream<List<int>> Function()? streamData,
+    String? webBlobUrl,
     required String fileName,
     required String contentType,
+    int sizeBytes = 0,
     String? albumId,
     String? folderId,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     // In-memory mock: report progress 100%
-    onSendProgress?.call(bytes.length, bytes.length);
+    final size = bytes?.length ?? 1024;
+    onSendProgress?.call(size, size);
     final now = DateTime.now();
     final media = MediaModel(
       id: 'mem-${now.microsecondsSinceEpoch}',
@@ -251,7 +256,7 @@ class InMemoryMediaRepository implements MediaRepository {
       fileName: fileName,
       albumId: albumId,
       folderId: folderId,
-      size: bytes.length,
+      size: size,
       width: 0,
       height: 0,
       createdAt: now,
@@ -263,7 +268,8 @@ class InMemoryMediaRepository implements MediaRepository {
   @override
   Future<MediaModel> replaceMediaFile({
     required String id,
-    required List<int> bytes,
+    List<int>? bytes,
+    String? filePath,
     required String fileName,
     required String contentType,
   }) async {
@@ -273,8 +279,9 @@ class InMemoryMediaRepository implements MediaRepository {
       throw NotFoundException('Media "$id" no longer exists');
     }
     final now = DateTime.now();
+    final size = bytes?.length ?? 1024;
     final updated = all[idx].copyWith(
-      size: bytes.length,
+      size: size,
       modifiedAt: now,
       canRevert: true,
       editRecipe: null,

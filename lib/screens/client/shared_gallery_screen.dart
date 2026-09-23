@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,14 +18,50 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/cards/glass_card.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/common/pinch_zoom_handler.dart';
 import '../../widgets/inputs/custom_text_field.dart';
+import '../../services/share_service_impl.dart';
 import '../../services/download_service_impl.dart';
 import '../../services/media_file_cache.dart';
 import '../../providers/auth_providers.dart'
     show apiClientProvider;
+import '../../providers/settings_provider.dart';
 
 const _gridFileCache = MediaFileCache();
 const _gridDownloadService = DownloadServiceImpl();
+const _gridShareService = ShareServiceImpl();
+
+Future<void> _shareMultipleMedia(BuildContext context, List<MediaModel> mediaList) async {
+  if (kIsWeb) {
+    final bytesList = <Uint8List>[];
+    final fileNames = <String>[];
+    for (final m in mediaList) {
+      final result = await _gridFileCache.bytesFor(m);
+      if (result != null) {
+        bytesList.add(result.bytes);
+        fileNames.add(result.fileName);
+      }
+    }
+    if (bytesList.isEmpty || !context.mounted) return;
+    await _gridShareService.shareMultipleMediaBytes(
+      context: context,
+      bytesList: bytesList,
+      fileNames: fileNames,
+    );
+    return;
+  }
+
+  final paths = <String>[];
+  for (final m in mediaList) {
+    final path = await _gridFileCache.localPathFor(m);
+    if (path != null) paths.add(path);
+  }
+  if (paths.isEmpty || !context.mounted) return;
+  await _gridShareService.shareMultipleMedia(
+    context: context,
+    filePaths: paths,
+  );
+}
 
 /// A guest's view of a shared album — reached either via a
 /// `picgallery://shared/{token}` deep link (real client scanning the
@@ -55,6 +92,8 @@ class SharedGalleryScreen extends ConsumerStatefulWidget {
       _SharedGalleryScreenState();
 }
 
+enum _ClientGalleryViewMode { compactGrid, grid, list, details }
+
 class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -62,6 +101,64 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
   final Set<String> _selectedIds = {};
 
   bool get _isSelectionMode => _selectedIds.isNotEmpty;
+
+  _ClientGalleryViewMode _viewMode = _ClientGalleryViewMode.grid;
+
+  // GestureDetector-based scale tracking – works for both touch pinch
+  // and trackpad pinch-to-zoom on Flutter Web.
+  double _scaleStartModeIndex = 3.0;
+
+  int get _currentModeIndex {
+    switch (_viewMode) {
+      case _ClientGalleryViewMode.compactGrid: return 4;
+      case _ClientGalleryViewMode.grid: return 3;
+      case _ClientGalleryViewMode.list: return 2;
+      case _ClientGalleryViewMode.details: return 1;
+    }
+  }
+
+
+  void _changeViewMode(_ClientGalleryViewMode mode) {
+    setState(() => _viewMode = mode);
+    final settings = ref.read(settingsProvider);
+    String modeStr = 'Grid';
+    if (mode == _ClientGalleryViewMode.compactGrid) modeStr = 'Compact';
+    if (mode == _ClientGalleryViewMode.list) modeStr = 'List';
+    if (mode == _ClientGalleryViewMode.details) modeStr = 'Details';
+    ref.read(settingsProvider.notifier).updateSettings(settings.copyWith(galleryViewMode: modeStr));
+  }
+
+  void _zoomIn() {
+    switch (_viewMode) {
+      case _ClientGalleryViewMode.compactGrid:
+        _changeViewMode(_ClientGalleryViewMode.grid);
+        break;
+      case _ClientGalleryViewMode.grid:
+        _changeViewMode(_ClientGalleryViewMode.list);
+        break;
+      case _ClientGalleryViewMode.list:
+        _changeViewMode(_ClientGalleryViewMode.details);
+        break;
+      case _ClientGalleryViewMode.details:
+        break;
+    }
+  }
+
+  void _zoomOut() {
+    switch (_viewMode) {
+      case _ClientGalleryViewMode.details:
+        _changeViewMode(_ClientGalleryViewMode.list);
+        break;
+      case _ClientGalleryViewMode.list:
+        _changeViewMode(_ClientGalleryViewMode.grid);
+        break;
+      case _ClientGalleryViewMode.grid:
+        _changeViewMode(_ClientGalleryViewMode.compactGrid);
+        break;
+      case _ClientGalleryViewMode.compactGrid:
+        break;
+    }
+  }
 
   void _toggleSelection(String id) {
     setState(() {
@@ -75,6 +172,24 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
 
   void _clearSelection() {
     setState(() => _selectedIds.clear());
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final settings = ref.read(settingsProvider);
+      if (settings.galleryViewMode == 'List') {
+        setState(() => _viewMode = _ClientGalleryViewMode.list);
+      } else if (settings.galleryViewMode == 'Compact') {
+        setState(() => _viewMode = _ClientGalleryViewMode.compactGrid);
+      } else if (settings.galleryViewMode == 'Details') {
+        setState(() => _viewMode = _ClientGalleryViewMode.details);
+      } else {
+        setState(() => _viewMode = _ClientGalleryViewMode.grid);
+      }
+    });
   }
 
   @override
@@ -328,14 +443,38 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
     final coverMedia = hasCover ? albumMedia.first : null;
 
     return Scaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 280,
-            pinned: true,
-            elevation: 0,
-            leadingWidth: 64,
+      body: PinchZoomHandler(
+        onZoomIn: _zoomIn,
+        onZoomOut: _zoomOut,
+        child: GestureDetector(
+        // GestureDetector onScaleUpdate handles BOTH two-finger touch pinch
+        // AND trackpad pinch-to-zoom on Flutter Web natively.
+        onScaleStart: (_) {
+          _scaleStartModeIndex = _currentModeIndex.toDouble();
+        },
+        onScaleUpdate: (details) {
+          if (details.scale == 1.0) return;
+          final newLevel = (_scaleStartModeIndex / details.scale).round().clamp(1, 4);
+          if (newLevel != _currentModeIndex) {
+            if (newLevel == 4) {
+              _changeViewMode(_ClientGalleryViewMode.compactGrid);
+            } else if (newLevel == 3) {
+              _changeViewMode(_ClientGalleryViewMode.grid);
+            } else if (newLevel == 2) {
+              _changeViewMode(_ClientGalleryViewMode.list);
+            } else if (newLevel == 1) {
+              _changeViewMode(_ClientGalleryViewMode.details);
+            }
+          }
+        },
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 280,
+              pinned: true,
+              elevation: 0,
+              leadingWidth: 64,
             leading: Padding(
               padding: EdgeInsets.only(left: 12),
               child: Center(
@@ -357,6 +496,38 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
               ),
             ),
             actions: [
+              if (_isSelectionMode)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Center(
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          if (_selectedIds.length == albumMedia.length) {
+                            _selectedIds.clear();
+                          } else {
+                            _selectedIds.addAll(albumMedia.map((m) => m.id));
+                          }
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(100),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: Icon(
+                          _selectedIds.length == albumMedia.length ? Icons.deselect_rounded : Icons.select_all_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (kIsWeb)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
@@ -494,6 +665,61 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                       ),
+                      const Spacer(),
+                      PopupMenuButton<_ClientGalleryViewMode>(
+                        tooltip: 'Change View Mode',
+                        initialValue: _viewMode,
+                        onSelected: _changeViewMode,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _viewMode == _ClientGalleryViewMode.compactGrid
+                                    ? Icons.apps_rounded
+                                    : _viewMode == _ClientGalleryViewMode.grid
+                                        ? Icons.grid_view_rounded
+                                        : _viewMode == _ClientGalleryViewMode.list
+                                            ? Icons.view_list_rounded
+                                            : Icons.table_rows_rounded,
+                                size: 16,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.textOnDark
+                                    : AppColors.text,
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.arrow_drop_down,
+                                  size: 16,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? AppColors.textOnDark
+                                      : AppColors.text),
+                            ],
+                          ),
+                        ),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: _ClientGalleryViewMode.compactGrid,
+                            child: Text('Compact Grid'),
+                          ),
+                          const PopupMenuItem(
+                            value: _ClientGalleryViewMode.grid,
+                            child: Text('Grid'),
+                          ),
+                          const PopupMenuItem(
+                            value: _ClientGalleryViewMode.list,
+                            child: Text('List'),
+                          ),
+                          const PopupMenuItem(
+                            value: _ClientGalleryViewMode.details,
+                            child: Text('Details'),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   SizedBox(height: 8),
@@ -511,25 +737,43 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
             ),
           ),
           (data.albums != null && data.albums!.isNotEmpty)
-              ? SliverPadding(
-                  padding: EdgeInsets.all(AppSpacing.md),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.8,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        final a = data.albums![i];
-                        return _buildAlbumGridItem(context, a, widget.token, widget.isPreview);
-                      },
-                      childCount: data.albums!.length,
-                    ),
-                  ),
-                )
+              ? ((_viewMode == _ClientGalleryViewMode.list || _viewMode == _ClientGalleryViewMode.details)
+                  ? SliverPadding(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final a = data.albums![i];
+                            return Container(
+                              margin: EdgeInsets.only(bottom: 12),
+                              height: _viewMode == _ClientGalleryViewMode.details ? 300 : 200,
+                              child: _buildAlbumGridItem(context, a, widget.token, widget.isPreview),
+                            );
+                          },
+                          childCount: data.albums!.length,
+                        ),
+                      ),
+                    )
+                  : SliverPadding(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      sliver: SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: MediaQuery.of(context).size.width < 420
+                              ? (_viewMode == _ClientGalleryViewMode.compactGrid ? 8 : 2)
+                              : (MediaQuery.of(context).size.width ~/ (_viewMode == _ClientGalleryViewMode.compactGrid ? 50 : 140)).clamp(2, 12),
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.8,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final a = data.albums![i];
+                            return _buildAlbumGridItem(context, a, widget.token, widget.isPreview);
+                          },
+                          childCount: data.albums!.length,
+                        ),
+                      ),
+                    ))
               : (data.collection != null)
                   ? const SliverFillRemaining(
                       child: Center(
@@ -548,71 +792,126 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
                             ),
                           ),
                         )
-                      : SliverPadding(
-                  padding: EdgeInsets.all(AppSpacing.md),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 1.0,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        final m = albumMedia[i];
-                        return _buildGridItem(context, m, albumMedia,
-                            data.showWatermark, data.allowDownload);
-                      },
-                      childCount: albumMedia.length,
-                    ),
-                  ),
-                ),
+                      : (_viewMode == _ClientGalleryViewMode.list || _viewMode == _ClientGalleryViewMode.details)
+                          ? SliverPadding(
+                              padding: EdgeInsets.all(AppSpacing.md),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final m = albumMedia[i];
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                                      child: SizedBox(
+                                        height: _viewMode == _ClientGalleryViewMode.details ? 300 : 150,
+                                        child: _buildGridItem(
+                                            context, m, albumMedia, data.showWatermark, data.allowDownload),
+                                      ),
+                                    );
+                                  },
+                                  childCount: albumMedia.length,
+                                ),
+                              ),
+                            )
+                          : SliverPadding(
+                              padding: EdgeInsets.all(AppSpacing.md),
+                              sliver: SliverGrid(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: MediaQuery.of(context).size.width < 420
+                                      ? (_viewMode == _ClientGalleryViewMode.compactGrid ? 8 : 2)
+                                      : (MediaQuery.of(context).size.width ~/ (_viewMode == _ClientGalleryViewMode.compactGrid ? 50 : 140)).clamp(2, 12),
+                                  crossAxisSpacing: 8,
+                                  mainAxisSpacing: 8,
+                                  childAspectRatio: 1.0,
+                                ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, i) {
+                                    final m = albumMedia[i];
+                                    return _buildGridItem(context, m, albumMedia,
+                                        data.showWatermark, data.allowDownload);
+                                  },
+                                  childCount: albumMedia.length,
+                                ),
+                              ),
+                            ),
         ],
-      ),
-      floatingActionButton: _isSelectionMode && data.allowDownload
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final ids = _selectedIds.toList(growable: false);
-                _clearSelection();
-                if (ids.isEmpty) return;
+      ), // closes CustomScrollView
+      ), // closes GestureDetector
+      ), // closes PinchZoomHandler
+      floatingActionButton: _isSelectionMode
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'share_fab',
+                  onPressed: () async {
+                    final ids = _selectedIds.toList(growable: false);
+                    _clearSelection();
+                    if (ids.isEmpty) return;
 
-                // For web/mobile downloading, loop through ids and download individually.
-                final apiClient = ref.read(apiClientProvider);
-                for (final id in ids) {
-                  final m = albumMedia.firstWhere((x) => x.id == id,
-                      orElse: () => albumMedia.first);
-                  if (m.id != id) continue; // Not found
+                    final itemsToShare = <MediaModel>[];
+                    for (final id in ids) {
+                      final m = albumMedia.firstWhere((x) => x.id == id,
+                          orElse: () => albumMedia.first);
+                      if (m.id == id && m.displayPath.trim().isNotEmpty) {
+                        itemsToShare.add(m);
+                      }
+                    }
+                    if (itemsToShare.isEmpty || !context.mounted) return;
+                    await _shareMultipleMedia(context, itemsToShare);
+                  },
+                  icon: Icon(Icons.share_rounded),
+                  label: Text('Share ${_selectedIds.length} items'),
+                  backgroundColor: AppColors.primary,
+                ),
+                if (data.allowDownload) ...[
+                  SizedBox(width: 16),
+                  FloatingActionButton.extended(
+                    heroTag: 'download_fab',
+                    onPressed: () async {
+                      final ids = _selectedIds.toList(growable: false);
+                      _clearSelection();
+                      if (ids.isEmpty) return;
 
-                  if (kIsWeb) {
-                    final result = await _gridFileCache.bytesFor(m);
-                    if (result == null) continue;
-                    if (!context.mounted) continue;
-                    await _gridDownloadService.downloadBytes(
-                      context: context,
-                      bytes: result.bytes,
-                      fileName: result.fileName,
-                      mediaId: m.id,
-                      apiClient: apiClient,
-                      isClientUser: true,
-                    );
-                  } else {
-                    final filePath = await _gridFileCache.localPathFor(m);
-                    if (filePath == null) continue;
-                    if (!context.mounted) continue;
-                    await _gridDownloadService.downloadOriginal(
-                      context: context,
-                      filePath: filePath,
-                      mediaId: m.id,
-                      apiClient: apiClient,
-                      isClientUser: true,
-                    );
-                  }
-                }
-              },
-              icon: Icon(Icons.download_rounded),
-              label: Text('Download ${_selectedIds.length} items'),
-              backgroundColor: AppColors.primary,
+                      // For web/mobile downloading, loop through ids and download individually.
+                      final apiClient = ref.read(apiClientProvider);
+                      for (final id in ids) {
+                        final m = albumMedia.firstWhere((x) => x.id == id,
+                            orElse: () => albumMedia.first);
+                        if (m.id != id) continue; // Not found
+
+                        if (kIsWeb) {
+                          final result = await _gridFileCache.bytesFor(m);
+                          if (result == null) continue;
+                          if (!context.mounted) continue;
+                          await _gridDownloadService.downloadBytes(
+                            context: context,
+                            bytes: result.bytes,
+                            fileName: result.fileName,
+                            mediaId: m.id,
+                            apiClient: apiClient,
+                            isClientUser: true,
+                          );
+                        } else {
+                          final filePath = await _gridFileCache.localPathFor(m);
+                          if (filePath == null) continue;
+                          if (!context.mounted) continue;
+                          await _gridDownloadService.downloadOriginal(
+                            context: context,
+                            filePath: filePath,
+                            mediaId: m.id,
+                            apiClient: apiClient,
+                            isClientUser: true,
+                          );
+                        }
+                      }
+                    },
+                    icon: Icon(Icons.download_rounded),
+                    label: Text('Download ${_selectedIds.length} items'),
+                    backgroundColor: AppColors.primary,
+                  ),
+                ],
+              ],
             )
           : (albumMedia.isNotEmpty
               ? FloatingActionButton.extended(
@@ -775,7 +1074,7 @@ class _SharedGalleryScreenState extends ConsumerState<SharedGalleryScreen> {
     final isNetwork =
         thumbPath.startsWith('http://') || thumbPath.startsWith('https://');
     final file = (!isNetwork && thumbPath.isNotEmpty) ? File(thumbPath) : null;
-    final hasRealFile = isNetwork || (file != null && file.existsSync());
+    final hasRealFile = isNetwork || (!kIsWeb && file != null && file.existsSync());
 
     Widget imageWidget;
     if (isNetwork) {

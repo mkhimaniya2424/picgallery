@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:video_player/video_player.dart' as video_player;
 
 import '../core/theme/app_theme.dart';
 import '../providers/album_provider.dart';
@@ -13,6 +15,7 @@ import 'upload_queue_provider.dart';
 import 'upload_queue_state.dart';
 import 'widgets/upload_queue_tile.dart';
 import '../widgets/common/anchored_dropdown_field.dart';
+import '../widgets/common/pinch_zoom_handler.dart';
 
 /// The primary Screen for the Studio Upload Module.
 ///
@@ -31,6 +34,25 @@ class UploadQueueScreen extends ConsumerStatefulWidget {
 class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
   final TextEditingController _renameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  int _gridColumns = 3;
+  double _scaleStartCrossAxisCount = 3.0;
+
+  void _zoomIn() {
+    if (_gridColumns > 1) {
+      setState(() {
+        _gridColumns--;
+      });
+    }
+  }
+
+  void _zoomOut() {
+    if (_gridColumns < 8) {
+      setState(() {
+        _gridColumns++;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -230,6 +252,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                           onPressed: () async {
                             final rawFiles = await FilePicker.pickFiles(
                               type: FileType.custom,
+                              allowMultiple: true,
+                              withData: false, // Prevents reading large files into RAM on Web automatically
                               allowedExtensions: const [
                                 'jpg',
                                 'jpeg',
@@ -245,14 +269,27 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                               ],
                             );
                             if (rawFiles.isNotEmpty) {
-                              // Eagerly read size + bytes (web) so state
-                              // holds a plain PickedFileInfo, not a live
-                              // PlatformFile with async-only accessors.
+                              // Eagerly read size + bytes (web, small files) so
+                              // state holds a plain PickedFileInfo. For large
+                              // web files (>10 MB, i.e. videos) we use a stream
+                              // factory instead of loading all bytes into RAM.
+                              const _webStreamThreshold = 10 * 1024 * 1024; // 10 MB
                               final picked = <PickedFileInfo>[];
                               for (final f in rawFiles) {
                                 final size = await f.length();
-                                final bytes =
-                                    kIsWeb ? await f.readAsBytes() : null;
+                                Uint8List? bytes;
+                                Stream<Uint8List> Function()? streamFactory;
+                                String? webBlobUrl;
+                                if (kIsWeb) {
+                                  if (size > _webStreamThreshold) {
+                                    // Large file: use streaming to avoid OOM
+                                    streamFactory = f.readAsByteStream;
+                                    webBlobUrl = f.xFile.path;
+                                  } else {
+                                    // Small file: eagerly read bytes
+                                    bytes = await f.readAsBytes();
+                                  }
+                                }
                                 final ext = f.extension;
                                 picked.add(PickedFileInfo(
                                   name: f.name,
@@ -260,6 +297,8 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                                   path: f.path,
                                   bytes: bytes,
                                   extension: ext,
+                                  streamFactory: streamFactory,
+                                  webBlobUrl: webBlobUrl,
                                 ));
                               }
                               notifier.updatePickedFiles(picked);
@@ -312,16 +351,36 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                     ),
                     const Divider(height: 1),
                     Expanded(
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.0,
-                        ),
-                        itemCount: files.length,
+                      child: SingleChildScrollView(
+                        child: PinchZoomHandler(
+                          onZoomIn: _zoomIn,
+                        onZoomOut: _zoomOut,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onScaleStart: (details) {
+                            _scaleStartCrossAxisCount = _gridColumns.toDouble();
+                          },
+                          onScaleUpdate: (details) {
+                            if (details.scale == 1.0) return;
+                            final newCount = (_scaleStartCrossAxisCount / details.scale)
+                                .round()
+                                .clamp(1, 8);
+                            if (newCount != _gridColumns) {
+                              setState(() => _gridColumns = newCount);
+                            }
+                          },
+                          child: GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: _gridColumns,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 1.0,
+                            ),
+                            itemCount: files.length,
                         itemBuilder: (context, idx) {
                           final f = files[idx];
                           final isImage = ['jpg', 'jpeg', 'png', 'webp', 'heic']
@@ -348,51 +407,52 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                                   // `kIsWeb` has to gate access to it
                                   // entirely (a `f.path != null` check
                                   // alone still throws).
-                                  child: isImage && kIsWeb && f.bytes != null
-                                      ? Image.memory(
-                                          f.bytes!,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          height: double.infinity,
-                                        )
-                                      : isImage && !kIsWeb && f.path != null
-                                          ? Image.file(
-                                              File(f.path!),
+                                  child: isImage
+                                      ? (kIsWeb && f.bytes != null
+                                          ? Image.memory(
+                                              f.bytes!,
                                               fit: BoxFit.cover,
                                               width: double.infinity,
                                               height: double.infinity,
                                             )
+                                          : (kIsWeb && f.webBlobUrl != null
+                                              ? Image.network(
+                                                  f.webBlobUrl!,
+                                                  fit: BoxFit.cover,
+                                                  width: double.infinity,
+                                                  height: double.infinity,
+                                                )
+                                              : (f.path != null
+                                                  ? Image.file(
+                                                      File(f.path!),
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                      height: double.infinity,
+                                                    )
+                                                  : const Icon(Icons.image, size: 32))))
+                                      : (!isImage && (f.webBlobUrl != null || f.path != null))
+                                          ? _LocalVideoThumbnail(
+                                              url: f.webBlobUrl ?? f.path!,
+                                            )
                                           : Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
+                                              mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
                                                 Icon(
-                                                  Icons
-                                                      .play_circle_outline_rounded,
+                                                  Icons.play_circle_outline_rounded,
                                                   size: 32,
-                                                  color: Colors.black
-                                                      .withValues(alpha: 0.2),
+                                                  color: Colors.black.withValues(alpha: 0.2),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 4.0),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                                   child: Text(
-                                                    f.extension
-                                                            ?.toUpperCase() ??
-                                                        'FILE',
+                                                    f.extension?.toUpperCase() ?? 'FILE',
                                                     maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                    overflow: TextOverflow.ellipsis,
                                                     style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w800,
+                                                      fontWeight: FontWeight.w800,
                                                       fontSize: 10,
-                                                      color: isDark
-                                                          ? AppColors
-                                                              .subtitleOnDark
-                                                          : Colors.black45,
+                                                      color: isDark ? AppColors.subtitleOnDark : Colors.black45,
                                                     ),
                                                   ),
                                                 )
@@ -423,7 +483,10 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
                           );
                         },
                       ),
+                        ),
+                      ),
                     ),
+                  ),
                   ],
                 ),
         ),
@@ -1181,3 +1244,92 @@ class _UploadQueueScreenState extends ConsumerState<UploadQueueScreen> {
     );
   }
 }
+
+/// A simple video player widget to generate a thumbnail for picked videos on Web and Mobile.
+class _LocalVideoThumbnail extends StatefulWidget {
+  final String url;
+  final BoxFit fit;
+
+  const _LocalVideoThumbnail({
+    super.key,
+    required this.url,
+    this.fit = BoxFit.cover,
+  });
+
+  @override
+  State<_LocalVideoThumbnail> createState() => _LocalVideoThumbnailState();
+}
+
+class _LocalVideoThumbnailState extends State<_LocalVideoThumbnail> {
+  late video_player.VideoPlayerController _controller;
+  bool _initialized = false;
+  bool _error = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = video_player.VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    _controller.initialize().then((_) async {
+      await _controller.setVolume(0);
+      
+      // Seek slightly into the video to avoid the initial black frame
+      if (_controller.value.duration.inMilliseconds > 1000) {
+        await _controller.seekTo(const Duration(seconds: 1));
+      } else if (_controller.value.duration.inMilliseconds > 100) {
+        await _controller.seekTo(const Duration(milliseconds: 100));
+      }
+
+      if (mounted) {
+        setState(() {
+          _initialized = true;
+        });
+      }
+    }).catchError((e) {
+      debugPrint('Error initializing local video thumbnail: $e');
+      if (mounted) {
+        setState(() {
+          _error = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error) {
+      return const Center(
+        child: Icon(Icons.broken_image_rounded, color: Colors.grey),
+      );
+    }
+    if (!_initialized) {
+      return const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    
+    // IgnorePointer so it doesn't swallow tap events
+    return IgnorePointer(
+      child: SizedBox.expand(
+        child: FittedBox(
+          fit: widget.fit,
+          child: SizedBox(
+            width: _controller.value.size.width,
+            height: _controller.value.size.height,
+            child: video_player.VideoPlayer(_controller),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
