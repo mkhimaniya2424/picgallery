@@ -530,7 +530,7 @@ class MediaListController extends ChangeNotifier {
         }
       }
 
-      const chunkSize = 5;
+      const chunkSize = 25;
       for (int i = 0; i < ids.length; i += chunkSize) {
         final end = (i + chunkSize) > ids.length ? ids.length : i + chunkSize;
         final chunk = ids.sublist(i, end);
@@ -540,6 +540,9 @@ class MediaListController extends ChangeNotifier {
         for (final id in chunk) {
           _allMedia.removeWhere((m) => m.id == id);
         }
+        
+        // Ensure UI updates to show it's not frozen
+        await Future.delayed(Duration.zero);
       }
 
       for (final entry in albumDeltas.entries) {

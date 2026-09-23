@@ -225,11 +225,16 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
               builder: (context, constraints) {
                 // Two columns on wide/tablet layouts, single column on phones.
                 final isWide = constraints.maxWidth >= 720;
-                final content = ListView(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  children: [
-                    AlbumDetailsHeader(album: album),
-                    SizedBox(height: AppSpacing.md),
+                final content = RefreshIndicator(
+                  onRefresh: () async {
+                    await ref.read(albumProvider).load();
+                    await ref.read(mediaProvider).load();
+                  },
+                  child: ListView(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    children: [
+                      AlbumDetailsHeader(album: album),
+                      SizedBox(height: AppSpacing.md),
                     if (folder != null || album.description != null)
                       Builder(builder: (context) {
                         final isDark =
@@ -371,6 +376,7 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                       ),
                     ),
                   ],
+                ),
                 );
 
                 if (!isWide) return content;

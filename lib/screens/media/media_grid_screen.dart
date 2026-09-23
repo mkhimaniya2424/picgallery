@@ -187,6 +187,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   final ScrollController _scrollController = ScrollController();
   int _visibleLimit = 24;
   bool _loadingMore = false;
+  int _gridColumns = 4;
 
   // GestureDetector-based scale tracking – works for both touch pinch
   // and trackpad pinch-to-zoom on Flutter Web.
@@ -203,16 +204,26 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   void _zoomIn() {
     if (_viewMode == _GalleryViewMode.timeline) {
       _changeViewMode(_GalleryViewMode.grid);
+      setState(() { _gridColumns = 8; });
     } else if (_viewMode == _GalleryViewMode.grid) {
-      _changeViewMode(_GalleryViewMode.list);
+      if (_gridColumns > 1) {
+        setState(() { _gridColumns--; });
+      } else {
+        _changeViewMode(_GalleryViewMode.list);
+      }
     }
   }
 
   void _zoomOut() {
     if (_viewMode == _GalleryViewMode.list) {
       _changeViewMode(_GalleryViewMode.grid);
+      setState(() { _gridColumns = 1; });
     } else if (_viewMode == _GalleryViewMode.grid) {
-      _changeViewMode(_GalleryViewMode.timeline);
+      if (_gridColumns < 8) {
+        setState(() { _gridColumns++; });
+      } else {
+        _changeViewMode(_GalleryViewMode.timeline);
+      }
     }
   }
 
@@ -712,10 +723,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        const double tileMinWidth = 140;
-        final width = constraints.maxWidth;
-        final crossAxisCount =
-            width < 420 ? 2 : (width ~/ tileMinWidth).clamp(2, 4);
+        final crossAxisCount = _gridColumns;
 
         return GridView.builder(
           controller: _scrollController,
@@ -789,10 +797,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
             if (viewMode == _GalleryViewMode.grid)
               LayoutBuilder(
                 builder: (context, constraints) {
-                  const double tileMinWidth = 140;
-                  final width = constraints.maxWidth;
-                  final crossAxisCount =
-                      width < 420 ? 2 : (width ~/ tileMinWidth).clamp(2, 4);
+                  final crossAxisCount = _gridColumns;
 
                   return GridView.builder(
                     shrinkWrap: true,
@@ -1006,10 +1011,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
 
   Widget _buildTimelineGridSliver(MediaListController c, List<MediaModel> items,
       List<MediaModel> mediaList) {
-    final width = MediaQuery.of(context).size.width - 56;
-    const double tileMinWidth = 45;
-    final crossAxisCount =
-        width < 300 ? 2 : (width ~/ tileMinWidth).clamp(2, 8);
+    final crossAxisCount = _gridColumns;
 
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
