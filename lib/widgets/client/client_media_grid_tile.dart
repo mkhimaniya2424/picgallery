@@ -10,6 +10,7 @@ import '../../services/download_service_impl.dart';
 import '../../services/media_file_cache.dart';
 import '../../services/permission_service.dart';
 import '../../screens/client/client_media_detail_screen.dart';
+import '../../widgets/media/media_thumb.dart';
 
 /// Client-facing media grid tile with download and view options.
 ///
@@ -169,18 +170,7 @@ class _ClientMediaGridTileState extends ConsumerState<ClientMediaGridTile> {
             // Thumbnail
             Hero(
               tag: widget.heroTag ?? media.id,
-              child: Image.network(
-                media.displayThumbnailPath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey[300],
-                  child: const Icon(
-                    Icons.broken_image,
-                    size: 48,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
+              child: MediaThumb(media: media, fit: BoxFit.cover),
             ),
 
             // Scrim for buttons

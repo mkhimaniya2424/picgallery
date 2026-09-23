@@ -18,6 +18,7 @@ import '../../services/share_service_impl.dart';
 import '../../widgets/media/media_like_button.dart';
 import '../../widgets/media/media_comments_section.dart';
 import '../../widgets/media/download_complete_bottom_sheet.dart';
+import '../../widgets/media/media_thumb.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../media/image_viewer_screen.dart';
 import '../media/video_player_screen.dart';
@@ -321,18 +322,7 @@ class _ClientMediaDetailScreenState
                   children: [
                     Hero(
                       tag: widget.heroTag ?? media.id,
-                      child: Image.network(
-                        media.displayThumbnailPath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: Colors.grey[300],
-                          child: Icon(
-                            Icons.broken_image,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
+                      child: MediaThumb(media: media, fit: BoxFit.cover),
                     ),
                     if (media.type == MediaType.video)
                       Center(
