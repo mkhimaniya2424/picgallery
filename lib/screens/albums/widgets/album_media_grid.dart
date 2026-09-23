@@ -250,7 +250,7 @@ class _MediaThumbState extends State<_MediaThumb>
                       return Image.network(
                         path,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => kIsWeb && isVideo
+                        errorBuilder: (_, __, ___) => isVideo
                             ? VideoFallbackThumbnail(media: m, fit: BoxFit.cover)
                             : _fallback(isVideo: isVideo),
                       );
@@ -262,13 +262,13 @@ class _MediaThumbState extends State<_MediaThumb>
                             _fallback(isVideo: isVideo),
                       );
                     }
-                    return kIsWeb && isVideo
+                    return isVideo
                         ? VideoFallbackThumbnail(media: m, fit: BoxFit.cover)
                         : _fallback(isVideo: isVideo);
                   },
                 )
               else
-                kIsWeb && isVideo 
+                isVideo 
                     ? VideoFallbackThumbnail(media: m, fit: BoxFit.cover)
                     : _fallback(isVideo: isVideo),
               // Fallback play icon rendering is handled by VideoFallbackThumbnail if it kicks in.

@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from app.db.session import SessionLocal
-from app.models.media import Media
+from app.models.gallery import Media
 from app.core.config import settings
 
 def fix_thumbnails():
@@ -45,19 +45,17 @@ def fix_thumbnails():
                     print(f"  ❌ FFmpeg failed! Error output:")
                     print(result.stderr[-500:])  # Print last 500 chars of error
                     continue
-                    
-                if expected_thumb_path.exists():
-                    # Update database if needed
-                    rel_thumb_path = expected_thumb_path.relative_to(media_root)
-                    video.thumbnail_path = str(rel_thumb_path).replace("\\", "/")
-                    db.commit()
-                    
-                    test_url = f"{settings.app_public_url}{settings.MEDIA_URL_PREFIX}/{video.thumbnail_path}"
-                    print(f"  ✅ Success! You can view it here to verify:")
-                    print(f"  🔗 {test_url}")
-                    fixed_count += 1
-                else:
-                    print("  ❌ FFmpeg succeeded but file was not created?")
+            
+            if expected_thumb_path.exists() and not video.thumbnail_path:
+                # Update database if needed
+                rel_thumb_path = expected_thumb_path.relative_to(media_root)
+                video.thumbnail_path = str(rel_thumb_path).replace("\\", "/")
+                db.commit()
+                
+                test_url = f"{settings.app_public_url}{settings.MEDIA_URL_PREFIX}/{video.thumbnail_path}"
+                print(f"  ✅ DB Updated! You can view it here to verify:")
+                print(f"  🔗 {test_url}")
+                fixed_count += 1
                     
         print(f"\nDone! Fixed {fixed_count} video thumbnails.")
     except Exception as e:

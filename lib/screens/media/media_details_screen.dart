@@ -467,18 +467,17 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                                 videoThumbIsNetwork
                                     ? Image.network(videoThumbPath,
                                         fit: BoxFit.contain,
-                                        errorBuilder: (_, __, ___) => kIsWeb
-                                            ? VideoFallbackThumbnail(media: media, fit: BoxFit.contain)
-                                            : _MediaGradientPlaceholder(media: media))
+                                        errorBuilder: (_, __, ___) =>
+                                            VideoFallbackThumbnail(media: media, fit: BoxFit.contain))
                                     : Image.file(videoThumbFile!,
                                         fit: BoxFit.contain,
                                         errorBuilder: (_, __, ___) =>
                                             _MediaGradientPlaceholder(
                                                 media: media))
+                              else if (media.type == MediaType.video)
+                                VideoFallbackThumbnail(media: media, fit: BoxFit.contain)
                               else
-                                kIsWeb && media.type == MediaType.video
-                                    ? VideoFallbackThumbnail(media: media, fit: BoxFit.contain)
-                                    : _MediaGradientPlaceholder(media: media),
+                                _MediaGradientPlaceholder(media: media),
                               // Play affordance sits on top of whatever's
                               // behind it (real poster frame or the
                               // gradient fallback) — a video is always

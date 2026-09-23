@@ -54,7 +54,7 @@ class MediaThumb extends StatelessWidget {
           thumbPath,
           fit: fit,
           errorBuilder: (context, error, stackTrace) =>
-              kIsWeb ? VideoFallbackThumbnail(media: media, fit: fit) : _Placeholder(media: media),
+              VideoFallbackThumbnail(media: media, fit: fit),
         );
       } else if (!kIsWeb &&
           thumbPath.isNotEmpty &&
@@ -67,7 +67,7 @@ class MediaThumb extends StatelessWidget {
         );
       }
     }
-    return kIsWeb && media.type == MediaType.video 
+    return media.type == MediaType.video 
         ? VideoFallbackThumbnail(media: media, fit: fit) 
         : _Placeholder(media: media);
   }

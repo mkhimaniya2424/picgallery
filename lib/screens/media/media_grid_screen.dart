@@ -2290,7 +2290,7 @@ class _MediaThumbnail extends StatelessWidget {
           thumbPath,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) =>
-              kIsWeb ? VideoFallbackThumbnail(media: media, fit: BoxFit.cover) : _placeholder(),
+              VideoFallbackThumbnail(media: media, fit: BoxFit.cover),
         );
       } else if (!kIsWeb &&
           thumbPath.isNotEmpty &&
@@ -2302,7 +2302,7 @@ class _MediaThumbnail extends StatelessWidget {
         );
       }
     }
-    return kIsWeb && media.type == MediaType.video
+    return media.type == MediaType.video
         ? VideoFallbackThumbnail(media: media, fit: BoxFit.cover)
         : _placeholder();
   }
