@@ -167,7 +167,7 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
     final allAlbumMedia = mediaState.allMedia
         .where((m) => m.albumId == album.id)
         .toList()
-      ..sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     const int previewLimit = 12;
     final previewMedia =
         allAlbumMedia.take(previewLimit).toList(growable: false);

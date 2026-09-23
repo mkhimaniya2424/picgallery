@@ -216,7 +216,7 @@ class MediaListController extends ChangeNotifier {
     final out = list.toList();
     switch (_sortOption) {
       case MediaSortOption.recent:
-        out.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
+        out.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
       case MediaSortOption.name:
         out.sort((a, b) =>

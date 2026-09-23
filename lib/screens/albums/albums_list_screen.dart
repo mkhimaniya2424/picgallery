@@ -10,7 +10,7 @@ import '../../models/folder_model.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/face_search_provider.dart';
 import '../../providers/folder_provider.dart';
-
+import '../../providers/media_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 
 import '../../widgets/common/empty_state_card.dart';
@@ -189,7 +189,10 @@ class _AlbumsListScreenState extends ConsumerState<AlbumsListScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () => ref.read(albumProvider).load(),
+          onRefresh: () async {
+            await ref.read(albumProvider).load();
+            await ref.read(mediaProvider).load();
+          },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
