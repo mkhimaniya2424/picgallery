@@ -32,6 +32,12 @@ import 'upload_queue_state.dart';
 class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Timer? _ticker;
 
+  /// Set to true in [ref.onDispose] so fire-and-forget async chains
+  /// ([_beginRealUpload] and progress callbacks) stop writing to a
+  /// disposed notifier — previously caused StateError crashes when
+  /// auth state changed or the user navigated away mid-upload.
+  bool _disposed = false;
+
   /// Read fresh each time rather than cached in a field — this queue can
   /// outlive a single repository instance (e.g. `apiClientProvider`
   /// rebuilding), and always going through Riverpod keeps this on the
@@ -41,9 +47,10 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
   final UploadQueueLocalStore _localStore = UploadQueueLocalStore();
 
-  /// How many uploads may run in parallel. 2 is a good balance between
-  /// throughput and avoiding server rate-limiting / OOM on web.
-  static const int _maxConcurrentUploads = 2;
+  /// How many uploads may run in parallel. 4 gives 2× throughput over
+  /// the old 2-slot limit on a 20 Mbps+ connection while staying within
+  /// safe concurrency limits for the FastAPI backend.
+  static const int _maxConcurrentUploads = 4;
 
   /// Ids of jobs whose real upload (file read + network request) is currently
   /// in flight. Up to [_maxConcurrentUploads] may be active at once.
@@ -105,6 +112,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   @override
   FutureOr<UploadQueueState> build() async {
     ref.onDispose(() {
+      _disposed = true;
       _ticker?.cancel();
       _ticker = null;
       _offlineRetryTicker?.cancel();
@@ -488,6 +496,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// `uploadedBytes`/`totalBytes` (Task 19.11) so [UploadQueueTile]'s
   /// progress bar reflects bytes actually on the wire — not a guess.
   Future<void> _beginRealUpload(UploadJobModel job) async {
+    // If the controller is already disposed, don't start any new uploads.
+    if (_disposed) return;
+
     _inFlightJobIds.add(job.id);
 
     final started = state.value;
@@ -495,6 +506,15 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       _inFlightJobIds.remove(job.id);
       return;
     }
+
+    // Guard again before writing state in case the notifier was disposed
+    // between the above checks (race conditions can happen on container
+    // rebuilds). If disposed, clean up and exit.
+    if (_disposed) {
+      _inFlightJobIds.remove(job.id);
+      return;
+    }
+
     final startedJobs = started.jobs.map((j) {
       if (j.id != job.id) return j;
       return j.copyWith(
@@ -503,6 +523,13 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         clearError: true,
       );
     }).toList();
+
+    // If disposed after constructing startedJobs, avoid writing state.
+    if (_disposed) {
+      _inFlightJobIds.remove(job.id);
+      return;
+    }
+
     state = AsyncValue.data(started.copyWith(jobs: startedJobs));
     _debouncedSave(); // non-blocking — don't delay the actual upload
 
@@ -574,6 +601,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// Called by the real `onSendProgress` callback, potentially many times
   /// a second, while [jobId]'s upload is on the wire.
   void _onRealProgress(String jobId, int sent, int total) {
+    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
@@ -610,6 +638,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   }
 
   Future<void> _onRealSuccess(String jobId, MediaModel media) async {
+    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
@@ -652,6 +681,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
   Future<void> _onRealFailure(String jobId, String message,
       {bool isConnectivityIssue = false}) async {
+    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
@@ -704,6 +734,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// hookup from Task 19.11) takes it from there, same as if the user had
   /// tapped Retry by hand.
   Future<void> _tickOfflineRetries() async {
+    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
 
@@ -929,9 +960,38 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     await _saveQueue();
   }
 
-  Future<void> resetWizard() async {
+  /// Resets the upload wizard for a new session.
+  ///
+  /// If [startFresh] is true, always goes to step 0 (file selection)
+  /// regardless of any existing active/paused jobs — used when the user
+  /// explicitly triggers "Upload Media" from the dashboard FAB or drawer.
+  ///
+  /// If [startFresh] is false (default) and there are unfinished jobs,
+  /// jumps to step 2 (Progress) so the user can see them — used when
+  /// the upload screen is opened from the BackgroundUploadIndicator tap.
+  ///
+  /// Async-safe: if the provider is still loading (e.g. fresh after a
+  /// reconnect), waits for [build()] to complete before acting.
+  Future<void> resetWizard({bool startFresh = false}) async {
+    // Wait if provider is still initialising (avoids the race where
+    // state.value is null right after a reconnect rebuilds the notifier).
+    if (state is AsyncLoading) {
+      try {
+        await future;
+      } catch (_) {
+        return; // build() failed — nothing to reset
+      }
+    }
+    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
+
+    // If the user wants a fresh start, always go to step 0.
+    // Otherwise, if there are active jobs, show them in the progress step.
+    if (!startFresh && s.jobs.any((j) => !j.isDone)) {
+      state = AsyncValue.data(s.copyWith(wizardStep: 2));
+      return;
+    }
 
     state = AsyncValue.data(s.copyWith(
       wizardStep: 0,
@@ -940,6 +1000,23 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       clearFolder: true,
       clearRenamePrefix: true,
     ));
+  }
+
+  /// Opens the Activity Hub (step 4) which shows all existing upload jobs
+  /// grouped by status. Used when the user taps "Upload Media" in the drawer
+  /// while jobs already exist.
+  Future<void> openActivityHub() async {
+    if (state is AsyncLoading) {
+      try {
+        await future;
+      } catch (_) {
+        return;
+      }
+    }
+    if (_disposed) return;
+    final s = state.value;
+    if (s == null) return;
+    state = AsyncValue.data(s.copyWith(wizardStep: 4));
   }
 
   Future<void> failFirstNonDone() async {
