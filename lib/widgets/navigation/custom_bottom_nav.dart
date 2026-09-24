@@ -26,6 +26,7 @@ class CustomBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     String getLabel(int index) {
       switch (index) {
@@ -43,6 +44,7 @@ class CustomBottomNav extends StatelessWidget {
     }
 
     return SafeArea(
+      bottom: !isIOS,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

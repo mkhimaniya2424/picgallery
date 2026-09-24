@@ -24,8 +24,10 @@ class AdminBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return SafeArea(
+      bottom: !isIOS,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
