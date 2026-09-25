@@ -213,6 +213,12 @@ class MediaContentType {
     'webm': 'video/webm',
     'avi': 'video/x-msvideo',
     'm4v': 'video/x-m4v',
+    '3gp': 'video/3gpp',
+    '3g2': 'video/3gpp2',
+    'wmv': 'video/x-ms-wmv',
+    'm2ts': 'video/mp2t',
+    'mts': 'video/mp2t',
+    'ts': 'video/mp2t',
   };
 
   /// Falls back to `application/octet-stream` for anything unrecognized

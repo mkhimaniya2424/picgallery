@@ -35,7 +35,18 @@ logger = logging.getLogger("app.storage")
 # Extensions/content-types accepted from the upload form. Kept narrow on
 # purpose — this is what actually gets written to storage and served back.
 _PHOTO_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
-_VIDEO_CONTENT_TYPES = {"video/mp4", "video/quicktime", "video/x-matroska", "video/webm"}
+_VIDEO_CONTENT_TYPES = {
+    "video/mp4",
+    "video/quicktime",       # .mov
+    "video/x-matroska",      # .mkv
+    "video/webm",
+    "video/x-msvideo",       # .avi
+    "video/avi",             # .avi (alternate MIME)
+    "video/x-m4v",           # .m4v
+    "video/3gpp",            # .3gp
+    "video/3gpp2",           # .3g2
+    "video/x-ms-wmv",        # .wmv
+}
 
 THUMBNAIL_MAX_DIMENSION = 480
 # Grab the poster frame this far into the clip (skips a possible black
