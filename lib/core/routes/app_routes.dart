@@ -55,8 +55,8 @@ import '../../screens/media/media_details_screen.dart';
 import '../../screens/media/image_viewer_screen.dart';
 import '../../screens/media/video_player_screen.dart';
 import '../../screens/media/photo_editor_screen.dart';
-import '../../upload/upload_hub_screen.dart';
 import '../../upload/new_upload_screen.dart';
+import '../../upload/upload_hub_screen.dart';
 import '../../screens/albums/share_settings_screen.dart';
 import '../../screens/client/shared_gallery_screen.dart';
 import '../../screens/client/chat_thread_screen.dart';
@@ -95,7 +95,8 @@ class SharedGalleryArgs {
   final String token;
   final bool isPreview;
   final String? albumId;
-  const SharedGalleryArgs({required this.token, this.isPreview = false, this.albumId});
+  const SharedGalleryArgs(
+      {required this.token, this.isPreview = false, this.albumId});
 }
 
 /// Arguments for [AppRoutes.pinUnlock] — see splash_screen.dart, the only
@@ -188,8 +189,9 @@ class AppRoutes {
       '/face-search/scan-progress';
   static const String faceSearchResults = '/face-search/results';
 
-  static const String uploads = '/uploads';
-  static const String newUpload = '/uploads/new';
+  static const String uploadQueue = '/upload-queue';
+  static const String uploads = uploadQueue;
+  static const String newUpload = '/new-upload';
 
   static const String media = '/media';
   static const String mediaFavorites = '/media/favorites';
@@ -211,7 +213,8 @@ class AppRoutes {
   static const String adminFolderMove = '/admin/folders/move';
   static const String adminFolderSettings = '/admin/folders/settings';
   static const String albumShareSettings = '/admin/albums/share-settings';
-  static const String collectionShareSettings = '/admin/collections/share-settings';
+  static const String collectionShareSettings =
+      '/admin/collections/share-settings';
   static const String sharedGallery = '/shared/gallery';
   static const String adminClientDetails = '/admin/clients/details';
   static const String adminAnalytics = '/admin/analytics';
@@ -429,17 +432,11 @@ class AppRoutes {
       case faceSearchResults:
         return _slide(const FaceSearchResultsScreen());
 
-      case uploads:
+      case uploadQueue:
         return _fade(const UploadHubScreen());
       case newUpload:
-        final args = settings.arguments;
-        if (args is Map<String, dynamic>) {
-          return _slide(NewUploadScreen(
-            initialAlbumId: args['albumId'] as String?,
-            initialFolderId: args['folderId'] as String?,
-          ));
-        }
-        return _slide(const NewUploadScreen());
+        return _fade(const NewUploadScreen());
+
       case adminAlbumCreate:
         return _slide(
             CreateAlbumScreen(folderId: settings.arguments as String?));
@@ -524,7 +521,9 @@ class AppRoutes {
         final rawArgs = settings.arguments;
         if (rawArgs is SharedGalleryArgs) {
           return _fade(SharedGalleryScreen(
-              token: rawArgs.token, isPreview: rawArgs.isPreview, albumId: rawArgs.albumId));
+              token: rawArgs.token,
+              isPreview: rawArgs.isPreview,
+              albumId: rawArgs.albumId));
         }
         final token = rawArgs as String? ?? '';
         return _fade(SharedGalleryScreen(token: token));

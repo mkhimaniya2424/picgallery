@@ -100,9 +100,14 @@ class _ErrorStateCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.86),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkSurfaceRaised
+              : Colors.white.withValues(alpha: 0.86),
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
+          border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkBorder
+                  : AppColors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -202,16 +207,18 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
       : _viewMode == _GalleryViewMode.grid
           ? 2
           : 1;
-  
-
 
   void _zoomIn() {
     if (_viewMode == _GalleryViewMode.timeline) {
       _changeViewMode(_GalleryViewMode.grid);
-      setState(() { _gridColumns = 8; });
+      setState(() {
+        _gridColumns = 8;
+      });
     } else if (_viewMode == _GalleryViewMode.grid) {
       if (_gridColumns > 1) {
-        setState(() { _gridColumns--; });
+        setState(() {
+          _gridColumns--;
+        });
       } else {
         _changeViewMode(_GalleryViewMode.list);
       }
@@ -221,10 +228,14 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
   void _zoomOut() {
     if (_viewMode == _GalleryViewMode.list) {
       _changeViewMode(_GalleryViewMode.grid);
-      setState(() { _gridColumns = 1; });
+      setState(() {
+        _gridColumns = 1;
+      });
     } else if (_viewMode == _GalleryViewMode.grid) {
       if (_gridColumns < 8) {
-        setState(() { _gridColumns++; });
+        setState(() {
+          _gridColumns++;
+        });
       } else {
         _changeViewMode(_GalleryViewMode.timeline);
       }
@@ -701,7 +712,8 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+                color: (isDark ? Colors.white : Colors.black)
+                    .withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -713,8 +725,8 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                 color: AppColors.error.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.delete_rounded,
-                  color: AppColors.error, size: 30),
+              child:
+                  Icon(Icons.delete_rounded, color: AppColors.error, size: 30),
             ),
             const SizedBox(height: 16),
             Text(
@@ -772,8 +784,7 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                 child: Text('Cancel',
                     style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color:
-                            isDark ? AppColors.textOnDark : AppColors.text)),
+                        color: isDark ? AppColors.textOnDark : AppColors.text)),
               ),
             ),
           ],
@@ -1198,8 +1209,12 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
         actions: [
           if (c.isSelectionMode) ...[
             IconButton(
-              tooltip: c.selectedIds.length == media.length ? 'Deselect All' : 'Select All',
-              icon: Icon(c.selectedIds.length == media.length ? Icons.deselect_rounded : Icons.select_all_rounded),
+              tooltip: c.selectedIds.length == media.length
+                  ? 'Deselect All'
+                  : 'Select All',
+              icon: Icon(c.selectedIds.length == media.length
+                  ? Icons.deselect_rounded
+                  : Icons.select_all_rounded),
               onPressed: () {
                 if (c.selectedIds.length == media.length) {
                   c.clearSelection();
@@ -1273,10 +1288,16 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                           padding:
                               EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : Colors.white,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.darkSurface
+                                    : Colors.white,
                             border: Border(
-                                bottom:
-                                    BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : Colors.grey.shade100)),
+                                bottom: BorderSide(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.darkBorder
+                                        : Colors.grey.shade100)),
                           ),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -1286,7 +1307,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                 Row(
                                   children: [
                                     Icon(Icons.sort_rounded,
-                                        size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
+                                        size: 16,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.subtitleOnDark
+                                            : Colors.black45),
                                     SizedBox(width: 4),
                                     CompactAnchoredDropdown<MediaSortOption>(
                                       value: c.sortOption,
@@ -1296,7 +1321,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                           .bodySmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.textOnDark
+                                                    : Colors.black87,
                                           ),
                                       items: const [
                                         DropdownMenuItem(
@@ -1323,7 +1352,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                 Row(
                                   children: [
                                     Icon(Icons.filter_list_rounded,
-                                        size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
+                                        size: 16,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.subtitleOnDark
+                                            : Colors.black45),
                                     SizedBox(width: 4),
                                     CompactAnchoredDropdown<MediaType?>(
                                       value: c.type,
@@ -1333,7 +1366,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                           .bodySmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.textOnDark
+                                                    : Colors.black87,
                                           ),
                                       items: const [
                                         DropdownMenuItem(
@@ -1359,9 +1396,14 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                   Row(
                                     children: [
                                       Icon(Icons.group_work_rounded,
-                                          size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45),
+                                          size: 16,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? AppColors.subtitleOnDark
+                                              : Colors.black45),
                                       SizedBox(width: 4),
-                                      CompactAnchoredDropdown<_GalleryGroupMode>(
+                                      CompactAnchoredDropdown<
+                                          _GalleryGroupMode>(
                                         value: _groupMode,
                                         iconSize: 16,
                                         style: Theme.of(context)
@@ -1369,7 +1411,11 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                             .bodySmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.w700,
-                                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? AppColors.textOnDark
+                                                  : Colors.black87,
                                             ),
                                         items: const [
                                           DropdownMenuItem(
@@ -1544,97 +1590,104 @@ class _MediaGridScreenState extends ConsumerState<MediaGridScreen>
                                 onZoomIn: _zoomIn,
                                 onZoomOut: _zoomOut,
                                 child: GestureDetector(
-                                // GestureDetector onScaleUpdate works for both
-                                // two-finger touch pinch AND trackpad pinch on web.
-                                onScaleStart: (_) {
-                                  _scaleStartModeIndex = _currentModeIndex.toDouble();
-                                },
-                                onScaleUpdate: (details) {
-                                  if (details.scale == 1.0) return;
-                                  final newLevel = (_scaleStartModeIndex / details.scale).round().clamp(1, 3);
-                                  if (newLevel != _currentModeIndex) {
-                                    if (newLevel == 3) {
-                                      _changeViewMode(_GalleryViewMode.timeline);
-                                    } else if (newLevel == 2) {
-                                      _changeViewMode(_GalleryViewMode.grid);
-                                    } else if (newLevel == 1) {
-                                      _changeViewMode(_GalleryViewMode.list);
+                                  // GestureDetector onScaleUpdate works for both
+                                  // two-finger touch pinch AND trackpad pinch on web.
+                                  onScaleStart: (_) {
+                                    _scaleStartModeIndex =
+                                        _currentModeIndex.toDouble();
+                                  },
+                                  onScaleUpdate: (details) {
+                                    if (details.scale == 1.0) return;
+                                    final newLevel =
+                                        (_scaleStartModeIndex / details.scale)
+                                            .round()
+                                            .clamp(1, 3);
+                                    if (newLevel != _currentModeIndex) {
+                                      if (newLevel == 3) {
+                                        _changeViewMode(
+                                            _GalleryViewMode.timeline);
+                                      } else if (newLevel == 2) {
+                                        _changeViewMode(_GalleryViewMode.grid);
+                                      } else if (newLevel == 1) {
+                                        _changeViewMode(_GalleryViewMode.list);
+                                      }
                                     }
-                                  }
-                                },
-                                child: RefreshIndicator(
-                                  onRefresh: () async {
-                                  await ref.read(mediaProvider).load();
-                                  _resetPagination();
-                                },
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 250),
-                                  transitionBuilder: (child, animation) {
-                                    // Only the incoming child (the one matching the
-                                    // current view/group mode) keeps its Heroes active.
-                                    // The outgoing child is still mounted for the
-                                    // duration of the crossfade, so without this its
-                                    // Hero tags (e.g. 'media-$id') would briefly exist
-                                    // twice in this subtree and Flutter would throw
-                                    // "multiple heroes that share the same tag".
-                                    //
-                                    // NOTE: transitionBuilder is only invoked once per
-                                    // child, at the moment it *becomes* incoming - it is
-                                    // NOT re-invoked later when that same child is
-                                    // displaced and starts fading out. So the incoming/
-                                    // outgoing state must be read live from the
-                                    // animation's own direction on every frame (via
-                                    // AnimatedBuilder), not computed once here by
-                                    // comparing keys - that comparison is always true
-                                    // and never actually disables the outgoing Hero.
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: AnimatedBuilder(
-                                        animation: animation,
-                                        child: child,
-                                        builder: (context, child) {
-                                          final isOutgoing = animation.status ==
-                                              AnimationStatus.reverse;
-                                          return HeroMode(
-                                            enabled: !isOutgoing,
-                                            child: child!,
-                                          );
+                                  },
+                                  child: RefreshIndicator(
+                                    onRefresh: () async {
+                                      await ref.read(mediaProvider).load();
+                                      _resetPagination();
+                                    },
+                                    child: AnimatedSwitcher(
+                                      duration:
+                                          const Duration(milliseconds: 250),
+                                      transitionBuilder: (child, animation) {
+                                        // Only the incoming child (the one matching the
+                                        // current view/group mode) keeps its Heroes active.
+                                        // The outgoing child is still mounted for the
+                                        // duration of the crossfade, so without this its
+                                        // Hero tags (e.g. 'media-$id') would briefly exist
+                                        // twice in this subtree and Flutter would throw
+                                        // "multiple heroes that share the same tag".
+                                        //
+                                        // NOTE: transitionBuilder is only invoked once per
+                                        // child, at the moment it *becomes* incoming - it is
+                                        // NOT re-invoked later when that same child is
+                                        // displaced and starts fading out. So the incoming/
+                                        // outgoing state must be read live from the
+                                        // animation's own direction on every frame (via
+                                        // AnimatedBuilder), not computed once here by
+                                        // comparing keys - that comparison is always true
+                                        // and never actually disables the outgoing Hero.
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: AnimatedBuilder(
+                                            animation: animation,
+                                            child: child,
+                                            builder: (context, child) {
+                                              final isOutgoing =
+                                                  animation.status ==
+                                                      AnimationStatus.reverse;
+                                              return HeroMode(
+                                                enabled: !isOutgoing,
+                                                child: child!,
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                      child: KeyedSubtree(
+                                        key: ValueKey((_viewMode, _groupMode)),
+                                        child: switch (_viewMode) {
+                                          _GalleryViewMode.grid =>
+                                            _groupMode == _GalleryGroupMode.none
+                                                ? _buildGridView(
+                                                    c, media, _visibleLimit)
+                                                : _buildGroupedView(
+                                                    c,
+                                                    media,
+                                                    _visibleLimit,
+                                                    _groupMode,
+                                                    _GalleryViewMode.grid),
+                                          _GalleryViewMode.list =>
+                                            _groupMode == _GalleryGroupMode.none
+                                                ? _buildListView(
+                                                    c, media, _visibleLimit)
+                                                : _buildGroupedView(
+                                                    c,
+                                                    media,
+                                                    _visibleLimit,
+                                                    _groupMode,
+                                                    _GalleryViewMode.list),
+                                          _GalleryViewMode.timeline =>
+                                            _buildTimelineView(
+                                                c, media, _visibleLimit),
                                         },
                                       ),
-                                    );
-                                  },
-                                  child: KeyedSubtree(
-                                    key: ValueKey((_viewMode, _groupMode)),
-                                    child: switch (_viewMode) {
-                                      _GalleryViewMode.grid =>
-                                        _groupMode == _GalleryGroupMode.none
-                                            ? _buildGridView(
-                                                c, media, _visibleLimit)
-                                            : _buildGroupedView(
-                                                c,
-                                                media,
-                                                _visibleLimit,
-                                                _groupMode,
-                                                _GalleryViewMode.grid),
-                                      _GalleryViewMode.list =>
-                                        _groupMode == _GalleryGroupMode.none
-                                            ? _buildListView(
-                                                c, media, _visibleLimit)
-                                            : _buildGroupedView(
-                                                c,
-                                                media,
-                                                _visibleLimit,
-                                                _groupMode,
-                                                _GalleryViewMode.list),
-                                      _GalleryViewMode.timeline =>
-                                        _buildTimelineView(
-                                            c, media, _visibleLimit),
-                                    },
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            ),
                       ),
                     ],
                   ),
@@ -1693,8 +1746,14 @@ class _MediaListRow extends ConsumerWidget {
         decoration: BoxDecoration(
           color: selected
               ? AppColors.primary.withValues(alpha: 0.08)
-              : (Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : Colors.white),
-          border: Border(bottom: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : Colors.grey.shade100)),
+              : (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkSurface
+                  : Colors.white),
+          border: Border(
+              bottom: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkBorder
+                      : Colors.grey.shade100)),
         ),
         child: Row(
           children: [
@@ -1727,7 +1786,9 @@ class _MediaListRow extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.textOnDark : Colors.black87,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textOnDark
+                            : Colors.black87,
                         fontSize: 13.5),
                   ),
                   SizedBox(height: 4),
@@ -1735,7 +1796,9 @@ class _MediaListRow extends ConsumerWidget {
                     '${media.type == MediaType.photo ? "Photo" : "Video"} • $sizeStr • $dateStr',
                     style: TextStyle(
                         fontSize: 11.5,
-                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black45,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : Colors.black45,
                         fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -1757,15 +1820,21 @@ class _MediaListRow extends ConsumerWidget {
                       media.isFavorite
                           ? Icons.favorite_rounded
                           : Icons.favorite_border_rounded,
-                      color:
-                          media.isFavorite ? AppColors.accent : (Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black38),
+                      color: media.isFavorite
+                          ? AppColors.accent
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.subtitleOnDark
+                              : Colors.black38),
                       size: 20,
                     ),
                     onPressed: onToggleFavorite,
                   ),
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert_rounded,
-                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black38, size: 20),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.subtitleOnDark
+                            : Colors.black38,
+                        size: 20),
                     surfaceTintColor: Colors.transparent,
                     onSelected: (value) async {
                       switch (value) {
@@ -1796,7 +1865,11 @@ class _MediaListRow extends ConsumerWidget {
                         child: Row(
                           children: [
                             Icon(Icons.edit_outlined,
-                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
+                                size: 18,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : Colors.black54),
                             SizedBox(width: 8),
                             Text('Rename'),
                           ],
@@ -1807,7 +1880,11 @@ class _MediaListRow extends ConsumerWidget {
                         child: Row(
                           children: [
                             Icon(Icons.info_outline_rounded,
-                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
+                                size: 18,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : Colors.black54),
                             SizedBox(width: 8),
                             Text('Properties'),
                           ],
@@ -1818,7 +1895,11 @@ class _MediaListRow extends ConsumerWidget {
                         child: Row(
                           children: [
                             Icon(Icons.share_outlined,
-                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
+                                size: 18,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : Colors.black54),
                             SizedBox(width: 8),
                             Text('Share'),
                           ],
@@ -1829,7 +1910,11 @@ class _MediaListRow extends ConsumerWidget {
                         child: Row(
                           children: [
                             Icon(Icons.download_outlined,
-                                size: 18, color: Theme.of(context).brightness == Brightness.dark ? AppColors.subtitleOnDark : Colors.black54),
+                                size: 18,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.subtitleOnDark
+                                    : Colors.black54),
                             SizedBox(width: 8),
                             Text('Download'),
                           ],
@@ -1916,9 +2001,14 @@ class _SelectionToolbarState extends State<_SelectionToolbar> {
       padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.92),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSurfaceRaised
+            : Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
+        border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkBorder
+                : AppColors.border),
       ),
       child: Row(
         children: [
@@ -2120,10 +2210,16 @@ class _MediaTileState extends State<_MediaTile> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
-            color: widget.selected ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? AppColors.darkBorder : AppColors.border),
+            color: widget.selected
+                ? AppColors.primary
+                : (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkBorder
+                    : AppColors.border),
             width: widget.selected ? 2 : 1,
           ),
-          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurfaceRaised : Colors.white.withValues(alpha: 0.92),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkSurfaceRaised
+              : Colors.white.withValues(alpha: 0.92),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(radius),
@@ -2274,6 +2370,17 @@ class _MediaThumbnail extends StatelessWidget {
     final path = media.displayPath;
     final isNetwork = media.isDisplayPathNetwork;
     if (media.type == MediaType.photo) {
+      if (kIsWeb) {
+        final thumbnailPath = media.displayThumbnailPath;
+        if (thumbnailPath.startsWith('http://') ||
+            thumbnailPath.startsWith('https://')) {
+          return Image.network(
+            thumbnailPath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _placeholder(),
+          );
+        }
+      }
       if (isNetwork ||
           (!kIsWeb && path.isNotEmpty && File(path).existsSync())) {
         return EditedImage(

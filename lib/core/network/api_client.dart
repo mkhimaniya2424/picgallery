@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
 import 'package:http/http.dart' as http;
@@ -34,11 +32,6 @@ class ApiClient {
 
   String? _inMemoryToken;
 
-  /// Timestamp of the last successful token refresh (or null if we've never
-  /// refreshed). Used by [ensureFreshToken] to decide whether to proactively
-  /// refresh before starting a long upload.
-  DateTime? _lastTokenRefresh;
-
   String? get authToken => _authManager?.accessToken ?? _inMemoryToken;
   set authToken(String? token) {
     _inMemoryToken = token;
@@ -62,22 +55,7 @@ class ApiClient {
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(minutes: 10),
           sendTimeout: const Duration(minutes: 10),
-          // Speed Fix 3: Prefer persistent connections — set keep-alive header
-          headers: {'Connection': 'keep-alive'},
         )) {
-    if (!kIsWeb) {
-      _dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final client = HttpClient();
-          // Allow a few concurrent connections per host for parallel uploads
-          client.maxConnectionsPerHost = 6;
-          // Keep idle connections alive for a short period to allow connection reuse
-          client.idleTimeout = const Duration(seconds: 30);
-          return client;
-        },
-      );
-    }
-
     if (authToken != null && authManager != null) {
       authManager.setTokens(accessToken: authToken, refreshToken: null);
     }
@@ -90,64 +68,8 @@ class ApiClient {
         authManager: mgr,
         secureStorage: storage,
         getBaseUrl: () => this.baseUrl,
-        onTokenRefreshed: () => _lastTokenRefresh = DateTime.now(),
       ),
     );
-  }
-
-  /// Proactively refreshes the access token if it was issued more than
-  /// [_refreshThreshold] ago. Call this before starting a long upload
-  /// to ensure the token does not expire mid-transfer.
-  ///
-  /// - Does nothing if there is no refresh token (anonymous / test).
-  /// - Silently swallows all errors so a refresh hiccup does not abort the
-  ///   upload before it even starts; the 401 path in [AuthInterceptor] is
-  ///   still there as a safety net.
-  static const Duration _refreshThreshold = Duration(minutes: 12);
-
-  Future<void> ensureFreshToken() async {
-    final mgr = _authManager;
-    if (mgr == null) return;
-    final refreshToken =
-        mgr.refreshToken ?? await _secureStorage?.getRefreshToken();
-    if (refreshToken == null || refreshToken.isEmpty) return;
-
-    final sinceRefresh = _lastTokenRefresh == null
-        ? const Duration(days: 1) // never refreshed → treat as stale
-        : DateTime.now().difference(_lastTokenRefresh!);
-
-    if (sinceRefresh < _refreshThreshold) return; // still fresh enough
-
-    try {
-      final refreshUrl = baseUrl.endsWith('/api/v1')
-          ? '$baseUrl/auth/token/refresh'
-          : '$baseUrl/api/v1/auth/token/refresh';
-      final refreshDio = Dio();
-      final resp = await refreshDio.post(
-        refreshUrl,
-        data: {'refresh_token': refreshToken},
-        options: Options(
-          extra: {'isRefresh': true},
-          headers: {'Content-Type': 'application/json'},
-        ),
-      );
-      final data = resp.data as Map<String, dynamic>;
-      final newAccess = (data['access_token'] ?? data['access']) as String?;
-      final newRefresh = (data['refresh_token'] ?? data['refresh']) as String?;
-      if (newAccess != null && newAccess.isNotEmpty) {
-        await _secureStorage?.saveAccessToken(newAccess);
-        if (newRefresh != null) await _secureStorage?.saveRefreshToken(newRefresh);
-        mgr.setTokens(
-          accessToken: newAccess,
-          refreshToken: newRefresh ?? refreshToken,
-        );
-        _lastTokenRefresh = DateTime.now();
-        debugPrint('[ApiClient] ✅ Proactive token refresh succeeded');
-      }
-    } catch (e) {
-      // Silently ignore — the 401 interceptor is the fallback.
-      debugPrint('[ApiClient] ⚠️ Proactive token refresh failed (non-fatal): $e');
-    }
   }
 
   static String baseUrlForHost(String host) {
@@ -253,20 +175,16 @@ class ApiClient {
   Future<dynamic> postMultipart(String path,
       {required FormData data,
       bool withAuth = true,
-      CancelToken? cancelToken,
       void Function(int, int)? onSendProgress}) async {
     debugPrint('[ApiClient] POST MULTIPART ${_url(path)}');
     return _guarded(() => _dio.post(
           _url(path),
           data: data,
-          cancelToken: cancelToken,
           onSendProgress: onSendProgress,
           options: Options(
             extra: {'withAuth': withAuth},
             sendTimeout: const Duration(hours: 12),
             receiveTimeout: const Duration(hours: 12),
-            // Speed Fix 6: Use default chunking/streaming for higher throughput
-            requestEncoder: null,
           ),
         ));
   }
@@ -284,8 +202,6 @@ class ApiClient {
             extra: {'withAuth': withAuth},
             sendTimeout: const Duration(hours: 12),
             receiveTimeout: const Duration(hours: 12),
-            // Speed Fix 6: Use default chunking/streaming for higher throughput
-            requestEncoder: null,
           ),
         ));
   }
@@ -303,9 +219,8 @@ class ApiClient {
           onSendProgress: onSendProgress,
           options: Options(
             extra: {'withAuth': withAuth},
-            sendTimeout: const Duration(hours: 12),
-            receiveTimeout: const Duration(hours: 12),
-            requestEncoder: null,
+            sendTimeout: const Duration(minutes: 10),
+            receiveTimeout: const Duration(minutes: 10),
           ),
         ));
   }
@@ -327,7 +242,7 @@ class ApiClient {
         headers['Authorization'] = 'Bearer $token';
       }
     }
-    
+
     // Attempt the upload via XHR bypass
     try {
       final responseBody = await uploadFileWeb(
@@ -339,7 +254,7 @@ class ApiClient {
         onSendProgress: onSendProgress,
       );
       debugPrint('[ApiClient] ✅ NATIVE WEB UPLOAD SUCCESS');
-      
+
       // We expect the server to return JSON
       if (responseBody is String) {
         if (responseBody.isEmpty) return {};

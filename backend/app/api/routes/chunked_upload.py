@@ -17,19 +17,59 @@ from app.core.storage import (
     _r2_client,
     _storage_root,
     _use_r2,
+    get_video_duration_ms,
+    make_thumbnail,
+    make_video_thumbnail,
     media_type_for_content_type,
 )
-from app.db.session import get_db
+from app.db.session import get_db, SessionLocal
 from app.models.activity_log import ActivityType
 from app.models.gallery import Album, Folder, Media, MediaType
 from app.models.user import User
 from app.schemas.gallery import MediaRead
 
-# We import this function to reuse the background metadata extraction
-from app.api.routes.media import _generate_thumbnail_background
-
 router = APIRouter(prefix="/media/chunked", tags=["chunked-upload"])
 logger = logging.getLogger(__name__)
+
+
+def _generate_chunked_upload_thumbnail(
+    *, media_id: uuid.UUID, owner_id: uuid.UUID, relative_path: str, media_type: MediaType
+) -> None:
+    """Generate thumbnail and video duration after a chunked upload commits."""
+    thumbnail_path = (
+        make_video_thumbnail(
+            owner_id=owner_id,
+            media_id=media_id,
+            original_relative_path=relative_path,
+        )
+        if media_type == MediaType.video
+        else make_thumbnail(
+            owner_id=owner_id,
+            media_id=media_id,
+            original_relative_path=relative_path,
+        )
+    )
+    duration_ms = (
+        get_video_duration_ms(relative_path)
+        if media_type == MediaType.video
+        else None
+    )
+
+    with SessionLocal() as db:
+        media = db.get(Media, media_id)
+        if media is None:
+            logger.error("Chunked upload media %s disappeared before processing", media_id)
+            return
+        media.thumbnail_path = thumbnail_path
+        media.duration_ms = duration_ms
+        db.commit()
+
+
+def _cleanup_chunk_directory(chunk_dir: Path) -> None:
+    try:
+        shutil.rmtree(chunk_dir, ignore_errors=True)
+    except Exception:
+        logger.exception("Failed to clean up completed upload chunks in %s", chunk_dir)
 
 
 class ChunkedStartRequest(BaseModel):
@@ -214,6 +254,13 @@ def complete_chunked_upload(
 
     suffix = Path(req.filename).suffix if req.filename else ".bin"
     relative_path = f"{current_user.id}/{req.media_id}/original{suffix}"
+    chunk_dir_to_cleanup: Path | None = None
+
+    existing_media = db.get(Media, req.media_id)
+    if existing_media is not None:
+        if existing_media.owner_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Media not found")
+        return MediaRead.from_model(existing_media)
 
     if _use_r2():
         if not req.parts:
@@ -240,30 +287,46 @@ def complete_chunked_upload(
             raise HTTPException(status_code=400, detail="Invalid upload_id format.")
             
         chunk_dir = _storage_root() / "tmp" / str(uuid_val)
-        if not chunk_dir.exists():
-            raise HTTPException(status_code=404, detail="Upload session not found.")
-        
         dest = _storage_root() / relative_path
         dest.parent.mkdir(parents=True, exist_ok=True)
         
         try:
-            parts = sorted(chunk_dir.glob("*.part"))
-            if not parts:
-                raise HTTPException(status_code=400, detail="No chunks found.")
-            
-            if req.parts and len(parts) != len(req.parts):
-                raise HTTPException(status_code=400, detail="Uploaded chunks count does not match the requested parts count.")
-                
-            with dest.open("wb") as outfile:
-                for part_path in parts:
-                    with part_path.open("rb") as infile:
-                        shutil.copyfileobj(infile, outfile)
-                        
-            if dest.stat().st_size != req.total_size:
-                dest.unlink(missing_ok=True)
-                raise HTTPException(status_code=400, detail="Stitched file size does not match expected total size.")
-                        
-            shutil.rmtree(chunk_dir, ignore_errors=True)
+            # A client/proxy retry can arrive after the first request already
+            # assembled the file and queued cleanup. Treat that as success.
+            if not (dest.is_file() and dest.stat().st_size == req.total_size):
+                if not chunk_dir.exists():
+                    raise HTTPException(status_code=404, detail="Upload session not found.")
+
+                parts = sorted(chunk_dir.glob("*.part"))
+                if not parts:
+                    raise HTTPException(status_code=400, detail="No chunks found.")
+
+                if req.parts and len(parts) != len(req.parts):
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Uploaded chunks count does not match the requested parts count.",
+                    )
+
+                with dest.open("wb") as outfile:
+                    for part_path in parts:
+                        with part_path.open("rb") as infile:
+                            shutil.copyfileobj(
+                                infile, outfile, length=16 * 1024 * 1024
+                            )
+
+                if dest.stat().st_size != req.total_size:
+                    dest.unlink(missing_ok=True)
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Stitched file size does not match expected total size.",
+                    )
+
+            # Deleting hundreds of temporary chunks can be slow on a hard
+            # disk. Do it after the response so completion remains retryable.
+            if chunk_dir.exists():
+                chunk_dir_to_cleanup = chunk_dir
+        except HTTPException:
+            raise
         except Exception:
             logger.exception("Failed to stitch local chunks for %s", req.upload_id)
             raise HTTPException(status_code=500, detail="Failed to assemble uploaded file.")
@@ -301,9 +364,12 @@ def complete_chunked_upload(
         logger.exception("Database insert failed for chunked upload %s (owner=%s)", req.filename, current_user.id)
         raise HTTPException(status_code=500, detail="Failed to save media record.")
 
+    if chunk_dir_to_cleanup is not None:
+        background_tasks.add_task(_cleanup_chunk_directory, chunk_dir_to_cleanup)
+
     # Queue background processing (thumbnails + metadata)
     background_tasks.add_task(
-        _generate_thumbnail_background,
+        _generate_chunked_upload_thumbnail,
         media_id=media.id,
         owner_id=current_user.id,
         relative_path=relative_path,

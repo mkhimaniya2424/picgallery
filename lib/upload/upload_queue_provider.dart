@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/network/api_client.dart';
-import 'package:dio/dio.dart' show CancelToken;
 import '../repositories/media_repository.dart';
 import '../models/media_model.dart';
 import '../providers/album_provider.dart';
@@ -11,7 +11,6 @@ import '../providers/auth_providers.dart';
 import '../providers/media_provider.dart';
 import '../providers/admin_dashboard_providers.dart';
 import '../services/media_picker_service.dart' show MediaContentType;
-import '../services/chunked_upload_service.dart';
 import '../services/upload_foreground_service.dart';
 import '../storage/upload_queue_local_store.dart';
 
@@ -35,12 +34,6 @@ import 'upload_queue_state.dart';
 class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Timer? _ticker;
 
-  /// Set to true in [ref.onDispose] so fire-and-forget async chains
-  /// ([_beginRealUpload] and progress callbacks) stop writing to a
-  /// disposed notifier — previously caused StateError crashes when
-  /// auth state changed or the user navigated away mid-upload.
-  bool _disposed = false;
-
   /// Read fresh each time rather than cached in a field — this queue can
   /// outlive a single repository instance (e.g. `apiClientProvider`
   /// rebuilding), and always going through Riverpod keeps this on the
@@ -50,16 +43,14 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
   final UploadQueueLocalStore _localStore = UploadQueueLocalStore();
 
-  /// How many uploads may run in parallel. 4 gives 2× throughput over
-  /// the old 2-slot limit on a 20 Mbps+ connection while staying within
-  /// safe concurrency limits for the FastAPI backend.
-  static const int _maxConcurrentUploads = 4;
+  /// How many uploads may run in parallel. 2 is a good balance between
+  /// throughput and avoiding server rate-limiting / OOM on web.
+  static const int _maxConcurrentUploads = 2;
 
   /// Ids of jobs whose real upload (file read + network request) is currently
   /// in flight. Up to [_maxConcurrentUploads] may be active at once.
   final Set<String> _inFlightJobIds = {};
-
-  final Map<String, CancelToken> _cancelTokens = {};
+  final Map<String, CancelToken> _uploadCancelTokens = {};
 
   /// Cached result of [canUploadNow] — rechecked every 5 s to avoid a
   /// slow async connectivity check on every 250 ms tick.
@@ -78,9 +69,6 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// Snapshot of total uploaded bytes across all jobs as of the last tick,
   /// used only to derive a real bytes/sec speed reading for display.
   int _lastTickTotalUploadedBytes = 0;
-  
-  /// Exponential moving average for smoothed speed display.
-  double _emaSpeed = 0.0;
 
   /// Task 19.12 — offline-upload queueing.
   ///
@@ -96,7 +84,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Timer? _offlineRetryTicker;
 
   // Simulated cellular flag to check WiFi-only option
-  final bool _simulateCellular = false;
+  bool _simulateCellular = false;
   bool get simulateCellular => _simulateCellular;
 
   Future<void> scopeToUser(String userId) async {
@@ -120,25 +108,28 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   @override
   FutureOr<UploadQueueState> build() async {
     ref.onDispose(() {
-      _disposed = true;
       _ticker?.cancel();
       _ticker = null;
       _offlineRetryTicker?.cancel();
       _offlineRetryTicker = null;
       _saveDebounce?.cancel();
       _saveDebounce = null;
+      for (final token in _uploadCancelTokens.values) {
+        token.cancel('Upload queue disposed');
+      }
+      _uploadCancelTokens.clear();
     });
 
     ref.listen<AuthState>(authStateProvider, (previous, next) {
       final userId = next.user?.id;
-      if (userId != null && previous?.user?.id != userId) {
+      if (userId != null) {
         // ignore: unawaited_futures
         scopeToUser(userId);
-      } else if (userId == null && previous?.user != null) {
+      } else if (previous?.user != null) {
         // ignore: unawaited_futures
         clearForLogout();
       }
-    });
+    }, fireImmediately: true);
 
     // Task 19.12: poll for jobs that failed because the device looked
     // offline and requeue them once their backoff window has passed —
@@ -148,30 +139,41 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     _offlineRetryTicker ??= Timer.periodic(
         const Duration(seconds: 5), (_) => _tickOfflineRetries());
 
-    // Ensure we are scoped to the current user on startup before loading
-    final initialUserId = ref.read(authStateProvider).user?.id;
-    if (initialUserId != null) {
-      await _localStore.scopeToUser(initialUserId);
-    }
-
     // Load from Hive database
     final persistedJobs = await _localStore.load();
 
     // Sanitize any stuck jobs from a previous launch
     final sanitizedJobs = persistedJobs.map((j) {
       if (j.status == UploadJobStatus.uploading) {
-        return j.copyWith(status: UploadJobStatus.queued);
+        return j.copyWith(status: UploadJobStatus.paused);
       }
       return j;
     }).toList();
 
+    // If there are unfinished jobs, we start in step 2 (Progress) so user can see them
+    final hasUnfinished = sanitizedJobs.any((j) => !j.isDone);
+
     return UploadQueueState(
       jobs: sanitizedJobs,
       isProcessing: false,
+      wizardStep: hasUnfinished ? 2 : 0,
     );
   }
 
-
+  void toggleSimulationNetwork() {
+    _simulateCellular = !_simulateCellular;
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(
+      message: _simulateCellular
+          ? "Simulating: Cellular Data active"
+          : "Simulating: Wi-Fi active",
+    ));
+    // If ticker is active, it will automatically pause wifi-only jobs next tick
+    if (_ticker == null && !_simulateCellular) {
+      _ensureProcessing();
+    }
+  }
 
   Future<void> _refreshMediaGrid(MediaModel media) async {
     try {
@@ -196,7 +198,65 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     } catch (_) {}
   }
 
-  // Wizard transitions removed (now handled by NewUploadProvider)
+  // Wizard transitions
+  void setWizardStep(int step) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(wizardStep: step));
+  }
+
+  void updatePickedFiles(List<PickedFileInfo> files) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(tempPickedFiles: files));
+  }
+
+  void removePickedFileAt(int index) {
+    final current = state.value;
+    if (current == null) return;
+    final files = [...current.tempPickedFiles];
+    files.removeAt(index);
+    state = AsyncValue.data(current.copyWith(tempPickedFiles: files));
+  }
+
+  void clearPickedFiles() {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(
+      tempPickedFiles: const [],
+      wizardStep: 0,
+      clearAlbum: true,
+      clearFolder: true,
+      clearRenamePrefix: true,
+    ));
+  }
+
+  void updateOptions({
+    String? albumId,
+    bool clearAlbum = false,
+    String? folderId,
+    bool clearFolder = false,
+    String? renamePrefix,
+    bool clearRenamePrefix = false,
+    bool? compress,
+    bool? wifiOnly,
+    bool? keepOriginalQuality,
+    bool? uploadMetadata,
+  }) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(
+      selectedAlbumId: clearAlbum ? null : (albumId ?? current.selectedAlbumId),
+      selectedFolderId:
+          clearFolder ? null : (folderId ?? current.selectedFolderId),
+      renamePrefix:
+          clearRenamePrefix ? null : (renamePrefix ?? current.renamePrefix),
+      compress: compress ?? current.compress,
+      wifiOnly: wifiOnly ?? current.wifiOnly,
+      keepOriginalQuality: keepOriginalQuality ?? current.keepOriginalQuality,
+      uploadMetadata: uploadMetadata ?? current.uploadMetadata,
+    ));
+  }
 
   Future<void> _saveQueue() async {
     final current = state.value;
@@ -206,14 +266,70 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
   /// Debounced version of [_saveQueue] — coalesces rapid successive calls
   /// (e.g. from progress events firing dozens of times per second) into
-  /// a single write 1000 ms after the last call.
+  /// a single write 500 ms after the last call.
   void _debouncedSave() {
     _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 1000), _saveQueue);
+    _saveDebounce = Timer(const Duration(milliseconds: 500), _saveQueue);
   }
 
-  /// Add files directly to the persistent queue without touching wizard state.
-  /// Called by the modern [NewUploadScreen] after the user taps "Start Upload".
+  /// Add picked files to the persistent queue and start the uploading process
+  Future<void> startUpload() async {
+    final current = state.value;
+    if (current == null || current.tempPickedFiles.isEmpty) return;
+
+    final List<UploadJobModel> newJobs = [];
+    final prefix = current.renamePrefix?.trim() ?? '';
+
+    for (int i = 0; i < current.tempPickedFiles.length; i++) {
+      final f = current.tempPickedFiles[i];
+      final originalName = f.name.isNotEmpty ? f.name : 'untitled_${i + 1}';
+
+      // Rename handling
+      String finalName = originalName;
+      if (prefix.isNotEmpty) {
+        final dotIdx = originalName.lastIndexOf('.');
+        final ext = (dotIdx != -1) ? originalName.substring(dotIdx) : '';
+        finalName = current.tempPickedFiles.length == 1
+            ? '$prefix$ext'
+            : '$prefix (${i + 1})$ext';
+      }
+
+      // `f.path` isn't just null on web — touching the getter itself
+      // throws — so it has to stay behind a `kIsWeb` check rather than
+      // a `?? ''`. Web instead carries its bytes through [webBytes] for
+      // small files, or [webStreamFactory] for large files (>10 MB).
+      newJobs.add(UploadJobModel(
+        id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+        fileName: finalName,
+        filePath: kIsWeb ? '' : (f.path ?? ''),
+        webBytes: kIsWeb ? f.bytes : null,
+        webStreamFactory: kIsWeb ? f.streamFactory : null,
+        webBlobUrl: kIsWeb ? f.webBlobUrl : null,
+        albumId: current.selectedAlbumId,
+        folderId: current.selectedFolderId,
+        totalBytes:
+            f.sizeBytes > 0 ? f.sizeBytes : 1024 * 1024 * 5, // Default to 5MB
+        uploadedBytes: 0,
+        createdAt: DateTime.now(),
+        status: UploadJobStatus.queued,
+        compress: current.compress,
+        wifiOnly: current.wifiOnly,
+        keepOriginalQuality: current.keepOriginalQuality,
+        uploadMetadata: current.uploadMetadata,
+      ));
+    }
+
+    state = AsyncValue.data(current.copyWith(
+      jobs: [...current.jobs, ...newJobs],
+      tempPickedFiles: const [],
+      wizardStep: 2, // Navigates to Progress view
+      message: 'Uploading ${newJobs.length} item(s)',
+    ));
+
+    await _saveQueue();
+    _ensureProcessing();
+  }
+
   Future<void> enqueueFiles({
     required List<PickedFileInfo> files,
     String? albumId,
@@ -222,61 +338,19 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     bool compress = false,
     bool wifiOnly = false,
     bool keepOriginalQuality = true,
-    bool uploadMetadata = true,
+    bool? uploadMetadata,
   }) async {
-    final current = state.value;
-    if (current == null || files.isEmpty) return;
-
-    final List<UploadJobModel> newJobs = [];
-    final prefix = renamePrefix?.trim() ?? '';
-
-    for (int i = 0; i < files.length; i++) {
-      final f = files[i];
-
-      final existing = current.jobs.any((j) =>
-          (j.status == UploadJobStatus.queued || j.status == UploadJobStatus.uploading) &&
-          j.filePath.isNotEmpty &&
-          j.filePath == f.path &&
-          j.totalBytes == f.sizeBytes);
-      if (existing) continue;
-      final originalName = f.name.isNotEmpty ? f.name : 'untitled_${i + 1}';
-
-      String finalName = originalName;
-      if (prefix.isNotEmpty) {
-        final dotIdx = originalName.lastIndexOf('.');
-        final ext = (dotIdx != -1) ? originalName.substring(dotIdx) : '';
-        finalName = files.length == 1 ? '$prefix$ext' : '$prefix (${i + 1})$ext';
-      }
-
-      newJobs.add(UploadJobModel(
-        id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-        fileName: finalName,
-        filePath: kIsWeb ? '' : (f.path ?? ''),
-        webBytes: kIsWeb ? f.bytes : null,
-        webStreamFactory: kIsWeb ? f.streamFactory : null,
-        webBlobUrl: kIsWeb ? f.webBlobUrl : null,
-        albumId: albumId,
-        folderId: folderId,
-        totalBytes: f.sizeBytes > 0 ? f.sizeBytes : 1024 * 1024 * 5,
-        uploadedBytes: 0,
-        createdAt: DateTime.now(),
-        status: UploadJobStatus.queued,
-        compress: compress,
-        wifiOnly: wifiOnly,
-        keepOriginalQuality: keepOriginalQuality,
-        uploadMetadata: uploadMetadata,
-      ));
-    }
-
-    if (_disposed) return;
-    state = AsyncValue.data(current.copyWith(
-      jobs: [...current.jobs, ...newJobs],
-      message: 'Uploading ${newJobs.length} item(s)',
-    ));
-
-    await _saveQueue();
-    if (_disposed) return;
-    _ensureProcessing();
+    updatePickedFiles(files);
+    updateOptions(
+      albumId: albumId,
+      folderId: folderId,
+      renamePrefix: renamePrefix,
+      compress: compress,
+      wifiOnly: wifiOnly,
+      keepOriginalQuality: keepOriginalQuality,
+      uploadMetadata: uploadMetadata,
+    );
+    await startUpload();
   }
 
   void _ensureProcessing() {
@@ -292,12 +366,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     state = AsyncValue.data(
       current.copyWith(isProcessing: true, clearMessage: true),
     );
-
-    // Start the Android foreground service so the OS won't kill the process
-    // while we have active uploads.
-    final initialActive = current.jobs.where(
-        (j) => j.status == UploadJobStatus.uploading || j.status == UploadJobStatus.queued).length;
-    UploadForegroundService.start(activeCount: initialActive);
+    unawaited(_startForegroundService(current));
 
     _ticker?.cancel();
 
@@ -308,7 +377,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     //  (a) fill up to [_maxConcurrentUploads] upload slots with queued jobs,
     //  (b) derive a speed/ETA reading from bytes moved since the last tick.
     _ticker = Timer.periodic(const Duration(milliseconds: 250), (_) async {
-      var s = state.value;
+      final s = state.value;
       if (s == null) return;
 
       final now = DateTime.now();
@@ -328,15 +397,10 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
           j.wifiOnly &&
           (j.status == UploadJobStatus.uploading ||
               j.status == UploadJobStatus.queued));
-      final realOnWifi = (anyJobWantsWifiOnly && !_simulateCellular && needsGateRefresh)
-          ? await ref.read(networkConnectivityServiceProvider).isOnWifi()
-          : true;
-
-      // CRITICAL FIX: Refresh state after awaits!
-      // If the user paused/canceled a job while we were awaiting the network check,
-      // using the old `s` here would overwrite their action with stale state.
-      s = state.value;
-      if (s == null) return;
+      final realOnWifi =
+          (anyJobWantsWifiOnly && !_simulateCellular && needsGateRefresh)
+              ? await ref.read(networkConnectivityServiceProvider).isOnWifi()
+              : true;
 
       final inFlightCount = _inFlightJobIds.length;
       final slotsAvailable = _maxConcurrentUploads - inFlightCount;
@@ -358,7 +422,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
           final blockedByJobWifiOnly =
               job.wifiOnly && !_simulateCellular && !realOnWifi;
 
-          if (blockedBySimulation || blockedByRealGate || blockedByJobWifiOnly) {
+          if (blockedBySimulation ||
+              blockedByRealGate ||
+              blockedByJobWifiOnly) {
             // Pause this job — it can't upload right now.
             final idx = s.jobs.indexWhere((j) => j.id == job.id);
             if (idx != -1) {
@@ -410,7 +476,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
       // Derive a real bytes/sec reading from how far uploadedBytes moved
       // across all jobs since the last tick (tick = 250ms, so *4 for /sec).
-      final refreshed = s;
+      final refreshed = state.value ?? s;
       final totalUploadedNow =
           refreshed.jobs.fold<int>(0, (sum, j) => sum + j.uploadedBytes);
       final stillActive = refreshed.jobs.any((j) =>
@@ -418,17 +484,13 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
           j.status == UploadJobStatus.queued);
       final deltaBytes = totalUploadedNow - _lastTickTotalUploadedBytes;
       _lastTickTotalUploadedBytes = totalUploadedNow;
-      final rawSpeed =
+      final currentSpeed =
           stillActive && deltaBytes > 0 ? (deltaBytes * 4).toDouble() : 0.0;
-      if (rawSpeed > 0) {
-        _emaSpeed = _emaSpeed == 0.0 ? rawSpeed : (_emaSpeed * 0.8 + rawSpeed * 0.2);
-      } else if (!stillActive) {
-        _emaSpeed = 0.0;
-      }
-      final currentSpeed = _emaSpeed;
+
+      unawaited(_updateForegroundService(refreshed, stillActive));
 
       Duration? estRemaining;
-      if (currentSpeed > 1024) { // Only show ETA if speed is at least 1 KB/s
+      if (currentSpeed > 0) {
         int remainingBytes = 0;
         for (final j in refreshed.jobs) {
           if (j.status == UploadJobStatus.uploading ||
@@ -449,26 +511,54 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         clearRemainingTime: !stillActive,
       ));
 
-      // Update / stop the Android foreground service notification.
-      if (stillActive) {
-        final s2 = state.value;
-        if (s2 != null) {
-          final activeCount = s2.jobs.where(
-              (j) => j.status == UploadJobStatus.uploading || j.status == UploadJobStatus.queued).length;
-          final totalBytes = s2.jobs.fold<int>(0, (a, j) => a + j.totalBytes);
-          final uploadedBytes = s2.jobs.fold<int>(0, (a, j) => a + j.uploadedBytes);
-          final pct = totalBytes > 0 ? ((uploadedBytes / totalBytes) * 100).round() : 0;
-          UploadForegroundService.update(activeCount: activeCount, percentDone: pct);
-        }
-      } else {
-        UploadForegroundService.stop();
-      }
-
       if (!stillActive) {
         _ticker?.cancel();
         _ticker = null;
+        unawaited(UploadForegroundService.stop());
       }
     });
+  }
+
+  Future<void> _startForegroundService(UploadQueueState queue) async {
+    final activeCount = queue.jobs
+        .where((job) =>
+            job.status == UploadJobStatus.queued ||
+            job.status == UploadJobStatus.uploading)
+        .length;
+    if (activeCount == 0) return;
+    try {
+      await UploadForegroundService.start(activeCount: activeCount);
+    } catch (error, stackTrace) {
+      debugPrint(
+          'Could not start upload foreground service: $error\n$stackTrace');
+    }
+  }
+
+  Future<void> _updateForegroundService(
+      UploadQueueState queue, bool stillActive) async {
+    if (!stillActive) return;
+    final activeCount = queue.jobs
+        .where((job) =>
+            job.status == UploadJobStatus.queued ||
+            job.status == UploadJobStatus.uploading)
+        .length;
+    if (activeCount == 0) return;
+    final totalBytes =
+        queue.jobs.fold<int>(0, (sum, job) => sum + job.totalBytes);
+    final uploadedBytes =
+        queue.jobs.fold<int>(0, (sum, job) => sum + job.uploadedBytes);
+    final percentDone = totalBytes == 0
+        ? 0
+        : (((uploadedBytes * 100) ~/ totalBytes).clamp(0, 100)).toInt();
+    try {
+      await UploadForegroundService.update(
+        activeCount: activeCount,
+        percentDone: percentDone.clamp(0, 100),
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+          'Could not update upload foreground service: $error\n$stackTrace');
+    }
   }
 
   /// Starts the real upload for [job]: reads its bytes off disk and sends
@@ -477,26 +567,15 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// `uploadedBytes`/`totalBytes` (Task 19.11) so [UploadQueueTile]'s
   /// progress bar reflects bytes actually on the wire — not a guess.
   Future<void> _beginRealUpload(UploadJobModel job) async {
-    if (_disposed) return;
-
     _inFlightJobIds.add(job.id);
     final cancelToken = CancelToken();
-    _cancelTokens[job.id] = cancelToken;
+    _uploadCancelTokens[job.id] = cancelToken;
 
     final started = state.value;
     if (started == null) {
       _inFlightJobIds.remove(job.id);
       return;
     }
-
-    // Guard again before writing state in case the notifier was disposed
-    // between the above checks (race conditions can happen on container
-    // rebuilds). If disposed, clean up and exit.
-    if (_disposed) {
-      _inFlightJobIds.remove(job.id);
-      return;
-    }
-
     final startedJobs = started.jobs.map((j) {
       if (j.id != job.id) return j;
       return j.copyWith(
@@ -505,23 +584,10 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         clearError: true,
       );
     }).toList();
-
-    // If disposed after constructing startedJobs, avoid writing state.
-    if (_disposed) {
-      _inFlightJobIds.remove(job.id);
-      return;
-    }
-
     state = AsyncValue.data(started.copyWith(jobs: startedJobs));
     _debouncedSave(); // non-blocking — don't delay the actual upload
 
     try {
-      // Task 8: Proactively refresh the token before each upload step so a
-      // 20-minute upload that outlives the 15-minute access token doesn't
-      // log the user out. Silently swallowed on error — the 401 interceptor
-      // is the fallback if this doesn't work.
-      await ref.read(apiClientProvider).ensureFreshToken();
-
       final contentType = MediaContentType.forFileName(job.fileName);
 
       // Compression is permanently disabled — files are always uploaded at
@@ -549,52 +615,52 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         throw StateError('File path is empty — this file cannot be uploaded.');
       }
 
-      MediaModel media;
-      // Task 10: Use chunked uploads for files over 10MB
-      if (!kIsWeb && finalFilePath != null && job.totalBytes > 10 * 1024 * 1024) {
-        final chunkedService = ChunkedUploadService(apiClient: ref.read(apiClientProvider));
-        media = await chunkedService.uploadChunked(
-          filePath: finalFilePath,
-          fileName: job.fileName,
-          contentType: contentType,
-          albumId: job.albumId,
-          folderId: job.folderId,
-          existingUploadId: job.uploadId,
-          existingMediaId: job.mediaId,
-          completedParts: job.completedParts,
-          cancelToken: cancelToken,
-          onSendProgress: (sent, total) => _onRealProgress(job.id, sent, total),
-          onUploadStarted: (uploadId, mediaId) {
-            _updateJobLocally(job.id, (j) => j.copyWith(uploadId: uploadId, mediaId: mediaId));
-          },
-          onPartUploaded: (partNumber, etag) {
-            _updateJobLocally(job.id, (j) {
-              final newParts = Map<String, String>.from(j.completedParts ?? {});
-              newParts[partNumber.toString()] = etag;
-              return j.copyWith(completedParts: newParts);
-            });
-          },
-        );
-      } else {
-        media = await _mediaRepo.uploadMedia(
-          bytes: finalBytes,
-          filePath: finalFilePath,
-          // Stream<Uint8List> is not assignable to Stream<List<int>> directly
-          // in Dart due to invariant generics, so cast via .cast<List<int>>().
-          streamData: kIsWeb && job.webStreamFactory != null
-              ? () => job.webStreamFactory!().cast<List<int>>()
-              : null,
-          webBlobUrl: job.webBlobUrl,
-          fileName: job.fileName,
-          contentType: contentType,
-          sizeBytes: job.totalBytes,
-          albumId: job.albumId,
-          folderId: job.folderId,
-          cancelToken: cancelToken,
-          onSendProgress: (sent, total) => _onRealProgress(job.id, sent, total),
-        );
-      }
-      
+      final media = await _mediaRepo.uploadMedia(
+        bytes: finalBytes,
+        filePath: finalFilePath,
+        // Stream<Uint8List> is not assignable to Stream<List<int>> directly
+        // in Dart due to invariant generics, so cast via .cast<List<int>>().
+        streamData: kIsWeb && job.webStreamFactory != null
+            ? () => job.webStreamFactory!().cast<List<int>>()
+            : null,
+        webBlobUrl: job.webBlobUrl,
+        fileName: job.fileName,
+        contentType: contentType,
+        sizeBytes: job.totalBytes,
+        albumId: job.albumId,
+        folderId: job.folderId,
+        existingUploadId: job.uploadId,
+        existingMediaId: job.uploadMediaId,
+        completedParts: job.completedParts,
+        onUploadStarted: (uploadId, mediaId) {
+          final current = state.value;
+          if (current == null) return;
+          final index = current.jobs.indexWhere((item) => item.id == job.id);
+          if (index < 0) return;
+          final jobs = [...current.jobs];
+          jobs[index] = jobs[index].copyWith(
+            uploadId: uploadId,
+            uploadMediaId: mediaId,
+          );
+          state = AsyncValue.data(current.copyWith(jobs: jobs));
+          _debouncedSave();
+        },
+        onPartUploaded: (partNumber, etag) {
+          final current = state.value;
+          if (current == null) return;
+          final index = current.jobs.indexWhere((item) => item.id == job.id);
+          if (index < 0) return;
+          final currentJob = current.jobs[index];
+          final completed = {...currentJob.completedParts};
+          completed[partNumber.toString()] = etag;
+          final jobs = [...current.jobs];
+          jobs[index] = currentJob.copyWith(completedParts: completed);
+          state = AsyncValue.data(current.copyWith(jobs: jobs));
+          _debouncedSave();
+        },
+        cancelToken: cancelToken,
+        onSendProgress: (sent, total) => _onRealProgress(job.id, sent, total),
+      );
       await _onRealSuccess(job.id, media);
     } on ApiException catch (e) {
       // statusCode 0 → never reached the server (DNS / connection refused / timeout).
@@ -605,34 +671,22 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       final isRetriable = e.statusCode == 0 ||
           e.statusCode == 429 ||
           (e.statusCode >= 500 && e.statusCode < 600);
-      await _onRealFailure(job.id, e.message,
-          isConnectivityIssue: isRetriable);
+      await _onRealFailure(job.id, e.message, isConnectivityIssue: isRetriable);
     } catch (e) {
-      // File missing/moved, empty path, permission error, etc.
-      await _onRealFailure(job.id,
-          "Couldn't read this file to upload it — it may have been moved or deleted.");
+      debugPrint('Upload failed for ${job.fileName}: $e');
+      await _onRealFailure(
+          job.id, 'Upload could not be completed: ${e.toString()}');
     } finally {
-      _cancelTokens.remove(job.id);
       _inFlightJobIds.remove(job.id);
+      if (identical(_uploadCancelTokens[job.id], cancelToken)) {
+        _uploadCancelTokens.remove(job.id);
+      }
     }
-  }
-
-  void _updateJobLocally(String jobId, UploadJobModel Function(UploadJobModel) updateFn) {
-    if (_disposed) return;
-    final s = state.value;
-    if (s == null) return;
-    final idx = s.jobs.indexWhere((j) => j.id == jobId);
-    if (idx == -1) return;
-    final updatedJobs = [...s.jobs];
-    updatedJobs[idx] = updateFn(s.jobs[idx]);
-    state = AsyncValue.data(s.copyWith(jobs: updatedJobs));
-    _debouncedSave();
   }
 
   /// Called by the real `onSendProgress` callback, potentially many times
   /// a second, while [jobId]'s upload is on the wire.
   void _onRealProgress(String jobId, int sent, int total) {
-    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
@@ -669,7 +723,6 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   }
 
   Future<void> _onRealSuccess(String jobId, MediaModel media) async {
-    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
@@ -679,7 +732,10 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     // A cancel can't retract bytes that already reached the server, but
     // it can at least keep the local queue honoring the user's intent
     // instead of flipping a canceled row back to "completed".
-    if (job.status == UploadJobStatus.canceled) return;
+    if (job.status == UploadJobStatus.canceled ||
+        job.status == UploadJobStatus.paused) {
+      return;
+    }
 
     final updatedJobs = [...s.jobs];
     updatedJobs[idx] = job.copyWith(
@@ -695,6 +751,9 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
     state = AsyncValue.data(s.copyWith(
       jobs: updatedJobs,
+      // Auto go to the Success/Complete screen (step 3) once nothing is
+      // left uploading or queued.
+      wizardStep: (!stillActive && s.wizardStep == 2) ? 3 : s.wizardStep,
     ));
     _debouncedSave();
 
@@ -709,14 +768,14 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
   Future<void> _onRealFailure(String jobId, String message,
       {bool isConnectivityIssue = false}) async {
-    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
     final idx = s.jobs.indexWhere((j) => j.id == jobId);
     if (idx == -1) return;
 
     final job = s.jobs[idx];
-    if (job.status == UploadJobStatus.canceled || job.status == UploadJobStatus.paused) {
+    if (job.status == UploadJobStatus.canceled ||
+        job.status == UploadJobStatus.paused) {
       return;
     }
 
@@ -764,7 +823,6 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   /// hookup from Task 19.11) takes it from there, same as if the user had
   /// tapped Retry by hand.
   Future<void> _tickOfflineRetries() async {
-    if (_disposed) return;
     final s = state.value;
     if (s == null) return;
 
@@ -795,8 +853,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Future<void> pauseJob(String jobId) async {
     final s = state.value;
     if (s == null) return;
-
-    _cancelTokens[jobId]?.cancel('Paused by user');
+    _uploadCancelTokens[jobId]?.cancel('Paused by user');
 
     final updatedJobs = s.jobs.map((j) {
       if (j.id != jobId) return j;
@@ -814,7 +871,6 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
         .every((j) => j.isDone || j.status == UploadJobStatus.paused)) {
       _ticker?.cancel();
       _ticker = null;
-      UploadForegroundService.stop();
       state = AsyncValue.data(s.copyWith(
         jobs: updatedJobs,
         isProcessing: false,
@@ -845,8 +901,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Future<void> pauseAll() async {
     final s = state.value;
     if (s == null) return;
-
-    for (final token in _cancelTokens.values) {
+    for (final token in _uploadCancelTokens.values) {
       token.cancel('Paused by user');
     }
 
@@ -860,7 +915,6 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
 
     _ticker?.cancel();
     _ticker = null;
-    UploadForegroundService.stop();
 
     state = AsyncValue.data(s.copyWith(
       jobs: updatedJobs,
@@ -891,8 +945,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Future<void> cancelJob(String jobId) async {
     final s = state.value;
     if (s == null) return;
-
-    _cancelTokens[jobId]?.cancel('Canceled by user');
+    _uploadCancelTokens[jobId]?.cancel('Canceled by user');
 
     final updatedJobs = s.jobs.map((j) {
       if (j.id != jobId) return j;
@@ -923,8 +976,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
   Future<void> cancelAll() async {
     final s = state.value;
     if (s == null) return;
-
-    for (final token in _cancelTokens.values) {
+    for (final token in _uploadCancelTokens.values) {
       token.cancel('Canceled by user');
     }
 
@@ -962,6 +1014,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       return j.copyWith(
         status: UploadJobStatus.queued,
         uploadedBytes: 0,
+        clearUploadSession: true,
         clearError: true,
         offlinePending: false,
         offlineRetryCount: 0,
@@ -983,6 +1036,7 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
       return j.copyWith(
         status: UploadJobStatus.queued,
         uploadedBytes: 0,
+        clearUploadSession: true,
         clearError: true,
         offlinePending: false,
         offlineRetryCount: 0,
@@ -1004,7 +1058,50 @@ class UploadQueueController extends AsyncNotifier<UploadQueueState> {
     await _saveQueue();
   }
 
+  Future<void> resetWizard() async {
+    final s = state.value;
+    if (s == null) return;
 
+    state = AsyncValue.data(s.copyWith(
+      wizardStep: 0,
+      tempPickedFiles: const [],
+      clearAlbum: true,
+      clearFolder: true,
+      clearRenamePrefix: true,
+    ));
+  }
+
+  Future<void> failFirstNonDone() async {
+    final s = state.value;
+    if (s == null) return;
+
+    final idx = s.jobs.indexWhere((j) => !j.isDone);
+    if (idx == -1) return;
+
+    final updated = [...s.jobs];
+    final j = updated[idx];
+    updated[idx] = j.copyWith(
+      status: UploadJobStatus.failed,
+      finishedAt: DateTime.now(),
+      errorMessage: 'Simulated connection failure',
+    );
+
+    state = AsyncValue.data(s.copyWith(
+      jobs: updated,
+      message: 'Upload failed (simulated)',
+    ));
+    await _saveQueue();
+
+    if (updated.every((j) => j.isDone)) {
+      _ticker?.cancel();
+      _ticker = null;
+      state = AsyncValue.data(state.value!.copyWith(
+        isProcessing: false,
+        speedBytesPerSecond: 0.0,
+        remainingTime: null,
+      ));
+    }
+  }
 }
 
 final uploadQueueProvider =

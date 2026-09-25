@@ -1,10 +1,7 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
@@ -377,101 +374,52 @@ class _EditStudioProfileScreenState
     }
   }
 
-  /// Picks one or more images and uploads them all into the Showcase
-  /// Portfolio grid (`POST /studios/me/portfolio`). Newly uploaded images
-  /// are prepended so they show up first, matching the backend's
-  /// newest-first ordering. Supports multi-select on all platforms.
-  Future<void> _pickPortfolioImages() async {
-    if (kIsWeb || Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-      final result = await FilePicker.pickFiles(
-        type: FileType.image,
-        allowMultiple: true,
+  /// Picks and uploads one image into the Showcase Portfolio grid
+  /// (`POST /studios/me/portfolio`). New image is prepended so it shows
+  /// up first, matching the backend's newest-first ordering.
+  Future<void> _pickPortfolioImage() async {
+    final picker = ImagePicker();
+    XFile? picked;
+    try {
+      picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
       );
-      if (result == null || result.isEmpty) return;
-
-      final List<({String name, List<int> bytes})> filesToUpload = [];
-      for (final f in result) {
-        try {
-          final bytes = await f.readAsBytes();
-          filesToUpload.add((name: f.name, bytes: bytes));
-        } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
       }
-      _uploadPortfolioFiles(filesToUpload);
       return;
     }
+    if (picked == null) return;
 
-    final List<AssetEntity>? assets = await AssetPicker.pickAssets(
-      context,
-      pickerConfig: const AssetPickerConfig(
-        requestType: RequestType.image,
-        maxAssets: 50,
-      ),
-    );
-    
-    if (assets == null || assets.isEmpty) return;
-    
     setState(() => _isAddingPortfolioImage = true);
-
-    final List<({String name, List<int> bytes})> filesToUpload = [];
-    for (final asset in assets) {
-      final file = await asset.file;
-      if (file == null) continue;
-      
-      try {
-        final bytes = await file.readAsBytes();
-        final name = asset.title ?? file.path.split(Platform.pathSeparator).last;
-        filesToUpload.add((name: name, bytes: bytes));
-      } catch (_) {}
-    }
-    
-    _uploadPortfolioFiles(filesToUpload);
-  }
-
-  Future<void> _uploadPortfolioFiles(List<({String name, List<int> bytes})> filesToUpload) async {
-    if (filesToUpload.isEmpty) {
+    try {
+      final bytes = await picked.readAsBytes();
+      final contentType =
+          picked.mimeType ?? MediaContentType.forFileName(picked.name);
+      final image =
+          await ref.read(studioProfileRepositoryProvider).addPortfolioImage(
+                bytes: bytes,
+                fileName: picked.name,
+                contentType: contentType,
+              );
+      if (!mounted) return;
+      setState(() => _portfolioImages = [image, ..._portfolioImages]);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading image: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
       if (mounted) setState(() => _isAddingPortfolioImage = false);
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() => _isAddingPortfolioImage = true);
-    
-    int successCount = 0;
-    int failCount = 0;
-
-    for (final fileData in filesToUpload) {
-      try {
-        final contentType = MediaContentType.forFileName(fileData.name);
-        final image =
-            await ref.read(studioProfileRepositoryProvider).addPortfolioImage(
-                  bytes: fileData.bytes,
-                  fileName: fileData.name,
-                  contentType: contentType,
-                );
-        if (mounted) {
-          setState(() => _portfolioImages = [image, ..._portfolioImages]);
-          successCount++;
-        }
-      } catch (_) {
-        failCount++;
-      }
-    }
-
-    if (!mounted) return;
-    setState(() => _isAddingPortfolioImage = false);
-
-    if (successCount > 0 || failCount > 0) {
-      final msg = failCount == 0
-          ? 'Added $successCount portfolio image${successCount == 1 ? '' : 's'}'
-          : 'Added $successCount image${successCount == 1 ? '' : 's'}, $failCount failed';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor:
-              failCount > 0 ? AppColors.error : null,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
@@ -915,7 +863,7 @@ class _EditStudioProfileScreenState
                                   return GestureDetector(
                                     onTap: _isAddingPortfolioImage
                                         ? null
-                                        : _pickPortfolioImages,
+                                        : _pickPortfolioImage,
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: placeholderBg,

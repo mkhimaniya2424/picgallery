@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../core/utils/app_exceptions.dart';
 import '../models/media_model.dart';
 import 'media_repository.dart';
@@ -241,8 +243,13 @@ class InMemoryMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
-    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
+    String? existingUploadId,
+    String? existingMediaId,
+    Map<String, String>? completedParts,
+    void Function(String uploadId, String mediaId)? onUploadStarted,
+    void Function(int partNumber, String etag)? onPartUploaded,
+    CancelToken? cancelToken,
   }) async {
     // In-memory mock: report progress 100%
     final size = bytes?.length ?? 1024;

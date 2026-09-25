@@ -10,7 +10,6 @@ import '../../providers/auth_providers.dart';
 import '../../providers/drawer_provider.dart';
 import '../../providers/face_search_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../../upload/upload_queue_provider.dart';
 import '../../main.dart'; // For navigatorKey
 import 'drawer_header.dart';
 
@@ -79,7 +78,6 @@ class StudioDrawer extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      // ignore: use_build_context_synchronously
       final container = ProviderScope.containerOf(context, listen: false);
       container.read(authProvider.notifier).logout();
       final currentSettings = container.read(settingsProvider);
@@ -231,32 +229,11 @@ class StudioDrawer extends ConsumerWidget {
                 ),
                 _StudioDrawerTile(
                   icon: Icons.cloud_upload_rounded,
-                  label: 'Upload Media',
+                  label: 'Uploads',
                   selected: selectedId == 'uploads',
-                  // Show active-upload count as badge when uploads are running
-                  badgeCount: ref
-                          .watch(uploadQueueProvider)
-                          .value
-                          ?.jobs
-                          .where((j) =>
-                              j.status.name == 'uploading' ||
-                              j.status.name == 'queued' ||
-                              j.status.name == 'paused')
-                          .length ??
-                      0,
-                 onTap: () {
-                    ref
-                        .read(selectedDrawerItemProvider.notifier)
-                        .select('uploads');
-                    Navigator.of(context).pop(); // close drawer first
-                    final queueState = ref.read(uploadQueueProvider).value;
-                    final hasJobs = queueState?.jobs.isNotEmpty ?? false;
-                    if (hasJobs) {
-                      navigatorKey.currentState?.pushNamed(AppRoutes.uploads);
-                    } else {
-                      navigatorKey.currentState?.pushNamed(AppRoutes.newUpload);
-                    }
-                  },
+                  onTap: () => _handleTap(
+                      context, ref, 'uploads', _DrawerAction.route,
+                      routeName: AppRoutes.uploadQueue),
                 ),
                 _StudioDrawerTile(
                   icon: Icons.face_retouching_natural_rounded,

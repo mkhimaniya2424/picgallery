@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
@@ -104,6 +105,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
 
   // For toolbar/info panel
   bool _infoVisible = false;
+  bool _isFullscreen = false;
+  bool _isLandscape = false;
 
   // Services
   final ShareService _shareService = const ShareServiceImpl();
@@ -120,8 +123,47 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
     _pageController = PageController(initialPage: _index);
   }
 
+  Future<void> _setLandscape(bool landscape) async {
+    if (kIsWeb) return;
+    await SystemChrome.setPreferredOrientations(
+      landscape
+          ? const [
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ]
+          : const [
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ],
+    );
+    if (mounted) setState(() => _isLandscape = landscape);
+  }
+
+  Future<void> _toggleFullscreen() async {
+    if (kIsWeb) return;
+    final fullscreen = !_isFullscreen;
+    await SystemChrome.setEnabledSystemUIMode(
+      fullscreen ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+    );
+    if (fullscreen) {
+      await _setLandscape(true);
+    } else {
+      await _setLandscape(false);
+    }
+    if (mounted) setState(() => _isFullscreen = fullscreen);
+  }
+
+  Future<void> _toggleOrientation() => _setLandscape(!_isLandscape);
+
   @override
   void dispose() {
+    if (!kIsWeb) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
     _pageController.dispose();
     if (_activeController != null) {
       _activeController!.removeListener(_videoListener);
@@ -282,6 +324,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
   Widget build(BuildContext context) {
     // Maintain original ordering given by viewer args.
     final items = <MediaModel>[];
+    final authToken = ref.read(apiClientProvider).authToken;
     if (widget.mediaItems != null) {
       // Pre-fetched media (e.g. client Shared Gallery) — never touches
       // mediaProvider, so it works for media the current user doesn't own.
@@ -385,7 +428,9 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         // Fire-and-forget: real /public/share-links/{token}/download call
         // instead of the old local-only incrementDownloads.
         ref
-            .read(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.shareLinkId!)).notifier)
+            .read(publicGalleryControllerProvider(
+                    PublicGalleryTarget(token: widget.shareLinkId!))
+                .notifier)
             .recordDownload(mediaId: current.id);
       }
       if (saved && context.mounted) {
@@ -447,7 +492,9 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
         // Fire-and-forget: real /public/share-links/{token}/download call
         // instead of the old local-only incrementDownloads.
         ref
-            .read(publicGalleryControllerProvider(PublicGalleryTarget(token: widget.shareLinkId!)).notifier)
+            .read(publicGalleryControllerProvider(
+                    PublicGalleryTarget(token: widget.shareLinkId!))
+                .notifier)
             .recordDownload(mediaId: current.id);
       }
       if (saved && context.mounted) {
@@ -562,6 +609,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                               media: m,
                               isActive: i == _index,
                               isNearby: isNearby,
+                              authToken: authToken,
                               onControllerInitialized: _onControllerChanged,
                             ),
                           ),
@@ -904,6 +952,22 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                                   },
                                 ),
                                 _ActionChip(
+                                  icon: _isLandscape
+                                      ? Icons.stay_current_portrait_rounded
+                                      : Icons.screen_rotation_rounded,
+                                  label: _isLandscape ? 'Portrait' : 'Rotate',
+                                  onTap: _toggleOrientation,
+                                ),
+                                _ActionChip(
+                                  icon: _isFullscreen
+                                      ? Icons.fullscreen_exit_rounded
+                                      : Icons.fullscreen_rounded,
+                                  label: _isFullscreen
+                                      ? 'Exit Full screen'
+                                      : 'Full screen',
+                                  onTap: _toggleFullscreen,
+                                ),
+                                _ActionChip(
                                   icon: Icons.speed_rounded,
                                   label: '${_playbackSpeed}x',
                                   onTap: () {
@@ -943,12 +1007,14 @@ class _VideoPlayerItem extends StatefulWidget {
   final MediaModel media;
   final bool isActive;
   final bool isNearby;
+  final String? authToken;
   final ValueChanged<VideoPlayerController?> onControllerInitialized;
 
   const _VideoPlayerItem({
     required this.media,
     required this.isActive,
     required this.isNearby,
+    this.authToken,
     required this.onControllerInitialized,
   });
 
@@ -960,6 +1026,7 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
   VideoPlayerController? _controller;
   bool _initializing = false;
   bool _initFailed = false;
+  String? _initError;
 
   @override
   void initState() {
@@ -1009,6 +1076,7 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
     setState(() {
       _initializing = false;
       _initFailed = false;
+      _initError = null;
     });
   }
 
@@ -1023,81 +1091,79 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
     setState(() {
       _initializing = true;
       _initFailed = false;
+      _initError = null;
     });
 
-    var path = widget.media.displayPath;
-    var isNetwork = widget.media.isDisplayPathNetwork;
+    final sources = <({String path, bool network})>[];
+    final localPath = widget.media.filePath;
+    final remotePath = widget.media.remoteUrl;
 
-    // On web, dart:io File is unavailable — always use the network URL.
-    if (kIsWeb) {
-      // Prefer remoteUrl as the streaming source on web.
-      final webPath = widget.media.remoteUrl ?? path;
-      if (webPath.isEmpty) {
-        setState(() {
-          _initializing = false;
-          _initFailed = true;
-        });
-        return;
-      }
-      path = webPath;
-      isNetwork = true;
-    } else {
-      // A locally-cached filePath can go stale (cache cleared, app
-      // reinstalled, cached on a different device, etc). Rather than
-      // failing outright, fall back to streaming from remoteUrl if it's
-      // available — same as photos already do.
-      if (!isNetwork && path.isNotEmpty && !File(path).existsSync()) {
-        final fallback = widget.media.remoteUrl ?? '';
-        if (fallback.isNotEmpty) {
-          path = fallback;
-          isNetwork = true;
+    // Prefer a usable local file, but always retry the server copy when the
+    // cached/cut file exists and is no longer playable.
+    if (!kIsWeb && localPath.isNotEmpty && File(localPath).existsSync()) {
+      sources.add((path: localPath, network: false));
+    }
+    if (remotePath != null &&
+        remotePath.isNotEmpty &&
+        (remotePath.startsWith('http://') ||
+            remotePath.startsWith('https://'))) {
+      sources.add((path: remotePath, network: true));
+    }
+    if (sources.isEmpty && !kIsWeb && localPath.isNotEmpty) {
+      sources.add((path: localPath, network: false));
+    }
+    if (sources.isEmpty && kIsWeb && remotePath != null) {
+      sources.add((path: remotePath, network: true));
+    }
+
+    Object? lastError;
+    for (final source in sources) {
+      final controller = source.network
+          ? VideoPlayerController.networkUrl(
+              Uri.parse(source.path),
+              formatHint: source.path.toLowerCase().contains('.mkv')
+                  ? VideoFormat.other
+                  : null,
+              httpHeaders: source.network &&
+                      widget.authToken != null &&
+                      widget.authToken!.isNotEmpty
+                  ? {'Authorization': 'Bearer ${widget.authToken}'}
+                  : const {},
+            )
+          : VideoPlayerController.file(File(source.path));
+      try {
+        await controller.initialize();
+        if (!mounted || !widget.isNearby) {
+          controller.dispose();
+          return;
         }
-      }
-
-      if (path.isEmpty || (!isNetwork && !File(path).existsSync())) {
         setState(() {
+          _controller = controller;
           _initializing = false;
-          _initFailed = true;
         });
+        if (widget.isActive) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) widget.onControllerInitialized(_controller);
+          });
+        }
         return;
+      } catch (e) {
+        lastError = e;
+        debugPrint(
+          'Error initializing video source (${source.network ? 'network' : 'local'}): $e',
+        );
+        controller.dispose();
       }
     }
 
-    final controller = isNetwork
-        ? VideoPlayerController.networkUrl(Uri.parse(path))
-        : VideoPlayerController.file(File(path));
-    try {
-      await controller.initialize();
-      if (!mounted) {
-        controller.dispose();
-        return;
-      }
-
-      if (!widget.isNearby) {
-        controller.dispose();
-        return;
-      }
-
-      setState(() {
-        _controller = controller;
-        _initializing = false;
-      });
-
-      if (widget.isActive) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            widget.onControllerInitialized(_controller);
-          }
-        });
-      }
-    } catch (e) {
-      debugPrint('Error initializing VideoPlayerController: $e');
-      controller.dispose();
-      if (!mounted) return;
-      setState(() {
-        _initializing = false;
-        _initFailed = true;
-      });
+    if (!mounted) return;
+    setState(() {
+      _initializing = false;
+      _initFailed = true;
+      _initError = lastError?.toString();
+    });
+    if (lastError != null) {
+      debugPrint('Video playback failed for ${widget.media.id}: $lastError');
     }
   }
 
@@ -1117,7 +1183,7 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
       return Center(child: CircularProgressIndicator(color: Colors.white));
     }
     if (_initFailed || _controller == null) {
-      return _NoVideoPlaceholder(media: widget.media);
+      return _NoVideoPlaceholder(media: widget.media, error: _initError);
     }
 
     return Center(
@@ -1138,8 +1204,9 @@ class _VideoPlayerItemState extends State<_VideoPlayerItem> {
 
 class _NoVideoPlaceholder extends StatelessWidget {
   final MediaModel media;
+  final String? error;
 
-  const _NoVideoPlaceholder({required this.media});
+  const _NoVideoPlaceholder({required this.media, this.error});
 
   @override
   Widget build(BuildContext context) {
@@ -1164,13 +1231,29 @@ class _NoVideoPlaceholder extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.92), size: 48),
           SizedBox(height: AppSpacing.sm),
           Text(
-            'Video file not available on this device',
+            error == null
+                ? 'Video file not available on this device'
+                : 'Unable to play this video',
             textAlign: TextAlign.center,
             style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.92),
                 fontWeight: FontWeight.w700,
                 fontSize: 12.5),
           ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 12, right: 12),
+              child: Text(
+                error!,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.72),
+                  fontSize: 9,
+                ),
+              ),
+            ),
         ],
       ),
     );

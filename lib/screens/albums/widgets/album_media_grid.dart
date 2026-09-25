@@ -165,35 +165,35 @@ class _MediaGridViewState extends State<_MediaGridView> {
           onZoomOut: _zoomOut,
           child: GestureDetector(
             // onScaleStart/Update handles BOTH two-finger touch pinch AND
-          // trackpad pinch-to-zoom on Web/desktop natively in Flutter.
-          onScaleStart: (details) {
-            _scaleStartCrossAxisCount = _crossAxisCount.toDouble();
-          },
-          onScaleUpdate: (details) {
-            if (details.scale == 1.0) return;
-            final newCount = (_scaleStartCrossAxisCount / details.scale)
-                .round()
-                .clamp(1, 8);
-            if (newCount != _crossAxisCount) {
-              setState(() => _crossAxisCount = newCount);
-            }
-          },
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _crossAxisCount,
-              mainAxisSpacing: AppSpacing.sm,
-              crossAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 1,
-            ),
-            itemCount: widget.media.length,
-            itemBuilder: (context, i) {
-              final m = widget.media[i];
-              return _MediaThumb(media: m, onTap: () => widget.onTapMedia(m));
+            // trackpad pinch-to-zoom on Web/desktop natively in Flutter.
+            onScaleStart: (details) {
+              _scaleStartCrossAxisCount = _crossAxisCount.toDouble();
             },
+            onScaleUpdate: (details) {
+              if (details.scale == 1.0) return;
+              final newCount = (_scaleStartCrossAxisCount / details.scale)
+                  .round()
+                  .clamp(1, 8);
+              if (newCount != _crossAxisCount) {
+                setState(() => _crossAxisCount = newCount);
+              }
+            },
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: _crossAxisCount,
+                mainAxisSpacing: AppSpacing.sm,
+                crossAxisSpacing: AppSpacing.sm,
+                childAspectRatio: 1,
+              ),
+              itemCount: widget.media.length,
+              itemBuilder: (context, i) {
+                final m = widget.media[i];
+                return _MediaThumb(media: m, onTap: () => widget.onTapMedia(m));
+              },
+            ),
           ),
-        ),
         );
       },
     );
@@ -242,8 +242,9 @@ class _MediaThumbState extends State<_MediaThumb>
               if (m.displayPath.isNotEmpty || m.displayThumbnailPath.isNotEmpty)
                 Builder(
                   builder: (context) {
-                    final path =
-                        isVideo ? m.displayThumbnailPath : m.displayPath;
+                    final path = isVideo || kIsWeb
+                        ? m.displayThumbnailPath
+                        : m.displayPath;
                     final isNetwork = path.startsWith('http://') ||
                         path.startsWith('https://');
                     if (isNetwork) {
@@ -251,10 +252,13 @@ class _MediaThumbState extends State<_MediaThumb>
                         path,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => isVideo
-                            ? VideoFallbackThumbnail(media: m, fit: BoxFit.cover)
+                            ? VideoFallbackThumbnail(
+                                media: m, fit: BoxFit.cover)
                             : _fallback(isVideo: isVideo),
                       );
-                    } else if (!kIsWeb && path.isNotEmpty && File(path).existsSync()) {
+                    } else if (!kIsWeb &&
+                        path.isNotEmpty &&
+                        File(path).existsSync()) {
                       return Image.file(
                         File(path),
                         fit: BoxFit.cover,
@@ -268,7 +272,7 @@ class _MediaThumbState extends State<_MediaThumb>
                   },
                 )
               else
-                isVideo 
+                isVideo
                     ? VideoFallbackThumbnail(media: m, fit: BoxFit.cover)
                     : _fallback(isVideo: isVideo),
               // Fallback play icon rendering is handled by VideoFallbackThumbnail if it kicks in.

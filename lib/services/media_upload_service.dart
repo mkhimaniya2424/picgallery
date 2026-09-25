@@ -18,7 +18,6 @@ class MediaUploadService {
     required int sizeBytes,
     String? albumId,
     String? folderId,
-    CancelToken? cancelToken,
     void Function(int sentBytes, int totalBytes)? onSendProgress,
   }) async {
     final query = <String, String>{
@@ -62,7 +61,7 @@ class MediaUploadService {
 
     final formData = FormData.fromMap({'file': file});
     final response = await _apiClient.postMultipart(path,
-        data: formData, cancelToken: cancelToken, onSendProgress: onSendProgress);
+        data: formData, onSendProgress: onSendProgress);
     return MediaModel.fromApiJson(response as Map<String, dynamic>);
   }
 

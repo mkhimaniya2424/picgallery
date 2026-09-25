@@ -1,4 +1,5 @@
 import '../models/media_model.dart';
+import 'package:dio/dio.dart';
 
 /// Repository abstraction for offline media management.
 ///
@@ -35,8 +36,13 @@ abstract class MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
-    dynamic cancelToken, // Use dynamic in the interface so Hive repo doesn't need to import dio just for the signature
     void Function(int sent, int total)? onSendProgress,
+    String? existingUploadId,
+    String? existingMediaId,
+    Map<String, String>? completedParts,
+    void Function(String uploadId, String mediaId)? onUploadStarted,
+    void Function(int partNumber, String etag)? onPartUploaded,
+    CancelToken? cancelToken,
   });
 
   Future<MediaModel> updateMedia(MediaModel media);

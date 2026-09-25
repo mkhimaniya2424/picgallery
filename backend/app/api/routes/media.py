@@ -149,49 +149,6 @@ def _comment_count_for(db: Session, media_ids: list[uuid.UUID]) -> dict[uuid.UUI
     return {media_id: count for media_id, count in rows}
 
 
-def _generate_thumbnail_background(
-    media_id: uuid.UUID,
-    owner_id: uuid.UUID,
-    relative_path: str,
-    media_type: MediaType,
-):
-    """Background task to generate thumbnails and extract metadata without blocking the upload response."""
-    # We must create a new session since this runs in a separate thread after response is sent
-    from app.db.session import SessionLocal
-    from sqlalchemy import update
-    
-    with SessionLocal() as db:
-        try:
-            thumbnail_path = None
-            width = height = None
-            duration_ms = None
-            
-            if media_type == MediaType.photo:
-                thumbnail_path = make_thumbnail(
-                    owner_id=owner_id, media_id=media_id, original_relative_path=relative_path
-                )
-                width, height = get_image_dimensions(relative_path)
-            elif media_type == MediaType.video:
-                thumbnail_path = make_video_thumbnail(
-                    owner_id=owner_id, media_id=media_id, original_relative_path=relative_path
-                )
-                duration_ms = get_video_duration_ms(relative_path)
-
-            db.execute(
-                update(Media)
-                .where(Media.id == media_id)
-                .values(
-                    thumbnail_path=thumbnail_path,
-                    width=width,
-                    height=height,
-                    duration_ms=duration_ms,
-                )
-            )
-            db.commit()
-        except Exception:
-            logger.exception("Failed to generate background thumbnail/metadata for media %s", media_id)
-
-
 @router.post("/upload", response_model=MediaRead, status_code=status.HTTP_201_CREATED)
 def upload_media(
     background_tasks: BackgroundTasks,
@@ -238,6 +195,25 @@ def upload_media(
         raise HTTPException(status_code=500, detail="Failed to store the uploaded file. Check server logs / disk space.")
 
     try:
+        thumbnail_path = None
+        width = height = None
+        duration_ms = None
+        if media_type == MediaType.photo:
+            thumbnail_path = make_thumbnail(
+                owner_id=current_user.id, media_id=media_id, original_relative_path=relative_path
+            )
+            width, height = get_image_dimensions(relative_path)
+        elif media_type == MediaType.video:
+            # Poster-frame thumbnail via ffmpeg; None (e.g. ffmpeg missing or
+            # extraction failed) just means the UI falls back to a placeholder.
+            thumbnail_path = make_video_thumbnail(
+                owner_id=current_user.id, media_id=media_id, original_relative_path=relative_path
+            )
+            # Same best-effort contract as the thumbnail above: None (no
+            # ffprobe, or the probe failed) just means the UI shows
+            # "--:--" instead of a crash or a bogus 0:00.
+            duration_ms = get_video_duration_ms(relative_path)
+
         media = Media(
             id=media_id,
             owner_id=current_user.id,
@@ -246,12 +222,12 @@ def upload_media(
             media_type=media_type,
             file_name=file.filename or "upload",
             file_path=relative_path,
-            thumbnail_path=None,  # Generated in background
+            thumbnail_path=thumbnail_path,
             content_type=content_type,
             size_bytes=size,
-            width=None,  # Generated in background
-            height=None, # Generated in background
-            duration_ms=None, # Generated in background
+            width=width,
+            height=height,
+            duration_ms=duration_ms,
         )
         db.add(media)
         log_activity(
@@ -266,23 +242,20 @@ def upload_media(
     except HTTPException:
         raise
     except Exception:
-        # Catches DB commit failures (bad migration state, constraint violation, connection drop)
+        # Catches thumbnail/dimension bugs, DB commit failures (bad
+        # migration state, constraint violation, connection drop) — any
+        # of it, not just the commit step. Every branch here now cleans
+        # up the orphaned file AND logs the real traceback so the next
+        # failure is diagnosable from the server console instead of
+        # showing up client-side as a bare "Internal Server Error".
         db.rollback()
         delete_media_folder(current_user.id, media_id)
         logger.exception("upload_media failed after file save for %s (owner=%s)", file.filename, current_user.id)
         raise HTTPException(status_code=500, detail="Failed to save media record. Check server logs for details.")
 
-    # Queue background processing (thumbnails + metadata)
-    background_tasks.add_task(
-        _generate_thumbnail_background,
-        media_id=media.id,
-        owner_id=current_user.id,
-        relative_path=relative_path,
-        media_type=media_type,
-    )
-
     if media_type == MediaType.photo:
-        # Runs after the response is sent (see core/face_index.py)
+        # Runs after the response is sent (see core/face_index.py —
+        # it opens its own DB session rather than reusing this one).
         background_tasks.add_task(index_media_background, media.id)
 
     return MediaRead.from_model(media)

@@ -12,18 +12,22 @@ import '../../core/theme/app_theme.dart';
 /// - Contextual action buttons: Pause, Resume, Cancel, Retry
 class UploadQueueTile extends StatelessWidget {
   final UploadJobModel job;
-  final VoidCallback? onCancel;
+  final VoidCallback onCancel;
   final VoidCallback? onPause;
   final VoidCallback? onResume;
   final VoidCallback? onRetry;
+  final double speedBytesPerSecond;
+  final Duration? remainingTime;
 
   const UploadQueueTile({
     super.key,
     required this.job,
-    this.onCancel,
+    required this.onCancel,
     this.onPause,
     this.onResume,
     this.onRetry,
+    this.speedBytesPerSecond = 0,
+    this.remainingTime,
   });
 
   String _extensionLower() {
@@ -50,7 +54,26 @@ class UploadQueueTile extends StatelessWidget {
       v /= 1024;
       i++;
     }
+
     return '${v.toStringAsFixed(v >= 10 || i == 0 ? 0 : 1)} ${units[i]}';
+  }
+
+  String _formatSpeed() {
+    if (speedBytesPerSecond <= 0) return 'estimating speed';
+    if (speedBytesPerSecond >= 1024 * 1024) {
+      return '${(speedBytesPerSecond / 1024 / 1024).toStringAsFixed(1)} MB/s';
+    }
+    return '${(speedBytesPerSecond / 1024).toStringAsFixed(0)} KB/s';
+  }
+
+  String _formatRemaining() {
+    if (remainingTime == null) return 'estimating time';
+    final seconds = remainingTime!.inSeconds;
+    if (seconds >= 3600) {
+      return '${seconds ~/ 3600}h ${(seconds % 3600) ~/ 60}m left';
+    }
+    if (seconds >= 60) return '${seconds ~/ 60}m ${seconds % 60}s left';
+    return '$seconds s left';
   }
 
   @override
@@ -78,13 +101,8 @@ class UploadQueueTile extends StatelessWidget {
         : (job.status == UploadJobStatus.completed ? 1.0 : job.progress);
 
     final showProgressIndicator = job.status == UploadJobStatus.uploading ||
-        job.status == UploadJobStatus.paused;
-        
-    final isWaitingForWifi = job.status == UploadJobStatus.paused &&
-        job.errorMessage != null &&
-        job.errorMessage!.contains('WiFi');
-        
-    final statusText = isWaitingForWifi ? 'WAITING FOR WI-FI' : job.status.name.toUpperCase();
+        job.status == UploadJobStatus.paused ||
+        job.status == UploadJobStatus.queued;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -159,7 +177,7 @@ class UploadQueueTile extends StatelessWidget {
                   border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                 ),
                 child: Text(
-                  statusText,
+                  job.status.name.toUpperCase(),
                   style: TextStyle(
                     color: statusColor,
                     fontWeight: FontWeight.w800,
@@ -202,6 +220,16 @@ class UploadQueueTile extends StatelessWidget {
                 ),
               ],
             ),
+            if (job.status == UploadJobStatus.uploading) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${_formatSpeed()} • ${_formatRemaining()}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
           ],
 
           // Error Messages (if any)

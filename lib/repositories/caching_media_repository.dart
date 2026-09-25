@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../core/network/api_client.dart';
 import '../models/media_model.dart';
 import 'api_media_repository.dart';
@@ -117,8 +119,13 @@ class CachingMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
-    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
+    String? existingUploadId,
+    String? existingMediaId,
+    Map<String, String>? completedParts,
+    void Function(String uploadId, String mediaId)? onUploadStarted,
+    void Function(int partNumber, String etag)? onPartUploaded,
+    CancelToken? cancelToken,
   }) async {
     final result = await _api.uploadMedia(
       bytes: bytes,
@@ -130,6 +137,11 @@ class CachingMediaRepository implements MediaRepository {
       sizeBytes: sizeBytes,
       albumId: albumId,
       folderId: folderId,
+      existingUploadId: existingUploadId,
+      existingMediaId: existingMediaId,
+      completedParts: completedParts,
+      onUploadStarted: onUploadStarted,
+      onPartUploaded: onPartUploaded,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
     );

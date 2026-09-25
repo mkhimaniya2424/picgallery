@@ -50,7 +50,6 @@ class ClientDrawer extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      // ignore: use_build_context_synchronously
       final container = ProviderScope.containerOf(context, listen: false);
       container.read(authProvider.notifier).logout();
       final currentSettings = container.read(settingsProvider);

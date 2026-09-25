@@ -1,10 +1,14 @@
 import asyncio
 import contextlib
+import mimetypes
+import re
 from pathlib import Path
+from typing import Iterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, StreamingResponse
 
 from app.api.routes import api_router
 from app.core.auto_delete import auto_delete_loop
@@ -47,6 +51,85 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 if settings.STORAGE_BACKEND == "local":
     _media_root = Path(settings.MEDIA_STORAGE_DIR)
     _media_root.mkdir(parents=True, exist_ok=True)
+
+    @app.api_route(
+        f"{settings.MEDIA_URL_PREFIX}/{{file_path:path}}",
+        methods=["GET", "HEAD"],
+        include_in_schema=False,
+    )
+    async def serve_media_file(request: Request, file_path: str):
+        """Serve media with HTTP ranges so large video players can stream."""
+        root = _media_root.resolve()
+        target = (root / file_path).resolve()
+        if target != root and root not in target.parents:
+            raise HTTPException(status_code=404, detail="Media file not found")
+        if not target.is_file():
+            raise HTTPException(status_code=404, detail="Media file not found")
+
+        size = target.stat().st_size
+        content_type = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+        range_header = request.headers.get("range")
+        if not range_header:
+            response = FileResponse(target, media_type=content_type)
+            response.headers["Accept-Ranges"] = "bytes"
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            return response
+
+        match = re.fullmatch(r"bytes=(\d*)-(\d*)", range_header.strip())
+        if match is None:
+            raise HTTPException(status_code=416, detail="Invalid byte range")
+
+        start_text, end_text = match.groups()
+        if not start_text and not end_text:
+            raise HTTPException(status_code=416, detail="Invalid byte range")
+        if start_text:
+            start = int(start_text)
+            end = int(end_text) if end_text else size - 1
+        else:
+            suffix_length = int(end_text)
+            if suffix_length <= 0:
+                raise HTTPException(status_code=416, detail="Invalid byte range")
+            start = max(size - suffix_length, 0)
+            end = size - 1
+
+        if start >= size or start > end:
+            raise HTTPException(status_code=416, detail="Range not satisfiable")
+        end = min(end, size - 1)
+        length = end - start + 1
+
+        def iter_file() -> Iterator[bytes]:
+            with target.open("rb") as media_file:
+                media_file.seek(start)
+                remaining = length
+                while remaining:
+                    chunk = media_file.read(min(1024 * 1024, remaining))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    yield chunk
+
+        headers = {
+            "Accept-Ranges": "bytes",
+            "Content-Range": f"bytes {start}-{end}/{size}",
+            "Content-Length": str(length),
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+        }
+        if request.method == "HEAD":
+            return StreamingResponse(
+                content=iter(()),
+                status_code=206,
+                media_type=content_type,
+                headers=headers,
+            )
+        return StreamingResponse(
+            content=iter_file(),
+            status_code=206,
+            media_type=content_type,
+            headers=headers,
+        )
+
     app.mount(settings.MEDIA_URL_PREFIX, StaticFiles(directory=str(_media_root)), name="media")
 
 

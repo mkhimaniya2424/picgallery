@@ -36,7 +36,7 @@ class UploadJobModel {
   final Stream<Uint8List> Function()? webStreamFactory;
 
   /// Object URL for large web files (e.g. `blob:http://...`). This allows
-  /// us to bypass Dio completely and use native XMLHttpRequest to stream the 
+  /// us to bypass Dio completely and use native XMLHttpRequest to stream the
   /// file from disk on Flutter Web. Like [webBytes], not persisted.
   final String? webBlobUrl;
 
@@ -47,6 +47,9 @@ class UploadJobModel {
   /// Bytes total/loaded.
   final int totalBytes;
   final int uploadedBytes;
+  final String? uploadId;
+  final String? uploadMediaId;
+  final Map<String, String> completedParts;
 
   final DateTime createdAt;
   final DateTime? startedAt;
@@ -56,10 +59,6 @@ class UploadJobModel {
 
   /// Optional error message when failed.
   final String? errorMessage;
-
-  final String? uploadId;
-  final String? mediaId;
-  final Map<String, String>? completedParts;
 
   // Options fields
   final bool compress;
@@ -97,6 +96,9 @@ class UploadJobModel {
     this.folderId,
     required this.totalBytes,
     required this.uploadedBytes,
+    this.uploadId,
+    this.uploadMediaId,
+    this.completedParts = const {},
     required this.createdAt,
     this.startedAt,
     this.finishedAt,
@@ -109,9 +111,6 @@ class UploadJobModel {
     this.offlinePending = false,
     this.offlineRetryCount = 0,
     this.nextRetryAt,
-    this.uploadId,
-    this.mediaId,
-    this.completedParts,
   });
 
   double get progress {
@@ -135,6 +134,10 @@ class UploadJobModel {
     String? folderId,
     int? totalBytes,
     int? uploadedBytes,
+    String? uploadId,
+    String? uploadMediaId,
+    Map<String, String>? completedParts,
+    bool clearUploadSession = false,
     DateTime? createdAt,
     DateTime? startedAt,
     DateTime? finishedAt,
@@ -149,9 +152,6 @@ class UploadJobModel {
     int? offlineRetryCount,
     DateTime? nextRetryAt,
     bool clearNextRetryAt = false,
-    String? uploadId,
-    String? mediaId,
-    Map<String, String>? completedParts,
   }) {
     return UploadJobModel(
       id: id ?? this.id,
@@ -164,6 +164,12 @@ class UploadJobModel {
       folderId: folderId ?? this.folderId,
       totalBytes: totalBytes ?? this.totalBytes,
       uploadedBytes: uploadedBytes ?? this.uploadedBytes,
+      uploadId: clearUploadSession ? null : (uploadId ?? this.uploadId),
+      uploadMediaId:
+          clearUploadSession ? null : (uploadMediaId ?? this.uploadMediaId),
+      completedParts: clearUploadSession
+          ? const {}
+          : (completedParts ?? this.completedParts),
       createdAt: createdAt ?? this.createdAt,
       startedAt: startedAt ?? this.startedAt,
       finishedAt: finishedAt ?? this.finishedAt,
@@ -176,9 +182,6 @@ class UploadJobModel {
       offlinePending: offlinePending ?? this.offlinePending,
       offlineRetryCount: offlineRetryCount ?? this.offlineRetryCount,
       nextRetryAt: clearNextRetryAt ? null : (nextRetryAt ?? this.nextRetryAt),
-      uploadId: uploadId ?? this.uploadId,
-      mediaId: mediaId ?? this.mediaId,
-      completedParts: completedParts ?? this.completedParts,
     );
   }
 
@@ -191,6 +194,9 @@ class UploadJobModel {
       'folderId': folderId,
       'totalBytes': totalBytes,
       'uploadedBytes': uploadedBytes,
+      'uploadId': uploadId,
+      'uploadMediaId': uploadMediaId,
+      'completedParts': completedParts,
       'createdAt': createdAt.toIso8601String(),
       'startedAt': startedAt?.toIso8601String(),
       'finishedAt': finishedAt?.toIso8601String(),
@@ -203,9 +209,6 @@ class UploadJobModel {
       'offlinePending': offlinePending,
       'offlineRetryCount': offlineRetryCount,
       'nextRetryAt': nextRetryAt?.toIso8601String(),
-      'uploadId': uploadId,
-      'mediaId': mediaId,
-      'completedParts': completedParts,
     };
   }
 
@@ -224,6 +227,11 @@ class UploadJobModel {
       folderId: json['folderId'] as String?,
       totalBytes: json['totalBytes'] as int? ?? 0,
       uploadedBytes: json['uploadedBytes'] as int? ?? 0,
+      uploadId: json['uploadId'] as String?,
+      uploadMediaId: json['uploadMediaId'] as String?,
+      completedParts: (json['completedParts'] as Map?)?.map(
+              (key, value) => MapEntry(key.toString(), value.toString())) ??
+          const {},
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
       startedAt: json['startedAt'] != null
@@ -245,11 +253,6 @@ class UploadJobModel {
       offlineRetryCount: json['offlineRetryCount'] as int? ?? 0,
       nextRetryAt: json['nextRetryAt'] != null
           ? DateTime.tryParse(json['nextRetryAt'] as String)
-          : null,
-      uploadId: json['uploadId'] as String?,
-      mediaId: json['mediaId'] as String?,
-      completedParts: json['completedParts'] != null
-          ? Map<String, String>.from(json['completedParts'] as Map)
           : null,
     );
   }

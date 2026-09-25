@@ -133,18 +133,21 @@ class MediaPickerService {
     final type = allowedExtensions == null ? FileType.media : FileType.custom;
     final List<PlatformFile> result;
     if (allowMultiple) {
-      // pickFiles() always picks multiple by default in file_picker ≥12
       result = await FilePicker.pickFiles(
         type: type,
+        withData: false,
+        allowMultiple: true,
         allowedExtensions: allowedExtensions,
       );
     } else {
-      // pickFile() is the recommended single-file API
-      final single = await FilePicker.pickFile(
+      final resultList = await FilePicker.pickFiles(
         type: type,
+        withData: false,
+        allowMultiple: false,
         allowedExtensions: allowedExtensions,
       );
-      result = single != null ? [single] : [];
+      final f = resultList?.isNotEmpty == true ? resultList!.first : null;
+      result = f != null ? [f] : [];
     }
     if (result.isEmpty) return [];
 

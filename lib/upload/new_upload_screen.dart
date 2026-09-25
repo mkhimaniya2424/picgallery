@@ -81,16 +81,35 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
     try {
       final rawFiles = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowMultiple: true,
         allowedExtensions: [
-          'jpg', 'jpeg', 'png', 'heic', 'heif', 'webp', 'gif', 'tif', 'tiff',
-          'mp4', 'mov', 'avi', 'm4v', 'mkv', 'webm', '3gp',
-          'raw', 'arw', 'cr2', 'cr3', 'nef', 'orf', 'dng',
+          'jpg',
+          'jpeg',
+          'png',
+          'heic',
+          'heif',
+          'webp',
+          'gif',
+          'tif',
+          'tiff',
+          'mp4',
+          'mov',
+          'avi',
+          'm4v',
+          'mkv',
+          'webm',
+          '3gp',
+          'raw',
+          'arw',
+          'cr2',
+          'cr3',
+          'nef',
+          'orf',
+          'dng',
         ],
       );
 
       // v12: returns List<PlatformFile>; empty means user cancelled
-      if (rawFiles == null || rawFiles.isEmpty) {
+      if (rawFiles.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No files were selected')),
@@ -163,7 +182,7 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
       if (assets == null || assets.isEmpty) {
         return;
       }
-      
+
       // Show preparing spinner since file extraction can take time
       if (mounted) {
         showDialog(
@@ -175,18 +194,21 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
 
       final picked = <PickedFileInfo>[];
       int duplicateCount = 0;
-      final existingJobs = ref.read(uploadQueueProvider).valueOrNull?.jobs ?? [];
+      final existingJobs =
+          ref.read(uploadQueueProvider).valueOrNull?.jobs ?? [];
 
       for (final asset in assets) {
         final file = await asset.file;
         if (file == null) continue;
 
         final sizeBytes = await file.length();
-        final name = asset.title ?? file.path.split(Platform.pathSeparator).last;
+        final name =
+            asset.title ?? file.path.split(Platform.pathSeparator).last;
         final ext = name.split('.').last;
-        
+
         // Check for duplicates
-        final isDuplicate = existingJobs.any((j) => j.fileName == name && j.totalBytes == sizeBytes);
+        final isDuplicate = existingJobs
+            .any((j) => j.fileName == name && j.totalBytes == sizeBytes);
         if (isDuplicate) {
           duplicateCount++;
           continue;
@@ -201,14 +223,15 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
           streamFactory: null,
         ));
       }
-      
+
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss spinner
-        
+
         if (duplicateCount > 0) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Skipped $duplicateCount file(s) that are already in the upload queue.'),
+              content: Text(
+                  'Skipped $duplicateCount file(s) that are already in the upload queue.'),
               duration: const Duration(seconds: 4),
             ),
           );
@@ -288,18 +311,19 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
       try {
         final newAlbum = await ref.read(albumProvider).createAlbum(
               name: nameCtrl.text.trim(),
-              description: descCtrl.text.trim().isNotEmpty
-                  ? descCtrl.text.trim()
-                  : null,
+              description:
+                  descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : null,
             );
         if (!mounted) return;
-        ref.read(newUploadProvider.notifier).updateOptions(albumId: newAlbum.id);
+        ref
+            .read(newUploadProvider.notifier)
+            .updateOptions(albumId: newAlbum.id);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Album "${newAlbum.name}" created successfully')));
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Failed to create album: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to create album: $e')));
         }
       }
     }
@@ -336,13 +360,15 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
             .read(folderProvider)
             .createFolder(name: nameCtrl.text.trim());
         if (!mounted) return;
-        ref.read(newUploadProvider.notifier).updateOptions(folderId: newFolder.id);
+        ref
+            .read(newUploadProvider.notifier)
+            .updateOptions(folderId: newFolder.id);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Folder "${newFolder.name}" created successfully')));
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Failed to create folder: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to create folder: $e')));
         }
       }
     }
@@ -442,15 +468,13 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                         Text(
                           'Select high-quality images and videos to upload to your Studio Gallery.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color: isDark
-                                    ? AppColors.subtitleOnDark
-                                    : AppColors.subtitle,
-                                height: 1.5,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: isDark
+                                        ? AppColors.subtitleOnDark
+                                        : AppColors.subtitle,
+                                    height: 1.5,
+                                  ),
                         ),
                         const SizedBox(height: 32),
                         _isPicking
@@ -520,7 +544,8 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                     Expanded(
                       child: GridView.builder(
                         padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
@@ -530,28 +555,36 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                           final f = files[i];
                           final isVideo = _isVideo(f.name);
                           final unsupported = _isUnsupported(f.name);
-                          
+
                           return Stack(
                             fit: StackFit.expand,
                             children: [
                               Container(
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkSurfaceRaised : Colors.grey.shade100,
+                                  color: isDark
+                                      ? AppColors.darkSurfaceRaised
+                                      : Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(8),
-                                  image: (!kIsWeb && f.path != null && !isVideo) 
+                                  image: (!kIsWeb && f.path != null && !isVideo)
                                       ? DecorationImage(
                                           image: FileImage(File(f.path!)),
                                           fit: BoxFit.cover,
-                                        ) 
+                                        )
                                       : null,
                                 ),
-                                child: (kIsWeb || f.path == null || isVideo) ? Center(
-                                  child: Icon(
-                                    isVideo ? Icons.videocam_rounded : Icons.image_rounded,
-                                    color: isDark ? Colors.white54 : Colors.black54,
-                                    size: 32,
-                                  ),
-                                ) : null,
+                                child: (kIsWeb || f.path == null || isVideo)
+                                    ? Center(
+                                        child: Icon(
+                                          isVideo
+                                              ? Icons.videocam_rounded
+                                              : Icons.image_rounded,
+                                          color: isDark
+                                              ? Colors.white54
+                                              : Colors.black54,
+                                          size: 32,
+                                        ),
+                                      )
+                                    : null,
                               ),
                               if (unsupported)
                                 Positioned(
@@ -562,12 +595,16 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
                                       color: Colors.red.withOpacity(0.8),
-                                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                                      borderRadius: const BorderRadius.vertical(
+                                          bottom: Radius.circular(8)),
                                     ),
                                     child: const Text(
                                       'Unsupported',
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),
@@ -576,7 +613,9 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                                 right: 4,
                                 child: GestureDetector(
                                   onTap: () {
-                                    final updated = List<PickedFileInfo>.from(files)..removeAt(i);
+                                    final updated =
+                                        List<PickedFileInfo>.from(files)
+                                          ..removeAt(i);
                                     notifier.setPickedFiles(updated);
                                   },
                                   child: Container(
@@ -585,7 +624,8 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                                       color: Colors.black54,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.close_rounded, size: 16, color: Colors.white),
+                                    child: const Icon(Icons.close_rounded,
+                                        size: 16, color: Colors.white),
                                   ),
                                 ),
                               ),
@@ -594,12 +634,14 @@ class _NewUploadScreenState extends ConsumerState<NewUploadScreen> {
                                   bottom: 4,
                                   right: 4,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: Colors.black54,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                                    child: const Icon(Icons.videocam_rounded,
+                                        size: 14, color: Colors.white),
                                   ),
                                 ),
                             ],
@@ -826,8 +868,7 @@ class _SectionDivider extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
             child: Divider(
-                color:
-                    isDark ? AppColors.darkBorder : Colors.grey.shade200)),
+                color: isDark ? AppColors.darkBorder : Colors.grey.shade200)),
       ],
     );
   }
@@ -838,9 +879,7 @@ class _FileSummary extends StatelessWidget {
   final String Function(int) humanBytes;
   final bool isDark;
   const _FileSummary(
-      {required this.files,
-      required this.humanBytes,
-      required this.isDark});
+      {required this.files, required this.humanBytes, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -864,9 +903,8 @@ class _FileSummary extends StatelessWidget {
           Text(humanBytes(total),
               style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.subtitleOnDark
-                      : AppColors.subtitle)),
+                  color:
+                      isDark ? AppColors.subtitleOnDark : AppColors.subtitle)),
         ],
       ),
     );

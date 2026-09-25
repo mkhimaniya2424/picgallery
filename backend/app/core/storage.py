@@ -37,15 +37,16 @@ logger = logging.getLogger("app.storage")
 _PHOTO_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
 _VIDEO_CONTENT_TYPES = {
     "video/mp4",
-    "video/quicktime",       # .mov
-    "video/x-matroska",      # .mkv
+    "video/quicktime",
+    "video/x-matroska",
     "video/webm",
-    "video/x-msvideo",       # .avi
-    "video/avi",             # .avi (alternate MIME)
-    "video/x-m4v",           # .m4v
-    "video/3gpp",            # .3gp
-    "video/3gpp2",           # .3g2
-    "video/x-ms-wmv",        # .wmv
+    "video/x-msvideo",
+    "video/avi",
+    "video/x-m4v",
+    "video/3gpp",
+    "video/3gpp2",
+    "video/x-ms-wmv",
+    "video/mp2t",
 }
 
 THUMBNAIL_MAX_DIMENSION = 480
@@ -215,17 +216,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
     None thumbnail as "fall back to a placeholder in the UI", not an
     error, same as make_thumbnail.
     """
-    if _use_r2():
-        input_path = _r2_client().generate_presigned_url(
-            "get_object",
-            Params={"Bucket": settings.R2_BUCKET_NAME, "Key": original_relative_path},
-            ExpiresIn=3600,
-        )
-        fetched = None
-    else:
-        fetched = _fetch_to_temp(original_relative_path)
-        input_path = str(fetched)
-        
+    fetched = _fetch_to_temp(original_relative_path)
     thumb_relative = f"{owner_id}/{media_id}/thumbnail.jpg"
     thumb_tmp = Path(tempfile.mktemp(suffix=".jpg"))
 
@@ -235,7 +226,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
                 settings.FFMPEG_BINARY,
                 "-y",
                 "-ss", str(VIDEO_THUMBNAIL_TIMESTAMP_SECONDS),
-                "-i", input_path,
+                "-i", str(fetched),
                 "-frames:v", "1",
                 "-vf", f"scale='min({THUMBNAIL_MAX_DIMENSION},iw)':-2",
                 str(thumb_tmp),
@@ -248,7 +239,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
             result = subprocess.run(
                 [
                     settings.FFMPEG_BINARY, "-y",
-                    "-i", input_path,
+                    "-i", str(fetched),
                     "-frames:v", "1",
                     "-vf", f"scale='min({THUMBNAIL_MAX_DIMENSION},iw)':-2",
                     str(thumb_tmp),
@@ -266,7 +257,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
         logger.exception("Video thumbnail generation failed for %s", original_relative_path)
         return None
     finally:
-        if fetched and _use_r2():
+        if _use_r2():
             fetched.unlink(missing_ok=True)
 
     _store_local_file(local_path=thumb_tmp, relative_path=thumb_relative)
@@ -280,17 +271,7 @@ def get_video_duration_ms(original_relative_path: str) -> int | None:
     displaying "--:--"), not an error, same as the thumbnail helpers
     above.
     """
-    if _use_r2():
-        input_path = _r2_client().generate_presigned_url(
-            "get_object",
-            Params={"Bucket": settings.R2_BUCKET_NAME, "Key": original_relative_path},
-            ExpiresIn=3600,
-        )
-        fetched = None
-    else:
-        fetched = _fetch_to_temp(original_relative_path)
-        input_path = str(fetched)
-        
+    fetched = _fetch_to_temp(original_relative_path)
     try:
         result = subprocess.run(
             [
@@ -298,7 +279,7 @@ def get_video_duration_ms(original_relative_path: str) -> int | None:
                 "-v", "error",
                 "-show_entries", "format=duration",
                 "-of", "default=noprint_wrappers=1:nokey=1",
-                input_path,
+                str(fetched),
             ],
             capture_output=True,
             timeout=30,
@@ -326,7 +307,7 @@ def get_video_duration_ms(original_relative_path: str) -> int | None:
         logger.exception("Video duration read failed for %s", original_relative_path)
         return None
     finally:
-        if fetched and _use_r2():
+        if _use_r2():
             fetched.unlink(missing_ok=True)
 
 

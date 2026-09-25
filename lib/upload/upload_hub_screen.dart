@@ -72,6 +72,8 @@ class UploadHubScreen extends ConsumerWidget {
                   _buildSectionHeader('Active', isDark),
                 ...activeJobs.map((job) => UploadQueueTile(
                       job: job,
+                      speedBytesPerSecond: data.speedBytesPerSecond,
+                      remainingTime: data.remainingTime,
                       onCancel: () => notifier.cancelJob(job.id),
                       onPause: () => notifier.pauseJob(job.id),
                       onResume: () => notifier.resumeJob(job.id),
@@ -284,8 +286,7 @@ class UploadHubScreen extends ConsumerWidget {
                     ),
                   ),
                 )
-              else if (data.jobs
-                  .any((j) => j.status == UploadJobStatus.paused))
+              else if (data.jobs.any((j) => j.status == UploadJobStatus.paused))
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: notifier.resumeAll,

@@ -25,7 +25,9 @@ class MediaThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = media.displayPath;
+    final path = media.type == MediaType.photo && kIsWeb
+        ? media.displayThumbnailPath
+        : media.displayPath;
     final isNetwork = media.isDisplayPathNetwork;
 
     if (media.type == MediaType.photo) {
@@ -67,8 +69,8 @@ class MediaThumb extends StatelessWidget {
         );
       }
     }
-    return media.type == MediaType.video 
-        ? VideoFallbackThumbnail(media: media, fit: fit) 
+    return media.type == MediaType.video
+        ? VideoFallbackThumbnail(media: media, fit: fit)
         : _Placeholder(media: media);
   }
 }

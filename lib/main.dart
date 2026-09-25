@@ -6,6 +6,8 @@ import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/auth_providers.dart';
+import 'providers/album_provider.dart';
+import 'providers/media_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/deep_link_service.dart';
 import 'services/push_notification_service.dart';
@@ -22,14 +24,11 @@ final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await UploadForegroundService.init();
   // Opens the on-device Hive boxes the Admin Dashboard and the local-only
   // media/albums/folders/onboarding/settings/upload-queue features persist
   // to, so the very first frame can already read saved state.
   await Hive.initFlutter();
-
-  // Register the upload foreground-service notification channel so the first
-  // upload can start the service immediately without waiting for any widget.
-  await UploadForegroundService.init();
 
   // The backend now has a permanent public URL baked into ApiClient's
   // default (https://api.picgallery.in), so no saved/manual host is
@@ -69,11 +68,58 @@ Future<void> main() async {
   );
 }
 
-class PicGallery extends ConsumerWidget {
+class PicGallery extends ConsumerStatefulWidget {
   const PicGallery({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PicGallery> createState() => _PicGalleryState();
+}
+
+class _PicGalleryState extends ConsumerState<PicGallery>
+    with WidgetsBindingObserver {
+  DateTime? _backgroundedAt;
+  bool _refreshingOnResume = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _backgroundedAt ??= DateTime.now();
+      return;
+    }
+    if (state != AppLifecycleState.resumed || _backgroundedAt == null) return;
+
+    final elapsed = DateTime.now().difference(_backgroundedAt!);
+    _backgroundedAt = null;
+    if (elapsed < const Duration(seconds: 2) ||
+        _refreshingOnResume ||
+        !ref.read(authStateProvider).isLoggedIn) {
+      return;
+    }
+
+    _refreshingOnResume = true;
+    Future.wait([
+      ref.read(mediaProvider).load(),
+      ref.read(albumProvider).refreshSilently(),
+    ]).whenComplete(() {
+      _refreshingOnResume = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
 
     final themeMode = switch (settings.themeMode) {

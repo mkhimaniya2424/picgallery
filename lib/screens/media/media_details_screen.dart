@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -64,15 +65,42 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
   static const ShareService _shareService = ShareServiceImpl();
   static const DownloadService _downloadService = DownloadServiceImpl();
   static const MediaFileCache _fileCache = MediaFileCache();
+  Timer? _thumbnailRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _refreshMedia();
       ref.read(mediaLikesCommentsProvider).fetchComments(widget.mediaId);
       ref.read(mediaLikesCommentsProvider).fetchLikes(widget.mediaId);
     });
+  }
+
+  Future<void> _refreshMedia() async {
+    final controller = ref.read(mediaProvider);
+    await controller.load();
+    if (!mounted) return;
+
+    final media = _find(controller.allMedia, widget.mediaId);
+    if (media?.type != MediaType.video ||
+        media?.remoteThumbnailUrl?.isNotEmpty == true ||
+        media?.thumbnailPath.isNotEmpty == true) {
+      _thumbnailRefreshTimer?.cancel();
+      _thumbnailRefreshTimer = null;
+    } else {
+      _thumbnailRefreshTimer ??= Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => _refreshMedia(),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _thumbnailRefreshTimer?.cancel();
+    super.dispose();
   }
 
   MediaModel? _find(List<MediaModel> all, String id) {

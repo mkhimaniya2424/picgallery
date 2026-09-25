@@ -61,13 +61,12 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
   /// `MediaListController.addMedia` itself (see media_provider.dart), so
   /// this screen no longer needs to touch `albumProvider` directly.
   Future<void> _openAddMediaSheet(AlbumModel album) async {
-    Navigator.of(context).pushNamed(
-      AppRoutes.newUpload,
-      arguments: {
-        'albumId': album.id,
-        'folderId': album.folderId,
-      },
-    );
+    final notifier = ref.read(uploadQueueProvider.notifier);
+    await notifier.resetWizard();
+    notifier.updateOptions(albumId: album.id, folderId: album.folderId);
+
+    if (!mounted) return;
+    Navigator.of(context).pushNamed(AppRoutes.newUpload);
   }
 
   AlbumModel? _findAlbum(List<AlbumModel> albums) {
@@ -236,148 +235,149 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
                     children: [
                       AlbumDetailsHeader(album: album),
                       SizedBox(height: AppSpacing.md),
-                    if (folder != null || album.description != null)
-                      Builder(builder: (context) {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        return Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(AppSpacing.md),
-                          margin: EdgeInsets.only(bottom: AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.darkSurface
-                                : Colors.white.withValues(alpha: 0.72),
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                            border: Border.all(
-                                color: isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (album.description != null) ...[
-                                Text(
-                                  album.description!,
-                                  style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: isDark
-                                          ? AppColors.textOnDark
-                                          : (Theme.of(context).brightness ==
-                                                  Brightness.dark
-                                              ? AppColors.textOnDark
-                                              : AppColors.text)),
-                                ),
+                      if (folder != null || album.description != null)
+                        Builder(builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(AppSpacing.md),
+                            margin: EdgeInsets.only(bottom: AppSpacing.lg),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white.withValues(alpha: 0.72),
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                              border: Border.all(
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (album.description != null) ...[
+                                  Text(
+                                    album.description!,
+                                    style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? AppColors.textOnDark
+                                            : (Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? AppColors.textOnDark
+                                                : AppColors.text)),
+                                  ),
+                                  if (folder != null)
+                                    SizedBox(height: AppSpacing.sm),
+                                ],
                                 if (folder != null)
-                                  SizedBox(height: AppSpacing.sm),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.folder_rounded,
+                                          size: 16, color: AppColors.primary),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Filed under "${folder.name}"',
+                                        style: TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.primary),
+                                      ),
+                                    ],
+                                  ),
                               ],
-                              if (folder != null)
-                                Row(
-                                  children: [
-                                    Icon(Icons.folder_rounded,
-                                        size: 16, color: AppColors.primary),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Filed under "${folder.name}"',
-                                      style: TextStyle(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.primary),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                        );
-                      }),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => Navigator.of(context).pushNamed(
-                              AppRoutes.adminAlbumEdit,
-                              arguments: album.id,
                             ),
-                            icon: Icon(Icons.edit_outlined),
-                            label: Text('Edit Album'),
+                          );
+                        }),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => Navigator.of(context).pushNamed(
+                                AppRoutes.adminAlbumEdit,
+                                arguments: album.id,
+                              ),
+                              icon: Icon(Icons.edit_outlined),
+                              label: Text('Edit Album'),
+                            ),
                           ),
-                        ),
-                        SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _isMoving
-                                ? null
-                                : () => _pickFolder(
-                                    context, album, folderState.folders),
-                            icon: _isMoving
-                                ? SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2))
-                                : Icon(Icons.drive_file_move_rounded),
-                            label: Text('Move'),
+                          SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _isMoving
+                                  ? null
+                                  : () => _pickFolder(
+                                      context, album, folderState.folders),
+                              icon: _isMoving
+                                  ? SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2))
+                                  : Icon(Icons.drive_file_move_rounded),
+                              label: Text('Move'),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.tonalIcon(
-                        onPressed: () => Navigator.of(context)
-                            .pushNamed(AppRoutes.adminFolderList),
-                        icon: Icon(Icons.folder_open_rounded),
-                        label: Text('Manage Folders'),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: AppSpacing.xl),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Recent Photos',
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.textOnDark
-                                  : (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? AppColors.textOnDark
-                                      : AppColors.text)),
-                        ),
-                        if (allAlbumMedia.isNotEmpty)
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pushNamed(
-                              AppRoutes.media,
-                              arguments:
-                                  MediaSearchArgs(initialAlbumId: album.id),
-                            ),
-                            child: Text('Manage Photos',
-                                style: TextStyle(fontWeight: FontWeight.w700)),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: AppSpacing.md),
-                    AlbumMediaGrid(
-                      media: previewMedia,
-                      onAddMedia: () => _openAddMediaSheet(album),
-                      onTapMedia: (m) => Navigator.of(context).pushNamed(
-                        AppRoutes.mediaDetails,
-                        arguments: MediaDetailsArgs(
-                          mediaId: m.id,
-                          mediaIds: previewMedia
-                              .map((x) => x.id)
-                              .toList(growable: false),
+                      SizedBox(height: AppSpacing.sm),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonalIcon(
+                          onPressed: () => Navigator.of(context)
+                              .pushNamed(AppRoutes.adminFolderList),
+                          icon: Icon(Icons.folder_open_rounded),
+                          label: Text('Manage Folders'),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      SizedBox(height: AppSpacing.xl),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Recent Photos',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.textOnDark
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.textOnDark
+                                        : AppColors.text)),
+                          ),
+                          if (allAlbumMedia.isNotEmpty)
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pushNamed(
+                                AppRoutes.media,
+                                arguments:
+                                    MediaSearchArgs(initialAlbumId: album.id),
+                              ),
+                              child: Text('Manage Photos',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w700)),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: AppSpacing.md),
+                      AlbumMediaGrid(
+                        media: previewMedia,
+                        onAddMedia: () => _openAddMediaSheet(album),
+                        onTapMedia: (m) => Navigator.of(context).pushNamed(
+                          AppRoutes.mediaDetails,
+                          arguments: MediaDetailsArgs(
+                            mediaId: m.id,
+                            mediaIds: previewMedia
+                                .map((x) => x.id)
+                                .toList(growable: false),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
 
                 if (!isWide) return content;

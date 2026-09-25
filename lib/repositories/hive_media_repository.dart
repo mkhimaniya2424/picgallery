@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../core/utils/app_exceptions.dart';
 import '../models/media_model.dart';
 import '../storage/media_local_store.dart';
@@ -94,8 +96,13 @@ class HiveMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
-    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
+    String? existingUploadId,
+    String? existingMediaId,
+    Map<String, String>? completedParts,
+    void Function(String uploadId, String mediaId)? onUploadStarted,
+    void Function(int partNumber, String etag)? onPartUploaded,
+    CancelToken? cancelToken,
   }) {
     // Hive is a metadata-only cache — it never owned raw file bytes or
     // talked to a network, so "upload" has no meaning here. Callers

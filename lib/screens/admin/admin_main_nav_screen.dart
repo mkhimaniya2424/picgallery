@@ -105,7 +105,7 @@ class BackgroundUploadIndicator extends ConsumerWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: InkWell(
             onTap: () {
-              Navigator.of(context).pushNamed(AppRoutes.uploads);
+              Navigator.of(context).pushNamed(AppRoutes.uploadQueue);
             },
             borderRadius: BorderRadius.circular(16),
             child: Container(

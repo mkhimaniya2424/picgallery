@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
+
 import '../core/network/api_client.dart';
 import '../core/utils/app_exceptions.dart';
 import '../models/media_model.dart';
 import '../services/media_upload_service.dart';
+import '../services/chunked_upload_service.dart';
 import 'media_repository.dart';
 
 /// API-backed [MediaRepository], talking to `app/api/routes/media.py`
@@ -21,13 +24,19 @@ import 'media_repository.dart';
 /// `POST /media/{id}/copy`, a real server-side file copy.
 class ApiMediaRepository implements MediaRepository {
   ApiMediaRepository(
-      {required ApiClient apiClient, MediaUploadService? uploadService})
+      {required ApiClient apiClient,
+      MediaUploadService? uploadService,
+      ChunkedUploadService? chunkedUploadService})
       : _apiClient = apiClient,
         _uploadService =
-            uploadService ?? MediaUploadService(apiClient: apiClient);
+            uploadService ?? MediaUploadService(apiClient: apiClient),
+        _chunkedUploadService =
+            chunkedUploadService ?? ChunkedUploadService(apiClient: apiClient);
 
   final ApiClient _apiClient;
   final MediaUploadService _uploadService;
+  final ChunkedUploadService _chunkedUploadService;
+  static const int _chunkedUploadThresholdBytes = 50 * 1024 * 1024;
 
   List<MediaModel> _mapList(dynamic json) {
     final list = json as List<dynamic>;
@@ -96,9 +105,33 @@ class ApiMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
-    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
+    String? existingUploadId,
+    String? existingMediaId,
+    Map<String, String>? completedParts,
+    void Function(String uploadId, String mediaId)? onUploadStarted,
+    void Function(int partNumber, String etag)? onPartUploaded,
+    CancelToken? cancelToken,
   }) {
+    if (filePath != null &&
+        filePath.isNotEmpty &&
+        sizeBytes >= _chunkedUploadThresholdBytes) {
+      return _chunkedUploadService.uploadChunked(
+        filePath: filePath,
+        fileName: fileName,
+        contentType: contentType,
+        albumId: albumId,
+        folderId: folderId,
+        existingUploadId: existingUploadId,
+        existingMediaId: existingMediaId,
+        completedParts: completedParts,
+        onUploadStarted: onUploadStarted,
+        onPartUploaded: onPartUploaded,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+      );
+    }
+
     return _uploadService.upload(
       bytes: bytes,
       filePath: filePath,
@@ -109,7 +142,6 @@ class ApiMediaRepository implements MediaRepository {
       sizeBytes: sizeBytes,
       albumId: albumId,
       folderId: folderId,
-      cancelToken: cancelToken,
       onSendProgress: onSendProgress,
     );
   }
