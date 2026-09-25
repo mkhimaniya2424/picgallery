@@ -96,6 +96,7 @@ class ApiMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
+    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
   }) {
     return _uploadService.upload(
@@ -108,6 +109,7 @@ class ApiMediaRepository implements MediaRepository {
       sizeBytes: sizeBytes,
       albumId: albumId,
       folderId: folderId,
+      cancelToken: cancelToken,
       onSendProgress: onSendProgress,
     );
   }

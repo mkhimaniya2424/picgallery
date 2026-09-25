@@ -389,6 +389,7 @@ class _MediaCopyMoveFlowScreenState
                     title: Text('Root level (unfiled)'),
                     trailing: Radio<String?>(
                       value: null,
+                      // ignore: deprecated_member_use
                       groupValue: _destinationFolderId,
                       onChanged: (v) => _setDestinationFolder(v),
                     ),
@@ -416,6 +417,7 @@ class _MediaCopyMoveFlowScreenState
                           ),
                           trailing: Radio<String?>(
                             value: f.id,
+                            // ignore: deprecated_member_use
                             groupValue: _destinationFolderId,
                             onChanged: (v) => _setDestinationFolder(v),
                           ),

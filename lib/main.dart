@@ -9,6 +9,7 @@ import 'providers/auth_providers.dart';
 import 'providers/settings_provider.dart';
 import 'services/deep_link_service.dart';
 import 'services/push_notification_service.dart';
+import 'services/upload_foreground_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
@@ -25,6 +26,10 @@ Future<void> main() async {
   // media/albums/folders/onboarding/settings/upload-queue features persist
   // to, so the very first frame can already read saved state.
   await Hive.initFlutter();
+
+  // Register the upload foreground-service notification channel so the first
+  // upload can start the service immediately without waiting for any widget.
+  await UploadForegroundService.init();
 
   // The backend now has a permanent public URL baked into ApiClient's
   // default (https://api.picgallery.in), so no saved/manual host is

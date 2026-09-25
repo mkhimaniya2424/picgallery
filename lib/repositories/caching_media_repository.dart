@@ -117,6 +117,7 @@ class CachingMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
+    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     final result = await _api.uploadMedia(
@@ -129,6 +130,7 @@ class CachingMediaRepository implements MediaRepository {
       sizeBytes: sizeBytes,
       albumId: albumId,
       folderId: folderId,
+      cancelToken: cancelToken,
       onSendProgress: onSendProgress,
     );
     await _bestEffort(() => _cache.mirrorFromRemote([result]));

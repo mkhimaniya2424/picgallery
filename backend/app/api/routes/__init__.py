@@ -17,6 +17,7 @@ from app.api.routes import (
     legal,
     locations,
     media,
+    chunked_upload,
     notifications,
     search,
     share_links,
@@ -32,6 +33,7 @@ api_router.include_router(users.router)
 api_router.include_router(folders.router)
 api_router.include_router(albums.router)
 api_router.include_router(media.router)
+api_router.include_router(chunked_upload.router)
 api_router.include_router(faces.router)
 api_router.include_router(share_links.router)
 api_router.include_router(share_links.public_router)

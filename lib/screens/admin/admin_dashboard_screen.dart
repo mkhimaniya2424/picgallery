@@ -66,10 +66,7 @@ class _StudioDashboardScreenState extends ConsumerState<StudioDashboardScreen> {
   /// Details, per the "Add Media" FAB's intended scope — it should not
   /// appear on every screen.
   Future<void> _addMedia() async {
-    final notifier = ref.read(uploadQueueProvider.notifier);
-    await notifier.resetWizard();
-    if (!mounted) return;
-    Navigator.of(context).pushNamed(AppRoutes.uploadQueue);
+    Navigator.of(context).pushNamed(AppRoutes.newUpload);
   }
 
   @override

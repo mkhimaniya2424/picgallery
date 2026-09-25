@@ -61,12 +61,13 @@ class _AlbumDetailsScreenState extends ConsumerState<AlbumDetailsScreen>
   /// `MediaListController.addMedia` itself (see media_provider.dart), so
   /// this screen no longer needs to touch `albumProvider` directly.
   Future<void> _openAddMediaSheet(AlbumModel album) async {
-    final notifier = ref.read(uploadQueueProvider.notifier);
-    await notifier.resetWizard();
-    notifier.updateOptions(albumId: album.id, folderId: album.folderId);
-
-    if (!mounted) return;
-    Navigator.of(context).pushNamed(AppRoutes.uploadQueue);
+    Navigator.of(context).pushNamed(
+      AppRoutes.newUpload,
+      arguments: {
+        'albumId': album.id,
+        'folderId': album.folderId,
+      },
+    );
   }
 
   AlbumModel? _findAlbum(List<AlbumModel> albums) {

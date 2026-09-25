@@ -35,6 +35,7 @@ abstract class MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
+    dynamic cancelToken, // Use dynamic in the interface so Hive repo doesn't need to import dio just for the signature
     void Function(int sent, int total)? onSendProgress,
   });
 

@@ -9,7 +9,6 @@ import '../../models/media_model.dart';
 import '../../providers/album_provider.dart';
 import '../../providers/folder_provider.dart';
 import '../../providers/media_provider.dart';
-import '../../upload/upload_queue_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_card.dart';
 import '../../widgets/common/folder_tile.dart';
@@ -48,11 +47,12 @@ class _FolderDetailsScreenState extends ConsumerState<FolderDetailsScreen> {
   String get folderId => widget.folderId;
 
   Future<void> _addMedia(BuildContext context) async {
-    final notifier = ref.read(uploadQueueProvider.notifier);
-    await notifier.resetWizard();
-    notifier.updateOptions(folderId: folderId, clearAlbum: true);
-    if (!context.mounted) return;
-    Navigator.of(context).pushNamed(AppRoutes.uploadQueue);
+    Navigator.of(context).pushNamed(
+      AppRoutes.newUpload,
+      arguments: {
+        'folderId': folderId,
+      },
+    );
   }
 
   @override

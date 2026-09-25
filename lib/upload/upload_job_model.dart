@@ -57,6 +57,10 @@ class UploadJobModel {
   /// Optional error message when failed.
   final String? errorMessage;
 
+  final String? uploadId;
+  final String? mediaId;
+  final Map<String, String>? completedParts;
+
   // Options fields
   final bool compress;
   final bool wifiOnly;
@@ -105,6 +109,9 @@ class UploadJobModel {
     this.offlinePending = false,
     this.offlineRetryCount = 0,
     this.nextRetryAt,
+    this.uploadId,
+    this.mediaId,
+    this.completedParts,
   });
 
   double get progress {
@@ -142,6 +149,9 @@ class UploadJobModel {
     int? offlineRetryCount,
     DateTime? nextRetryAt,
     bool clearNextRetryAt = false,
+    String? uploadId,
+    String? mediaId,
+    Map<String, String>? completedParts,
   }) {
     return UploadJobModel(
       id: id ?? this.id,
@@ -166,6 +176,9 @@ class UploadJobModel {
       offlinePending: offlinePending ?? this.offlinePending,
       offlineRetryCount: offlineRetryCount ?? this.offlineRetryCount,
       nextRetryAt: clearNextRetryAt ? null : (nextRetryAt ?? this.nextRetryAt),
+      uploadId: uploadId ?? this.uploadId,
+      mediaId: mediaId ?? this.mediaId,
+      completedParts: completedParts ?? this.completedParts,
     );
   }
 
@@ -190,6 +203,9 @@ class UploadJobModel {
       'offlinePending': offlinePending,
       'offlineRetryCount': offlineRetryCount,
       'nextRetryAt': nextRetryAt?.toIso8601String(),
+      'uploadId': uploadId,
+      'mediaId': mediaId,
+      'completedParts': completedParts,
     };
   }
 
@@ -229,6 +245,11 @@ class UploadJobModel {
       offlineRetryCount: json['offlineRetryCount'] as int? ?? 0,
       nextRetryAt: json['nextRetryAt'] != null
           ? DateTime.tryParse(json['nextRetryAt'] as String)
+          : null,
+      uploadId: json['uploadId'] as String?,
+      mediaId: json['mediaId'] as String?,
+      completedParts: json['completedParts'] != null
+          ? Map<String, String>.from(json['completedParts'] as Map)
           : null,
     );
   }

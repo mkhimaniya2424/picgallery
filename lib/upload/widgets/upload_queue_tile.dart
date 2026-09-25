@@ -12,7 +12,7 @@ import '../../core/theme/app_theme.dart';
 /// - Contextual action buttons: Pause, Resume, Cancel, Retry
 class UploadQueueTile extends StatelessWidget {
   final UploadJobModel job;
-  final VoidCallback onCancel;
+  final VoidCallback? onCancel;
   final VoidCallback? onPause;
   final VoidCallback? onResume;
   final VoidCallback? onRetry;
@@ -20,7 +20,7 @@ class UploadQueueTile extends StatelessWidget {
   const UploadQueueTile({
     super.key,
     required this.job,
-    required this.onCancel,
+    this.onCancel,
     this.onPause,
     this.onResume,
     this.onRetry,
@@ -78,8 +78,13 @@ class UploadQueueTile extends StatelessWidget {
         : (job.status == UploadJobStatus.completed ? 1.0 : job.progress);
 
     final showProgressIndicator = job.status == UploadJobStatus.uploading ||
-        job.status == UploadJobStatus.paused ||
-        job.status == UploadJobStatus.queued;
+        job.status == UploadJobStatus.paused;
+        
+    final isWaitingForWifi = job.status == UploadJobStatus.paused &&
+        job.errorMessage != null &&
+        job.errorMessage!.contains('WiFi');
+        
+    final statusText = isWaitingForWifi ? 'WAITING FOR WI-FI' : job.status.name.toUpperCase();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -154,7 +159,7 @@ class UploadQueueTile extends StatelessWidget {
                   border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                 ),
                 child: Text(
-                  job.status.name.toUpperCase(),
+                  statusText,
                   style: TextStyle(
                     color: statusColor,
                     fontWeight: FontWeight.w800,

@@ -55,9 +55,9 @@ import '../../screens/media/media_details_screen.dart';
 import '../../screens/media/image_viewer_screen.dart';
 import '../../screens/media/video_player_screen.dart';
 import '../../screens/media/photo_editor_screen.dart';
-import '../../upload/upload_queue_screen.dart';
+import '../../upload/upload_hub_screen.dart';
+import '../../upload/new_upload_screen.dart';
 import '../../screens/albums/share_settings_screen.dart';
-import '../../screens/collections/collection_share_settings_screen.dart';
 import '../../screens/client/shared_gallery_screen.dart';
 import '../../screens/client/chat_thread_screen.dart';
 import '../../screens/client/discover_studios_screen.dart';
@@ -188,7 +188,8 @@ class AppRoutes {
       '/face-search/scan-progress';
   static const String faceSearchResults = '/face-search/results';
 
-  static const String uploadQueue = '/upload-queue';
+  static const String uploads = '/uploads';
+  static const String newUpload = '/uploads/new';
 
   static const String media = '/media';
   static const String mediaFavorites = '/media/favorites';
@@ -428,9 +429,17 @@ class AppRoutes {
       case faceSearchResults:
         return _slide(const FaceSearchResultsScreen());
 
-      case uploadQueue:
-        return _fade(const UploadQueueScreen());
-
+      case uploads:
+        return _fade(const UploadHubScreen());
+      case newUpload:
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          return _slide(NewUploadScreen(
+            initialAlbumId: args['albumId'] as String?,
+            initialFolderId: args['folderId'] as String?,
+          ));
+        }
+        return _slide(const NewUploadScreen());
       case adminAlbumCreate:
         return _slide(
             CreateAlbumScreen(folderId: settings.arguments as String?));

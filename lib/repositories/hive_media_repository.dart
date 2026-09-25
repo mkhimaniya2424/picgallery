@@ -94,6 +94,7 @@ class HiveMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
+    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
   }) {
     // Hive is a metadata-only cache — it never owned raw file bytes or

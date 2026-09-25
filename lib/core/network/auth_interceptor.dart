@@ -15,12 +15,16 @@ class AuthInterceptor extends QueuedInterceptor {
   final SecureStorage secureStorage;
   final String Function() getBaseUrl;
   final Dio refreshDio;
+  /// Optional callback invoked whenever a token refresh succeeds, so callers
+  /// (e.g. [ApiClient]) can update their own timestamp bookkeeping.
+  final void Function()? onTokenRefreshed;
 
   AuthInterceptor({
     required this.authManager,
     required this.secureStorage,
     required this.getBaseUrl,
     Dio? refreshDio,
+    this.onTokenRefreshed,
   }) : refreshDio = refreshDio ?? Dio();
 
   @override
@@ -105,6 +109,18 @@ class AuthInterceptor extends QueuedInterceptor {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken ?? refreshToken,
       );
+      onTokenRefreshed?.call();
+
+      // If the original request was a FormData (like a file upload), its
+      // internal streams/files have likely already been consumed. Retrying
+      // it directly via fetch() will throw a StateError, which would previously
+      // get caught by the catch block below and log the user out.
+      // Instead, we just pass the original 401 error through. The caller
+      // (e.g. UploadQueueController) should handle the failure and retry
+      // the job with the new token.
+      if (options.data is FormData) {
+        return handler.next(err);
+      }
 
       // Retry original request with new access token
       options.headers['Authorization'] = 'Bearer $newAccessToken';
@@ -112,8 +128,16 @@ class AuthInterceptor extends QueuedInterceptor {
       final retryDio = Dio();
       final retriedResponse = await retryDio.fetch(options);
       return handler.resolve(retriedResponse);
+    } on DioException catch (e) {
+      // Only expire the session if the refresh token itself is rejected (401/403).
+      // A timeout (0) or server error (502) should just fail the current
+      // request so the user can retry later, without wiping their login state.
+      if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+        await authManager.handleSessionExpired();
+      }
+      return handler.next(err);
     } catch (_) {
-      await authManager.handleSessionExpired();
+      // Some non-Dio error occurred (e.g. parsing error). Don't log out.
       return handler.next(err);
     }
   }

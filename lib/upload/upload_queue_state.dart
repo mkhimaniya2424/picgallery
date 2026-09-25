@@ -1,27 +1,12 @@
-import 'picked_file_info.dart';
 import 'upload_job_model.dart';
 
-/// Represents the complete state of the upload queue and the wizard flow.
+/// Represents the complete state of the upload queue.
 class UploadQueueState {
   final List<UploadJobModel> jobs;
   final bool isProcessing;
 
   /// Human-readable last message for UI.
   final String? message;
-
-  // Wizard Flow state
-  /// 0 = Selection, 1 = Options, 2 = Progress, 3 = Complete
-  final int wizardStep;
-  final List<PickedFileInfo> tempPickedFiles;
-
-  // Selected options for the current batch
-  final String? selectedAlbumId;
-  final String? selectedFolderId;
-  final String? renamePrefix;
-  final bool compress;
-  final bool wifiOnly;
-  final bool keepOriginalQuality;
-  final bool uploadMetadata;
 
   // Real-time Metrics
   final double speedBytesPerSecond;
@@ -31,15 +16,6 @@ class UploadQueueState {
     required this.jobs,
     required this.isProcessing,
     this.message,
-    this.wizardStep = 0,
-    this.tempPickedFiles = const [],
-    this.selectedAlbumId,
-    this.selectedFolderId,
-    this.renamePrefix,
-    this.compress = false,
-    this.wifiOnly = false,
-    this.keepOriginalQuality = true,
-    this.uploadMetadata = true,
     this.speedBytesPerSecond = 0.0,
     this.remainingTime,
   });
@@ -48,15 +24,6 @@ class UploadQueueState {
       : jobs = const [],
         isProcessing = false,
         message = null,
-        wizardStep = 0,
-        tempPickedFiles = const [],
-        selectedAlbumId = null,
-        selectedFolderId = null,
-        renamePrefix = null,
-        compress = false,
-        wifiOnly = false,
-        keepOriginalQuality = true,
-        uploadMetadata = true,
         speedBytesPerSecond = 0.0,
         remainingTime = null;
 
@@ -100,18 +67,6 @@ class UploadQueueState {
     bool? isProcessing,
     String? message,
     bool clearMessage = false,
-    int? wizardStep,
-    List<PickedFileInfo>? tempPickedFiles,
-    String? selectedAlbumId,
-    bool clearAlbum = false,
-    String? selectedFolderId,
-    bool clearFolder = false,
-    String? renamePrefix,
-    bool clearRenamePrefix = false,
-    bool? compress,
-    bool? wifiOnly,
-    bool? keepOriginalQuality,
-    bool? uploadMetadata,
     double? speedBytesPerSecond,
     Duration? remainingTime,
     bool clearRemainingTime = false,
@@ -120,18 +75,6 @@ class UploadQueueState {
       jobs: jobs ?? this.jobs,
       isProcessing: isProcessing ?? this.isProcessing,
       message: clearMessage ? null : (message ?? this.message),
-      wizardStep: wizardStep ?? this.wizardStep,
-      tempPickedFiles: tempPickedFiles ?? this.tempPickedFiles,
-      selectedAlbumId:
-          clearAlbum ? null : (selectedAlbumId ?? this.selectedAlbumId),
-      selectedFolderId:
-          clearFolder ? null : (selectedFolderId ?? this.selectedFolderId),
-      renamePrefix:
-          clearRenamePrefix ? null : (renamePrefix ?? this.renamePrefix),
-      compress: compress ?? this.compress,
-      wifiOnly: wifiOnly ?? this.wifiOnly,
-      keepOriginalQuality: keepOriginalQuality ?? this.keepOriginalQuality,
-      uploadMetadata: uploadMetadata ?? this.uploadMetadata,
       speedBytesPerSecond: speedBytesPerSecond ?? this.speedBytesPerSecond,
       remainingTime:
           clearRemainingTime ? null : (remainingTime ?? this.remainingTime),

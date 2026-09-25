@@ -204,7 +204,17 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
     None thumbnail as "fall back to a placeholder in the UI", not an
     error, same as make_thumbnail.
     """
-    fetched = _fetch_to_temp(original_relative_path)
+    if _use_r2():
+        input_path = _r2_client().generate_presigned_url(
+            "get_object",
+            Params={"Bucket": settings.R2_BUCKET_NAME, "Key": original_relative_path},
+            ExpiresIn=3600,
+        )
+        fetched = None
+    else:
+        fetched = _fetch_to_temp(original_relative_path)
+        input_path = str(fetched)
+        
     thumb_relative = f"{owner_id}/{media_id}/thumbnail.jpg"
     thumb_tmp = Path(tempfile.mktemp(suffix=".jpg"))
 
@@ -214,7 +224,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
                 settings.FFMPEG_BINARY,
                 "-y",
                 "-ss", str(VIDEO_THUMBNAIL_TIMESTAMP_SECONDS),
-                "-i", str(fetched),
+                "-i", input_path,
                 "-frames:v", "1",
                 "-vf", f"scale='min({THUMBNAIL_MAX_DIMENSION},iw)':-2",
                 str(thumb_tmp),
@@ -227,7 +237,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
             result = subprocess.run(
                 [
                     settings.FFMPEG_BINARY, "-y",
-                    "-i", str(fetched),
+                    "-i", input_path,
                     "-frames:v", "1",
                     "-vf", f"scale='min({THUMBNAIL_MAX_DIMENSION},iw)':-2",
                     str(thumb_tmp),
@@ -245,7 +255,7 @@ def make_video_thumbnail(*, owner_id: uuid.UUID, media_id: uuid.UUID, original_r
         logger.exception("Video thumbnail generation failed for %s", original_relative_path)
         return None
     finally:
-        if _use_r2():
+        if fetched and _use_r2():
             fetched.unlink(missing_ok=True)
 
     _store_local_file(local_path=thumb_tmp, relative_path=thumb_relative)
@@ -259,7 +269,17 @@ def get_video_duration_ms(original_relative_path: str) -> int | None:
     displaying "--:--"), not an error, same as the thumbnail helpers
     above.
     """
-    fetched = _fetch_to_temp(original_relative_path)
+    if _use_r2():
+        input_path = _r2_client().generate_presigned_url(
+            "get_object",
+            Params={"Bucket": settings.R2_BUCKET_NAME, "Key": original_relative_path},
+            ExpiresIn=3600,
+        )
+        fetched = None
+    else:
+        fetched = _fetch_to_temp(original_relative_path)
+        input_path = str(fetched)
+        
     try:
         result = subprocess.run(
             [
@@ -267,7 +287,7 @@ def get_video_duration_ms(original_relative_path: str) -> int | None:
                 "-v", "error",
                 "-show_entries", "format=duration",
                 "-of", "default=noprint_wrappers=1:nokey=1",
-                str(fetched),
+                input_path,
             ],
             capture_output=True,
             timeout=30,
@@ -295,7 +315,7 @@ def get_video_duration_ms(original_relative_path: str) -> int | None:
         logger.exception("Video duration read failed for %s", original_relative_path)
         return None
     finally:
-        if _use_r2():
+        if fetched and _use_r2():
             fetched.unlink(missing_ok=True)
 
 

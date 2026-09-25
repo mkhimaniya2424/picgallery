@@ -241,6 +241,7 @@ class InMemoryMediaRepository implements MediaRepository {
     int sizeBytes = 0,
     String? albumId,
     String? folderId,
+    dynamic cancelToken,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     // In-memory mock: report progress 100%

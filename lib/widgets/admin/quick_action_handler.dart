@@ -69,7 +69,7 @@ class QuickActionHandler {
         // none of that to work with and always throws against the
         // real backend, so route to the real screen instead of faking
         // a finished upload.
-        Navigator.of(context).pushNamed(AppRoutes.uploadQueue);
+        Navigator.of(context).pushNamed(AppRoutes.newUpload);
         break;
       case 'create_album':
         // Same reasoning as uploads above — CreateAlbumScreen owns the
